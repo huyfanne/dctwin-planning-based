@@ -1,0 +1,142 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    "room_wall_.*"
+    {
+        type            noSlip;
+    }
+
+    "ceiling_.*"
+    {
+        type            noSlip;
+    }
+
+    "partition_wall_.*"
+    {
+        type            noSlip;
+    }
+
+    {% for acu in acu_list %}
+    {{ acu.supply_name }}
+    {
+        type                flowRateInletVelocity;
+        volumetricFlowRate  {{ acu.flow_rate if acu.flow_rate != 0 else 1e-10 }};
+        value               uniform (0 0 0);
+    }
+
+    {{ acu.return_name }}
+    {
+        type                flowRateOutletVelocity;
+        volumetricFlowRate  {{ acu.flow_rate if acu.flow_rate != 0 else 1e-10 }};
+        value               uniform (0 0 0);
+    }
+    {% endfor %}
+
+    "acu_wall_.*"
+    {
+        type            noSlip;
+    }
+
+    "rack_wall_.*"
+    {
+        type            noSlip;
+    }
+
+    "server_wall_.*"
+    {
+        type            noSlip;
+    }
+
+{% for server in server_list %}
+    {{ server.inlet_name }}
+{% if not server.dynamic_temperature_low %}
+    {
+        type                flowRateOutletVelocity;
+        volumetricFlowRate  {{ server.flow_rate }};
+        value               uniform (0 0 0);
+    }
+{% else %}
+{% set t = server.t_sink  %}
+{% set tl = server.dynamic_temperature_low + 273.15 %}
+{% set th = server.dynamic_temperature_high + 273.15 %}
+{% set fl = server.flow_rate %}
+{% set fh = server.dynamic_flow_rate_high %}
+{% set area = server.inlet_area %}
+{% set slope = (fh - fl) / (th - tl) %}
+    {
+        type            exprFixedValue;
+        value           $internalField;
+{% if server.orientation == 0 %}
+        valueExpr      "({{ t }}>={{ tl }})?({{ t }}<={{ th }})?vector(0,(({{ slope }}*({{ t }}-{{ tl }})) + {{ fl }})/{{ area }},0):vector(0,{{ fh }}/{{ area }},0):vector(0,{{ fl }}/{{ area }},0)";
+{% elif server.orientation == 90 %}
+        valueExpr      "({{ t }}>={{ tl }})?({{ t }}<={{ th }})?vector(-(({{ slope }}*({{ t }}-{{ tl }})) + {{ fl }})/{{ area }},0,0):vector(-{{ fh }}/{{ area }},0,0):vector(-{{ fl }}/{{ area }},0,0)";
+{% elif server.orientation == 180 %}
+        valueExpr      "({{ t }}>={{ tl }})?({{ t }}<={{ th }})?vector(0,-(({{ slope }}*({{ t }}-{{ tl }})) + {{ fl }})/{{ area }},0):vector(0,-{{ fh }}/{{ area }},0):vector(0,-{{ fl }}/{{ area }},0)";
+{% elif server.orientation == 270 %}
+        valueExpr      "({{ t }}>={{ tl }})?({{ t }}<={{ th }})?vector((({{ slope }}*({{ t }}-{{ tl }})) + {{ fl }})/{{ area }},0,0):vector({{ fh }}/{{ area }},0,0):vector({{ fl }}/{{ area }},0,0)";
+{% endif %}
+        variables
+        (
+            "{{ t }}{{ '{' + server.inlet_name + '} = weightAverage(T)' }}"
+        );
+    }
+{% endif %}
+{% endfor %}
+
+{% for server in server_list %}
+    {{ server.outlet_name }}
+{% if not server.dynamic_temperature_low %}
+    {
+        type                flowRateInletVelocity;
+        volumetricFlowRate  {{ server.flow_rate }};
+        value               uniform (0 0 0);
+    }
+{% else %}
+{% set t = server.t_sink  %}
+{% set tl = server.dynamic_temperature_low + 273.15 %}
+{% set th = server.dynamic_temperature_high + 273.15 %}
+{% set fl = server.flow_rate %}
+{% set fh = server.dynamic_flow_rate_high %}
+{% set slope = (fh - fl) / (th - tl) %}
+{% set area = server.outlet_area %}
+    {
+        type            exprFixedValue;
+        value           $internalField;
+{% if server.orientation == 0 %}
+        valueExpr      "({{ t }}>={{ tl }})?({{ t }}<={{ th }})?vector(0,(({{ slope }}*({{ t }}-{{ tl }})) + {{ fl }})/{{ area }},0):vector(0,{{ fh }}/{{ area }},0):vector(0,{{ fl }}/{{ area }},0)";
+{% elif server.orientation == 90 %}
+        valueExpr      "({{ t }}>={{ tl }})?({{ t }}<={{ th }})?vector(-(({{ slope }}*({{ t }}-{{ tl }})) + {{ fl }})/{{ area }},0,0):vector(-{{ fh }}/{{ area }},0,0):vector(-{{ fl }}/{{ area }},0,0)";
+{% elif server.orientation == 180 %}
+        valueExpr      "({{ t }}>={{ tl }})?({{ t }}<={{ th }})?vector(0,-(({{ slope }}*({{ t }}-{{ tl }})) + {{ fl }})/{{ area }},0):vector(0,-{{ fh }}/{{ area }},0):vector(0,-{{ fl }}/{{ area }},0)";
+{% elif server.orientation == 270 %}
+        valueExpr      "({{ t }}>={{ tl }})?({{ t }}<={{ th }})?vector((({{ slope }}*({{ t }}-{{ tl }})) + {{ fl }})/{{ area }},0,0):vector({{ fh }}/{{ area }},0,0):vector({{ fl }}/{{ area }},0,0)";
+{% endif %}
+        variables
+        (
+            "{{ t }}{{ '{' + server.inlet_name + '} = weightAverage(T)' }}"
+        );
+	  }
+{% endif %}
+{% endfor %}
+}
+
+// ************************************************************************* //
