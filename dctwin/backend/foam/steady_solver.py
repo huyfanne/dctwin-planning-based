@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import List, Union
 
 from dctwin.backend import template_env
+from dctwin.backend.core import Backend
 from dctwin.backend.foam.core import generate_control_dict
 from dctwin.config import environ
 from dctwin.models import ACU, Server
@@ -150,3 +151,39 @@ def run(
         subprocess.run(command)
     else:
         return command
+
+
+class SteadySolverBackend(Backend):
+    docker_image = 'openfoamplus/of_v1912_centos73'
+    solver = 'buoyantBoussinesqSimpleFoam'
+
+    @property
+    def command(self):
+        if self.process_num > 1:
+            command = f"""
+                bash -c 'source /opt/OpenFOAM/setImage_v1912.sh &&
+                decomposePar -force && mpirun -np {self.process_num}
+                --allow-run-as-root {self.solver} -parallel',
+            """
+        else:
+            command = f"""
+              bash -c 'source /opt/OpenFOAM/setImage_v1912.sh &&
+              {self.solver}'
+            """
+        return command
+
+    def run(self, room: Room):
+        generate_control_dict(
+            room.probes,
+            steady=True,
+            delta_t=1,
+            write_interval=100,
+            end_time=500,
+            process_num=self.process_num,
+        )
+        builder = Builder(room)
+        builder.run()
+
+        if self.dry_run:
+            return
+        self.run_container()

@@ -1,6 +1,5 @@
 import math
 import os
-import subprocess
 from dataclasses import dataclass
 from decimal import Decimal
 from logging import Logger
@@ -8,8 +7,6 @@ from pathlib import Path
 from typing import Optional
 
 import click
-from docker import DockerClient
-from docker.errors import ContainerError
 
 from dctwin.backend import template_env
 from dctwin.backend.core import Backend
@@ -82,8 +79,9 @@ def generate_block_dict(room: Room):
         )
 
 
-def generate_snappy_dict(room: Room, field_config: Optional[dict] = None,
-                         process_num: int = 1):
+def generate_snappy_dict(
+    room: Room, field_config: Optional[dict] = None, process_num: int = 1
+):
     files = os.listdir(Path(environ.GEOMETRY_DIR))
     files.sort()
     files = list(filter(lambda x: '.stl' in x, files))
@@ -171,7 +169,7 @@ def generate_snappy_dict(room: Room, field_config: Optional[dict] = None,
             process_num = 2
         with open(Path(environ.CASE_DIR, 'system/decomposeParDict'), 'w') as f:
             f.write(
-                template_env.get_template(f'system/decomposeParDict.j2').render(
+                template_env.get_template('system/decomposeParDict.j2').render(
                     process_num=process_num
                 )
             )
@@ -180,12 +178,29 @@ def generate_snappy_dict(room: Room, field_config: Optional[dict] = None,
 class SnappyHexBackend(Backend):
     docker_image = 'openfoamplus/of_v1912_centos73'
 
-    def __init__(self,
-                 client: DockerClient,
-                 dry_run: bool = False,
-                 process_num: int = 1) -> None:
-        super(SnappyHexBackend, self).__init__(client, dry_run)
-        self.process_num = process_num
+    @property
+    def command(self):
+        if self.process_num > 1:
+            command = [
+                'bash',
+                '-c',
+                '"source /opt/OpenFOAM/setImage_v1912.sh '
+                '&& blockMesh '
+                '&& surfaceFeatureExtract '
+                '&& decomposePar -copyZero -force '
+                f'&& mpirun -np {self.process_num} --allow-run-as-root '
+                f'snappyHexMesh -parallel -overwrite '
+                '&& reconstructParMesh -constant -mergeTol 6 '
+                '&& createPatch -overwrite '
+                '&& rm -rf /data/constant/triSurface/*.eMesh"',
+            ]
+        else:
+            command = """
+              bash -c 'source /opt/OpenFOAM/setImage_v1912.sh &&
+              blockMesh && surfaceFeatureExtract && snappyHexMesh -overwrite &&
+              createPatch -overwrite && rm -rf /data/constant/triSurface/*.eMesh'
+            """
+        return command
 
     def run(self, room: Room):
         init_foam()
@@ -194,60 +209,5 @@ class SnappyHexBackend(Backend):
         generate_snappy_dict(room, process_num=self.process_num)
         if self.dry_run:
             return
-
-        if self.process_num > 1:
-            command = ['bash',
-                       '-c',
-                       'source /opt/OpenFOAM/setImage_v1912.sh',
-                       '&&',
-                       'echo',
-                       '&&',
-                       'blockMesh',
-                       '&&',
-                       'surfaceFeatureExtract',
-                       '&&',
-                       'snappyHexMesh',
-                       '-overwrite',
-                       '&&',
-                       'createPatch',
-                       '-overwrite',
-                       '&&',
-                       'rm',
-                       '-rf',
-                       '/data/constant/triSurface/*.eMesh']
-        else:
-            command = ['bash', '-c',
-                       '"source /opt/OpenFOAM/setImage_v1912.sh '
-                       '&& blockMesh '
-                       '&& surfaceFeatureExtract '
-                       '&& decomposePar -copyZero -force '
-                       f'&& mpirun -np {self.process_num} --allow-run-as-root '
-                       f'snappyHexMesh -parallel -overwrite '
-                       '&& reconstructParMesh -constant -mergeTol 6 '
-                       '&& createPatch -overwrite '
-                       '&& rm -rf /data/constant/triSurface/*.eMesh"']
-
-        try:
-            container = self.client.containers.run(
-                self.docker_image,
-                command=command,
-                # auto_remove=True,
-                volumes={
-                    str(environ.CASE_DIR): {
-                        'bind': '/data',
-                        'mode': 'rw',
-                    },
-                    str(environ.GEOMETRY_DIR): {
-                        'bind': '/data/constant/triSurface',
-                        'mode': 'rw',
-                    },
-                },
-                working_dir='/data',
-                detach=True)
-            stream = container.logs(stream=True, follow=True)
-            for log in stream:
-                click.echo(log, nl=False)
-        except ContainerError as e:
-            click.echo('Run snappyHex failed:')
-            click.echo(str(e.stderr))
-            raise e
+        self.run_container()
+        click.echo('***** Mesh finished *****\n\n')

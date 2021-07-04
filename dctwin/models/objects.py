@@ -1,4 +1,3 @@
-import csv
 from decimal import Decimal
 from typing import Optional, OrderedDict
 
@@ -58,7 +57,7 @@ class ACU(ObjectModel):
 
     @property
     def k(self) -> float:
-        """ turbulent kinetic energy
+        """turbulent kinetic energy
         Others:
         omega = epsilon / (0.09 * k)
         """

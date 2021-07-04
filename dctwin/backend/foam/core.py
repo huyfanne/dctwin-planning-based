@@ -51,7 +51,7 @@ def generate_control_dict(
             process_num = 2
         with open(Path(environ.CASE_DIR, 'system/decomposeParDict'), 'w') as f:
             f.write(
-                template_env.get_template(f'system/decomposeParDict.j2').render(
+                template_env.get_template('system/decomposeParDict.j2').render(
                     process_num=process_num
                 )
             )

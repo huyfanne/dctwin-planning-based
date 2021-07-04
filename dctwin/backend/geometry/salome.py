@@ -1,10 +1,9 @@
 from pathlib import Path
 
 import click
-from docker.errors import ContainerError
 
-from dctwin.backend.core import Backend
 from dctwin.backend import template_env
+from dctwin.backend.core import Backend
 from dctwin.config import environ
 from dctwin.models.constructions import Room
 
@@ -17,6 +16,10 @@ class SalomeBackend(Backend):
         if not self.dry_run:
             self._run_backend()
         self._post_process()
+
+    @property
+    def command(self):
+        return ['salome', 'start', '-t', 'geometry_script.py']
 
     def _pre_process(self, room: Room):
         """Prepare files needed"""
@@ -41,29 +44,13 @@ class SalomeBackend(Backend):
             file.unlink()
 
     def _run_backend(self):
-        working_path = '/output'
+        working_path = self.geometry_dir
         geometry_file = f'{working_path}/geometry.json'
-        try:
-            container = self.client.containers.run(
-                self.docker_image,
-                command=['salome', 'start', '-t', 'geometry_script.py'],
-                auto_remove=True,
-                volumes={
-                    str(environ.GEOMETRY_DIR): {
-                        'bind': working_path,
-                        'mode': 'rw',
-                    },
-                },
-                environment={
-                    'SRC_PATH': geometry_file,
-                    'OUTPUT_PATH': working_path,
-                },
-                working_dir=working_path,
-                detach=True)
-            stream = container.logs(stream=True, follow=True)
-            for log in stream:
-                click.echo(log, nl=False)
-        except ContainerError as e:
-            click.echo('Run salome failed:')
-            click.echo(str(e.stderr))
-            raise e
+        self.run_container(
+            environment={
+                'SRC_PATH': geometry_file,
+                'OUTPUT_PATH': working_path,
+            },
+            working_dir=self.geometry_dir,
+        )
+        click.echo('***** Geometry finished *****\n\n')

@@ -286,7 +286,9 @@ class RackModel:
         self.rack_wall_mesh = util.mesh(group, 0.1, 2)
 
         blanking_box = util.make_box({**self.size, 'dz': 0.05})
-        blanking = util.group_by_faces(blanking_box, exclude=['top', 'bottom', 'left', 'right', 'rear'])
+        blanking = util.group_by_faces(
+            blanking_box, exclude=['top', 'bottom', 'left', 'right', 'rear']
+        )
         self.rack_blanking_mesh = util.mesh(blanking, 0.05, 1)
         self.is_meshed = True
 
@@ -303,30 +305,38 @@ class RackModel:
 
         meshes = []
         if True:
-            meshes.append(util.copy_mesh(
-                f'rack_wall_{rack_id}_panel_default_0)',
-                self.rack_blanking_mesh,
-                {**placement, 'z': 0},
-                orientation,
-                is_export=False
-            ))
-            meshes.append(util.copy_mesh(
-                f'rack_wall_{rack_id}_panel_default_0)',
-                self.rack_blanking_mesh,
-                {**placement, 'z': 0.05},
-                orientation,
-                is_export=False
-            ))
+            meshes.append(
+                util.copy_mesh(
+                    f'rack_wall_{rack_id}_panel_default_0)',
+                    self.rack_blanking_mesh,
+                    {**placement, 'z': 0},
+                    orientation,
+                    is_export=False,
+                )
+            )
+            meshes.append(
+                util.copy_mesh(
+                    f'rack_wall_{rack_id}_panel_default_0)',
+                    self.rack_blanking_mesh,
+                    {**placement, 'z': 0.05},
+                    orientation,
+                    is_export=False,
+                )
+            )
         for slot in slots:
             z = placement['z'] + self.first_slot_offset
             z += 0.05 * (slot - 1)
             mesh = util.copy_mesh(
-                f'rack_wall_{rack_id}_panel_{slot}', self.rack_blanking_mesh,
+                f'rack_wall_{rack_id}_panel_{slot}',
+                self.rack_blanking_mesh,
                 {**placement, 'z': z},
-                orientation, is_export=False
+                orientation,
+                is_export=False,
             )
             meshes.append(mesh)
-        compound_mesh = smesh.Concatenate([mesh.GetMesh() for mesh in meshes], 1, 1, 1e-05, False)
+        compound_mesh = smesh.Concatenate(
+            [mesh.GetMesh() for mesh in meshes], 1, 1, 1e-05, False
+        )
         util.export_stl(compound_mesh, f'rack_wall_{rack_id}_panel')
 
 
@@ -374,16 +384,29 @@ class Builder:
             model = models[server['model']]
             rack = self.racks[server['rack_id']]
             blanking_panels = rack_blanking_panels.get(
-                rack['id'], list(range(1, self.rack_models[rack['model']]['slot'] + 1)))
+                rack['id'], list(range(1, self.rack_models[rack['model']]['slot'] + 1))
+            )
             rack_blanking_panels[rack['id']] = [
-                panel for panel in blanking_panels if panel not in [
-                    x for x in range(server['slot'],
-                                     server['slot'] + self.server_models[server['model']]['occupation'])]]
+                panel
+                for panel in blanking_panels
+                if panel
+                not in [
+                    x
+                    for x in range(
+                        server['slot'],
+                        server['slot']
+                        + self.server_models[server['model']]['occupation'],
+                    )
+                ]
+            ]
 
             offset = self.rack_models[rack['model']]['first_slot_offset']
             model.make(
                 server['id'],
-                {**rack['placement'], 'z': offset + self.slot_height * (server['slot'] - 1)},
+                {
+                    **rack['placement'],
+                    'z': offset + self.slot_height * (server['slot'] - 1),
+                },
                 rack['orientation'],
             )
 
@@ -395,7 +418,12 @@ class Builder:
                     for k, v in self.rack_models.items():
                         self.computed_rack_models[k] = RackModel.from_dict(v)
                 rack_model: RackModel = self.computed_rack_models[rack['model']]
-                rack_model.make_blanking(rack['id'], rack['placement'], rack['orientation'], slots=blanking_panels)
+                rack_model.make_blanking(
+                    rack['id'],
+                    rack['placement'],
+                    rack['orientation'],
+                    slots=blanking_panels,
+                )
 
     def make_partition_wall_list(self):
         for i, wall in enumerate(self.partition_wall_list):
@@ -408,13 +436,13 @@ class Builder:
                 vent_face = util.geom.MakeTranslation(
                     vent_face,
                     (
-                            vent_opening['offset_h']
-                            - (size['dx'] - vent_opening['length']) / 2
+                        vent_opening['offset_h']
+                        - (size['dx'] - vent_opening['length']) / 2
                     ),
                     0,
                     (
-                            vent_opening['offset_v']
-                            - (size['dz'] - vent_opening['width']) / 2
+                        vent_opening['offset_v']
+                        - (size['dz'] - vent_opening['width']) / 2
                     ),
                 )
                 basic_face = util.geom.MakeCut(basic_face, vent_face)
