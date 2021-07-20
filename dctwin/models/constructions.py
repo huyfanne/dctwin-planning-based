@@ -3,11 +3,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import List, Optional, Union
 
-import yaml
 from pydantic import BaseModel, Field, validator
 
-from dctwin.models.basics import (ACUConfig, Face, RoomConfig, ServerConfig,
-                                  Size, Vertex)
+from dctwin.models.basics import ACUConfig, Face, RoomConfig, ServerConfig, Size, Vertex
 from dctwin.models.objects import Objects
 
 
@@ -60,7 +58,7 @@ class Room(BaseModel):
     class Config:
         json_encoders = {Decimal: float}
 
-    @validator('objects')
+    @validator("objects")
     def validate_objects(cls, v):
         for server in v.servers.values():
             rack = v.racks[server.rack_id]
@@ -86,22 +84,13 @@ class Room(BaseModel):
         )
 
     def dump(self, file_path: Union[str, Path]) -> None:
-        with open(file_path, 'w') as f:
+        with open(file_path, "w") as f:
             f.write(self.json(indent=2))
 
     @classmethod
-    def load(cls, file_path: 'str') -> 'Room':
+    def load(cls, file_path: "str") -> "Room":
         with open(file_path) as f:
             return cls(**json.load(f))
-
-    def dump_config(self, file_path: Union[str, Path]) -> None:
-        with open(file_path, 'w') as f:
-            yaml.safe_dump(json.loads(self.extract_config().json()), f)
-
-    def load_config(self, file_path: Union[str, Path]) -> None:
-        with open(file_path) as f:
-            config = RoomConfig(**yaml.safe_load(f))
-        self.apply_config(config)
 
     def apply_config(self, config: RoomConfig) -> None:
         """Update acu and server by config object"""
