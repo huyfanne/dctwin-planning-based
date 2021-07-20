@@ -87,12 +87,12 @@ class Room(BaseModel):
 
     def dump(self, file_path: Union[str, Path]) -> None:
         with open(file_path, 'w') as f:
-            yaml.safe_dump(json.loads(self.json()), f)
+            f.write(self.json(indent=2))
 
     @classmethod
     def load(cls, file_path: 'str') -> 'Room':
         with open(file_path) as f:
-            return cls(**yaml.safe_load(f))
+            return cls(**json.load(f))
 
     def dump_config(self, file_path: Union[str, Path]) -> None:
         with open(file_path, 'w') as f:

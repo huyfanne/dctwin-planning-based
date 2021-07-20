@@ -16,5 +16,9 @@ class Environ:
         )
         self.base_size = Decimal(base_size)
 
+    def set_case_dir(self, case_dir: typing.Union[str, Path]) -> None:
+        self.CASE_DIR = Path(case_dir)
+        self.GEOMETRY_DIR = Path(self.CASE_DIR, 'geometry')
+
 
 environ = Environ()

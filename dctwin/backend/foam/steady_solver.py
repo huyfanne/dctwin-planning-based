@@ -182,3 +182,16 @@ class SteadySolverBackend(Backend):
         if self.dry_run:
             return
         self.run_container()
+
+    def probe_result(self) -> list:
+        results = []
+        with open(f'{environ.CASE_DIR}/postProcessing/probes/0/T') as f:
+            for i in f:
+                if i.startswith('#'):
+                    continue
+                else:
+                    results.append(
+                        list(map(lambda x: round(float(x) - 273.15, 2),
+                                 i.split()[1:]))
+                    )
+        return results[-1]
