@@ -80,7 +80,7 @@ def generate_block_dict(room: Room):
 
 
 def generate_snappy_dict(
-    room: Room, field_config: Optional[dict] = None, process_num: int = 1
+        room: Room, field_config: Optional[dict] = None, process_num: int = 1
 ):
     files = os.listdir(Path(environ.GEOMETRY_DIR))
     files.sort()
@@ -181,32 +181,26 @@ class SnappyHexBackend(Backend):
     @property
     def command(self):
         if self.process_num > 1:
-            command = [
-                'bash',
-                '-c',
-                '"source /opt/OpenFOAM/setImage_v1912.sh '
-                '&& blockMesh '
-                '&& surfaceFeatureExtract '
-                '&& decomposePar -copyZero -force '
-                f'&& mpirun -np {self.process_num} --allow-run-as-root '
-                f'snappyHexMesh -parallel -overwrite '
-                '&& reconstructParMesh -constant -mergeTol 6 '
-                '&& createPatch -overwrite '
-                '&& rm -rf /data/constant/triSurface/*.eMesh"',
-            ]
+            command = "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && " \
+                      "blockMesh && surfaceFeatureExtract && " \
+                      "decomposePar -copyZero -force && " \
+                      f"mpirun --allow-run-as-root -np {self.process_num} snappyHexMesh -parallel -overwrite && " \
+                      "reconstructParMesh -constant -mergeTol 6 && " \
+                      "createPatch -overwrite && " \
+                      "rm -rf /data/constant/triSurface/*.eMesh'"
         else:
-            command = """
-              bash -c 'source /opt/OpenFOAM/setImage_v1912.sh &&
-              blockMesh && surfaceFeatureExtract && snappyHexMesh -overwrite &&
-              createPatch -overwrite && rm -rf /data/constant/triSurface/*.eMesh'
-            """
+            command = "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && " \
+                      "blockMesh && surfaceFeatureExtract && snappyHexMesh -overwrite && " \
+                      "createPatch -overwrite && rm -rf /data/constant/triSurface/*.eMesh'"
         return command
 
-    def run(self, room: Room):
+    def run(self, room: Room, field_config: Optional[dict] = None):
         init_foam()
 
         generate_block_dict(room)
-        generate_snappy_dict(room, process_num=self.process_num)
+        generate_snappy_dict(room,
+                             process_num=self.process_num,
+                             field_config=field_config)
         if self.dry_run:
             return
         self.run_container()
