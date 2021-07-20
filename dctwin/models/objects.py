@@ -1,4 +1,3 @@
-from decimal import Decimal
 from typing import Optional, OrderedDict
 
 from pydantic import BaseModel, validator
@@ -27,21 +26,21 @@ class ACUModel(BaseModel):
 
 class ACU(ObjectModel):
     id: str
-    model: str = ''
+    model: str = ""
     orientation: int
-    supply_temperature: Decimal
-    flow_rate: Decimal
+    supply_temperature: float
+    flow_rate: float
     supply_face: Optional[Face]
     return_face: Optional[Face]
 
-    def calculate_face_area(self, face: Face) -> Decimal:
+    def calculate_face_area(self, face: Face) -> float:
         if face in (Face.front, Face.rear):
             return self.size.dx / 2 * self.size.dz / 2
         if face in (Face.left, Face.right):
             return self.size.dx / 2 * self.size.dz / 2
         if face in (Face.bottom, Face.top):
             return self.size.dx / 2 * self.size.dz / 2
-        raise ValueError(f'No such face: {face}')
+        raise ValueError(f"No such face: {face}")
 
     @property
     def supply_area(self):
@@ -52,8 +51,8 @@ class ACU(ObjectModel):
         return self.calculate_face_area(self.return_face)
 
     @property
-    def supply_kelvin(self) -> Decimal:
-        return self.supply_temperature + Decimal(273.15)
+    def supply_kelvin(self) -> float:
+        return self.supply_temperature + float(273.15)
 
     @property
     def k(self) -> float:
@@ -77,11 +76,11 @@ class ACU(ObjectModel):
 
     @property
     def supply_name(self) -> str:
-        return f'acu_supply_{self.id}'
+        return f"acu_supply_{self.id}"
 
     @property
     def return_name(self) -> str:
-        return f'acu_return_{self.id}'
+        return f"acu_return_{self.id}"
 
 
 class RackModel(BaseModel):
@@ -93,9 +92,9 @@ class RackModel(BaseModel):
 class Rack(ObjectModel):
     id: str
     model: str
-    x: Decimal
-    y: Decimal
-    z: Decimal
+    x: float
+    y: float
+    z: float
     orientation: int
     has_blanking_panel: Optional[bool]
 
@@ -111,25 +110,25 @@ class Objects(BaseModel):
     def rack_model(self, rack_id):
         return self.rack_models[self.racks[rack_id].model]
 
-    @validator('acus')
+    @validator("acus")
     def validate_acus(cls, v, values):
         for acu in v.values():
-            acu_model = values['acu_models'][acu.model]
+            acu_model = values["acu_models"][acu.model]
             acu.supply_face = acu_model.supply_face.side
             acu.return_face = acu_model.return_face.side
             acu.size = acu_model.size
         return v
 
-    @validator('racks')
+    @validator("racks")
     def validate_racks(cls, v, values):
         for rack in v.values():
-            rack_model = values['rack_models'][rack.model]
+            rack_model = values["rack_models"][rack.model]
             rack.size = rack_model.size
         return v
 
-    @validator('servers')
+    @validator("servers")
     def validate_servers(cls, v, values):
         for server in v.values():
-            server_model = values['server_models'][server.model]
+            server_model = values["server_models"][server.model]
             server.occupation = server_model.occupation
         return v

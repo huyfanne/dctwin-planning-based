@@ -5,16 +5,15 @@ from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field, validator
 
-from dctwin.models.basics import (ACUConfig, Face, RoomConfig, ServerConfig,
-                                  Size, Vertex)
+from dctwin.models.basics import ACUConfig, Face, RoomConfig, ServerConfig, Size, Vertex
 from dctwin.models.objects import Objects
 
 
 class VentOpening(BaseModel):
-    width: Decimal
-    length: Decimal
-    offset_h: Decimal
-    offset_v: Decimal
+    width: float
+    length: float
+    offset_h: float
+    offset_v: float
 
 
 class PartitionWall(BaseModel):
@@ -30,7 +29,7 @@ class Duct(BaseModel):
 
 
 class Ceiling(BaseModel):
-    height: Decimal
+    height: float
     duct_in_list: List[Duct]
     duct_out_list: List[Duct]
 
@@ -47,7 +46,7 @@ class Constructions(BaseModel):
 
 class Room(BaseModel):
     name: str
-    height: Decimal
+    height: float
     plane_outline: List[Vertex]
 
     constructions: Constructions

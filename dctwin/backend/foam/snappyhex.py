@@ -1,7 +1,6 @@
 import math
 import os
 from dataclasses import dataclass
-from decimal import Decimal
 from logging import Logger
 from pathlib import Path
 from typing import Optional
@@ -39,9 +38,7 @@ def generate_block_dict(room: Room):
         if vertex.y > v_max.y:
             v_max.y = vertex.y
 
-    # base_size = Decimal('0.280')
     base_size = environ.base_size
-
     x_cells = math.ceil((v_max.x - v_min.x) / base_size)
     if base_size * x_cells != (v_max.x - v_min.x):
         v_max.x = x_cells * base_size - v_min.x
@@ -52,22 +49,15 @@ def generate_block_dict(room: Room):
     if base_size * z_cells != (v_max.z - v_min.z):
         v_max.z = z_cells * base_size - v_min.z
 
-    v_min.x -= Decimal(0.1)
-    v_min.y -= Decimal(0.1)
-    v_min.z -= Decimal(0.1)
-    v_max.x += Decimal(0.1)
-    v_max.y += Decimal(0.1)
-    v_max.z += Decimal(0.1)
-    places = Decimal(10) ** -3
-    v_min.x = v_min.x.quantize(places)
-    v_min.y = v_min.y.quantize(places)
-    v_min.z = v_min.z.quantize(places)
-    v_max.x = v_max.x.quantize(places)
-    v_max.y = v_max.y.quantize(places)
-    v_max.z = v_max.z.quantize(places)
+    v_min.x -= 0.1
+    v_min.y -= 0.1
+    v_min.z -= 0.1
+    v_max.x += 0.1
+    v_max.y += 0.1
+    v_max.z += 0.1
 
-    template = template_env.get_template('mesh/blockMeshDict.j2')
-    with open(Path(environ.CASE_DIR, 'system/blockMeshDict'), 'w') as f:
+    template = template_env.get_template("mesh/blockMeshDict.j2")
+    with open(Path(environ.CASE_DIR, "system/blockMeshDict"), "w") as f:
         f.write(
             template.render(
                 v_max=v_max,
@@ -84,27 +74,27 @@ def generate_snappy_dict(
 ):
     files = os.listdir(Path(environ.GEOMETRY_DIR))
     files.sort()
-    files = list(filter(lambda x: '.stl' in x, files))
+    files = list(filter(lambda x: ".stl" in x, files))
     new_field_config = {
-        'room_wall': {'type': 'wall', 'level': 1, 'refine_level': '(0 1)'},
-        'partition_wall': {'type': 'wall', 'level': 1, 'refine_level': '(0 1)'},
-        'acu_wall': {'type': 'wall', 'level': 2, 'refine_level': '(0 2)'},
-        'acu_return': {'type': 'patch', 'level': 2, 'refine_level': '(0 2)'},
-        'acu_supply': {'type': 'patch', 'level': 2, 'refine_level': '(0 2)'},
-        'server_inlet': {'type': 'patch', 'level': 2, 'refine_level': '(0 3)'},
-        'server_outlet': {'type': 'patch', 'level': 2, 'refine_level': '(0 3)'},
-        'server_wall': {'type': 'wall', 'level': 2, 'refine_level': '(0 3)'},
-        'rack_wall': {
-            'type': 'wall',
-            'level': 2,
-            'refine_level': '(0 2)',
-            'faceType': 'baffle',
+        "room_wall": {"type": "wall", "level": 1, "refine_level": "(0 1)"},
+        "partition_wall": {"type": "wall", "level": 1, "refine_level": "(0 1)"},
+        "acu_wall": {"type": "wall", "level": 2, "refine_level": "(0 2)"},
+        "acu_return": {"type": "patch", "level": 2, "refine_level": "(0 2)"},
+        "acu_supply": {"type": "patch", "level": 2, "refine_level": "(0 2)"},
+        "server_inlet": {"type": "patch", "level": 2, "refine_level": "(0 3)"},
+        "server_outlet": {"type": "patch", "level": 2, "refine_level": "(0 3)"},
+        "server_wall": {"type": "wall", "level": 2, "refine_level": "(0 3)"},
+        "rack_wall": {
+            "type": "wall",
+            "level": 2,
+            "refine_level": "(0 2)",
+            "faceType": "baffle",
         },
-        'ceiling': {
-            'type': 'wall',
-            'level': 2,
-            'refine_level': '(0 2)',
-            'faceType': 'baffle',
+        "ceiling": {
+            "type": "wall",
+            "level": 2,
+            "refine_level": "(0 2)",
+            "faceType": "baffle",
         },
     }
     if field_config:
@@ -112,49 +102,49 @@ def generate_snappy_dict(
     mesh_list = []
     baffle_faces = []
     for filename in files:
-        mesh_name = filename.split('.')[0]
+        mesh_name = filename.split(".")[0]
         mesh_category = None
         for k, v in new_field_config.items():
             if mesh_name.startswith(k):
                 mesh_category = v
                 break
         if mesh_category is None:
-            raise ValueError('No field config for snappyHex')
+            raise ValueError("No field config for snappyHex")
         mesh = Mesh(
             name=mesh_name,
-            level=mesh_category['level'],
-            type=mesh_category['type'],
-            refine_level=mesh_category['refine_level'],
+            level=mesh_category["level"],
+            type=mesh_category["type"],
+            refine_level=mesh_category["refine_level"],
         )
-        if mesh_category.get('faceType'):
-            mesh.face_type = mesh_category['faceType']
+        if mesh_category.get("faceType"):
+            mesh.face_type = mesh_category["faceType"]
             baffle_faces.append(mesh)
         mesh_list.append(mesh)
 
     assert len(mesh_list) == len(files)
-    with open(Path(environ.CASE_DIR, 'system/surfaceFeatureExtractDict'), 'w') as f:
+    with open(Path(environ.CASE_DIR, "system/surfaceFeatureExtractDict"), "w") as f:
         f.write(
-            template_env.get_template('mesh/surfaceFeatureExtractDict.j2').render(
+            template_env.get_template("mesh/surfaceFeatureExtractDict.j2").render(
                 files=files
             )
         )
 
     # location = Vertex(x=(room.plane_outline[0].x + room.plane_outline[2].y)/2,
     #                   y=(room.plane_outline[0].y + room.plane_outline[2].y)/2,
-    #                   z=room.height - Decimal(0.01))
+    #                   z=room.height - 0.01)
     first_rack = list(room.objects.racks.values())[0]
     location = Vertex(
         x=first_rack.x, y=first_rack.y, z=(room.height + first_rack.size.dz) / 2
     )
-    with open(Path(environ.CASE_DIR, 'system/snappyHexMeshDict'), 'w') as f:
+    with open(Path(environ.CASE_DIR, "system/snappyHexMeshDict"), "w") as f:
         f.write(
-            template_env.get_template('mesh/snappyHexMeshDict.j2').render(
+            template_env.get_template("mesh/snappyHexMeshDict.j2").render(
                 mesh_list=mesh_list, location=location
             )
         )
-    with open(Path(environ.CASE_DIR, 'system/createPatchDict'), 'w') as f:
+    with open(Path(environ.CASE_DIR, "system/createPatchDict"), "w") as f:
         f.write(
-            template_env.get_template('mesh/createPatchDict.j2').render(
+            template_env.get_template("mesh/createPatchDict.j2").render(
                 baffle_faces=baffle_faces
             )
         )
@@ -167,16 +157,16 @@ def generate_snappy_dict(
             process_num = 4
         elif process_num >= 2:
             process_num = 2
-        with open(Path(environ.CASE_DIR, 'system/decomposeParDict'), 'w') as f:
+        with open(Path(environ.CASE_DIR, "system/decomposeParDict"), "w") as f:
             f.write(
-                template_env.get_template('system/decomposeParDict.j2').render(
+                template_env.get_template("system/decomposeParDict.j2").render(
                     process_num=process_num
                 )
             )
 
 
 class SnappyHexBackend(Backend):
-    docker_image = 'openfoamplus/of_v1912_centos73'
+    docker_image = "openfoamplus/of_v1912_centos73"
 
     @property
     def command(self):
@@ -208,4 +198,4 @@ class SnappyHexBackend(Backend):
         if self.dry_run:
             return
         self.run_container()
-        click.echo('***** Mesh finished *****\n\n')
+        click.echo("***** Mesh finished *****\n\n")

@@ -5,7 +5,6 @@ form.omega.value = form.epsilon.value / (0.09 * form.k.value)
 """
 import shutil
 import subprocess
-from decimal import Decimal
 from logging import Logger
 from pathlib import Path
 from typing import List, Union
@@ -26,32 +25,32 @@ class Builder:
         self.server_list = list(room.objects.servers.values())
 
     def run(self):
-        self.render('alphat')
-        self.render('epsilon')
-        self.render('nut')
-        self.render('k')
-        self.render('p')
-        self.render('p_rgh')
-        self.render('T')
-        self.render('U')
+        self.render("alphat")
+        self.render("epsilon")
+        self.render("nut")
+        self.render("k")
+        self.render("p")
+        self.render("p_rgh")
+        self.render("T")
+        self.render("U")
 
     @classmethod
     def get_k_and_epsilon(cls, obj_list: List[Union[ACU, Server]]):
         """Get the minimum value greater than 0"""
         _obj_list = [acu for acu in obj_list if acu.k != 0]
         if len(_obj_list) == 0:
-            raise ValueError('Please check the ACU flow rate value')
+            raise ValueError("Please check the ACU flow rate value")
         obj = min(_obj_list, key=lambda x: x.k)
         return obj.k, obj.epsilon
 
     def render(self, filename):
         acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_list)
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_list)
-        with open(Path(environ.CASE_DIR, f'0/{filename}'), 'w') as f:
+        with open(Path(environ.CASE_DIR, f"0/{filename}"), "w") as f:
             f.write(
-                template_env.get_template(f'0/{filename}.j2').render(
+                template_env.get_template(f"0/{filename}.j2").render(
                     init_temperature=24 + 273.15,
-                    p_rgh=self.room_dz * Decimal('9.81'),
+                    p_rgh=round(self.room_dz * 9.81, 10),
                     acu_list=self.acu_list,
                     server_list=self.server_list,
                     acu_k=acu_k,
@@ -65,9 +64,9 @@ class Builder:
 def parse_result(case: str):
     results = []
     # case/postProcessing/probes/0/T
-    with open(f'{case}/postProcessing/probes/0/T') as f:
+    with open(f"{case}/postProcessing/probes/0/T") as f:
         for i in f:
-            if i.startswith('#'):
+            if i.startswith("#"):
                 continue
             else:
                 results.append(
@@ -87,18 +86,18 @@ def run(
     dry_run: bool = False,
 ):
     if steady:
-        solver = 'buoyantBoussinesqSimpleFoam'
+        solver = "buoyantBoussinesqSimpleFoam"
     else:
-        solver = 'buoyantBoussinesqPimpleFoam'
+        solver = "buoyantBoussinesqPimpleFoam"
 
     if output is not None:
         environ.CASE_DIR = Path(output).absolute()
-        logger.info(f'Copying data to {environ.CASE_DIR}')
+        logger.info(f"Copying data to {environ.CASE_DIR}")
 
-        shutil.copytree('case/0', f'{output}/0')
-        shutil.copytree('case/constant', f'{output}/constant')
-        shutil.copytree('case/system', f'{output}/system')
-        Path(environ.CASE_DIR, 'case.foam').touch(exist_ok=True)
+        shutil.copytree("case/0", f"{output}/0")
+        shutil.copytree("case/constant", f"{output}/constant")
+        shutil.copytree("case/system", f"{output}/system")
+        Path(environ.CASE_DIR, "case.foam").touch(exist_ok=True)
 
     generate_control_dict(
         room.probes,
@@ -110,40 +109,40 @@ def run(
     )
     builder = Builder(room)
     builder.run()
-    logger.info(f'Generate boundary in {environ.CASE_DIR}')
+    logger.info(f"Generate boundary in {environ.CASE_DIR}")
 
     if process_num > 1:
         command = [
-            'docker',
-            'run',
-            '--rm',
-            '-v',
-            f'{environ.CASE_DIR}:/data',
-            '-w',
-            '/data',
-            'openfoamplus/of_v1912_centos73',
-            'bash',
-            '-c',
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{environ.CASE_DIR}:/data",
+            "-w",
+            "/data",
+            "openfoamplus/of_v1912_centos73",
+            "bash",
+            "-c",
             '"source /opt/OpenFOAM/setImage_v1912.sh '
-            '&& decomposePar -force '
+            "&& decomposePar -force "
             f'&& mpirun -np {process_num} --allow-run-as-root {solver} -parallel"',
         ]
     else:
         command = [
-            'docker',
-            'run',
-            '--rm',
-            '-v',
-            f'{environ.CASE_DIR}:/data',
-            '-w',
-            '/data',
-            'openfoamplus/of_v1912_centos73',
-            'bash',
-            '-c',
-            'source /opt/OpenFOAM/setImage_v1912.sh',
-            '&&',
-            'echo',
-            '&&',
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{environ.CASE_DIR}:/data",
+            "-w",
+            "/data",
+            "openfoamplus/of_v1912_centos73",
+            "bash",
+            "-c",
+            "source /opt/OpenFOAM/setImage_v1912.sh",
+            "&&",
+            "echo",
+            "&&",
             solver,
         ]
     if dry_run is False:

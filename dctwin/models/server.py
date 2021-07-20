@@ -1,4 +1,3 @@
-from decimal import Decimal
 from typing import Optional
 
 from pydantic import BaseModel
@@ -21,7 +20,7 @@ class Server(BaseModel):
     rack_id: str
     model: str
     slot: int
-    heat_load: Decimal
+    heat_load: float
     flow_rate: float
     # Temperature -> Flow rate, example: 27 -> 0.05
     dynamic_flow_rate_high: Optional[float] = None
@@ -29,15 +28,15 @@ class Server(BaseModel):
     dynamic_temperature_low: Optional[float] = None
     occupation: Optional[int] = None
     orientation: Optional[int] = None
-    width: Optional[Decimal] = None
+    width: Optional[float] = None
 
     @property
     def t_sink(self) -> str:
-        return f'tSink_{self.id}'
+        return f"tSink_{self.id}"
 
     @property
     def u_sink(self) -> str:
-        return f'uSink_{self.id}'
+        return f"uSink_{self.id}"
 
     @property
     def height(self) -> float:
@@ -72,8 +71,8 @@ class Server(BaseModel):
 
     @property
     def inlet_name(self) -> str:
-        return f'server_inlet_{self.id}'
+        return f"server_inlet_{self.id}"
 
     @property
     def outlet_name(self) -> str:
-        return f'server_outlet_{self.id}'
+        return f"server_outlet_{self.id}"

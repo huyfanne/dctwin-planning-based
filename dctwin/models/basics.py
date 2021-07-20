@@ -10,36 +10,36 @@ from pydantic.fields import Field
 
 
 class Size(BaseModel):
-    dx: Decimal
-    dy: Decimal
-    dz: Decimal
+    dx: float
+    dy: float
+    dz: float
 
 
 class Vertex(BaseModel):
-    x: Decimal
-    y: Decimal
-    z: Decimal
+    x: float
+    y: float
+    z: float
 
 
 class Face(str, Enum):
-    front = 'front'
-    rear = 'rear'
-    left = 'left'
-    right = 'right'
-    top = 'top'
-    bottom = 'bottom'
+    front = "front"
+    rear = "rear"
+    left = "left"
+    right = "right"
+    top = "top"
+    bottom = "bottom"
 
 
 class ACUConfig(BaseModel):
-    supply_temperature: Decimal
-    fan_speed_ratio: Decimal
-    flow_rate: Decimal
+    supply_temperature: float
+    fan_speed_ratio: float
+    flow_rate: float
 
 
 class ServerConfig(BaseModel):
-    # load_ratio: Decimal
-    flow_rate: Decimal
-    heat_load: Decimal
+    # load_ratio: float
+    flow_rate: float
+    heat_load: float
 
 
 class RoomConfig(BaseModel):
