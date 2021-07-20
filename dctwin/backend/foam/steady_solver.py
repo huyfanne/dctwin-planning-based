@@ -65,7 +65,6 @@ class Builder:
 
 def parse_result(case: str):
     results = []
-    # case/postProcessing/probes/0/T
     with open(f"{case}/postProcessing/probes/0/T") as f:
         for i in f:
             if i.startswith("#"):
