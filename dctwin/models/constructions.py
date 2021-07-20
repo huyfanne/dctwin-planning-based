@@ -5,7 +5,8 @@ from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field, validator
 
-from dctwin.models.basics import ACUConfig, Face, RoomConfig, ServerConfig, Size, Vertex
+from dctwin.models.basics import (ACUConfig, Face, RoomConfig, ServerConfig,
+                                  Size, Vertex)
 from dctwin.models.objects import Objects
 
 

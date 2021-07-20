@@ -1,5 +1,4 @@
 import abc
-import os
 from typing import Union
 
 import click
@@ -11,8 +10,8 @@ from dctwin.models import Room
 
 
 class Backend(abc.ABC):
-    data_dir = '/data'
-    geometry_dir = '/data/constant/triSurface'
+    data_dir = "/data"
+    geometry_dir = "/data/constant/triSurface"
 
     def __init__(
         self, client: DockerClient, dry_run: bool = False, process_num: int = 1
@@ -48,12 +47,12 @@ class Backend(abc.ABC):
                 auto_remove=auto_remove,
                 volumes={
                     str(environ.CASE_DIR): {
-                        'bind': self.data_dir,
-                        'mode': 'rw',
+                        "bind": self.data_dir,
+                        "mode": "rw",
                     },
                     str(environ.GEOMETRY_DIR): {
-                        'bind': self.geometry_dir,
-                        'mode': 'rw',
+                        "bind": self.geometry_dir,
+                        "mode": "rw",
                     },
                 },
                 environment=environment,

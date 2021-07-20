@@ -78,14 +78,14 @@ def parse_result(case: str):
 
 
 def run(
-        room: Room,
-        steady=True,
-        output: str = None,
-        delta_t: int = 1,
-        write_interval: int = 100,
-        end_time: int = 500,
-        process_num: int = 1,
-        dry_run: bool = False,
+    room: Room,
+    steady=True,
+    output: str = None,
+    delta_t: int = 1,
+    write_interval: int = 100,
+    end_time: int = 500,
+    process_num: int = 1,
+    dry_run: bool = False,
 ):
     if steady:
         solver = 'buoyantBoussinesqSimpleFoam'
@@ -160,11 +160,15 @@ class SteadySolverBackend(Backend):
     @property
     def command(self):
         if self.process_num > 1:
-            command = "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && " \
-                      "decomposePar -force && " \
-                      f"mpirun --allow-run-as-root -np {self.process_num} {self.solver} -parallel'"
+            command = (
+                "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
+                "decomposePar -force && "
+                f"mpirun --allow-run-as-root -np {self.process_num} {self.solver} -parallel'"
+            )
         else:
-            command = f"bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && {self.solver}'"
+            command = (
+                f"bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && {self.solver}'"
+            )
         return command
 
     def run(self, room: Room):
@@ -191,7 +195,6 @@ class SteadySolverBackend(Backend):
                     continue
                 else:
                     results.append(
-                        list(map(lambda x: round(float(x) - 273.15, 2),
-                                 i.split()[1:]))
+                        list(map(lambda x: round(float(x) - 273.15, 2), i.split()[1:]))
                     )
         return results[-1]
