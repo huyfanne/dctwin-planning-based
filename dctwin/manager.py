@@ -48,7 +48,7 @@ class DCTwinManager:
                 self.docker_client, process_num=self.solve_process
             )
 
-    def run_simulation(self, room: Room,) -> bool:
+    def run_simulation(self, room: Room) -> bool:
         try:
             self.geometry_backend.run(room)
             self.mesh_backend.run(room)

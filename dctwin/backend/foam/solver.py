@@ -5,6 +5,7 @@ form.omega.value = form.epsilon.value / (0.09 * form.k.value)
 """
 import abc
 import shutil
+import time
 from logging import Logger
 from pathlib import Path
 from typing import List, Union
@@ -118,11 +119,14 @@ class SolverBackend(Backend):
             if mesh_path is None:
                 mesh_path = environ.CASE_DIR
 
+            output_path = Path(output_dir)
+            output_path.mkdir(exist_ok=True)
             environ.CASE_DIR = Path(output_dir).absolute()
             shutil.copytree(f"{mesh_path}/0", f"{output_dir}/0")
             shutil.copytree(f"{mesh_path}/constant", f"{output_dir}/constant")
             shutil.copytree(f"{mesh_path}/system", f"{output_dir}/system")
             Path(environ.CASE_DIR, "case.foam").touch(exist_ok=True)
+            time.sleep(1)
 
         self.generate_control_dict(room)
 
