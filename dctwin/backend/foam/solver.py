@@ -3,13 +3,14 @@ form.k.value = 1.5 * Math.pow(form.Tu.value/100,2) * Math.pow(form.u_freestream.
 form.epsilon.value = 0.09 * Math.pow(form.k.value,1.5) / form.Tu_L.value
 form.omega.value = form.epsilon.value / (0.09 * form.k.value)
 """
+import abc
 import shutil
-import subprocess
 from logging import Logger
 from pathlib import Path
 from typing import List, Union
 
 from dctwin.backend import template_env
+from dctwin.backend.core import Backend
 from dctwin.backend.foam.core import generate_control_dict
 from dctwin.config import environ
 from dctwin.models import ACU, Server
@@ -63,7 +64,6 @@ class Builder:
 
 def parse_result(case: str):
     results = []
-    # case/postProcessing/probes/0/T
     with open(f"{case}/postProcessing/probes/0/T") as f:
         for i in f:
             if i.startswith("#"):
@@ -75,77 +75,88 @@ def parse_result(case: str):
     return results[-1]
 
 
-def run(
-    room: Room,
-    steady=True,
-    output: str = None,
-    delta_t: int = 1,
-    write_interval: int = 100,
-    end_time: int = 500,
-    process_num: int = 1,
-    dry_run: bool = False,
-):
-    if steady:
-        solver = "buoyantBoussinesqSimpleFoam"
-    else:
-        solver = "buoyantBoussinesqPimpleFoam"
+class SolverBackend(Backend):
+    docker_image = "openfoamplus/of_v1912_centos73"
 
-    if output is not None:
-        environ.CASE_DIR = Path(output).absolute()
-        logger.info(f"Copying data to {environ.CASE_DIR}")
+    @property
+    @abc.abstractmethod
+    def solver(self):
+        raise NotImplementedError
 
-        shutil.copytree("case/0", f"{output}/0")
-        shutil.copytree("case/constant", f"{output}/constant")
-        shutil.copytree("case/system", f"{output}/system")
-        Path(environ.CASE_DIR, "case.foam").touch(exist_ok=True)
-
-    generate_control_dict(
-        room.probes,
-        steady=steady,
-        delta_t=delta_t,
-        write_interval=write_interval,
-        end_time=end_time,
-        process_num=process_num,
-    )
-    builder = Builder(room)
-    builder.run()
-    logger.info(f"Generate boundary in {environ.CASE_DIR}")
-
-    if process_num > 1:
-        command = [
-            "docker",
-            "run",
-            "--rm",
-            "-v",
-            f"{environ.CASE_DIR}:/data",
-            "-w",
-            "/data",
-            "openfoamplus/of_v1912_centos73",
-            "bash",
-            "-c",
-            '"source /opt/OpenFOAM/setImage_v1912.sh '
-            "&& decomposePar -force "
-            f'&& mpirun -np {process_num} --allow-run-as-root {solver} -parallel"',
-        ]
-    else:
-        command = [
-            "docker",
-            "run",
-            "--rm",
-            "-v",
-            f"{environ.CASE_DIR}:/data",
-            "-w",
-            "/data",
-            "openfoamplus/of_v1912_centos73",
-            "bash",
-            "-c",
-            "source /opt/OpenFOAM/setImage_v1912.sh",
-            "&&",
-            "echo",
-            "&&",
-            solver,
-        ]
-    if dry_run is False:
-        subprocess.run(command)
-    else:
+    @property
+    def command(self):
+        if self.process_num > 1:
+            command = (
+                "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
+                "decomposePar -force && "
+                f"mpirun --allow-run-as-root -np {self.process_num} {self.solver} -parallel'"
+            )
+        else:
+            command = (
+                f"bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && {self.solver}'"
+            )
         return command
+
+    @classmethod
+    def probe_result(cls) -> list:
+        results = []
+        with open(f"{environ.CASE_DIR}/postProcessing/probes/0/T") as f:
+            for i in f:
+                if i.startswith("#"):
+                    continue
+                else:
+                    results.append(
+                        list(map(lambda x: round(float(x) - 273.15, 2), i.split()[1:]))
+                    )
+        return results[-1]
+
+    def generate_control_dict(self, room: Room):
+        raise NotImplementedError
+
+    def run(self, room: Room, mesh_path=None, output_dir=None):
+        if output_dir is not None:
+            if mesh_path is None:
+                mesh_path = environ.CASE_DIR
+
+            environ.CASE_DIR = Path(output_dir).absolute()
+            shutil.copytree(f"{mesh_path}/0", f"{output_dir}/0")
+            shutil.copytree(f"{mesh_path}/constant", f"{output_dir}/constant")
+            shutil.copytree(f"{mesh_path}/system", f"{output_dir}/system")
+            Path(environ.CASE_DIR, "case.foam").touch(exist_ok=True)
+
+        self.generate_control_dict(room)
+
+        builder = Builder(room)
+        builder.run()
+
+        if self.dry_run:
+            return
+        self.run_container()
+
+
+class SteadySolverBackend(SolverBackend):
+    solver = "buoyantBoussinesqSimpleFoam"
+
+    def generate_control_dict(self, room: Room):
+        generate_control_dict(
+            room.probes,
+            steady=True,
+            delta_t=1,
+            write_interval=100,
+            end_time=500,
+            process_num=self.process_num,
+        )
+
+
+class TransientSolverBackend(SolverBackend):
+    solver = "buoyantBoussinesqPimpleFoam"
+
+    def generate_control_dict(self, room: Room):
+        generate_control_dict(
+            room.probes,
+            steady=True,
+            delta_t=1e-5,
+            write_interval=10,
+            end_time=50,
+            process_num=self.process_num,
+        )

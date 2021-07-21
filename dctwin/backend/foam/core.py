@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
 from dctwin.backend import template_dir, template_env
 from dctwin.config import environ
@@ -10,7 +10,7 @@ from dctwin.models.basics import Vertex
 def generate_control_dict(
     probes: List[Vertex] = None,
     steady=True,
-    delta_t: int = 1,
+    delta_t: Union[int, float] = 1,
     write_interval: int = 100,
     end_time: int = 500,
     process_num: int = 1,
