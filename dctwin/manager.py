@@ -4,7 +4,7 @@ import click
 import docker
 
 from dctwin.backend.foam.snappyhex import SnappyHexBackend
-from dctwin.backend.foam.steady_solver import SteadySolverBackend
+from dctwin.backend.foam.solver import SteadySolverBackend, TransientSolverBackend
 from dctwin.backend.geometry.salome import SalomeBackend
 from dctwin.config import environ
 from dctwin.models import Room
@@ -27,7 +27,8 @@ class DCTwinManager:
             environ.set_case_dir(data_dir)
         self.geometry_backend: Optional[SalomeBackend] = None
         self.mesh_backend: Optional[SnappyHexBackend] = None
-        self.solver_backend: Optional[SteadySolverBackend] = None
+        self.steady_solver_backend: Optional[SteadySolverBackend] = None
+        self.transient_solver_backend: Optional[TransientSolverBackend] = None
         self.mesh_process = mesh_process
         self.solve_process = solve_process
         self.setup_backend()
@@ -37,15 +38,21 @@ class DCTwinManager:
         self.mesh_backend = SnappyHexBackend(
             self.docker_client, process_num=self.mesh_process
         )
-        self.solver_backend = SteadySolverBackend(
+        self.steady_solver_backend = SteadySolverBackend(
+            self.docker_client, process_num=self.solve_process
+        )
+        self.transient_solver_backend = TransientSolverBackend(
             self.docker_client, process_num=self.solve_process
         )
 
-    def run_simulation(self, room: Room) -> bool:
+    def run_simulation(self, room: Room, steady: bool=True) -> bool:
         try:
             self.geometry_backend.run(room)
             self.mesh_backend.run(room)
-            self.solver_backend.run(room)
+            if steady:
+                self.steady_solver_backend.run(room)
+            else:
+                self.transient_solver_backend.run(room)
         except Exception as e:
             # Todo: use exact exceptions
             click.echo(e)
