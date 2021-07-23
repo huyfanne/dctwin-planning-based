@@ -115,10 +115,7 @@ class SolverBackend(Backend):
         raise NotImplementedError
 
     def run(self, room: Room, mesh_path=None, output_dir=None):
-        if output_dir is not None:
-            if mesh_path is None:
-                mesh_path = environ.CASE_DIR
-
+        if output_dir is not None and mesh_path is not None:
             output_path = Path(output_dir)
             output_path.mkdir(exist_ok=True)
             environ.CASE_DIR = Path(output_dir).absolute()
