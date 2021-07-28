@@ -119,9 +119,12 @@ class SolverBackend(Backend):
             output_path = Path(output_dir)
             output_path.mkdir(exist_ok=True)
             environ.CASE_DIR = Path(output_dir).absolute()
-            shutil.copytree(f"{mesh_path}/0", f"{output_dir}/0")
-            shutil.copytree(f"{mesh_path}/constant", f"{output_dir}/constant")
-            shutil.copytree(f"{mesh_path}/system", f"{output_dir}/system")
+            if not Path(f"{output_dir}/0").exists():
+                shutil.copytree(f"{mesh_path}/0", f"{output_dir}/0")
+            if not Path(f"{output_dir}/constant").exists():
+                shutil.copytree(f"{mesh_path}/constant", f"{output_dir}/constant")
+            if not Path(f"{output_dir}/system").exists():
+                shutil.copytree(f"{mesh_path}/system", f"{output_dir}/system")
             Path(environ.CASE_DIR, "case.foam").touch(exist_ok=True)
             time.sleep(1)
 
@@ -155,7 +158,7 @@ class TransientSolverBackend(SolverBackend):
     def generate_control_dict(self, room: Room):
         generate_control_dict(
             room.probes,
-            steady=True,
+            steady=False,
             delta_t=1e-5,
             write_interval=10,
             end_time=50,
