@@ -10,8 +10,8 @@ from dctwin.models import Room
 
 
 class Backend(abc.ABC):
-    data_dir = "/data"
-    geometry_dir = "/data/constant/triSurface"
+    volume_data_dir = "/data"
+    volume_geometry_dir = f"{volume_data_dir}/constant/triSurface"
 
     def __init__(
         self, client: DockerClient, dry_run: bool = False, process_num: int = 1
@@ -38,6 +38,7 @@ class Backend(abc.ABC):
         self,
         environment: dict = None,
         auto_remove: bool = True,
+        user: int = None,
         working_dir: str = None,
     ) -> None:
         try:
@@ -47,16 +48,15 @@ class Backend(abc.ABC):
                 auto_remove=auto_remove,
                 volumes={
                     str(environ.CASE_DIR): {
-                        "bind": self.data_dir,
-                        "mode": "rw",
-                    },
-                    str(environ.GEOMETRY_DIR): {
-                        "bind": self.geometry_dir,
+                        "bind": self.volume_data_dir,
                         "mode": "rw",
                     },
                 },
+                user=user,
                 environment=environment,
-                working_dir=working_dir if working_dir is not None else self.data_dir,
+                working_dir=working_dir
+                if working_dir is not None
+                else self.volume_data_dir,
                 detach=True,
             )
             stream = container.logs(stream=True, follow=True)

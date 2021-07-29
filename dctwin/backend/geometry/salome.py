@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import click
@@ -9,7 +10,7 @@ from dctwin.models.constructions import Room
 
 
 class SalomeBackend(Backend):
-    docker_image = 'charact3/salome-9'
+    docker_image = "charact3/salome-9"
 
     def run(self, room: Room):
         self._pre_process(room)
@@ -19,23 +20,29 @@ class SalomeBackend(Backend):
 
     @property
     def command(self):
-        return ['salome', 'start', '-t', 'geometry_script.py']
+        return [
+            "bash",
+            "-c",
+            "salome start -t geometry_script.py "
+            f"&& chown -R {os.getuid}:{os.getgid} {self.volume_data_dir}",
+        ]
 
     def _pre_process(self, room: Room):
         """Prepare files needed"""
         image = self.client.images.get(self.docker_image)
         if image is None:
-            click.echo('Salome image not existed, try to pull...')
+            click.echo("Salome image not existed, try to pull...")
             self.client.images.pull(self.docker_image)
 
-        environ.GEOMETRY_DIR.mkdir(parents=True, exist_ok=True)
+        environ.CASE_DIR.mkdir(parents=True, exist_ok=True)
+        environ.geometry_dir.mkdir(parents=True, exist_ok=True)
 
-        geometry_script = Path(environ.GEOMETRY_DIR, 'geometry_script.py')
-        geometry_description = Path(environ.GEOMETRY_DIR, 'geometry.json')
-        with open(geometry_description, 'w') as f:
+        geometry_script = Path(environ.geometry_dir, "geometry_script.py")
+        geometry_description = Path(environ.geometry_dir, "geometry.json")
+        with open(geometry_description, "w") as f:
             f.write(room.json())
-        template = template_env.get_template('salome/geometry_script.py')
-        with open(geometry_script, 'w') as f:
+        template = template_env.get_template("salome/geometry_script.py")
+        with open(geometry_script, "w") as f:
             f.write(template.render())
         self._clean_files = [geometry_script, geometry_description]
 
@@ -44,13 +51,13 @@ class SalomeBackend(Backend):
             file.unlink()
 
     def _run_backend(self):
-        working_path = self.geometry_dir
-        geometry_file = f'{working_path}/geometry.json'
+        working_path = self.volume_geometry_dir
+        geometry_file = f"{working_path}/geometry.json"
         self.run_container(
             environment={
-                'SRC_PATH': geometry_file,
-                'OUTPUT_PATH': working_path,
+                "SRC_PATH": geometry_file,
+                "OUTPUT_PATH": working_path,
             },
-            working_dir=self.geometry_dir,
+            working_dir=working_path,
         )
-        click.echo('***** Geometry finished *****\n\n')
+        click.echo("***** Geometry finished *****\n\n")

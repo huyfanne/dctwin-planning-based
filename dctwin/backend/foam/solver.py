@@ -4,6 +4,7 @@ form.epsilon.value = 0.09 * Math.pow(form.k.value,1.5) / form.Tu_L.value
 form.omega.value = form.epsilon.value / (0.09 * form.k.value)
 """
 import abc
+import os
 import shutil
 import time
 from logging import Logger
@@ -90,7 +91,7 @@ class SolverBackend(Backend):
             command = (
                 "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
                 "decomposePar -force && "
-                f"mpirun --allow-run-as-root -np {self.process_num} {self.solver} -parallel'"
+                f"mpirun -np {self.process_num} {self.solver} -parallel'"
             )
         else:
             command = (
@@ -135,7 +136,7 @@ class SolverBackend(Backend):
 
         if self.dry_run:
             return
-        self.run_container()
+        self.run_container(user=os.getuid())
 
 
 class SteadySolverBackend(SolverBackend):

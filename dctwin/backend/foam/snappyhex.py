@@ -72,7 +72,7 @@ def generate_block_dict(room: Room):
 def generate_snappy_dict(
     room: Room, field_config: Optional[dict] = None, process_num: int = 1
 ):
-    files = os.listdir(Path(environ.GEOMETRY_DIR))
+    files = os.listdir(Path(environ.geometry_dir))
     files.sort()
     files = list(filter(lambda x: ".stl" in x, files))
     new_field_config = {
@@ -175,7 +175,7 @@ class SnappyHexBackend(Backend):
                 "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
                 "blockMesh && surfaceFeatureExtract && "
                 "decomposePar -copyZero -force && "
-                f"mpirun --allow-run-as-root -np {self.process_num} snappyHexMesh -parallel -overwrite && "
+                f"mpirun -np {self.process_num} snappyHexMesh -parallel -overwrite && "
                 "reconstructParMesh -constant -mergeTol 6 && "
                 "createPatch -overwrite && "
                 "rm -rf /data/constant/triSurface/*.eMesh'"
@@ -197,5 +197,5 @@ class SnappyHexBackend(Backend):
         )
         if self.dry_run:
             return
-        self.run_container()
+        self.run_container(user=os.getuid())
         click.echo("***** Mesh finished *****\n\n")

@@ -4,7 +4,8 @@ import click
 import docker
 
 from dctwin.backend.foam.snappyhex import SnappyHexBackend
-from dctwin.backend.foam.solver import SteadySolverBackend, TransientSolverBackend
+from dctwin.backend.foam.solver import (SteadySolverBackend,
+                                        TransientSolverBackend)
 from dctwin.backend.geometry.salome import SalomeBackend
 from dctwin.config import environ
 from dctwin.models import Room
@@ -28,7 +29,9 @@ class DCTwinManager:
             environ.set_case_dir(data_dir)
         self.geometry_backend: Optional[SalomeBackend] = None
         self.mesh_backend: Optional[SnappyHexBackend] = None
-        self.solver_backend: Union[None, TransientSolverBackend, SteadySolverBackend] = None
+        self.solver_backend: Union[
+            None, TransientSolverBackend, SteadySolverBackend
+        ] = None
         self.mesh_process = mesh_process
         self.solve_process = solve_process
         self.steady = steady
