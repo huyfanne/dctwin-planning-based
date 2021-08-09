@@ -92,9 +92,6 @@ class RackModel(BaseModel):
 class Rack(ObjectModel):
     id: str
     model: str
-    x: float
-    y: float
-    z: float
     orientation: int
     has_blanking_panel: Optional[bool]
 

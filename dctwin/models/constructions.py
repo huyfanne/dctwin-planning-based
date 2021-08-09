@@ -1,12 +1,11 @@
 import json
 from decimal import Decimal
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, OrderedDict, Union
 
 from pydantic import BaseModel, Field, validator
 
-from dctwin.models.basics import (ACUConfig, Face, RoomConfig, ServerConfig,
-                                  Size, Vertex)
+from dctwin.models.basics import ACUConfig, Face, RoomConfig, ServerConfig, Size, Vertex
 from dctwin.models.objects import Objects
 
 
@@ -40,7 +39,7 @@ class RaisedFloor(BaseModel):
 
 
 class Constructions(BaseModel):
-    partition_wall_list: List[PartitionWall] = Field(default_factory=list)
+    partition_walls: OrderedDict[str, PartitionWall]
     raised_floor: Optional[RaisedFloor]
     ceiling: Optional[Ceiling]
 
@@ -50,6 +49,7 @@ class Room(BaseModel):
     height: float
     plane_outline: List[Vertex]
 
+    version: str = "0.1"
     constructions: Constructions
     objects: Objects
 
@@ -67,23 +67,6 @@ class Room(BaseModel):
             server.width = v.rack_models[rack.model].size.dx
         return v
 
-    def extract_config(self) -> RoomConfig:
-        return RoomConfig(
-            acu_configs={
-                acu.id: ACUConfig(
-                    supply_temperature=acu.supply_temperature,
-                    flow_rate=acu.flow_rate,
-                )
-                for acu in self.objects.acus.values()
-            },
-            server_configs={
-                server.id: ServerConfig(
-                    heat_load=server.heat_load, flow_rate=server.flow_rate
-                )
-                for server in self.objects.servers.values()
-            },
-        )
-
     def dump(self, file_path: Union[str, Path]) -> None:
         with open(file_path, "w") as f:
             f.write(self.json(indent=2))
@@ -92,16 +75,3 @@ class Room(BaseModel):
     def load(cls, file_path: "str") -> "Room":
         with open(file_path) as f:
             return cls(**json.load(f))
-
-    def apply_config(self, config: RoomConfig) -> None:
-        """Update acu and server by config object"""
-        for acu_id, acu_config in config.acu_configs.items():
-            acu = self.objects.acus.get(acu_id)
-            acu.fan_speed_ratio = acu_config.fan_speed_ratio
-            acu.supply_temperature = acu_config.supply_temperature
-            acu.config_flow_rate = acu_config.flow_rate
-        for server_id, server_config in config.server_configs.items():
-            server = self.objects.servers.get(server_id)
-            server.config_heat_load = server_config.heat_load
-            server.config_flow_rate = server_config.flow_rate
-        self.probes = config.probes
