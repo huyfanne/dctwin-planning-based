@@ -50,6 +50,12 @@ boundaryField
         value           uniform {{ acu_k }};
     }
 
+    "containment_.*"
+    {
+        type            kqRWallFunction;
+        value           uniform {{ acu_k }};
+    }
+
     "partition_wall_.*"
     {
         type            kqRWallFunction;

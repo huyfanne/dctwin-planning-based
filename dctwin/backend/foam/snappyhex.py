@@ -97,6 +97,18 @@ def generate_snappy_dict(
             "refine_level": "(0 2)",
             "faceType": "baffle",
         },
+        "duct": {
+            "type": "wall",
+            "level": 2,
+            "refine_level": "(0 2)",
+            "faceType": "baffle",
+        },
+        "containment": {
+            "type": "wall",
+            "level": 2,
+            "refine_level": "(0 2)",
+            "faceType": "baffle",
+        },
     }
     if field_config:
         new_field_config = {**new_field_config, **field_config}

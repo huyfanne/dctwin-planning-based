@@ -22,24 +22,34 @@ class PartitionWall(BaseModel):
     vent_opening_list: List[VentOpening] = Field(default_factory=list)
 
 
+class Containment(BaseModel):
+    size: Size
+    placement: Vertex
+    front: bool = True
+    rear: bool = True
+    left: bool = True
+    right: bool = True
+    top: bool = True
+    bottom: bool = True
+
+
 class Duct(BaseModel):
     placement: Vertex
     size: Size
-    extend_to_floor: Optional[List[Face]]
 
 
 class Ceiling(BaseModel):
     height: float
-    duct_in_list: List[Duct]
-    duct_out_list: List[Duct]
+    duct_list: List[Duct] = Field(default_factory=list)
 
 
 class RaisedFloor(BaseModel):
-    placement: Vertex
+    height: float
 
 
 class Constructions(BaseModel):
     partition_walls: OrderedDict[str, PartitionWall] = Field(default_factory=dict)
+    containments: OrderedDict[str, Containment] = Field(default_factory=dict)
     raised_floor: Optional[RaisedFloor]
     ceiling: Optional[Ceiling]
 

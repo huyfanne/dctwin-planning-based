@@ -33,6 +33,12 @@ boundaryField
         value           uniform {{ acu_epsilon }};
     }
 
+    "containment.*"
+    {
+        type            epsilonWallFunction;
+        value           uniform {{ acu_epsilon }};
+    }
+
     "partition_wall_.*"
     {
         type            epsilonWallFunction;

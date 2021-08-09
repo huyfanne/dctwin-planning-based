@@ -345,6 +345,7 @@ class Builder:
         self.partition_wall_list: list = list(
             room["constructions"]["partition_walls"].values()
         )
+        self.contaiments: list = list(room["constructions"]["containments"].values())
         self.ceiling: dict = room["constructions"].get("ceiling", None)
         self.acus: dict = room["objects"]["acus"]
         self.racks: dict = room["objects"]["racks"]
@@ -483,51 +484,36 @@ class Builder:
                 face, {"x": 0, "y": 0, "z": self.ceiling["height"]}
             )
 
+    def make_containments(self):
+        for index, contaiment in enumerate(self.contaiments):
+            box = util.make_box(contaiment["size"], contaiment["placement"])
+            exclude_faces = []
+            for face in list(SalomeUtil.SUB_FACE_SIZE_INDICES):
+                if not contaiment[face]:
+                    exclude_faces.append(face)
+            contaiment_box = util.group_by_faces(box, exclude=exclude_faces)
+            util.export_stl(util.mesh(contaiment_box, 0.5, 2), f"containment_{index}")
+
     def make_ceiling(self):
-        ceiling_result = []
-        vent_faces = []
+        duct_faces = []
 
         # duct out
-        duct_out_list = self.ceiling["duct_out_list"]
-        for duct in duct_out_list:
+        duct_list = self.ceiling["duct_list"]
+        for index, duct in enumerate(duct_list):
             box = util.make_box(duct["size"], duct["placement"])
-            ceiling_result.append(util.group_by_faces(box, exclude=["top", "bottom"]))
-            vent_faces.append(util.sub_face(box, "top"))
+            duct_box = util.group_by_faces(box, exclude=["top", "bottom"])
+            util.export_stl(util.mesh(duct_box, 0.5, 2), f"ceiling_duct_{index}")
+            duct_faces.append(util.sub_face(box, "top"))
 
-        # duct in
-        duct_in_list = self.ceiling["duct_in_list"]
-        for duct in duct_in_list:
-            box = util.make_box(duct["size"], duct["placement"])
-            ceiling_result.append(util.group_by_faces(box, exclude=["top", "bottom"]))
-            vent_faces.append(util.sub_face(box, "top"))
-
-            if duct.get("extend_to_floor"):
-                size = dict(**duct["size"])
-                size["dz"] = self.ceiling["height"] - self.floor_height - size["dz"]
-                placement = dict(**duct["placement"])
-                placement["z"] = self.floor_height
-                _box = util.make_box(size, placement)
-                ceiling_result.append(
-                    util.group_by_faces(
-                        _box,
-                        exclude=[
-                            i
-                            for i in util.SUB_FACE_INDICES
-                            if i not in duct.get("extend_to_floor")
-                        ],
-                    )
-                )
-
-        self.ceiling_face = util.geom.MakeCutList(self.ceiling_face, vent_faces)
-        ceiling_result.append(self.ceiling_face)
-        ceiling = util.geom.MakeFuseList(ceiling_result, True, True)
-        util.export_stl(util.mesh(ceiling, 0.5, 5), "ceiling_1")
+        self.ceiling_face = util.geom.MakeCutList(self.ceiling_face, duct_faces)
+        util.export_stl(util.mesh(self.ceiling_face, 0.5, 5), "ceiling_1")
 
     def run(self, runner_id, runner_count):
         if runner_id is None or runner_count is None:
             self.make_room()
             if self.ceiling is not None:
                 self.make_ceiling()
+            self.make_containments()
             self.make_partition_wall_list()
             self.make_acus()
             self.make_racks()

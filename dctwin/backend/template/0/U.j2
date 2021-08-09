@@ -30,6 +30,12 @@ boundaryField
         type            noSlip;
     }
 
+    "containment_.*"
+    {
+        type            zeroGradient;
+    }
+
+
     "partition_wall_.*"
     {
         type            noSlip;
