@@ -5,7 +5,7 @@ from typing import List, Optional, OrderedDict, Union
 
 from pydantic import BaseModel, Field, validator
 
-from dctwin.models.basics import ACUConfig, Face, RoomConfig, ServerConfig, Size, Vertex
+from dctwin.models.basics import Size, Vertex
 from dctwin.models.objects import Objects
 
 
@@ -43,8 +43,14 @@ class Ceiling(BaseModel):
     duct_list: List[Duct] = Field(default_factory=list)
 
 
+class Vent(BaseModel):
+    placement: Vertex
+    size: Vertex
+
+
 class RaisedFloor(BaseModel):
     height: float
+    vent_list: List[Vent] = Field(default_factory=list)
 
 
 class Constructions(BaseModel):

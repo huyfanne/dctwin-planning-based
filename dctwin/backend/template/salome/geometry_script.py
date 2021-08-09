@@ -323,8 +323,13 @@ class RackModel:
                     is_export=False,
                 )
             )
+        if not self.first_slot_offset:
+            try:
+                slots.remove(1)
+            except ValueError:
+                pass
         for slot in slots:
-            z = placement["z"] + self.first_slot_offset
+            z = placement["z"]
             z += 0.05 * (slot - 1)
             mesh = util.copy_mesh(
                 f"rack_wall_{rack_id}_panel_{slot}",
