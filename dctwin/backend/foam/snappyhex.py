@@ -1,3 +1,4 @@
+from dctwin.models.objects import Rack
 import math
 import os
 from dataclasses import dataclass
@@ -132,9 +133,11 @@ def generate_snappy_dict(
     # location = Vertex(x=(room.plane_outline[0].x + room.plane_outline[2].y)/2,
     #                   y=(room.plane_outline[0].y + room.plane_outline[2].y)/2,
     #                   z=room.height - 0.01)
-    first_rack = list(room.objects.racks.values())[0]
+    first_rack: Rack = list(room.objects.racks.values())[0]
     location = Vertex(
-        x=first_rack.x, y=first_rack.y, z=(room.height + first_rack.size.dz) / 2
+        x=first_rack.placement.x,
+        y=first_rack.placement.y,
+        z=(room.height + first_rack.size.dz) / 2,
     )
     with open(Path(environ.CASE_DIR, "system/snappyHexMeshDict"), "w") as f:
         f.write(

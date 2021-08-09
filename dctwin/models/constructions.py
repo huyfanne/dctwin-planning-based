@@ -39,7 +39,7 @@ class RaisedFloor(BaseModel):
 
 
 class Constructions(BaseModel):
-    partition_walls: OrderedDict[str, PartitionWall]
+    partition_walls: OrderedDict[str, PartitionWall] = Field(default_factory=dict)
     raised_floor: Optional[RaisedFloor]
     ceiling: Optional[Ceiling]
 
