@@ -28,7 +28,12 @@ class Mesh:
 
 
 def generate_block_dict(room: Room):
-    v_min, v_max = Vertex(x=0, y=0, z=0), Vertex(x=0, y=0, z=room.height)
+    min_z = (
+        0
+        if room.constructions.raised_floor is None
+        else -room.constructions.raised_floor.height
+    )
+    v_min, v_max = Vertex(x=0, y=0, z=min_z), Vertex(x=0, y=0, z=room.height)
     for vertex in room.plane_outline:
         if vertex.x < v_min.x:
             v_min.x = vertex.x
@@ -104,6 +109,12 @@ def generate_snappy_dict(
             "faceType": "baffle",
         },
         "containment": {
+            "type": "wall",
+            "level": 2,
+            "refine_level": "(0 2)",
+            "faceType": "baffle",
+        },
+        "floor": {
             "type": "wall",
             "level": 2,
             "refine_level": "(0 2)",

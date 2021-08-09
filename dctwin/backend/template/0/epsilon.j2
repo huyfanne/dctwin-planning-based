@@ -27,6 +27,12 @@ boundaryField
         value           uniform {{ acu_epsilon }};
     }
 
+    "floor_.*"
+    {
+        type            epsilonWallFunction;
+        value           uniform {{ acu_epsilon }};
+    }
+
     "ceiling_.*"
     {
         type            epsilonWallFunction;

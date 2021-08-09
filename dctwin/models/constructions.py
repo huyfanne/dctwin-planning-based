@@ -43,14 +43,14 @@ class Ceiling(BaseModel):
     duct_list: List[Duct] = Field(default_factory=list)
 
 
-class Vent(BaseModel):
+class Opening(BaseModel):
     placement: Vertex
-    size: Vertex
+    size: Size
 
 
 class RaisedFloor(BaseModel):
     height: float
-    vent_list: List[Vent] = Field(default_factory=list)
+    opening_list: List[Opening] = Field(default_factory=list)
 
 
 class Constructions(BaseModel):

@@ -44,6 +44,12 @@ boundaryField
         value           uniform {{ acu_k }};
     }
 
+    "floor_.*"
+    {
+        type            kqRWallFunction;
+        value           uniform {{ acu_k }};
+    }
+
     "ceiling_.*"
     {
         type            kqRWallFunction;
