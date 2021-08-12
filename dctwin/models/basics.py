@@ -5,7 +5,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from pydantic.fields import Field
 
 
@@ -14,11 +14,19 @@ class Size(BaseModel):
     dy: float
     dz: float
 
+    @validator("dx", "dy", "dz")
+    def float_check(cls, v):
+        return round(v, 3)
+
 
 class Vertex(BaseModel):
     x: float
     y: float
     z: float
+
+    @validator("x", "y", "z")
+    def float_check(cls, v):
+        return round(v, 3)
 
 
 class Face(str, Enum):
