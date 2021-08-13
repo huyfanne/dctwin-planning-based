@@ -50,10 +50,5 @@ class ServerConfig(BaseModel):
     heat_load: float
 
 
-class RoomConfig(BaseModel):
-    acu_configs: Dict[str, ACUConfig]
-    server_configs: Dict[str, ServerConfig]
-    probes: List[Vertex] = Field(default_factory=list)
-
-    class Config:
-        json_encoders = {Decimal: float}
+class Probe(Vertex):
+    name: str = None

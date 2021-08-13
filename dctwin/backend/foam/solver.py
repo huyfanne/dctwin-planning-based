@@ -64,7 +64,7 @@ class Builder:
             )
 
 
-def parse_result(case: str):
+def parse_result(room: Room, case: str):
     results = []
     with open(f"{case}/postProcessing/probes/0/T") as f:
         for i in f:
@@ -74,7 +74,15 @@ def parse_result(case: str):
                 results.append(
                     list(map(lambda x: round(float(x) - 273.15, 2), i.split()[1:]))
                 )
-    return results[-1]
+    probe_results = results[-1]
+    assert len(room.probes) == probe_results
+    return [
+        {
+            "probe": room.probes[i].dict(),
+            "result": probe_results["i"],
+        }
+        for i in range(len(room.probes))
+    ]
 
 
 class SolverBackend(Backend):

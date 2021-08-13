@@ -5,7 +5,7 @@ from typing import List, Optional, OrderedDict, Union
 
 from pydantic import BaseModel, Field, validator
 
-from dctwin.models.basics import Size, Vertex
+from dctwin.models.basics import Probe, Size, Vertex
 from dctwin.models.objects import Objects
 
 
@@ -70,10 +70,17 @@ class Room(BaseModel):
     objects: Objects
 
     # Probe locations
-    probes: List[Vertex] = Field(default_factory=list)
+    probes: List[Probe] = Field(default_factory=list)
 
     class Config:
         json_encoders = {Decimal: float}
+
+    @validator("probes")
+    def update_probes(self, v):
+        for index, probe in enumerate(v):
+            if probe.name is None:
+                probe.name = f"Probe_{index + 1}"
+        return v
 
     @validator("objects")
     def validate_objects(cls, v):
