@@ -99,9 +99,9 @@ class SolverBackend(Backend):
             command = (
                 "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
                 "decomposePar -force && "
-                f"mpirun -np {self.process_num} {self.solver} -parallel' && "
+                f"mpirun -np {self.process_num} {self.solver} -parallel && "
                 "reconstructPar -latestTime && "
-                "rm -rf /data/processor*"
+                "rm -rf /data/processor*'"
             )
         else:
             command = (
