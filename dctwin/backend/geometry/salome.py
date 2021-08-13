@@ -12,9 +12,9 @@ from dctwin.models.constructions import Room
 class SalomeBackend(Backend):
     docker_image = "charact3/salome-9"
 
-    def run(self, room: Room):
+    def run(self, room: Room, dry_run: bool = False):
         self._pre_process(room)
-        if not self.dry_run:
+        if not dry_run:
             self._run_backend()
         self._post_process()
 

@@ -204,7 +204,8 @@ class SnappyHexBackend(Backend):
                 f"mpirun -np {self.process_num} snappyHexMesh -parallel -overwrite && "
                 "reconstructParMesh -constant -mergeTol 6 && "
                 "createPatch -overwrite && "
-                "rm -rf /data/constant/triSurface/*.eMesh'"
+                "rm -rf /data/constant/triSurface/*.eMesh' && "
+                "rm -rf /data/processor*"
             )
         else:
             command = (
@@ -214,14 +215,22 @@ class SnappyHexBackend(Backend):
             )
         return command
 
-    def run(self, room: Room, field_config: Optional[dict] = None):
-        init_foam()
+    def run(
+        self,
+        room: Room,
+        dry_run: bool = False,
+        process_num: int = None,
+        field_config: Optional[dict] = None,
+    ):
+        if process_num is not None:
+            self.process_num = process_num
 
+        init_foam()
         generate_block_dict(room)
         generate_snappy_dict(
             room, process_num=self.process_num, field_config=field_config
         )
-        if self.dry_run:
+        if dry_run:
             return
         self.run_container(user=os.getuid())
         click.echo("***** Mesh finished *****\n\n")

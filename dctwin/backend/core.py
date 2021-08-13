@@ -13,11 +13,8 @@ class Backend(abc.ABC):
     volume_data_dir = "/data"
     volume_geometry_dir = f"{volume_data_dir}/constant/triSurface"
 
-    def __init__(
-        self, client: DockerClient, dry_run: bool = False, process_num: int = 1
-    ) -> None:
+    def __init__(self, client: DockerClient, process_num: int = 1) -> None:
         self.client = client
-        self.dry_run = dry_run
         self.process_num = process_num
 
     @property
@@ -31,7 +28,7 @@ class Backend(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def run(self, room: Room):
+    def run(self, room: Room, dry_run: bool = None, process_num: int = None):
         pass
 
     def run_container(

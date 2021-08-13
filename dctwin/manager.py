@@ -1,11 +1,12 @@
+from dctwin.cli.main import mesh
+from math import exp
 from typing import Optional, Union
 
 import click
 import docker
 
 from dctwin.backend.foam.snappyhex import SnappyHexBackend
-from dctwin.backend.foam.solver import (SteadySolverBackend,
-                                        TransientSolverBackend)
+from dctwin.backend.foam.solver import SteadySolverBackend, TransientSolverBackend
 from dctwin.backend.geometry.salome import SalomeBackend
 from dctwin.config import environ
 from dctwin.models import Room
@@ -35,9 +36,14 @@ class DCTwinManager:
         self.mesh_process = mesh_process
         self.solve_process = solve_process
         self.steady = steady
-        self.setup_backend()
+        self.setup_default_backend()
 
-    def setup_backend(self):
+    def setup_default_backend(self):
+        """Setup default backend
+        geometry: Salome
+        meshing: SnappyHexMesh
+        solver: buoyantBoussinesqSimpleFoam/buoyantBoussinesqPimpleFoam
+        """
         self.geometry_backend = SalomeBackend(self.docker_client)
         self.mesh_backend = SnappyHexBackend(
             self.docker_client, process_num=self.mesh_process
@@ -51,14 +57,52 @@ class DCTwinManager:
                 self.docker_client, process_num=self.solve_process
             )
 
-    def run_simulation(self, room: Room) -> bool:
+    def build_geometry(self, room: Room, dry_run: bool = False):
         try:
-            self.geometry_backend.run(room)
-            self.mesh_backend.run(room)
-            self.solver_backend.run(room)
+            self.geometry_backend.run(room, dry_run)
         except Exception as e:
-            # Todo: use exact exceptions
+            click.echo("Failed to build geometry")
             click.echo(e)
-            return False
-        else:
-            return True
+
+    def mesh(
+        self,
+        room: Room,
+        dry_run: bool = False,
+        process_num: int = None,
+        field_config: Optional[dict] = None,
+    ):
+        try:
+            self.mesh_backend.run(
+                room,
+                dry_run=dry_run,
+                process_num=process_num,
+                field_config=field_config,
+            )
+        except Exception as e:
+            click.echo("Failed to mesh")
+            click.echo(e)
+
+    def solve(
+        self,
+        room: Room,
+        mesh_path=None,
+        output_dir=None,
+        dry_run: bool = False,
+        process_num: int = None,
+    ):
+        try:
+            self.solver_backend.run(
+                room,
+                dry_run=dry_run,
+                process_num=process_num,
+                mesh_path=mesh_path,
+                output_dir=output_dir,
+            )
+        except Exception as e:
+            click.echo("Failed to solve")
+            click.echo(e)
+
+    def run_simulation(self, room: Room) -> bool:
+        self.build_geometry(room)
+        self.mesh(room)
+        self.solve(room)

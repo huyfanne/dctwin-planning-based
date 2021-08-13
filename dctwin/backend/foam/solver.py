@@ -99,7 +99,9 @@ class SolverBackend(Backend):
             command = (
                 "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
                 "decomposePar -force && "
-                f"mpirun -np {self.process_num} {self.solver} -parallel'"
+                f"mpirun -np {self.process_num} {self.solver} -parallel' && "
+                "reconstructPar -latestTime && "
+                "rm -rf /data/processor*"
             )
         else:
             command = (
@@ -123,7 +125,17 @@ class SolverBackend(Backend):
     def generate_control_dict(self, room: Room):
         raise NotImplementedError
 
-    def run(self, room: Room, mesh_path=None, output_dir=None):
+    def run(
+        self,
+        room: Room,
+        mesh_path=None,
+        output_dir=None,
+        dry_run: bool = False,
+        process_num: int = None,
+    ):
+        if process_num is not None:
+            self.process_num = process_num
+
         if output_dir is not None and mesh_path is not None:
             output_path = Path(output_dir)
             output_path.mkdir(exist_ok=True)
@@ -142,7 +154,7 @@ class SolverBackend(Backend):
         builder = Builder(room)
         builder.run()
 
-        if self.dry_run:
+        if dry_run:
             return
         self.run_container(user=os.getuid())
 
