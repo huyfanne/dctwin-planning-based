@@ -28,11 +28,7 @@ class Mesh:
 
 
 def generate_block_dict(room: Room):
-    min_z = (
-        0
-        if room.constructions.raised_floor is None
-        else -room.constructions.raised_floor.height
-    )
+    min_z = 0
     v_min, v_max = Vertex(x=0, y=0, z=min_z), Vertex(x=0, y=0, z=room.height)
     for vertex in room.plane_outline:
         if vertex.x < v_min.x:

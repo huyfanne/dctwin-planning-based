@@ -377,14 +377,16 @@ class Builder:
             models[k] = ACUModel.from_dict(v)
         for acu in self.acus.values():
             model = models[acu["model"]]
-            model.make_acu(acu["id"], acu["placement"], acu["orientation"])
+            new_placement = {**acu["placement"], "z": self.floor_height}
+            model.make_acu(acu["id"], new_placement, acu["orientation"])
 
     def make_racks(self):
         for k, v in self.rack_models.items():
             self.computed_rack_models[k] = RackModel.from_dict(v)
         for rack in self.racks.values():
             model = self.computed_rack_models[rack["model"]]
-            model.make(rack["id"], rack["placement"], rack["orientation"])
+            new_placement = {**rack["placement"], "z": self.floor_height}
+            model.make(rack["id"], new_placement, rack["orientation"])
 
     def make_servers(self):
         models = dict()
@@ -417,7 +419,9 @@ class Builder:
                 server["id"],
                 {
                     **rack["placement"],
-                    "z": offset + self.slot_height * (server["slot"] - 1),
+                    "z": offset
+                    + self.slot_height * (server["slot"] - 1)
+                    + self.floor_height,
                 },
                 rack["orientation"],
             )
@@ -437,7 +441,7 @@ class Builder:
                     slots=blanking_panels,
                 )
 
-    def make_partition_wall_list(self):
+    def make_partition_walls(self):
         for i, wall in enumerate(self.partition_wall_list):
             placement, size = wall["placement"], wall["size"]
             basic_face = util.geom.MakeFaceHW(size["dz"], size["dx"], 3)
@@ -465,7 +469,7 @@ class Builder:
                 {
                     "x": placement["x"] + size["dx"] / 2,
                     "y": placement["y"],
-                    "z": (size["dz"] - placement["z"]) / 2,
+                    "z": (size["dz"] - placement["z"]) / 2 + self.floor_height,
                 },
             )
 
@@ -485,7 +489,7 @@ class Builder:
         face = geompy.MakeFaceWires(lines, 1)
         prism = geompy.MakePrismVecH(face, oz, room["height"])
         # Setup raised floor
-        room_box = util.move_placement(prism, {"x": 0, "y": 0, "z": -self.floor_height})
+        room_box = util.move_placement(prism, {"x": 0, "y": 0, "z": 0})
         box_faces = util.group_by_faces(room_box)
         util.export_stl(util.mesh(box_faces, 2, 6), "room_wall_1")
 
@@ -496,11 +500,14 @@ class Builder:
             )
         # Make floor
         if self.raised_floor is not None:
-            self.floor_face = util.move_placement(face, {"x": 0, "y": 0, "z": 0})
+            self.floor_face = util.move_placement(
+                face, {"x": 0, "y": 0, "z": self.floor_height}
+            )
 
     def make_containments(self):
         for index, contaiment in enumerate(self.contaiments):
-            box = util.make_box(contaiment["size"], contaiment["placement"])
+            new_placement = {**contaiment["placement"], "z": self.floor_height}
+            box = util.make_box(contaiment["size"], new_placement)
             exclude_faces = []
             for face in list(SalomeUtil.SUB_FACE_SIZE_INDICES):
                 if not contaiment[face]:
@@ -509,6 +516,8 @@ class Builder:
             util.export_stl(util.mesh(contaiment_box, 0.5, 2), f"containment_{index}")
 
     def make_ceiling(self):
+        if self.ceiling is None:
+            return
         duct_faces = []
 
         # duct out
@@ -530,7 +539,7 @@ class Builder:
         for opening in opening_list:
             # Just for cutting face
             opening["size"]["dz"] = 0.1
-            opening["placement"]["z"] = 0
+            opening["placement"]["z"] = self.floor_height
             box = util.make_box(opening["size"], opening["placement"])
             opening_faces.append(util.sub_face(box, "bottom"))
 
@@ -540,11 +549,10 @@ class Builder:
     def run(self, runner_id, runner_count):
         if runner_id is None or runner_count is None:
             self.make_room()
-            if self.ceiling is not None:
-                self.make_ceiling()
+            self.make_ceiling()
             self.make_floor()
             self.make_containments()
-            self.make_partition_wall_list()
+            self.make_partition_walls()
             self.make_acus()
             self.make_racks()
             self.make_servers()
@@ -553,9 +561,8 @@ class Builder:
             runner_count = int(runner_count)
             if runner_id == 0:
                 self.make_room()
-                if self.ceiling is not None:
-                    self.make_ceiling()
-                self.make_partition_wall_list()
+                self.make_ceiling()
+                self.make_partition_walls()
                 self.make_acus()
                 self.make_racks()
             else:
