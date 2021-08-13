@@ -76,7 +76,7 @@ class Room(BaseModel):
         json_encoders = {Decimal: float}
 
     @validator("probes")
-    def update_probes(self, v):
+    def update_probes(cls, v):
         for index, probe in enumerate(v):
             if probe.name is None:
                 probe.name = f"Probe_{index + 1}"

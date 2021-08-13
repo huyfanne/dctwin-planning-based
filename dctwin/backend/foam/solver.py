@@ -75,11 +75,11 @@ def parse_result(room: Room, case: str):
                     list(map(lambda x: round(float(x) - 273.15, 2), i.split()[1:]))
                 )
     probe_results = results[-1]
-    assert len(room.probes) == probe_results
+    assert len(room.probes) == len(probe_results)
     return [
         {
             "probe": room.probes[i].dict(),
-            "result": probe_results["i"],
+            "result": probe_results[i],
         }
         for i in range(len(room.probes))
     ]
