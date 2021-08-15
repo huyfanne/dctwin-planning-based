@@ -132,6 +132,8 @@ class SolverBackend(Backend):
         output_dir=None,
         dry_run: bool = False,
         process_num: int = None,
+        write_interval: int=None,
+        end_time: int=None,
     ):
         if process_num is not None:
             self.process_num = process_num
@@ -149,6 +151,10 @@ class SolverBackend(Backend):
             Path(environ.CASE_DIR, "case.foam").touch(exist_ok=True)
             time.sleep(1)
 
+        if write_interval is not None:
+            self.write_interval = write_interval
+        if end_time is not None:
+            self.end_time = end_time
         self.generate_control_dict(room)
 
         builder = Builder(room)
@@ -161,27 +167,31 @@ class SolverBackend(Backend):
 
 class SteadySolverBackend(SolverBackend):
     solver = "buoyantBoussinesqSimpleFoam"
+    write_interval = 100
+    end_time = 500
 
     def generate_control_dict(self, room: Room):
         generate_control_dict(
             room.probes,
             steady=True,
             delta_t=1,
-            write_interval=100,
-            end_time=500,
+            write_interval=self.write_interval,
+            end_time=self.end_time,
             process_num=self.process_num,
         )
 
 
 class TransientSolverBackend(SolverBackend):
     solver = "buoyantBoussinesqPimpleFoam"
+    write_interval = 10
+    end_time = 50
 
     def generate_control_dict(self, room: Room):
         generate_control_dict(
             room.probes,
             steady=False,
             delta_t=1e-5,
-            write_interval=10,
-            end_time=50,
+            write_interval=self.write_interval,
+            end_time=self.end_time,
             process_num=self.process_num,
         )

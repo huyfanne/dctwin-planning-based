@@ -89,6 +89,8 @@ class DCTwinManager:
         output_dir=None,
         dry_run: bool = False,
         process_num: int = None,
+        end_time: int=None,
+        write_interval: int=None,
     ):
         try:
             self.solver_backend.run(
@@ -97,12 +99,14 @@ class DCTwinManager:
                 process_num=process_num,
                 mesh_path=mesh_path,
                 output_dir=output_dir,
+                end_time=end_time,
+                write_interval=write_interval,
             )
         except Exception as e:
             click.echo("Failed to solve")
             click.echo(e)
 
-    def run_simulation(self, room: Room) -> bool:
+    def run_simulation(self, room: Room):
         self.build_geometry(room)
         self.mesh(room)
         self.solve(room)
