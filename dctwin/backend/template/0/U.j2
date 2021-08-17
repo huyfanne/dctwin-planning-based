@@ -46,26 +46,9 @@ boundaryField
         type            noSlip;
     }
 
-    {% for acu in acu_list %}
-    {{ acu.supply_name }}
-    {
-        type                flowRateInletVelocity;
-        volumetricFlowRate  {{ acu.flow_rate if acu.flow_rate != 0 else 1e-10 }};
-        value               uniform (0 0 0);
-    }
-
-    {{ acu.return_name }}
-    {
-        type                flowRateOutletVelocity;
-        volumetricFlowRate  {{ acu.flow_rate if acu.flow_rate != 0 else 1e-10 }};
-        value               uniform (0 0 0);
-    }
+    {% for acu_boundary in acu_boundaries %}
+    {{ acu_boundary.U }}
     {% endfor %}
-
-    "acu_wall_.*"
-    {
-        type            noSlip;
-    }
 
     "rack_wall_.*"
     {

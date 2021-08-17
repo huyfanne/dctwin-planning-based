@@ -46,23 +46,9 @@ boundaryField
         type            zeroGradient;
     }
 
-    {% for acu in acu_list %}
-    {{ acu.supply_name }}
-    {
-        type            fixedValue;
-        value           uniform {{ acu.supply_kelvin }};
-    }
+    {% for acu_boundary in acu_boundaries %}
+    {{ acu_boundary.T }}
     {% endfor %}
-
-    "acu_return_.*"
-    {
-        type            zeroGradient;
-    }
-
-    "acu_wall_.*"
-    {
-        type            zeroGradient;
-    }
 
     "rack_wall_.*"
     {

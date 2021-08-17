@@ -4,6 +4,7 @@ form.epsilon.value = 0.09 * Math.pow(form.k.value,1.5) / form.Tu_L.value
 form.omega.value = form.epsilon.value / (0.09 * form.k.value)
 """
 import abc
+from dctwin.backend.foam.objects import ACUBoundary
 import pathlib
 from dctwin.backend.foam.reader import read_internal_field
 import os
@@ -66,6 +67,7 @@ class Builder:
                     init_temperature=24 + 273.15,
                     p_rgh=round(self.room_dz * 9.81, 10),
                     acu_list=self.acu_list,
+                    acu_boundaries=[ACUBoundary(acu) for acu in self.acu_list],
                     server_list=self.server_list,
                     acu_k=acu_k,
                     acu_epsilon=acu_epsilon,
