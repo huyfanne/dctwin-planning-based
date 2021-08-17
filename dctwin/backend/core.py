@@ -48,6 +48,10 @@ class Backend(abc.ABC):
                         "bind": self.volume_data_dir,
                         "mode": "rw",
                     },
+                    "/etc/passwd": {
+                        "bind": "/etc/passwd",
+                        "mode": "ro",
+                    },
                 },
                 user=user,
                 environment=environment,
