@@ -168,11 +168,11 @@ class ServerBoundary(Boundary):
             outlet = f"""
             {{
                 type            exprFixedValue;
-                value           $internalField;
+                // value           $internalField;
                 valueExpr       "{value}";
                 variables
                 (
-                    "{t_sink}{{server_inlet_name_{self.object.id}}} = weightAverage(T)"
+                    "{t_sink}{{server_inlet_{self.object.id}}} = weightAverage(T)"
                 );
             }}"""
         return f"""
@@ -201,8 +201,8 @@ class ServerBoundary(Boundary):
             valueExpr       "{t_sink} <= {self.t_low}? {value}:({changing_value})";
             variables
             (
-                "{t_sink}{{server_inlet_name_{self.object.id}}} = weightAverage(T)"
-                "{u_sink}{{server_inlet_name_{self.object.id}}} = {weight_u}"
+                "{t_sink}{{server_inlet_{self.object.id}}} = weightAverage(T)"
+                "{u_sink}{{server_inlet_{self.object.id}}} = {weight_u}"
             );
         }}
         """
