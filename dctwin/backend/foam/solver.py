@@ -4,6 +4,8 @@ form.epsilon.value = 0.09 * Math.pow(form.k.value,1.5) / form.Tu_L.value
 form.omega.value = form.epsilon.value / (0.09 * form.k.value)
 """
 import abc
+import pathlib
+from dctwin.backend.foam.reader import read_internal_field
 import os
 import shutil
 import time
@@ -22,10 +24,11 @@ logger = Logger(__file__)
 
 
 class Builder:
-    def __init__(self, room: Room):
+    def __init__(self, room: Room, last_state_case=None):
         self.room_dz = room.height
         self.acu_list = list(room.objects.acus.values())
         self.server_list = list(room.objects.servers.values())
+        self.last_state_case = last_state_case
 
     def run(self):
         self.render("alphat")
@@ -34,8 +37,16 @@ class Builder:
         self.render("k")
         self.render("p")
         self.render("p_rgh")
-        self.render("T")
-        self.render("U")
+        if self.last_state_case is not None:
+            self.render(
+                "T", "".join(read_internal_field(Path(self.last_state_case, "T")))
+            )
+            self.render(
+                "U", "".join(read_internal_field(Path(self.last_state_case, "U")))
+            )
+        else:
+            self.render("T")
+            self.render("U")
 
     @classmethod
     def get_k_and_epsilon(cls, obj_list: List[Union[ACU, Server]]):
@@ -46,7 +57,7 @@ class Builder:
         obj = min(_obj_list, key=lambda x: x.k)
         return obj.k, obj.epsilon
 
-    def render(self, filename):
+    def render(self, filename, internal_field=None):
         acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_list)
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_list)
         with open(Path(environ.CASE_DIR, f"0/{filename}"), "w") as f:
@@ -60,11 +71,12 @@ class Builder:
                     acu_epsilon=acu_epsilon,
                     server_k=server_k,
                     server_epsilon=server_epsilon,
+                    internal_field=internal_field,
                 )
             )
 
 
-def parse_result(room: Room, case: str):
+def parse_result(room: Room, case: Union[str, Path]):
     results = []
     with open(f"{case}/postProcessing/probes/0/T") as f:
         for i in f:
@@ -131,9 +143,11 @@ class SolverBackend(Backend):
         mesh_path=None,
         output_dir=None,
         dry_run: bool = False,
+        last_state_case=None,
         process_num: int = None,
-        write_interval: int=None,
-        end_time: int=None,
+        write_interval: int = None,
+        end_time: int = None,
+        delta_t=None,
     ):
         if process_num is not None:
             self.process_num = process_num
@@ -157,7 +171,7 @@ class SolverBackend(Backend):
             self.end_time = end_time
         self.generate_control_dict(room)
 
-        builder = Builder(room)
+        builder = Builder(room, last_state_case)
         builder.run()
 
         if dry_run:
@@ -170,11 +184,15 @@ class SteadySolverBackend(SolverBackend):
     write_interval = 100
     end_time = 500
 
-    def generate_control_dict(self, room: Room):
+    def generate_control_dict(
+        self,
+        room: Room,
+        delta_t=1,
+    ):
         generate_control_dict(
             room.probes,
             steady=True,
-            delta_t=1,
+            delta_t=delta_t,
             write_interval=self.write_interval,
             end_time=self.end_time,
             process_num=self.process_num,
@@ -186,11 +204,15 @@ class TransientSolverBackend(SolverBackend):
     write_interval = 10
     end_time = 50
 
-    def generate_control_dict(self, room: Room):
+    def generate_control_dict(
+        self,
+        room: Room,
+        delta_t=1e-5,
+    ):
         generate_control_dict(
             room.probes,
             steady=False,
-            delta_t=1e-5,
+            delta_t=delta_t,
             write_interval=self.write_interval,
             end_time=self.end_time,
             process_num=self.process_num,

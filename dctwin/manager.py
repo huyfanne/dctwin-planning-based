@@ -1,5 +1,4 @@
-from dctwin.cli.main import mesh
-from math import exp
+from pathlib import Path
 from typing import Optional, Union
 
 import click
@@ -20,7 +19,7 @@ class DCTwinManager:
     def __init__(
         self,
         docker_client: docker.DockerClient = None,
-        data_dir: Optional[str] = None,
+        data_dir: Union[str, Path] = None,
         mesh_process: int = 1,
         solve_process: int = 1,
         steady: bool = True,
@@ -89,8 +88,9 @@ class DCTwinManager:
         output_dir=None,
         dry_run: bool = False,
         process_num: int = None,
-        end_time: int=None,
-        write_interval: int=None,
+        end_time: int = None,
+        write_interval: int = None,
+        last_state_case: Union[Path, str] = None,
     ):
         try:
             self.solver_backend.run(
@@ -101,10 +101,12 @@ class DCTwinManager:
                 output_dir=output_dir,
                 end_time=end_time,
                 write_interval=write_interval,
+                last_state_case=last_state_case,
             )
         except Exception as e:
             click.echo("Failed to solve")
             click.echo(e)
+            raise e
 
     def run_simulation(self, room: Room):
         self.build_geometry(room)
