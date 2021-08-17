@@ -1,9 +1,67 @@
+from dctwin.models.constructions import Room
 from dctwin.models.objects import ACU
 
 
 class Boundary:
     def __init__(self) -> None:
         pass
+
+
+class RoomBoundary:
+    def __init__(self, room: Room) -> None:
+        self.room = room
+
+    @property
+    def T(self):
+        ceiling = f"""       
+        "ceiling_1"
+        {{
+            type            zeroGradient;
+        }}
+        """
+        floor = f"""
+        "floor_1"
+        {{
+            type            zeroGradient;
+        }}"""
+        if self.room.constructions.ceiling is None:
+            ceiling = ""
+        if self.room.constructions.raised_floor is None:
+            floor = ""
+        return f"""
+        "room_wall_1"
+        {{
+            type            zeroGradient;
+        }}
+        {ceiling}
+        {floor}
+        """
+
+    @property
+    def U(self):
+        ceiling = f"""       
+        "ceiling_1"
+        {{
+            type            noSlip;
+        }}
+        """
+        floor = f"""
+        "floor_1"
+        {{
+            type            noSlip;
+        }}"""
+        if self.room.constructions.ceiling is None:
+            ceiling = ""
+        if self.room.constructions.raised_floor is None:
+            floor = ""
+        return f"""
+        "room_wall_1"
+        {{
+            type            noSlip;
+        }}
+        {ceiling}
+        {floor}
+        """
 
 
 class ACUBoundary:
@@ -18,7 +76,7 @@ class ACUBoundary:
         acu_supply_{self.object.id}
         {{
             type    fixedValue;
-            value   uniform {self.supply_kelvin}
+            value   uniform {self.supply_kelvin};
         }}
         "acu_return_{self.object.id}"
         {{
@@ -32,35 +90,28 @@ class ACUBoundary:
 
     @property
     def U(self):
-        flow_boundary = (
-            f"""
+        supply = f"""
+            type                flowRateInletVelocity;
+            volumetricFlowRate  {self.flow_rate};
+            value               uniform (0 0 0);
+        """
+        _return = f"""
+            type                flowRateOutletVelocity;
+            volumetricFlowRate  {self.flow_rate};
+            value               uniform (0 0 0);
+        """
+        if self.flow_rate != 0:
+            supply = "type    noSlip;"
+            _return = "type    noSlip;"
+        return f"""
         "acu_supply_{self.object.id}"
         {{
-            type    noSlip;
+            {supply}
         }}
         "acu_return_{self.object.id}"
         {{
-            type    noSlip;
+            {_return}
         }}
-        """
-            if self.flow_rate == 0
-            else f"""
-        acu_supply_{self.object.id}
-        {{
-            type                flowRateInletVelocity;
-            volumetricFlowRate  {{ acu.flow_rate if acu.flow_rate != 0 else 1e-10 }};
-            value               uniform (0 0 0);
-        }}
-        "acu_return_{self.object.id}"
-        {{
-            type                flowRateOutletVelocity;
-            volumetricFlowRate  {{ acu.flow_rate if acu.flow_rate != 0 else 1e-10 }};
-            value               uniform (0 0 0);
-        }}
-        """
-        )
-        return f"""
-        {flow_boundary}
         "acu_wall_{self.object.id}"
         {{
             type    noSlip;

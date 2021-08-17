@@ -20,20 +20,7 @@ internalField   {{ 'uniform (0 0 0)' if not internal_field else internal_field }
 
 boundaryField
 {
-    "room_wall_.*"
-    {
-        type            noSlip;
-    }
-
-    "floor_.*"
-    {
-        type            noSlip;
-    }
-
-    "ceiling_.*"
-    {
-        type            noSlip;
-    }
+    {{ room_boundary.U }}
 
     "containment_.*"
     {

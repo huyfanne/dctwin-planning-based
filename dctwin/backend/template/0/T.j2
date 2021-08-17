@@ -21,20 +21,7 @@ internalField   {{ 'uniform {}'.format(init_temperature) if not internal_field e
 boundaryField
 {
 
-    "room_wall_.*"
-    {
-        type            zeroGradient;
-    }
-
-    "floor_.*"
-    {
-        type            zeroGradient;
-    }
-
-    "ceiling_.*"
-    {
-        type            zeroGradient;
-    }
+    {{ room_boundary.T }}
 
     "containment_.*"
     {

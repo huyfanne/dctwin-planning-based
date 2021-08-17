@@ -4,7 +4,7 @@ form.epsilon.value = 0.09 * Math.pow(form.k.value,1.5) / form.Tu_L.value
 form.omega.value = form.epsilon.value / (0.09 * form.k.value)
 """
 import abc
-from dctwin.backend.foam.objects import ACUBoundary
+from dctwin.backend.foam.objects import ACUBoundary, RoomBoundary
 import pathlib
 from dctwin.backend.foam.reader import read_internal_field
 import os
@@ -26,6 +26,7 @@ logger = Logger(__file__)
 
 class Builder:
     def __init__(self, room: Room, last_state_case=None):
+        self.room = room
         self.room_dz = room.height
         self.acu_list = list(room.objects.acus.values())
         self.server_list = list(room.objects.servers.values())
@@ -68,6 +69,7 @@ class Builder:
                     p_rgh=round(self.room_dz * 9.81, 10),
                     acu_list=self.acu_list,
                     acu_boundaries=[ACUBoundary(acu) for acu in self.acu_list],
+                    room_boundary=RoomBoundary(self.room),
                     server_list=self.server_list,
                     acu_k=acu_k,
                     acu_epsilon=acu_epsilon,
