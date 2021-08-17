@@ -27,72 +27,10 @@ boundaryField
     {{ acu_boundary.T }}
     {% endfor %}
 
-    "server_wall_.*"
-    {
-        type            zeroGradient;
-    }
-
-    "server_inlet_.*"
-    {
-        type            zeroGradient;
-    }
-
-    {% for server in server_list %}
-    {{ server.outlet_name }}
-    {% set index = loop.index %}
-    {% if not server.dynamic_temperature_low %}
-    {
-        type            exprFixedValue;
-        value           $internalField;
-        valueExpr       "({{ server.t_sink }}+({{ server.heat_load }}/(massflowrate{{ index }}*specificheat{{ index }})))";
-        variables
-        (
-            "{{ server.t_sink }}{{ '{' + server.inlet_name + '} = weightAverage(T)' }}"
-            "massflowrate{{ index }} = {{ server.flow_rate * 1.19 }}"
-            "specificheat{{ index }} = 1006"
-            "density{{ index }} = 1.19"
-        );
-    }
-    {% else %}
-    {% set t = server.t_sink %}
-    {% set u = server.u_sink %}
-    {% set tl = server.dynamic_temperature_low + 273.15 %}
-    {% set th = server.dynamic_temperature_high + 273.15 %}
-    {% set fl = server.flow_rate %}
-    {% set fh = server.dynamic_flow_rate_high %}
-    {
-        type            exprFixedValue;
-        value           $internalField;
-        valueExpr       "{{ t }} <= {{ tl }}?({{ t }}+({{ server.heat_load }}/(massflowrate{{ index }}*1006))):({{ t }} + {{ server.heat_load }} / ({{ '' if server.orientation % 270 == 0 else '-' }}{{ u }} * {{ server.outlet_area }} * 1.19 * 1006))";
-        variables
-        (
-            "{{ t }}{{ '{' + server.inlet_name + '} = weightAverage(T)' }}"
-            "{{ u }}{{ '{' + server.inlet_name + '} = weightAverage(U.y())' }}"
-            "massflowrate{{ index }} = {{ server.flow_rate * 1.19 }}"
-            "specificheat{{ index }} = 1006"
-            "density{{ index }} = 1.19"
-        );
-    }
-    {% endif %}
+    {% for server_boundary in server_boundaries %}
+    {{ server_boundary.T }}
     {% endfor %}
 
-    {#
-    {
-        type            exprFixedValue;
-        value           $internalField;
-        valueExpr      "(tSink{{ loop.index }}<=300.15)?tSink{{ loop.index }}+(heatload{{ loop.index }}/(massflowrate{{ loop.index }}*specificheat{{ loop.index }})):tSink{{ loop.index }}+(heatload{{ loop.index }}/(uSink{{ loop.index }}*area{{ loop.index }}*density{{ loop.index }}*specificheat{{ loop.index }}))";
-        variables
-        (
-            "tSink{{ loop.index }}{{ '{' + server.outlet_name + '} = weightAverage(T)' }}"
-            "uSink{{ loop.index }}{{ '{' + server.outlet_name + '} = weightAverage(U.x())' }}"
-            "area{{ loop.index }} = {{ server.outlet_area }}"
-            "heatload{{ loop.index }} = {{ server.heat_load }}"
-            "massflowrate{{ loop.index }} = 0.06952176"
-            "specificheat{{ loop.index }} = 1006"
-            "density{{ loop.index }} = 1.19"
-        );
-    }
-    #}
 }
 
 // ************************************************************************* //

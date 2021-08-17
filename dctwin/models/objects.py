@@ -51,10 +51,6 @@ class ACU(ObjectModel):
         return self.calculate_face_area(self.return_face)
 
     @property
-    def supply_kelvin(self) -> float:
-        return self.supply_temperature + float(273.15)
-
-    @property
     def k(self) -> float:
         """turbulent kinetic energy
         Others:
@@ -73,14 +69,6 @@ class ACU(ObjectModel):
         nu = 1.5e-05
         eddy_viscosity_ratio = 10
         return 0.09 * (self.k ** 2) / (nu * eddy_viscosity_ratio)
-
-    @property
-    def supply_name(self) -> str:
-        return f"acu_supply_{self.id}"
-
-    @property
-    def return_name(self) -> str:
-        return f"acu_return_{self.id}"
 
 
 class RackModel(BaseModel):
