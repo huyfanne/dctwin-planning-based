@@ -1,9 +1,17 @@
+import abc
 from dctwin.models.constructions import Room
 from dctwin.models.objects import ACU
 
 
-class Boundary:
-    def __init__(self) -> None:
+class Boundary(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def T(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def U(self):
         pass
 
 
@@ -69,6 +77,16 @@ class ACUBoundary:
         self.object = acu
         self.supply_kelvin = round(acu.supply_temperature + 273.15, 2)
         self.flow_rate = round(acu.flow_rate, 6)
+
+    @property
+    def p_rgh(self):
+        return f"""
+        acu_return_{self.object.id}
+        {{
+            type        fixedValue;
+            value 		$internalField;
+        }}
+        """
 
     @property
     def T(self):

@@ -20,12 +20,8 @@ internalField   uniform {{ p_rgh }};
 
 boundaryField
 {
-    {% for acu in acu_list %}
-    acu_return_{{ acu.id }}
-    {
-        type        fixedValue;
-        value 		$internalField;
-    }
+    {% for acu_boundary in acu_boundaries %}
+    {{ acu_boundary.p_rgh }}
     {% endfor %}
 
     ".*"
