@@ -32,29 +32,33 @@ class RoomBoundary(Boundary):
         self.room = room
 
     def generate_boundary(self, type_define):
-        ceiling = f""""ceiling_1" {type_define}"""
+        ceiling = f"ceiling_1 {type_define}"
         if self.room.constructions.ceiling is None:
             ceiling = ""
         else:
-            for index in enumerate(self.room.constructions.ceiling.duct_list):
-                "".join(ceiling, f"ceiling_duct_{index} {type_define}\n")
+            ceiling = ceiling + "\n".join(
+                [
+                    f"ceiling_duct_{index} {type_define}"
+                    for index, _ in enumerate(self.room.constructions.ceiling.duct_list)
+                ]
+            )
 
-        floor = f""""floor_1" {type_define}"""
+        floor = f"floor_1 {type_define}"
         if self.room.constructions.raised_floor is None:
             floor = ""
 
-        containments_boundary = ""
-        for index, _ in enumerate(list(self.room.constructions.containments)):
-            "".join(
-                containments_boundary,
-                f"containment_{index} {type_define}\n",
-            )
-        partition_wall_boundary = ""
-        for index, _ in enumerate(list(self.room.constructions.partition_walls)):
-            "".join(
-                partition_wall_boundary,
-                f"partition_wall_{index} {type_define}\n",
-            )
+        containments_boundary = "\n".join(
+            [
+                f"containment_{index} {type_define}"
+                for index, _ in enumerate(list(self.room.constructions.containments))
+            ]
+        )
+        partition_wall_boundary = "\n".join(
+            [
+                f"partition_wall_{index} {type_define}"
+                for index, _ in enumerate(list(self.room.constructions.partition_walls))
+            ]
+        )
 
         rack_boundary = "\n".join(
             [
@@ -63,7 +67,7 @@ class RoomBoundary(Boundary):
             ]
         )
         return f"""
-        "room_wall_1" {type_define}
+        room_wall_1 {type_define}
         {ceiling}
         {floor}
         {containments_boundary}
@@ -80,7 +84,7 @@ class RoomBoundary(Boundary):
         return self.generate_boundary(self.no_slip)
 
 
-class ACUBoundary:
+class ACUBoundary(Boundary):
     def __init__(self, acu: ACU) -> None:
         self.object = acu
         self.supply_kelvin = round(acu.supply_temperature + 273.15, 2)
@@ -104,42 +108,31 @@ class ACUBoundary:
             type    fixedValue;
             value   uniform {self.supply_kelvin};
         }}
-        "acu_return_{self.object.id}"
-        {{
-            type    zeroGradient;
-        }}
-        "acu_wall_{self.object.id}"
-        {{
-            type    zeroGradient;
-        }}
+        acu_return_{self.object.id} {self.zero_gradient}
+        acu_wall_{self.object.id} {self.zero_gradient}
         """
 
     @property
     def U(self):
         supply = f"""
+        {{
             type                flowRateInletVelocity;
             volumetricFlowRate  {self.flow_rate};
             value               uniform (0 0 0);
+        }}
         """
         _return = f"""
+        {{
             type                flowRateOutletVelocity;
             volumetricFlowRate  {self.flow_rate};
             value               uniform (0 0 0);
+        }}
         """
         if self.flow_rate != 0:
-            supply = "type    noSlip;"
-            _return = "type    noSlip;"
+            supply = self.no_slip
+            _return = self.no_slip
         return f"""
-        "acu_supply_{self.object.id}"
-        {{
-            {supply}
-        }}
-        "acu_return_{self.object.id}"
-        {{
-            {_return}
-        }}
-        "acu_wall_{self.object.id}"
-        {{
-            type    noSlip;
-        }}
+        acu_supply_{self.object.id} {supply}
+        acu_return_{self.object.id} {_return}
+        acu_wall_{self.object.id} {self.no_slip}
         """
