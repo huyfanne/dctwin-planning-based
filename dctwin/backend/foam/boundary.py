@@ -4,6 +4,18 @@ from dctwin.models.objects import ACU
 
 
 class Boundary(abc.ABC):
+
+    zero_gradient = """
+    {
+        type            zeroGradient;
+    }
+    """
+    no_slip = """
+    {
+        type            noSlip;
+    }
+    """
+
     @property
     @abc.abstractmethod
     def T(self):
@@ -15,61 +27,57 @@ class Boundary(abc.ABC):
         pass
 
 
-class RoomBoundary:
+class RoomBoundary(Boundary):
     def __init__(self, room: Room) -> None:
         self.room = room
 
-    @property
-    def T(self):
-        ceiling = f"""       
-        "ceiling_1"
-        {{
-            type            zeroGradient;
-        }}
-        """
-        floor = f"""
-        "floor_1"
-        {{
-            type            zeroGradient;
-        }}"""
+    def generate_boundary(self, type_define):
+        ceiling = f""""ceiling_1" {type_define}"""
         if self.room.constructions.ceiling is None:
             ceiling = ""
+        else:
+            for index in enumerate(self.room.constructions.ceiling.duct_list):
+                "".join(ceiling, f"ceiling_duct_{index} {type_define}\n")
+
+        floor = f""""floor_1" {type_define}"""
         if self.room.constructions.raised_floor is None:
             floor = ""
+
+        containments_boundary = ""
+        for index, _ in enumerate(list(self.room.constructions.containments)):
+            "".join(
+                containments_boundary,
+                f"containment_{index} {type_define}\n",
+            )
+        partition_wall_boundary = ""
+        for index, _ in enumerate(list(self.room.constructions.partition_walls)):
+            "".join(
+                partition_wall_boundary,
+                f"partition_wall_{index} {type_define}\n",
+            )
+
+        rack_boundary = "\n".join(
+            [
+                f"rack_wall_{rack.id} {type_define}"
+                for rack in self.room.objects.racks.values()
+            ]
+        )
         return f"""
-        "room_wall_1"
-        {{
-            type            zeroGradient;
-        }}
+        "room_wall_1" {type_define}
         {ceiling}
         {floor}
+        {containments_boundary}
+        {partition_wall_boundary}
+        {rack_boundary}
         """
 
     @property
+    def T(self):
+        return self.generate_boundary(self.zero_gradient)
+
+    @property
     def U(self):
-        ceiling = f"""       
-        "ceiling_1"
-        {{
-            type            noSlip;
-        }}
-        """
-        floor = f"""
-        "floor_1"
-        {{
-            type            noSlip;
-        }}"""
-        if self.room.constructions.ceiling is None:
-            ceiling = ""
-        if self.room.constructions.raised_floor is None:
-            floor = ""
-        return f"""
-        "room_wall_1"
-        {{
-            type            noSlip;
-        }}
-        {ceiling}
-        {floor}
-        """
+        return self.generate_boundary(self.no_slip)
 
 
 class ACUBoundary:

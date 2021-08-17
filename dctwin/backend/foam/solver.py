@@ -4,7 +4,7 @@ form.epsilon.value = 0.09 * Math.pow(form.k.value,1.5) / form.Tu_L.value
 form.omega.value = form.epsilon.value / (0.09 * form.k.value)
 """
 import abc
-from dctwin.backend.foam.objects import ACUBoundary, RoomBoundary
+from dctwin.backend.foam.boundary import ACUBoundary, RoomBoundary
 import pathlib
 from dctwin.backend.foam.reader import read_internal_field
 import os

@@ -22,25 +22,9 @@ boundaryField
 {
     {{ room_boundary.U }}
 
-    "containment_.*"
-    {
-        type            noSlip;
-    }
-
-
-    "partition_wall_.*"
-    {
-        type            noSlip;
-    }
-
     {% for acu_boundary in acu_boundaries %}
     {{ acu_boundary.U }}
     {% endfor %}
-
-    "rack_wall_.*"
-    {
-        type            noSlip;
-    }
 
     "server_wall_.*"
     {

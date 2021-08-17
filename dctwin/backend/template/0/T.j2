@@ -23,24 +23,9 @@ boundaryField
 
     {{ room_boundary.T }}
 
-    "containment_.*"
-    {
-        type            zeroGradient;
-    }
-
-    "partition_wall_.*"
-    {
-        type            zeroGradient;
-    }
-
     {% for acu_boundary in acu_boundaries %}
     {{ acu_boundary.T }}
     {% endfor %}
-
-    "rack_wall_.*"
-    {
-        type            zeroGradient;
-    }
 
     "server_wall_.*"
     {
