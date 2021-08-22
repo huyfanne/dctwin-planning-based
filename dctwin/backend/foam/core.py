@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
 from dctwin.backend import template_dir, template_env
 from dctwin.config import environ

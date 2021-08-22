@@ -1,4 +1,3 @@
-from dctwin.models.objects import Rack
 import math
 import os
 from dataclasses import dataclass
@@ -14,6 +13,7 @@ from dctwin.backend.foam.core import init_foam
 from dctwin.config import environ
 from dctwin.models.basics import Vertex
 from dctwin.models.constructions import Room
+from dctwin.models.objects import Rack
 
 logger = Logger(__name__)
 

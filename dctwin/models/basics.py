@@ -1,12 +1,9 @@
 """Basic geometry
 Unit: m
 """
-from decimal import Decimal
 from enum import Enum
-from typing import Dict, List
 
 from pydantic import BaseModel, validator
-from pydantic.fields import Field
 
 
 class Size(BaseModel):
@@ -45,7 +42,6 @@ class ACUConfig(BaseModel):
 
 
 class ServerConfig(BaseModel):
-    # load_ratio: float
     flow_rate: float
     heat_load: float
 

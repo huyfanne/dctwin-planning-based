@@ -1,5 +1,5 @@
-from typing import Union
 from pathlib import Path
+from typing import Union
 
 
 def read_internal_field(filename: Union[str, Path]):

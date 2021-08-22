@@ -5,7 +5,8 @@ import click
 import docker
 
 from dctwin.backend.foam.snappyhex import SnappyHexBackend
-from dctwin.backend.foam.solver import SteadySolverBackend, TransientSolverBackend
+from dctwin.backend.foam.solver import (SteadySolverBackend,
+                                        TransientSolverBackend)
 from dctwin.backend.geometry.salome import SalomeBackend
 from dctwin.config import environ
 from dctwin.models import Room
