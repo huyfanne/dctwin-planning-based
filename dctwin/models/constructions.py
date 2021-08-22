@@ -17,6 +17,7 @@ class VentOpening(BaseModel):
 
 
 class PartitionWall(BaseModel):
+    id: str
     size: Size
     placement: Vertex
     vent_opening_list: List[VentOpening] = Field(default_factory=list)
@@ -65,6 +66,12 @@ class Constructions(BaseModel):
     containments: OrderedDict[str, Containment] = Field(default_factory=dict)
     raised_floor: Optional[RaisedFloor]
     ceiling: Optional[Ceiling]
+
+    @validator("partition_walls", pre=True)
+    def validate_partition_walls(cls, v):
+        for _id, wall in v.items():
+            wall['id'] = _id
+        return v
 
 
 class Room(BaseModel):
