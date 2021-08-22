@@ -1,5 +1,5 @@
 import json
-from decimal import Decimal, DefaultContext
+from decimal import Decimal
 from pathlib import Path
 from typing import List, Optional, OrderedDict, Union
 
@@ -20,6 +20,12 @@ class PartitionWall(BaseModel):
     size: Size
     placement: Vertex
     vent_opening_list: List[VentOpening] = Field(default_factory=list)
+
+
+class Pillar(BaseModel):
+    id: str
+    size: Size
+    placement: Vertex
 
 
 class Containment(BaseModel):
@@ -55,6 +61,7 @@ class RaisedFloor(BaseModel):
 
 class Constructions(BaseModel):
     partition_walls: OrderedDict[str, PartitionWall] = Field(default_factory=dict)
+    pillars: OrderedDict[str, Pillar] = Field(default_factory=dict)
     containments: OrderedDict[str, Containment] = Field(default_factory=dict)
     raised_floor: Optional[RaisedFloor]
     ceiling: Optional[Ceiling]

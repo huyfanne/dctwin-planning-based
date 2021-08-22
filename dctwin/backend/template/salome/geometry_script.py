@@ -351,6 +351,7 @@ class Builder:
             room["constructions"]["partition_walls"].values()
         )
         self.contaiments: list = list(room["constructions"]["containments"].values())
+        self.pillars: list = list(room["constructions"]["pillars"].values())
         self.ceiling: dict = room["constructions"].get("ceiling", None)
         self.raised_floor: dict = room["constructions"].get("raised_floor", None)
         self.acus: dict = room["objects"]["acus"]
@@ -363,6 +364,7 @@ class Builder:
 
         self.computed_rack_models: dict = dict()
 
+        self.room_height = room["dz"]
         self.floor_height = (
             0 if self.raised_floor is None else self.raised_floor["height"]
         )
@@ -440,6 +442,15 @@ class Builder:
                     rack["orientation"],
                     slots=blanking_panels,
                 )
+
+    def make_pillars(self):
+        for i, pillar in enumerate(self.pillars):
+            placement, size = pillar["placement"], pillar["size"]
+            placement["z"] = 0
+            size["dz"] = self.room_height
+            box = util.make_box(size, placement)
+            contaiment_box = util.group_by_faces(box)
+            util.export_stl(util.mesh(contaiment_box, 0.5, 2), f"pillar_{i}")
 
     def make_partition_walls(self):
         for i, wall in enumerate(self.partition_wall_list):

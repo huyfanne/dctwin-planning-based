@@ -80,6 +80,7 @@ def generate_snappy_dict(
     new_field_config = {
         "room_wall": {"type": "wall", "level": 1, "refine_level": "(0 1)"},
         "partition_wall": {"type": "wall", "level": 1, "refine_level": "(0 1)"},
+        "pillar": {"type": "wall", "level": 1, "refine_level": "(0 1)"},
         "acu_wall": {"type": "wall", "level": 2, "refine_level": "(0 2)"},
         "acu_return": {"type": "patch", "level": 2, "refine_level": "(0 2)"},
         "acu_supply": {"type": "patch", "level": 2, "refine_level": "(0 2)"},

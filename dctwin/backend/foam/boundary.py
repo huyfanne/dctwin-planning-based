@@ -60,6 +60,12 @@ class RoomBoundary(Boundary):
                 for index, _ in enumerate(list(self.room.constructions.partition_walls))
             ]
         )
+        pillar_boundary = "\n".join(
+            [
+                f"pillar_{index} {type_define}"
+                for index, _ in enumerate(list(self.room.constructions.pillars))
+            ]
+        )
 
         rack_boundary = "\n".join(
             [
@@ -72,6 +78,7 @@ class RoomBoundary(Boundary):
         {ceiling}
         {floor}
         {containments_boundary}
+        {pillar_boundary}
         {partition_wall_boundary}
         {rack_boundary}
         """
