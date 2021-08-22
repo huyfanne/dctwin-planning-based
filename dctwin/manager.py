@@ -1,12 +1,11 @@
-from pathlib import Path
 from typing import Optional, Union
+from pathlib import Path
 
 import click
 import docker
 
 from dctwin.backend.foam.snappyhex import SnappyHexBackend
-from dctwin.backend.foam.solver import (SteadySolverBackend,
-                                        TransientSolverBackend)
+from dctwin.backend.foam.solver import SteadySolverBackend, TransientSolverBackend
 from dctwin.backend.geometry.salome import SalomeBackend
 from dctwin.config import environ
 from dctwin.models import Room
@@ -20,7 +19,7 @@ class DCTwinManager:
     def __init__(
         self,
         docker_client: docker.DockerClient = None,
-        data_dir: Union[str, Path] = None,
+        data_dir: Optional[str] = None,
         mesh_process: int = 1,
         solve_process: int = 1,
         steady: bool = True,
@@ -92,9 +91,10 @@ class DCTwinManager:
         end_time: int = None,
         write_interval: int = None,
         last_state_case: Union[Path, str] = None,
+        stream: bool = False,
     ):
         try:
-            self.solver_backend.run(
+            return self.solver_backend.run(
                 room,
                 dry_run=dry_run,
                 process_num=process_num,
@@ -103,11 +103,11 @@ class DCTwinManager:
                 end_time=end_time,
                 write_interval=write_interval,
                 last_state_case=last_state_case,
+                stream=stream,
             )
         except Exception as e:
             click.echo("Failed to solve")
             click.echo(e)
-            raise e
 
     def run_simulation(self, room: Room):
         self.build_geometry(room)

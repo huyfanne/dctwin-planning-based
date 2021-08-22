@@ -37,6 +37,7 @@ class Backend(abc.ABC):
         auto_remove: bool = True,
         user: int = None,
         working_dir: str = None,
+        stream: bool = False,
     ) -> None:
         try:
             container = self.client.containers.run(
@@ -60,9 +61,12 @@ class Backend(abc.ABC):
                 else self.volume_data_dir,
                 detach=True,
             )
-            stream = container.logs(stream=True, follow=True)
-            for log in stream:
-                click.echo(log, nl=False)
+            output_stream = container.logs(stream=True, follow=True)
+            if stream:
+                return output_stream
+            else:
+                for log in output_stream:
+                    click.echo(log, nl=False)
         except ContainerError as e:
             click.echo(str(e.stderr))
             raise e

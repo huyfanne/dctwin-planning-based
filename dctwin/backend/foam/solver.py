@@ -13,8 +13,7 @@ from typing import List, Union
 
 from dctwin.backend import template_env
 from dctwin.backend.core import Backend
-from dctwin.backend.foam.boundary import (ACUBoundary, RoomBoundary,
-                                          ServerBoundary)
+from dctwin.backend.foam.boundary import ACUBoundary, RoomBoundary, ServerBoundary
 from dctwin.backend.foam.core import generate_control_dict
 from dctwin.backend.foam.reader import read_internal_field
 from dctwin.config import environ
@@ -152,7 +151,7 @@ class SolverBackend(Backend):
         process_num: int = None,
         write_interval: int = None,
         end_time: int = None,
-        delta_t=None,
+        stream: bool = False,
     ):
         if process_num is not None:
             self.process_num = process_num
@@ -181,7 +180,7 @@ class SolverBackend(Backend):
 
         if dry_run:
             return
-        self.run_container(user=os.getuid())
+        return self.run_container(user=os.getuid(), stream=stream)
 
 
 class SteadySolverBackend(SolverBackend):
