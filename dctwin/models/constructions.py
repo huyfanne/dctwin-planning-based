@@ -83,13 +83,6 @@ class Room(BaseModel):
     def probes(self):
         return list(self.objects.sensors.values())
 
-    @validator("probes")
-    def update_probes(cls, v):
-        for index, probe in enumerate(v):
-            if probe.name is None:
-                probe.name = f"Probe_{index + 1}"
-        return v
-
     @validator("objects")
     def validate_objects(cls, v):
         for server in v.servers.values():
