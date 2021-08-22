@@ -563,6 +563,7 @@ class Builder:
             self.make_ceiling()
             self.make_floor()
             self.make_containments()
+            self.make_pillars()
             self.make_partition_walls()
             self.make_acus()
             self.make_racks()

@@ -115,7 +115,8 @@ class SolverBackend(Backend):
             command = (
                 "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
                 "decomposePar -force && "
-                f"mpirun -np {self.process_num} {self.solver} -parallel && "
+                "mpirun --allow-run-as-root "
+                f"-np {self.process_num} {self.solver} -parallel && "
                 "reconstructPar -latestTime && "
                 "rm -rf /data/processor*'"
             )
