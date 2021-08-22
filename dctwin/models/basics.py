@@ -44,7 +44,3 @@ class ACUConfig(BaseModel):
 class ServerConfig(BaseModel):
     flow_rate: float
     heat_load: float
-
-
-class Probe(Vertex):
-    name: str = None

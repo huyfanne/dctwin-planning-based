@@ -1,6 +1,7 @@
 from typing import Optional, OrderedDict
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
+from pydantic.utils import Obj
 
 from dctwin.models.basics import Face, Size, Vertex
 from dctwin.models.server import Server, ServerModel
@@ -84,6 +85,11 @@ class Rack(ObjectModel):
     has_blanking_panel: Optional[bool]
 
 
+class Sensor(Vertex):
+    id: str
+    meta: OrderedDict = Field(default_factory=dict)
+
+
 class Objects(BaseModel):
     rack_models: OrderedDict[str, RackModel]
     acu_models: OrderedDict[str, ACUModel]
@@ -91,6 +97,8 @@ class Objects(BaseModel):
     acus: OrderedDict[str, ACU]
     racks: OrderedDict[str, Rack]
     servers: OrderedDict[str, Server]
+
+    sensors: OrderedDict[str, Sensor] = Field(default_factory=dict)
 
     def rack_model(self, rack_id):
         return self.rack_models[self.racks[rack_id].model]

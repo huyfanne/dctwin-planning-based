@@ -1,11 +1,11 @@
 import json
-from decimal import Decimal
+from decimal import Decimal, DefaultContext
 from pathlib import Path
 from typing import List, Optional, OrderedDict, Union
 
 from pydantic import BaseModel, Field, validator
 
-from dctwin.models.basics import Probe, Size, Vertex
+from dctwin.models.basics import Size, Vertex
 from dctwin.models.objects import Objects
 
 
@@ -69,11 +69,12 @@ class Room(BaseModel):
     constructions: Constructions
     objects: Objects
 
-    # Probe locations
-    probes: List[Probe] = Field(default_factory=list)
-
     class Config:
         json_encoders = {Decimal: float}
+
+    @property
+    def probes(self):
+        return list(self.objects.sensors.values())
 
     @validator("probes")
     def update_probes(cls, v):
