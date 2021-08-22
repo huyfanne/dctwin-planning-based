@@ -364,7 +364,7 @@ class Builder:
 
         self.computed_rack_models: dict = dict()
 
-        self.room_height = room["dz"]
+        self.room_height = room["height"]
         self.floor_height = (
             0 if self.raised_floor is None else self.raised_floor["height"]
         )
