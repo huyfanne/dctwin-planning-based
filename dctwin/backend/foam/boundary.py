@@ -73,6 +73,14 @@ class RoomBoundary(Boundary):
                 for rack in self.room.objects.racks.values()
             ]
         )
+        rack_panel_boundary = "\n".join(
+            [
+                f"rack_panel_{rack.id} {type_define}"
+                for rack in filter(
+                    lambda r: r.has_blanking_panel, self.room.objects.racks.values()
+                )
+            ]
+        )
         return f"""
         room_wall_1 {type_define}
         {ceiling}
@@ -81,6 +89,7 @@ class RoomBoundary(Boundary):
         {pillar_boundary}
         {partition_wall_boundary}
         {rack_boundary}
+        {rack_panel_boundary}
         """
 
     @property

@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Optional
 
 import click
-
 from dctwin.backend import template_env
 from dctwin.backend.core import Backend
 from dctwin.backend.foam.core import init_foam
@@ -88,6 +87,12 @@ def generate_snappy_dict(
         "server_outlet": {"type": "patch", "level": 2, "refine_level": "(0 3)"},
         "server_wall": {"type": "wall", "level": 2, "refine_level": "(0 3)"},
         "rack_wall": {
+            "type": "wall",
+            "level": 2,
+            "refine_level": "(0 2)",
+            "faceType": "baffle",
+        },
+        "rack_panel": {
             "type": "wall",
             "level": 2,
             "refine_level": "(0 2)",

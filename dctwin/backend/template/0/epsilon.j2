@@ -81,6 +81,12 @@ boundaryField
         value           uniform {{ acu_epsilon }};
     }
 
+    "rack_panel_.*"
+    {
+        type            epsilonWallFunction;
+        value           uniform {{ acu_epsilon }};
+    }
+
     "server_wall_.*"
     {
         type            epsilonWallFunction;

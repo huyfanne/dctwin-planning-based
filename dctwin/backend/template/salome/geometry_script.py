@@ -11,6 +11,7 @@ try:
     import GEOM
     import SALOMEDS
     import SMESH
+
     from salome.geom import geomBuilder
     from salome.smesh import smeshBuilder
 
@@ -304,25 +305,24 @@ class RackModel:
             self.mesh()
 
         meshes = []
-        if True:
-            meshes.append(
-                util.copy_mesh(
-                    f"rack_wall_{rack_id}_panel_default_0)",
-                    self.rack_blanking_mesh,
-                    {**placement, "z": 0},
-                    orientation,
-                    is_export=False,
-                )
+        meshes.append(
+            util.copy_mesh(
+                f"rack_panel_default_{rack_id}",
+                self.rack_blanking_mesh,
+                {**placement, "z": 0},
+                orientation,
+                is_export=False,
             )
-            meshes.append(
-                util.copy_mesh(
-                    f"rack_wall_{rack_id}_panel_default_0)",
-                    self.rack_blanking_mesh,
-                    {**placement, "z": 0.05},
-                    orientation,
-                    is_export=False,
-                )
+        )
+        meshes.append(
+            util.copy_mesh(
+                f"rack_panel_default_{rack_id}",
+                self.rack_blanking_mesh,
+                {**placement, "z": 0.05},
+                orientation,
+                is_export=False,
             )
+        )
         if not self.first_slot_offset:
             try:
                 slots.remove(1)
@@ -332,7 +332,7 @@ class RackModel:
             z = placement["z"]
             z += 0.05 * (slot - 1)
             mesh = util.copy_mesh(
-                f"rack_wall_{rack_id}_panel_{slot}",
+                f"rack_panel_{rack_id}_{slot}",
                 self.rack_blanking_mesh,
                 {**placement, "z": z},
                 orientation,
@@ -342,7 +342,7 @@ class RackModel:
         compound_mesh = smesh.Concatenate(
             [mesh.GetMesh() for mesh in meshes], 1, 1, 1e-05, False
         )
-        util.export_stl(compound_mesh, f"rack_wall_{rack_id}_panel")
+        util.export_stl(compound_mesh, f"rack_panel_{rack_id}")
 
 
 class Builder:
