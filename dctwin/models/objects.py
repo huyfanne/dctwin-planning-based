@@ -1,10 +1,9 @@
 from typing import Optional, OrderedDict
 
-from pydantic import BaseModel, validator, Field
-from pydantic.utils import Obj
-
 from dctwin.models.basics import Face, Size, Vertex
 from dctwin.models.server import Server, ServerModel
+from pydantic import BaseModel, Field, validator
+from pydantic.utils import Obj
 
 
 class ObjectModel(BaseModel):
@@ -102,6 +101,12 @@ class Objects(BaseModel):
 
     def rack_model(self, rack_id):
         return self.rack_models[self.racks[rack_id].model]
+
+    @validator("sensors", pre=True)
+    def validate_sensors(cls, v):
+        for _id, sensor in v.items():
+            sensor["id"] = _id
+        return v
 
     @validator("acus")
     def validate_acus(cls, v, values):

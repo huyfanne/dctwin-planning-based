@@ -80,7 +80,7 @@ class Builder:
             )
 
 
-def parse_result(room: Room, case: Union[str, Path]):
+def parse_result(room: Room, case: Union[str, Path], **kwargs):
     results = []
     with open(f"{case}/postProcessing/probes/0/T") as f:
         for i in f:
@@ -92,13 +92,20 @@ def parse_result(room: Room, case: Union[str, Path]):
                 )
     probe_results = results[-1]
     assert len(room.probes) == len(probe_results)
-    return [
-        {
-            "probe": room.probes[i].dict(),
-            "result": probe_results[i],
-        }
-        for i in range(len(room.probes))
-    ]
+
+    results = []
+    for i, sensor in enumerate(room.probes):
+        if len(kwargs) == 0:
+            data = sensor.dict()
+            data["result"] = probe_results[i]
+            results.append(data)
+        else:
+            for k, v in kwargs.items():
+                if sensor.meta.get(k) == v:
+                    data = sensor.dict()
+                    data["result"] = probe_results[i]
+                    results.append(data)
+    return results
 
 
 class SolverBackend(Backend):
