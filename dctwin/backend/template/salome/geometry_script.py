@@ -229,9 +229,8 @@ class ServerModel:
     def from_dict(cls, model_data: dict):
         obj = cls()
         slot_height = 0.05
-        width = 0.6
         obj.size = {
-            "dx": width,
+            "dx": model_data["width"],
             "dy": model_data["depth"],
             "dz": model_data["occupation"] * slot_height,
         }

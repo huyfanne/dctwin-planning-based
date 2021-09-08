@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class ServerModel(BaseModel):
     occupation: int
     depth: float
+    width: float = 0.6
 
 
 class Server(BaseModel):
