@@ -1,3 +1,4 @@
+import math
 import shutil
 from pathlib import Path
 from typing import List, Optional, Union
@@ -41,14 +42,9 @@ def generate_control_dict(
             )
         )
     if process_num > 1:
-        if process_num >= 16:
-            process_num = 16
-        elif process_num >= 8:
-            process_num = 8
-        elif process_num >= 4:
-            process_num = 4
-        elif process_num >= 2:
-            process_num = 2
+        process_num = 2 ** round(math.log(process_num, 2))
+        if process_num >= 64:
+            process_num = 64
         with open(Path(environ.CASE_DIR, "system/decomposeParDict"), "w") as f:
             f.write(
                 template_env.get_template("system/decomposeParDict.j2").render(
