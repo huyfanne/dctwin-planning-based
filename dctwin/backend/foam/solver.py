@@ -110,6 +110,7 @@ def parse_result(room: Room, case: Union[str, Path], **kwargs):
 
 class SolverBackend(Backend):
     docker_image = "openfoamplus/of_v1912_centos73"
+    only_save_latest = True
 
     @property
     @abc.abstractmethod
@@ -119,12 +120,13 @@ class SolverBackend(Backend):
     @property
     def command(self):
         if self.process_num > 1:
+            latest_time = "-latestTime" if self.only_save_latest else ""
             command = (
                 "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
                 "decomposePar -force && "
                 "mpirun --allow-run-as-root "
                 f"-np {self.process_num} {self.solver} -parallel && "
-                "reconstructPar -latestTime && "
+                f"reconstructPar {latest_time} && "
                 "rm -rf /data/processor*'"
             )
         else:
