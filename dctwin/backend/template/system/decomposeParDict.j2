@@ -20,9 +20,9 @@ hierarchicalCoeffs
 {
     {% if process_num == 64 %}
     n (4 4 4);
-    {% if process_num == 32 %}
+    {% elif process_num == 32 %}
     n (4 4 2);
-    {% if process_num == 16 %}
+    {% elif process_num == 16 %}
     n (2 4 2);
     {% elif process_num == 8 %}
     n (2 2 2);
