@@ -1,6 +1,7 @@
 from typing import Optional
+from collections import OrderedDict
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ServerModel(BaseModel):
@@ -30,6 +31,7 @@ class Server(BaseModel):
     occupation: Optional[int] = None
     orientation: Optional[int] = None
     width: Optional[float] = None
+    meta: OrderedDict = Field(default_factory=dict)
 
     @property
     def t_sink(self) -> str:
