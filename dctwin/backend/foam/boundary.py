@@ -160,7 +160,7 @@ class ServerBoundary(Boundary):
     density = 1.19
 
     def __init__(self, server: Server) -> None:
-        self.object = server
+        self.object: Server = server
         self.heat_load = server.heat_load
         self.flow_rate = round(server.flow_rate, 6)
         self.mass_flow_rate = self.density * self.flow_rate
@@ -181,6 +181,10 @@ class ServerBoundary(Boundary):
         value = f"({t_sink}+({self.heat_load}/{self.flow_value}))"
         if self.flow_rate == 0:
             outlet = self.zero_gradient
+        elif self.object.dynamic_flow_rate_high is not None and \
+            self.object.dynamic_temperature_high is not None and \
+            self.object.dynamic_temperature_low is not None:
+            outlet = self.dynamic_t
         else:
             outlet = f"""
             {{
@@ -199,7 +203,7 @@ class ServerBoundary(Boundary):
         """
 
     @property
-    def dynamic_t(self):
+    def dynamic_t(self) -> str:
         t_sink = f"tSink_{self.object.id}"
         value = f"({t_sink}+({self.heat_load}/{self.flow_value}))"
         u_sink = f"uSink_{self.object.id}"
@@ -211,7 +215,7 @@ class ServerBoundary(Boundary):
             weight_u = "-weightAverage(U.y())"
         if self.object.orientation == 270:
             weight_u = "weightAverage(U.x())"
-        f"""
+        return f"""
         {{
             type            exprFixedValue;
             value           $internalField;
@@ -226,20 +230,26 @@ class ServerBoundary(Boundary):
 
     @property
     def U(self):
-        inlet = f"""
-        {{
-            type                flowRateOutletVelocity;
-            volumetricFlowRate  {self.flow_rate};
-            value               uniform (0 0 0);
-        }}
-        """
-        outlet = f"""
-        {{
-            type                flowRateInletVelocity;
-            volumetricFlowRate  {self.flow_rate};
-            value               uniform (0 0 0);
-        }}
-        """
+        if self.object.dynamic_flow_rate_high is not None and \
+            self.object.dynamic_temperature_high is not None and \
+            self.object.dynamic_temperature_low is not None:
+            inlet = self.dynamic_inlet
+            outlet = self.dynamic_outlet
+        else:
+            inlet = f"""
+            {{
+                type                flowRateOutletVelocity;
+                volumetricFlowRate  {self.flow_rate};
+                value               uniform (0 0 0);
+            }}
+            """
+            outlet = f"""
+            {{
+                type                flowRateInletVelocity;
+                volumetricFlowRate  {self.flow_rate};
+                value               uniform (0 0 0);
+            }}
+            """
         if self.flow_rate == 0:
             inlet = self.no_slip
             outlet = self.no_slip
