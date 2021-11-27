@@ -2,11 +2,10 @@ import abc
 from typing import Union
 
 import click
-from docker import DockerClient
-from docker.errors import ContainerError
-
 from dctwin.config import environ
 from dctwin.models import Room
+from docker import DockerClient
+from docker.errors import ContainerError
 
 
 class Backend(abc.ABC):
@@ -66,7 +65,8 @@ class Backend(abc.ABC):
                 return output_stream
             else:
                 for log in output_stream:
-                    click.echo(log, nl=False)
+                    if environ.BACKEND_LOG_PRINT:
+                        click.echo(log, nl=False)
         except ContainerError as e:
             click.echo(str(e.stderr))
             raise e
