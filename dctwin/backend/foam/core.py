@@ -68,10 +68,13 @@ def init_foam():
         Path(template_dir, "constant/transportProperties"),
         Path(environ.CASE_DIR, "constant/transportProperties"),
     )
-    shutil.copy(
-        Path(template_dir, "constant/turbulenceProperties"),
-        Path(environ.CASE_DIR, "constant/turbulenceProperties"),
-    )
+
+    with open(Path(environ.CASE_DIR, "constant/turbulenceProperties"), "w") as f:
+        f.write(
+            template_env.get_template("constant/turbulenceProperties.j2").render(
+                turbulence=environ.SOLVER_TURBULENCE
+            )
+        )
 
     shutil.copy(
         Path(template_dir, "system/steady/fvSchemes"),
