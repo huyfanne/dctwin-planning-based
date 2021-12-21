@@ -72,7 +72,7 @@ def init_foam():
     with open(Path(environ.CASE_DIR, "constant/turbulenceProperties"), "w") as f:
         f.write(
             template_env.get_template("constant/turbulenceProperties.j2").render(
-                turbulence=environ.SOLVER_TURBULENCE
+                turbulence=("on" if environ.SOLVER_TURBULENCE else "off")
             )
         )
 

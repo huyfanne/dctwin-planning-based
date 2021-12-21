@@ -32,6 +32,7 @@ class ACU(ObjectModel):
     flow_rate: float
     supply_face: Optional[Face]
     return_face: Optional[Face]
+    meta: OrderedDict = Field(default_factory=dict)
 
     def calculate_face_area(self, face: Face) -> float:
         if face in (Face.front, Face.rear):
