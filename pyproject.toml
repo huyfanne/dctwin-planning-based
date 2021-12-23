@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dctwin"
-version = "0.1.1"
+version = "0.1.2"
 description = "CFD digital twin for data centers."
 authors = ["Neng <darren.xia@ntu.edu.sg>"]
 packages = [
@@ -19,7 +19,6 @@ pytest = "^6.2.1"
 isort = "^5.7.0"
 black = "^20.8b1"
 pylava = "^0.3.0"
-pandas = "^1.2.0"
 
 [tool.poetry.scripts]
 dctwin = 'dctwin.cli.main:cli'

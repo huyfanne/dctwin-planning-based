@@ -103,11 +103,29 @@ class Objects(BaseModel):
     def rack_model(self, rack_id):
         return self.rack_models[self.racks[rack_id].model]
 
+    @classmethod
+    def _validate_id(cls, v: dict):
+        for _id, obj in v.items():
+            if not _id.isidentifier():
+                raise ValueError(f"must be valid identifier: {_id}")
+            obj["id"] = _id
+        return v
+
+    @validator("acus", pre=True)
+    def validate_acus_pre(cls, v):
+        return cls._validate_id(v)
+
+    @validator("racks", pre=True)
+    def validate_racks_pre(cls, v):
+        return cls._validate_id(v)
+
+    @validator("servers", pre=True)
+    def validate_servers_pre(cls, v):
+        return cls._validate_id(v)
+
     @validator("sensors", pre=True)
     def validate_sensors(cls, v):
-        for _id, sensor in v.items():
-            sensor["id"] = _id
-        return v
+        return cls._validate_id(v)
 
     @validator("acus")
     def validate_acus(cls, v, values):
@@ -127,7 +145,33 @@ class Objects(BaseModel):
 
     @validator("servers")
     def validate_servers(cls, v, values):
+        all_slots = dict()
         for server in v.values():
             server_model = values["server_models"][server.model]
             server.occupation = server_model.occupation
+
+            if server.rack_id not in all_slots:
+                rack = values["racks"].get(server.rack_id)
+                if rack is None:
+                    raise ValueError(
+                        f"invalid rack id: {server.rack_id} in Server({server.id})"
+                    )
+                rack_model = values["rack_models"][rack.model]
+                if (
+                    server.slot < 1
+                    or server.slot + server.occupation > rack_model.slot + 1
+                ):
+                    raise ValueError(
+                        f"invalid server slot/occupation: Server({server.id}, slot={server.slot}, occupation={server.occupation})"
+                    )
+                all_slots[rack.id] = dict()
+
+            for i in range(server.slot, server.slot + server.occupation):
+                if i not in all_slots[server.rack_id]:
+                    all_slots[server.rack_id][i] = server.id
+                else:
+                    raise ValueError(
+                        f"invalid server slot/occupation: Server({server.id}) has collision with Server({all_slots[server.rack_id][i]})"
+                    )
+
         return v
