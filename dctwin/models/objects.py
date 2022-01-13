@@ -150,20 +150,20 @@ class Objects(BaseModel):
             server_model = values["server_models"][server.model]
             server.occupation = server_model.occupation
 
+            rack = values["racks"].get(server.rack_id)
+            if rack is None:
+                raise ValueError(
+                    f"invalid rack id: {server.rack_id} in Server({server.id})"
+                )
+            rack_model = values["rack_models"][rack.model]
+            if (
+                server.slot < 1
+                or server.slot + server.occupation > rack_model.slot + 1
+            ):
+                raise ValueError(
+                    f"invalid server slot/occupation: Server({server.id}, slot={server.slot}, occupation={server.occupation})"
+                )
             if server.rack_id not in all_slots:
-                rack = values["racks"].get(server.rack_id)
-                if rack is None:
-                    raise ValueError(
-                        f"invalid rack id: {server.rack_id} in Server({server.id})"
-                    )
-                rack_model = values["rack_models"][rack.model]
-                if (
-                    server.slot < 1
-                    or server.slot + server.occupation > rack_model.slot + 1
-                ):
-                    raise ValueError(
-                        f"invalid server slot/occupation: Server({server.id}, slot={server.slot}, occupation={server.occupation})"
-                    )
                 all_slots[rack.id] = dict()
 
             for i in range(server.slot, server.slot + server.occupation):

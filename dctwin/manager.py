@@ -19,7 +19,7 @@ class DCTwinManager:
     def __init__(
         self,
         docker_client: docker.DockerClient = None,
-        data_dir: Optional[str] = None,
+        data_dir: Union[str, Path] = None,
         mesh_process: int = 1,
         solve_process: int = 1,
         steady: bool = True,
