@@ -1,14 +1,12 @@
-# Datacenter CFD Engine
+# DCTwin
 
 Building CFD model for datacenters.
 
-**!important**: Currenty this package is using **Docker command** as provider. Later will create more provider options.
 
 ## Installation
-Download the [package](https://github.com/CAP-GDCR/datacenter-cfd-engine/releases/download/0.1.0/datacenter_cfd_engine-0.1.0-py3-none-any.whl).
-Then:
+
 ```bash
-pip install datacenter_cfd_engine-0.1.0-py3-none-any.whl
+pip install dctwin-1.0.1-py3-none-any.whl
 ```
 
 ## Command line tools
