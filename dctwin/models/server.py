@@ -1,5 +1,5 @@
-from typing import Optional
 from collections import OrderedDict
+from typing import Optional
 
 from pydantic import BaseModel, Field
 

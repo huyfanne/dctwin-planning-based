@@ -3,7 +3,6 @@ from typing import Optional, OrderedDict
 from dctwin.models.basics import Face, Size, Vertex
 from dctwin.models.server import Server, ServerModel
 from pydantic import BaseModel, Field, validator
-from pydantic.utils import Obj
 
 
 class ObjectModel(BaseModel):
@@ -156,10 +155,7 @@ class Objects(BaseModel):
                     f"invalid rack id: {server.rack_id} in Server({server.id})"
                 )
             rack_model = values["rack_models"][rack.model]
-            if (
-                server.slot < 1
-                or server.slot + server.occupation > rack_model.slot + 1
-            ):
+            if server.slot < 1 or server.slot + server.occupation > rack_model.slot + 1:
                 raise ValueError(
                     f"invalid server slot/occupation: Server({server.id}, slot={server.slot}, occupation={server.occupation})"
                 )
