@@ -130,7 +130,7 @@ class Room(BaseModel):
         outlet_x, outlet_y = rotate(
             (rack.placement.x, rack.placement.y), (outlet_x, outlet_y), rack.orientation
         )
-        outlet = Vertex(x=round(outlet_x, 3), y=round(outlet_y), z=z)
+        outlet = Vertex(x=round(outlet_x, 3), y=round(outlet_y, 3), z=z)
         return inlet, outlet
 
     def acu_patch_positions(self, acu_id: str) -> Tuple[Vertex]:
@@ -179,7 +179,7 @@ class Room(BaseModel):
         outlet_x, outlet_y = rotate(
             (acu.placement.x, acu.placement.y), (outlet_x, outlet_y), acu.orientation
         )
-        outlet = Vertex(x=round(outlet_x, 3), y=round(outlet_y), z=outlet_z)
+        outlet = Vertex(x=round(outlet_x, 3), y=round(outlet_y, 3), z=outlet_z)
         return inlet, outlet
 
     @property
