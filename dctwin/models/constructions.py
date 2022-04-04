@@ -125,8 +125,8 @@ class Room(BaseModel):
         inlet = Vertex(x=round(inlet_x, 3), y=round(inlet_y, 3), z=z)
 
         # outlet
-        outlet_x = inlet_x
-        outlet_y = inlet_y + server_model.depth
+        outlet_x = rack.placement.x + rack.size.dx / 2
+        outlet_y = rack.placement.y + server_model.depth
         outlet_x, outlet_y = rotate(
             (rack.placement.x, rack.placement.y), (outlet_x, outlet_y), rack.orientation
         )
