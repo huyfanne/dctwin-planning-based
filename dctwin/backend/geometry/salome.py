@@ -8,6 +8,8 @@ from dctwin.backend.core import Backend
 from dctwin.config import environ
 from dctwin.models.constructions import Room
 
+from docker.errors import ImageNotFound
+
 
 class SalomeBackend(Backend):
     docker_image = "charact3/salome-9"
@@ -29,8 +31,9 @@ class SalomeBackend(Backend):
 
     def _pre_process(self, room: Room):
         """Prepare files needed"""
-        image = self.client.images.get(self.docker_image)
-        if image is None:
+        try:
+            self.client.images.get(self.docker_image)
+        except ImageNotFound:
             click.echo("Salome image not existed, try to pull...")
             self.client.images.pull(self.docker_image)
 
