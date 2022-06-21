@@ -152,3 +152,8 @@ dmypy.json
 .prof
 
 # End of https://www.toptal.com/developers/gitignore/api/python
+
+.scannerwork/
+
+dependency-check-report.html
+reports/dependency-check-report.html
