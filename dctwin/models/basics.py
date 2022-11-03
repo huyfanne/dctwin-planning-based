@@ -6,6 +6,7 @@ from enum import Enum
 from pydantic import BaseModel, validator
 
 
+# noinspection PyMethodParameters
 class Size(BaseModel):
     dx: float
     dy: float
@@ -16,6 +17,7 @@ class Size(BaseModel):
         return round(v, 3)
 
 
+# noinspection PyMethodParameters
 class Vertex(BaseModel):
     x: float
     y: float

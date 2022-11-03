@@ -1,12 +1,11 @@
 import json
 from decimal import Decimal
 from pathlib import Path
-from typing import List, Optional, OrderedDict, Tuple, TypeVar, Union
+from typing import List, Optional, OrderedDict, Union, Tuple
 
 from dctwin.models.basics import Face, Size, Vertex
 from dctwin.models.geometry_utils import rotate
 from dctwin.models.objects import ACU, Objects, Rack, Server
-from numpy import outer
 from pydantic import BaseModel, Field, validator
 
 
@@ -61,6 +60,7 @@ class RaisedFloor(BaseModel):
     opening_list: List[Opening] = Field(default_factory=list)
 
 
+# noinspection PyMethodParameters
 class Constructions(BaseModel):
     partition_walls: OrderedDict[str, PartitionWall] = Field(default_factory=dict)
     pillars: OrderedDict[str, Pillar] = Field(default_factory=dict)
@@ -75,6 +75,7 @@ class Constructions(BaseModel):
         return v
 
 
+# noinspection PyMethodParameters
 class Room(BaseModel):
     name: str
     height: float
@@ -100,7 +101,7 @@ class Room(BaseModel):
             raise ValueError(f"not exist: {klass.__name__}(id={obj_id})")
         return obj
 
-    def server_patch_positions(self, server_id: str) -> Tuple[Vertex]:
+    def server_patch_positions(self, server_id: str) -> Tuple[Vertex, Vertex]:
         """Get the center point position of server inlet and outlet"""
         server: Server = self.get_object(Server, server_id)
         rack: Rack = self.get_object(Rack, server.rack_id)
@@ -133,7 +134,7 @@ class Room(BaseModel):
         outlet = Vertex(x=round(outlet_x, 3), y=round(outlet_y, 3), z=z)
         return inlet, outlet
 
-    def acu_patch_positions(self, acu_id: str) -> Tuple[Vertex]:
+    def acu_patch_positions(self, acu_id: str) -> Tuple[Vertex, Vertex]:
         """Get the center point position of acu return and supply"""
         acu: ACU = self.get_object(ACU, acu_id)
         acu_model = self.objects.acu_models[acu.model]
@@ -169,17 +170,16 @@ class Room(BaseModel):
                 z += self.constructions.raised_floor.height
             return round(x, 3), round(y, 3), round(z, 3)
 
-        inlet_x, inlet_y, inlet_z = get_raw_point(acu_model.return_face)
-        inlet_x, inlet_y = rotate(
-            (acu.placement.x, acu.placement.y), (inlet_x, inlet_y), acu.orientation
-        )
-        inlet = Vertex(x=round(inlet_x, 3), y=round(inlet_y, 3), z=inlet_z)
+        def get_center_coordinate(face):
+            x, y, z = get_raw_point(face)
+            x, y = rotate(
+                (acu.placement.x, acu.placement.y), (x, y), acu.orientation
+            )
+            return Vertex(x=round(x, 3), y=round(y, 3), z=z)
 
-        outlet_x, outlet_y, outlet_z = get_raw_point(acu_model.supply_face)
-        outlet_x, outlet_y = rotate(
-            (acu.placement.x, acu.placement.y), (outlet_x, outlet_y), acu.orientation
-        )
-        outlet = Vertex(x=round(outlet_x, 3), y=round(outlet_y, 3), z=outlet_z)
+        inlet = get_center_coordinate(acu_model.return_face)
+        outlet = get_center_coordinate(acu_model.supply_face)
+
         return inlet, outlet
 
     @property
@@ -199,6 +199,6 @@ class Room(BaseModel):
             f.write(self.json(indent=2))
 
     @classmethod
-    def load(cls, file_path: "str") -> "Room":
+    def load(cls, file_path: Union[str, Path]) -> "Room":
         with open(file_path) as f:
             return cls(**json.load(f))

@@ -89,6 +89,7 @@ class Sensor(Vertex):
     meta: OrderedDict = Field(default_factory=dict)
 
 
+# noinspection PyMethodParameters
 class Objects(BaseModel):
     rack_models: OrderedDict[str, RackModel]
     acu_models: OrderedDict[str, ACUModel]
@@ -157,7 +158,9 @@ class Objects(BaseModel):
             rack_model = values["rack_models"][rack.model]
             if server.slot < 1 or server.slot + server.occupation > rack_model.slot + 1:
                 raise ValueError(
-                    f"invalid server slot/occupation: Server({server.id}, slot={server.slot}, occupation={server.occupation})"
+                    f"invalid server slot/occupation: "
+                    f"Server({server.id}, slot={server.slot}, "
+                    f"occupation={server.occupation})"
                 )
             if server.rack_id not in all_slots:
                 all_slots[rack.id] = dict()
@@ -167,7 +170,9 @@ class Objects(BaseModel):
                     all_slots[server.rack_id][i] = server.id
                 else:
                     raise ValueError(
-                        f"invalid server slot/occupation: Server({server.id}) has collision with Server({all_slots[server.rack_id][i]})"
+                        f"invalid server slot/occupation: "
+                        f"Server({server.id}) has collision with "
+                        f"Server({all_slots[server.rack_id][i]})"
                     )
 
         return v

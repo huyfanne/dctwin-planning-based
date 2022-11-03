@@ -2,7 +2,7 @@ import math
 from typing import Tuple
 
 
-def rotate(origin: Tuple[float], point: Tuple[float], angle: int) -> Tuple[float]:
+def rotate(origin: Tuple[float, float], point: Tuple[float, float], angle: int) -> Tuple[float, float]:
     ox, oy = origin
     px, py = point
     _angle = angle / 180 * math.pi
