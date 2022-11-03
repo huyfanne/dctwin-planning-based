@@ -3,15 +3,15 @@ from pathlib import Path
 
 import click
 
-from dctwin.backend import template_env
-from dctwin.backend.core import Backend
-from dctwin.config import environ
+from dctwin.backends.core import Backend
 from dctwin.models.constructions import Room
-
-from docker.errors import ImageNotFound
+from dctwin.utils import template_env, config
 
 
 class SalomeBackend(Backend):
+    """
+    A class to manage the geometry generation using Salome.
+    """
     docker_image = "charact3/salome-9"
 
     def run(self, room: Room, dry_run: bool = False):
@@ -26,22 +26,16 @@ class SalomeBackend(Backend):
             "bash",
             "-c",
             "salome start -t geometry_script.py "
-            f"&& chown -R {os.getuid}:{os.getgid} {self.volume_data_dir}",
+            f"&& chown -R {os.getuid()}:{os.getgid()} {self.volume_data_dir}",
         ]
 
     def _pre_process(self, room: Room):
         """Prepare files needed"""
-        try:
-            self.client.images.get(self.docker_image)
-        except ImageNotFound:
-            click.echo("Salome image not existed, try to pull...")
-            self.client.images.pull(self.docker_image)
+        config.CASE_DIR.mkdir(parents=True, exist_ok=True)
+        config.geometry_dir.mkdir(parents=True, exist_ok=True)
 
-        environ.CASE_DIR.mkdir(parents=True, exist_ok=True)
-        environ.geometry_dir.mkdir(parents=True, exist_ok=True)
-
-        geometry_script = Path(environ.geometry_dir, "geometry_script.py")
-        geometry_description = Path(environ.geometry_dir, "geometry.json")
+        geometry_script = Path(config.geometry_dir, "geometry_script.py")
+        geometry_description = Path(config.geometry_dir, "geometry.json")
         with open(geometry_description, "w") as f:
             f.write(room.json())
         template = template_env.get_template("salome/geometry_script.py")
