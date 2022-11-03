@@ -157,3 +157,10 @@ dmypy.json
 
 dependency-check-report.html
 reports/dependency-check-report.html
+
+/examples/
+/patches/
+/tutorials/co-sim/model/POD/
+/tutorials/cfd/log/
+/tutorials/eplus/log/
+/tutorials/co-sim/log/
