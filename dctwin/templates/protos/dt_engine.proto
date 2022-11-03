@@ -1,0 +1,217 @@
+syntax = "proto2";
+
+package DTEngine;
+
+message LoggingConfig {
+  enum Level {
+    DEBUG = 10;
+    INFO = 20;
+    WARNING = 30;
+    ERROR = 50;
+  }
+  required string log_dir = 1;
+  optional Level level = 2 [default = DEBUG];
+  optional bool verbose = 3 [default = true];
+}
+
+message NormalizeConfig {
+  enum Method {
+    LINEAR = 1;
+  }
+  optional Method method = 1 [default = LINEAR];
+  required double lb = 2;
+  required double ub = 3;
+  optional double resized_lb = 4 [default = -1];
+  optional double resized_ub = 5 [default = 1];
+}
+
+message IDFXIScheduleConfig {
+  enum ScheduleType {
+    ITE = 0; // the schedule is sent to an ElectricITEquipment (CPU schedule)
+    ITEDeltaTSupply = 1;  // the schedule is sent to an ElectricITEquipment (deltaT supply)
+    ITEDeltaTReturn = 2; // the schedule is sent to an ElectricITEquipment (deltaT return)
+    AirLoopHVAC = 3; // the schedule is sent to the AirLoopHVAC (Cooling Load Fraction Schedule, for multi-CRAC case only)
+    Room = 4; // the schedule is set as the room temperature set point to enable zoom air temperature control
+  }
+  required float initial_value = 1;
+  optional float lb = 2;
+  optional float ub = 3;
+  required ScheduleType schedule_type = 5;
+  optional string scheduled_ite_equipment_name = 6;
+  optional string scheduled_hvac_loop_name = 7;
+  optional string scheduled_thermostat_setpoint_name = 8;
+}
+
+message IDFXIActuatorConfig {
+  enum ComponentType {
+      Fan = 0;
+      System_Node_Setpoint = 1;
+      PUMP = 2;
+  }
+  enum ControlType {
+      Fan_Air_Mass_Flow_Rate = 0;
+      Temperature_Setpoint = 1;
+      Mass_Flow_Rate_Setpoint = 2;
+      Pump_Mass_Flow_Rate = 3;
+  }
+  required string actuated_component_unique_name = 1;
+  required ComponentType actuated_component_type = 2;
+  required ControlType actuated_component_control_type = 3;
+  optional float initial_value = 4;
+}
+
+message IDFOutputVariableConfig {
+  required string key_value = 1;
+  required string variable_name = 2;
+  optional string reporting_frequency = 3 [default = "timestep"];
+}
+
+message ScalarDataItemConfig {
+  required string variable_name = 2;
+  oneof value {
+    double default_normed_value = 3;
+    double default_unnormed_value = 4;
+  }
+  optional NormalizeConfig normalize_config = 5;
+}
+
+message EPlusActionConfig {
+  enum ControlType {
+    FIXED = 1;  // always a fixed value (i.e. default value), not exposed to the agent
+    AGENT_CONTROLLED = 2;  // i.e. action in the common sense, included in the action space
+    PRE_SCHEDULED = 3;  // get from a specified picked list in round-robin manner
+    CUSTOMIZED = 4;  // user register a callable function to produce value, example will be provided
+  }
+  optional ControlType control_type = 2 [default = AGENT_CONTROLLED];
+  optional string input_source = 3;  // only required/used when control_type == PRE_SCHEDULED, otherwise ignored
+  // unless absolute path specified, input_source are considered under the `data/` folder
+  required string variable_name = 5;
+  oneof value {
+    double default_normed_value = 6;
+    double default_unnormed_value = 7;
+  }
+  oneof IDFConfig {
+    IDFXIActuatorConfig actuator_config = 8;
+    IDFXIScheduleConfig schedule_config = 9;
+  }
+  optional NormalizeConfig normalize_config = 10;
+}
+
+message EPlusObservationConfig {
+  optional bool exposed = 2 [default = false];
+  required string variable_name = 3;
+  oneof value {
+    double default_normed_value = 4;
+    double default_unnormed_value = 5;
+  }
+  enum ObservationType {
+    EPLUS = 1;
+    EXTERNAL = 2;
+  }
+  optional IDFOutputVariableConfig output_variable_config = 6;
+  optional NormalizeConfig normalize_config = 7;
+  optional ObservationType observation_type = 8 [default = EPLUS];
+}
+
+message CFDObservationConfig {
+  optional bool exposed = 2 [default = true];
+  required string variable_name = 3;
+  oneof value {
+    double default_normed_value = 4;
+    double default_unnormed_value = 5;
+  }
+  optional NormalizeConfig normalize_config = 7;
+}
+
+message SimulationTimeConfig {
+  // well, time format is not supported by proto2
+  required int32 begin_month = 1;
+  required int32 begin_day_of_month = 2;
+  required int32 end_month = 3;
+  required int32 end_day_of_month = 4;
+  required int32 number_of_timesteps_per_hour = 5;
+  optional bool use_simulation_time = 6 [default = false];
+}
+
+message EPlusEnvConfig {
+  optional string weather_file = 3;  // path of weather files/
+  required string model_file = 4; // a.k.a path of idf file/
+  map<string, string> tags = 5;
+
+  optional SimulationTimeConfig simulation_time_config = 6;
+
+  repeated EPlusActionConfig actions = 7;
+  optional bool use_unnormed_act = 8 [default = false];
+  repeated EPlusObservationConfig observations = 9;
+  optional bool use_unnormed_obs = 10 [default = false];
+
+  optional float return_temp_lb = 11;
+  optional float return_temp_ub = 12;
+  optional float return_temp_init = 13;
+  optional string host = 14 [default = "localhost"];
+  optional string network = 15 [default = "host"];
+
+  optional EnvParams env_params = 16;
+}
+
+message EnvParams{
+  optional string task_id = 1 [default = "0"];
+  optional int32 num_constraints = 2 [default = 0];
+}
+
+message ObjectMeshConfig{
+  enum ObjectType {
+      wall = 0;
+      patch = 1;
+  }
+  required ObjectType type = 1;
+  required int64 level = 2;
+  required string refine_level = 3;
+}
+
+message CFDMeshConfig {
+  oneof MeshConfig {
+    ObjectMeshConfig server_wall = 1;
+    ObjectMeshConfig server_inlet = 2;
+    ObjectMeshConfig server_outlet = 3;
+    ObjectMeshConfig acu_wall = 4;
+    ObjectMeshConfig acu_supply = 5;
+    ObjectMeshConfig acu_return = 6;
+  }
+}
+
+message CFDEnvConfig {
+  required string geometry_file = 1; // path of room.json file
+  required string idf2room_map = 2; // path of facility map file
+  optional string pod_dir = 3; // path of pod mode file
+  optional string object_mesh_index = 4;// path of object mesh index
+  optional int64 process_num = 5 [default = 8]; // path of pod mode file
+  optional bool steady = 6 [default = true]; // use steady-state simulation
+  optional int64 write_interval = 7 [default = 100]; // path of object mesh index
+  optional int64 end_time = 8 [default = 500]; // path of object mesh index
+  optional string mesh_dir = 9 [default = ""]; // path of mesh directory
+  repeated CFDMeshConfig field_config  = 10; // object mesh config
+  optional string pod_method = 11 [default = "GP-Flux"]; // POD coefficients calculation method
+  repeated CFDObservationConfig observations = 12;
+  optional bool use_unnormed_obs = 13 [default = false];
+}
+
+message CoSimEnvConfig {
+    required CFDEnvConfig cfd = 1; // cfd config
+    required EPlusEnvConfig eplus = 2; // energyplus config
+    optional EnvParams env_params = 3; // co-simulation env config
+}
+
+message GymReset{
+  optional bool return_info = 1 [default = true];
+}
+
+// main engine configuration
+message DTEngineConfig {
+  optional LoggingConfig logging_config = 1;
+  oneof EnvConfig {
+    EPlusEnvConfig eplus_env_config = 2;
+    CoSimEnvConfig cosim_env_config = 3;
+  }
+  optional CFDEnvConfig cfd_config = 4;
+}

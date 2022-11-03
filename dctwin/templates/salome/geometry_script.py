@@ -11,7 +11,6 @@ try:
     import GEOM
     import SALOMEDS
     import SMESH
-
     from salome.geom import geomBuilder
     from salome.smesh import smeshBuilder
 
