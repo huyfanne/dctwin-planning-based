@@ -189,7 +189,7 @@ class CFDManager:
                 self.build_geometry(dry_run=dry_run)
             if run_mesh:
                 self.mesh(dry_run=dry_run)
-                if save_mesh_index and self.object_mesh_index is not None:
+                if save_mesh_index and self.object_mesh_index is None:
                     self.object_mesh_index = calc_object_mesh_index(
                         room=self.room, mesh_points=read_mesh_coordinates(),
                     )
