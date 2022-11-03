@@ -1,0 +1,6 @@
+server_flow_rate_noise: false
+noise_factor: 0.1
+server_flow_rate_factor: 0.8
+supply_temp: [ 16, 18, 20, 22 ]
+supply_flow_rate: [ 17, 22, 27 ]
+cpu_load_scheduling: [ 0.3, 0.6, 0.9]

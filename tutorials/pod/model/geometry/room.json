@@ -1,0 +1,7454 @@
+{
+  "name": "mini_alibaba_mixed",
+  "height": 4.0,
+  "plane_outline": [
+    {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "x": 12.6,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "x": 12.6,
+      "y": 6.0,
+      "z": 0.0
+    },
+    {
+      "x": 0.0,
+      "y": 6.0,
+      "z": 0.0
+    }
+  ],
+  "version": "0.1",
+  "constructions": {
+    "partition_walls": {},
+    "pillars": {},
+    "containments": {},
+    "raised_floor": {
+      "height": 0.4,
+      "opening_list": [
+        {
+          "placement": {
+            "x": 2.4,
+            "y": 0.6,
+            "z": 0.0
+          },
+          "size": {
+            "dx": 6.0,
+            "dy": 0.6,
+            "dz": 0.0
+          }
+        },
+        {
+          "placement": {
+            "x": 2.4,
+            "y": 4.8,
+            "z": 0.0
+          },
+          "size": {
+            "dx": 6.0,
+            "dy": 0.6,
+            "dz": 0.0
+          }
+        }
+      ]
+    }
+  },
+  "objects": {
+    "rack_models": {
+      "rack_model_1": {
+        "first_slot_offset": 0.1,
+        "slot": 42,
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        }
+      }
+    },
+    "acu_models": {
+      "acu_model_1": {
+        "size": {
+          "dx": 3.6,
+          "dy": 0.9,
+          "dz": 2.0
+        },
+        "supply_face": {
+          "side": "bottom",
+          "width": 3.4,
+          "length": 1.8,
+          "offset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "return_face": {
+          "side": "top",
+          "width": 3.4,
+          "length": 0.7,
+          "offset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      }
+    },
+    "server_models": {
+      "Pokemon": {
+        "occupation": 4,
+        "depth": 1.2,
+        "width": 0.6
+      },
+      "AliServer Thor01-12U": {
+        "occupation": 2,
+        "depth": 1.2,
+        "width": 0.6
+      },
+      "AliServer Thor01-2U": {
+        "occupation": 2,
+        "depth": 1.2,
+        "width": 0.6
+      },
+      "SA5212M4": {
+        "occupation": 2,
+        "depth": 1.2,
+        "width": 0.6
+      },
+      "K800G3-10G": {
+        "occupation": 2,
+        "depth": 1.2,
+        "width": 0.6
+      },
+      "S2PA": {
+        "occupation": 4,
+        "depth": 1.2,
+        "width": 0.6
+      },
+      "ThinkServer SD350X": {
+        "occupation": 2,
+        "depth": 1.2,
+        "width": 0.6
+      },
+      "ThinkServer RD452X": {
+        "occupation": 2,
+        "depth": 1.2,
+        "width": 0.6
+      },
+      "R2-1218R-TH": {
+        "occupation": 2,
+        "depth": 1.2,
+        "width": 0.6
+      },
+      "AliServer Thor02-12S": {
+        "occupation": 2,
+        "depth": 1.2,
+        "width": 0.6
+      },
+      "AliServer Thor04-2U": {
+        "occupation": 2,
+        "depth": 1.2,
+        "width": 0.6
+      },
+      "RH2288H V3": {
+        "occupation": 2,
+        "depth": 1.2,
+        "width": 0.6
+      },
+      "NF5280M4": {
+        "occupation": 2,
+        "depth": 1.2,
+        "width": 0.6
+      },
+      "S5BA3UPI": {
+        "occupation": 2,
+        "depth": 1.2,
+        "width": 0.6
+      }
+    },
+    "acus": {
+      "ACU1": {
+        "size": {
+          "dx": 3.6,
+          "dy": 0.9,
+          "dz": 2.0
+        },
+        "placement": {
+          "x": 10.8,
+          "y": 4.8,
+          "z": 0.0
+        },
+        "id": "ACU1",
+        "model": "acu_model_1",
+        "orientation": 270,
+        "supply_temperature": 23.0,
+        "flow_rate": 19.0964,
+        "supply_face": "bottom",
+        "return_face": "top",
+        "meta": {}
+      }
+    },
+    "racks": {
+      "A01": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 2.4,
+          "y": 1.2,
+          "z": 0.0
+        },
+        "id": "A01",
+        "model": "rack_model_1",
+        "orientation": 0,
+        "has_blanking_panel": true
+      },
+      "A02": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 3.0,
+          "y": 1.2,
+          "z": 0.0
+        },
+        "id": "A02",
+        "model": "rack_model_1",
+        "orientation": 0,
+        "has_blanking_panel": true
+      },
+      "A03": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 3.6,
+          "y": 1.2,
+          "z": 0.0
+        },
+        "id": "A03",
+        "model": "rack_model_1",
+        "orientation": 0,
+        "has_blanking_panel": true
+      },
+      "A04": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 4.2,
+          "y": 1.2,
+          "z": 0.0
+        },
+        "id": "A04",
+        "model": "rack_model_1",
+        "orientation": 0,
+        "has_blanking_panel": true
+      },
+      "A05": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 4.8,
+          "y": 1.2,
+          "z": 0.0
+        },
+        "id": "A05",
+        "model": "rack_model_1",
+        "orientation": 0,
+        "has_blanking_panel": true
+      },
+      "A06": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 5.4,
+          "y": 1.2,
+          "z": 0.0
+        },
+        "id": "A06",
+        "model": "rack_model_1",
+        "orientation": 0,
+        "has_blanking_panel": true
+      },
+      "A07": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 6.0,
+          "y": 1.2,
+          "z": 0.0
+        },
+        "id": "A07",
+        "model": "rack_model_1",
+        "orientation": 0,
+        "has_blanking_panel": true
+      },
+      "A08": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 6.6,
+          "y": 1.2,
+          "z": 0.0
+        },
+        "id": "A08",
+        "model": "rack_model_1",
+        "orientation": 0,
+        "has_blanking_panel": true
+      },
+      "A09": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 7.2,
+          "y": 1.2,
+          "z": 0.0
+        },
+        "id": "A09",
+        "model": "rack_model_1",
+        "orientation": 0,
+        "has_blanking_panel": true
+      },
+      "A10": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 7.8,
+          "y": 1.2,
+          "z": 0.0
+        },
+        "id": "A10",
+        "model": "rack_model_1",
+        "orientation": 0,
+        "has_blanking_panel": true
+      },
+      "B01": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 3.0,
+          "y": 4.8,
+          "z": 0.0
+        },
+        "id": "B01",
+        "model": "rack_model_1",
+        "orientation": 180,
+        "has_blanking_panel": true
+      },
+      "B02": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 3.6,
+          "y": 4.8,
+          "z": 0.0
+        },
+        "id": "B02",
+        "model": "rack_model_1",
+        "orientation": 180,
+        "has_blanking_panel": true
+      },
+      "B03": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 4.2,
+          "y": 4.8,
+          "z": 0.0
+        },
+        "id": "B03",
+        "model": "rack_model_1",
+        "orientation": 180,
+        "has_blanking_panel": true
+      },
+      "B04": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 4.8,
+          "y": 4.8,
+          "z": 0.0
+        },
+        "id": "B04",
+        "model": "rack_model_1",
+        "orientation": 180,
+        "has_blanking_panel": true
+      },
+      "B05": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 5.4,
+          "y": 4.8,
+          "z": 0.0
+        },
+        "id": "B05",
+        "model": "rack_model_1",
+        "orientation": 180,
+        "has_blanking_panel": true
+      },
+      "B06": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 6.0,
+          "y": 4.8,
+          "z": 0.0
+        },
+        "id": "B06",
+        "model": "rack_model_1",
+        "orientation": 180,
+        "has_blanking_panel": true
+      },
+      "B07": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 6.6,
+          "y": 4.8,
+          "z": 0.0
+        },
+        "id": "B07",
+        "model": "rack_model_1",
+        "orientation": 180,
+        "has_blanking_panel": true
+      },
+      "B08": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 7.2,
+          "y": 4.8,
+          "z": 0.0
+        },
+        "id": "B08",
+        "model": "rack_model_1",
+        "orientation": 180,
+        "has_blanking_panel": true
+      },
+      "B09": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 7.8,
+          "y": 4.8,
+          "z": 0.0
+        },
+        "id": "B09",
+        "model": "rack_model_1",
+        "orientation": 180,
+        "has_blanking_panel": true
+      },
+      "B10": {
+        "size": {
+          "dx": 0.6,
+          "dy": 1.2,
+          "dz": 2.2
+        },
+        "placement": {
+          "x": 8.4,
+          "y": 4.8,
+          "z": 0.0
+        },
+        "id": "B10",
+        "model": "rack_model_1",
+        "orientation": 180,
+        "has_blanking_panel": true
+      }
+    },
+    "servers": {
+      "A01_01": {
+        "id": "A01_01",
+        "rack_id": "A01",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A01_06": {
+        "id": "A01_06",
+        "rack_id": "A01",
+        "model": "Pokemon",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A01_11": {
+        "id": "A01_11",
+        "rack_id": "A01",
+        "model": "AliServer Thor01-12U",
+        "slot": 11,
+        "heat_load": 624.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-12U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A01_13": {
+        "id": "A01_13",
+        "rack_id": "A01",
+        "model": "AliServer Thor01-2U",
+        "slot": 13,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A01_15": {
+        "id": "A01_15",
+        "rack_id": "A01",
+        "model": "AliServer Thor01-2U",
+        "slot": 15,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A01_17": {
+        "id": "A01_17",
+        "rack_id": "A01",
+        "model": "AliServer Thor01-2U",
+        "slot": 17,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A01_19": {
+        "id": "A01_19",
+        "rack_id": "A01",
+        "model": "SA5212M4",
+        "slot": 19,
+        "heat_load": 445.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A01_21": {
+        "id": "A01_21",
+        "rack_id": "A01",
+        "model": "SA5212M4",
+        "slot": 21,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A01_23": {
+        "id": "A01_23",
+        "rack_id": "A01",
+        "model": "AliServer Thor01-2U",
+        "slot": 23,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A01_25": {
+        "id": "A01_25",
+        "rack_id": "A01",
+        "model": "AliServer Thor01-2U",
+        "slot": 25,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A01_27": {
+        "id": "A01_27",
+        "rack_id": "A01",
+        "model": "K800G3-10G",
+        "slot": 27,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A01_29": {
+        "id": "A01_29",
+        "rack_id": "A01",
+        "model": "AliServer Thor01-2U",
+        "slot": 29,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A01_31": {
+        "id": "A01_31",
+        "rack_id": "A01",
+        "model": "AliServer Thor01-2U",
+        "slot": 31,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A01_33": {
+        "id": "A01_33",
+        "rack_id": "A01",
+        "model": "AliServer Thor01-2U",
+        "slot": 33,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A01_35": {
+        "id": "A01_35",
+        "rack_id": "A01",
+        "model": "SA5212M4",
+        "slot": 35,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A01_37": {
+        "id": "A01_37",
+        "rack_id": "A01",
+        "model": "K800G3-10G",
+        "slot": 37,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A02_01": {
+        "id": "A02_01",
+        "rack_id": "A02",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A02_06": {
+        "id": "A02_06",
+        "rack_id": "A02",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A02_11": {
+        "id": "A02_11",
+        "rack_id": "A02",
+        "model": "K800G3-10G",
+        "slot": 11,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A02_13": {
+        "id": "A02_13",
+        "rack_id": "A02",
+        "model": "K800G3-10G",
+        "slot": 13,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A02_15": {
+        "id": "A02_15",
+        "rack_id": "A02",
+        "model": "K800G3-10G",
+        "slot": 15,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A02_23": {
+        "id": "A02_23",
+        "rack_id": "A02",
+        "model": "ThinkServer SD350X",
+        "slot": 23,
+        "heat_load": 1492.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer SD350X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A02_25": {
+        "id": "A02_25",
+        "rack_id": "A02",
+        "model": "ThinkServer RD452X",
+        "slot": 25,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A02_27": {
+        "id": "A02_27",
+        "rack_id": "A02",
+        "model": "ThinkServer RD452X",
+        "slot": 27,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A02_29": {
+        "id": "A02_29",
+        "rack_id": "A02",
+        "model": "ThinkServer RD452X",
+        "slot": 29,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A02_31": {
+        "id": "A02_31",
+        "rack_id": "A02",
+        "model": "ThinkServer RD452X",
+        "slot": 31,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A02_33": {
+        "id": "A02_33",
+        "rack_id": "A02",
+        "model": "ThinkServer RD452X",
+        "slot": 33,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A02_35": {
+        "id": "A02_35",
+        "rack_id": "A02",
+        "model": "ThinkServer RD452X",
+        "slot": 35,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A02_37": {
+        "id": "A02_37",
+        "rack_id": "A02",
+        "model": "ThinkServer RD452X",
+        "slot": 37,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A03_01": {
+        "id": "A03_01",
+        "rack_id": "A03",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A03_06": {
+        "id": "A03_06",
+        "rack_id": "A03",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A03_11": {
+        "id": "A03_11",
+        "rack_id": "A03",
+        "model": "AliServer Thor01-2U",
+        "slot": 11,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A03_13": {
+        "id": "A03_13",
+        "rack_id": "A03",
+        "model": "AliServer Thor01-2U",
+        "slot": 13,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A03_15": {
+        "id": "A03_15",
+        "rack_id": "A03",
+        "model": "AliServer Thor01-2U",
+        "slot": 15,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A03_17": {
+        "id": "A03_17",
+        "rack_id": "A03",
+        "model": "AliServer Thor01-2U",
+        "slot": 17,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A03_19": {
+        "id": "A03_19",
+        "rack_id": "A03",
+        "model": "K800G3-10G",
+        "slot": 19,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A03_21": {
+        "id": "A03_21",
+        "rack_id": "A03",
+        "model": "R2-1218R-TH",
+        "slot": 21,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A03_23": {
+        "id": "A03_23",
+        "rack_id": "A03",
+        "model": "AliServer Thor01-2U",
+        "slot": 23,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A03_25": {
+        "id": "A03_25",
+        "rack_id": "A03",
+        "model": "AliServer Thor01-2U",
+        "slot": 25,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A03_27": {
+        "id": "A03_27",
+        "rack_id": "A03",
+        "model": "AliServer Thor01-2U",
+        "slot": 27,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A03_29": {
+        "id": "A03_29",
+        "rack_id": "A03",
+        "model": "AliServer Thor01-2U",
+        "slot": 29,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A03_31": {
+        "id": "A03_31",
+        "rack_id": "A03",
+        "model": "AliServer Thor01-2U",
+        "slot": 31,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A03_33": {
+        "id": "A03_33",
+        "rack_id": "A03",
+        "model": "AliServer Thor01-2U",
+        "slot": 33,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A03_35": {
+        "id": "A03_35",
+        "rack_id": "A03",
+        "model": "SA5212M4",
+        "slot": 35,
+        "heat_load": 376.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A03_37": {
+        "id": "A03_37",
+        "rack_id": "A03",
+        "model": "AliServer Thor02-12S",
+        "slot": 37,
+        "heat_load": 662.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor02-12S",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A04_01": {
+        "id": "A04_01",
+        "rack_id": "A04",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A04_06": {
+        "id": "A04_06",
+        "rack_id": "A04",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A04_11": {
+        "id": "A04_11",
+        "rack_id": "A04",
+        "model": "AliServer Thor04-2U",
+        "slot": 11,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A04_13": {
+        "id": "A04_13",
+        "rack_id": "A04",
+        "model": "AliServer Thor04-2U",
+        "slot": 13,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A04_15": {
+        "id": "A04_15",
+        "rack_id": "A04",
+        "model": "AliServer Thor01-2U",
+        "slot": 15,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A04_17": {
+        "id": "A04_17",
+        "rack_id": "A04",
+        "model": "AliServer Thor01-2U",
+        "slot": 17,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A04_19": {
+        "id": "A04_19",
+        "rack_id": "A04",
+        "model": "K800G3-10G",
+        "slot": 19,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A04_21": {
+        "id": "A04_21",
+        "rack_id": "A04",
+        "model": "AliServer Thor01-2U",
+        "slot": 21,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A04_23": {
+        "id": "A04_23",
+        "rack_id": "A04",
+        "model": "K800G3-10G",
+        "slot": 23,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A04_25": {
+        "id": "A04_25",
+        "rack_id": "A04",
+        "model": "AliServer Thor01-2U",
+        "slot": 25,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A04_27": {
+        "id": "A04_27",
+        "rack_id": "A04",
+        "model": "AliServer Thor04-2U",
+        "slot": 27,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A04_31": {
+        "id": "A04_31",
+        "rack_id": "A04",
+        "model": "AliServer Thor01-2U",
+        "slot": 31,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A04_33": {
+        "id": "A04_33",
+        "rack_id": "A04",
+        "model": "AliServer Thor01-2U",
+        "slot": 33,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A04_35": {
+        "id": "A04_35",
+        "rack_id": "A04",
+        "model": "R2-1218R-TH",
+        "slot": 35,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A04_37": {
+        "id": "A04_37",
+        "rack_id": "A04",
+        "model": "AliServer Thor02-12S",
+        "slot": 37,
+        "heat_load": 662.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor02-12S",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A05_01": {
+        "id": "A05_01",
+        "rack_id": "A05",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A05_06": {
+        "id": "A05_06",
+        "rack_id": "A05",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A05_11": {
+        "id": "A05_11",
+        "rack_id": "A05",
+        "model": "K800G3-10G",
+        "slot": 11,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A05_13": {
+        "id": "A05_13",
+        "rack_id": "A05",
+        "model": "K800G3-10G",
+        "slot": 13,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A05_15": {
+        "id": "A05_15",
+        "rack_id": "A05",
+        "model": "K800G3-10G",
+        "slot": 15,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A05_23": {
+        "id": "A05_23",
+        "rack_id": "A05",
+        "model": "ThinkServer SD350X",
+        "slot": 23,
+        "heat_load": 1492.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer SD350X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A05_25": {
+        "id": "A05_25",
+        "rack_id": "A05",
+        "model": "ThinkServer RD452X",
+        "slot": 25,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A05_27": {
+        "id": "A05_27",
+        "rack_id": "A05",
+        "model": "ThinkServer RD452X",
+        "slot": 27,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A05_29": {
+        "id": "A05_29",
+        "rack_id": "A05",
+        "model": "ThinkServer RD452X",
+        "slot": 29,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A05_31": {
+        "id": "A05_31",
+        "rack_id": "A05",
+        "model": "ThinkServer RD452X",
+        "slot": 31,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A05_33": {
+        "id": "A05_33",
+        "rack_id": "A05",
+        "model": "ThinkServer RD452X",
+        "slot": 33,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A05_35": {
+        "id": "A05_35",
+        "rack_id": "A05",
+        "model": "ThinkServer RD452X",
+        "slot": 35,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A05_37": {
+        "id": "A05_37",
+        "rack_id": "A05",
+        "model": "ThinkServer RD452X",
+        "slot": 37,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A06_01": {
+        "id": "A06_01",
+        "rack_id": "A06",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A06_06": {
+        "id": "A06_06",
+        "rack_id": "A06",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A06_11": {
+        "id": "A06_11",
+        "rack_id": "A06",
+        "model": "AliServer Thor04-2U",
+        "slot": 11,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A06_13": {
+        "id": "A06_13",
+        "rack_id": "A06",
+        "model": "AliServer Thor04-2U",
+        "slot": 13,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A06_15": {
+        "id": "A06_15",
+        "rack_id": "A06",
+        "model": "AliServer Thor04-2U",
+        "slot": 15,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A06_17": {
+        "id": "A06_17",
+        "rack_id": "A06",
+        "model": "AliServer Thor04-2U",
+        "slot": 17,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A06_19": {
+        "id": "A06_19",
+        "rack_id": "A06",
+        "model": "AliServer Thor04-2U",
+        "slot": 19,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A06_21": {
+        "id": "A06_21",
+        "rack_id": "A06",
+        "model": "AliServer Thor04-2U",
+        "slot": 21,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A06_23": {
+        "id": "A06_23",
+        "rack_id": "A06",
+        "model": "AliServer Thor04-2U",
+        "slot": 23,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A06_25": {
+        "id": "A06_25",
+        "rack_id": "A06",
+        "model": "AliServer Thor04-2U",
+        "slot": 25,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A06_27": {
+        "id": "A06_27",
+        "rack_id": "A06",
+        "model": "AliServer Thor01-2U",
+        "slot": 27,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A06_29": {
+        "id": "A06_29",
+        "rack_id": "A06",
+        "model": "AliServer Thor04-2U",
+        "slot": 29,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A06_31": {
+        "id": "A06_31",
+        "rack_id": "A06",
+        "model": "K800G3-10G",
+        "slot": 31,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A06_33": {
+        "id": "A06_33",
+        "rack_id": "A06",
+        "model": "K800G3-10G",
+        "slot": 33,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A06_35": {
+        "id": "A06_35",
+        "rack_id": "A06",
+        "model": "R2-1218R-TH",
+        "slot": 35,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A06_37": {
+        "id": "A06_37",
+        "rack_id": "A06",
+        "model": "AliServer Thor02-12S",
+        "slot": 37,
+        "heat_load": 662.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor02-12S",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A07_01": {
+        "id": "A07_01",
+        "rack_id": "A07",
+        "model": "S2PA",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A07_06": {
+        "id": "A07_06",
+        "rack_id": "A07",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A07_11": {
+        "id": "A07_11",
+        "rack_id": "A07",
+        "model": "R2-1218R-TH",
+        "slot": 11,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A07_13": {
+        "id": "A07_13",
+        "rack_id": "A07",
+        "model": "R2-1218R-TH",
+        "slot": 13,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A07_15": {
+        "id": "A07_15",
+        "rack_id": "A07",
+        "model": "R2-1218R-TH",
+        "slot": 15,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A07_17": {
+        "id": "A07_17",
+        "rack_id": "A07",
+        "model": "R2-1218R-TH",
+        "slot": 17,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A07_19": {
+        "id": "A07_19",
+        "rack_id": "A07",
+        "model": "R2-1218R-TH",
+        "slot": 19,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A07_21": {
+        "id": "A07_21",
+        "rack_id": "A07",
+        "model": "AliServer Thor04-2U",
+        "slot": 21,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A07_23": {
+        "id": "A07_23",
+        "rack_id": "A07",
+        "model": "AliServer Thor04-2U",
+        "slot": 23,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A07_25": {
+        "id": "A07_25",
+        "rack_id": "A07",
+        "model": "AliServer Thor04-2U",
+        "slot": 25,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A07_27": {
+        "id": "A07_27",
+        "rack_id": "A07",
+        "model": "AliServer Thor04-2U",
+        "slot": 27,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A07_29": {
+        "id": "A07_29",
+        "rack_id": "A07",
+        "model": "AliServer Thor04-2U",
+        "slot": 29,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A07_31": {
+        "id": "A07_31",
+        "rack_id": "A07",
+        "model": "AliServer Thor04-2U",
+        "slot": 31,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A07_33": {
+        "id": "A07_33",
+        "rack_id": "A07",
+        "model": "AliServer Thor04-2U",
+        "slot": 33,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A07_35": {
+        "id": "A07_35",
+        "rack_id": "A07",
+        "model": "AliServer Thor04-2U",
+        "slot": 35,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A07_37": {
+        "id": "A07_37",
+        "rack_id": "A07",
+        "model": "ThinkServer RD452X",
+        "slot": 37,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A08_01": {
+        "id": "A08_01",
+        "rack_id": "A08",
+        "model": "S2PA",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A08_06": {
+        "id": "A08_06",
+        "rack_id": "A08",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A08_11": {
+        "id": "A08_11",
+        "rack_id": "A08",
+        "model": "K800G3-10G",
+        "slot": 11,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A08_13": {
+        "id": "A08_13",
+        "rack_id": "A08",
+        "model": "K800G3-10G",
+        "slot": 13,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A08_15": {
+        "id": "A08_15",
+        "rack_id": "A08",
+        "model": "K800G3-10G",
+        "slot": 15,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A08_17": {
+        "id": "A08_17",
+        "rack_id": "A08",
+        "model": "AliServer Thor01-2U",
+        "slot": 17,
+        "heat_load": 528.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A08_19": {
+        "id": "A08_19",
+        "rack_id": "A08",
+        "model": "RH2288H V3",
+        "slot": 19,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "RH2288H V3",
+          "manufacture": "Huawei",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A08_27": {
+        "id": "A08_27",
+        "rack_id": "A08",
+        "model": "ThinkServer SD350X",
+        "slot": 27,
+        "heat_load": 1492.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer SD350X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A08_29": {
+        "id": "A08_29",
+        "rack_id": "A08",
+        "model": "ThinkServer RD452X",
+        "slot": 29,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A08_31": {
+        "id": "A08_31",
+        "rack_id": "A08",
+        "model": "ThinkServer RD452X",
+        "slot": 31,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A08_33": {
+        "id": "A08_33",
+        "rack_id": "A08",
+        "model": "ThinkServer RD452X",
+        "slot": 33,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A08_35": {
+        "id": "A08_35",
+        "rack_id": "A08",
+        "model": "ThinkServer RD452X",
+        "slot": 35,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A08_37": {
+        "id": "A08_37",
+        "rack_id": "A08",
+        "model": "ThinkServer RD452X",
+        "slot": 37,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A09_01": {
+        "id": "A09_01",
+        "rack_id": "A09",
+        "model": "S2PA",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A09_06": {
+        "id": "A09_06",
+        "rack_id": "A09",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A09_11": {
+        "id": "A09_11",
+        "rack_id": "A09",
+        "model": "R2-1218R-TH",
+        "slot": 11,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A09_13": {
+        "id": "A09_13",
+        "rack_id": "A09",
+        "model": "AliServer Thor04-2U",
+        "slot": 13,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A09_15": {
+        "id": "A09_15",
+        "rack_id": "A09",
+        "model": "AliServer Thor04-2U",
+        "slot": 15,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A09_17": {
+        "id": "A09_17",
+        "rack_id": "A09",
+        "model": "AliServer Thor04-2U",
+        "slot": 17,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A09_19": {
+        "id": "A09_19",
+        "rack_id": "A09",
+        "model": "AliServer Thor04-2U",
+        "slot": 19,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A09_21": {
+        "id": "A09_21",
+        "rack_id": "A09",
+        "model": "AliServer Thor01-2U",
+        "slot": 21,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A09_23": {
+        "id": "A09_23",
+        "rack_id": "A09",
+        "model": "AliServer Thor01-2U",
+        "slot": 23,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A09_25": {
+        "id": "A09_25",
+        "rack_id": "A09",
+        "model": "AliServer Thor04-2U",
+        "slot": 25,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A09_27": {
+        "id": "A09_27",
+        "rack_id": "A09",
+        "model": "AliServer Thor01-2U",
+        "slot": 27,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A09_29": {
+        "id": "A09_29",
+        "rack_id": "A09",
+        "model": "K800G3-10G",
+        "slot": 29,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A09_31": {
+        "id": "A09_31",
+        "rack_id": "A09",
+        "model": "AliServer Thor01-2U",
+        "slot": 31,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A09_33": {
+        "id": "A09_33",
+        "rack_id": "A09",
+        "model": "R2-1218R-TH",
+        "slot": 33,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A09_35": {
+        "id": "A09_35",
+        "rack_id": "A09",
+        "model": "AliServer Thor01-2U",
+        "slot": 35,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A09_37": {
+        "id": "A09_37",
+        "rack_id": "A09",
+        "model": "AliServer Thor02-12S",
+        "slot": 37,
+        "heat_load": 662.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor02-12S",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A10_01": {
+        "id": "A10_01",
+        "rack_id": "A10",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A10_06": {
+        "id": "A10_06",
+        "rack_id": "A10",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A10_11": {
+        "id": "A10_11",
+        "rack_id": "A10",
+        "model": "AliServer Thor01-2U",
+        "slot": 11,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A10_13": {
+        "id": "A10_13",
+        "rack_id": "A10",
+        "model": "AliServer Thor01-2U",
+        "slot": 13,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A10_15": {
+        "id": "A10_15",
+        "rack_id": "A10",
+        "model": "K800G3-10G",
+        "slot": 15,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A10_17": {
+        "id": "A10_17",
+        "rack_id": "A10",
+        "model": "SA5212M4",
+        "slot": 17,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A10_19": {
+        "id": "A10_19",
+        "rack_id": "A10",
+        "model": "SA5212M4",
+        "slot": 19,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A10_21": {
+        "id": "A10_21",
+        "rack_id": "A10",
+        "model": "AliServer Thor01-2U",
+        "slot": 21,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A10_23": {
+        "id": "A10_23",
+        "rack_id": "A10",
+        "model": "AliServer Thor01-2U",
+        "slot": 23,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A10_25": {
+        "id": "A10_25",
+        "rack_id": "A10",
+        "model": "K800G3-10G",
+        "slot": 25,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A10_27": {
+        "id": "A10_27",
+        "rack_id": "A10",
+        "model": "K800G3-10G",
+        "slot": 27,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A10_29": {
+        "id": "A10_29",
+        "rack_id": "A10",
+        "model": "R2-1218R-TH",
+        "slot": 29,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A10_31": {
+        "id": "A10_31",
+        "rack_id": "A10",
+        "model": "SA5212M4",
+        "slot": 31,
+        "heat_load": 376.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A10_33": {
+        "id": "A10_33",
+        "rack_id": "A10",
+        "model": "AliServer Thor02-12S",
+        "slot": 33,
+        "heat_load": 662.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor02-12S",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "A10_35": {
+        "id": "A10_35",
+        "rack_id": "A10",
+        "model": "AliServer Thor01-12U",
+        "slot": 35,
+        "heat_load": 624.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-12U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "A10_37": {
+        "id": "A10_37",
+        "rack_id": "A10",
+        "model": "NF5280M4",
+        "slot": 37,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 0,
+        "width": 0.6,
+        "meta": {
+          "model": "NF5280M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B01_01": {
+        "id": "B01_01",
+        "rack_id": "B01",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B01_06": {
+        "id": "B01_06",
+        "rack_id": "B01",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B01_11": {
+        "id": "B01_11",
+        "rack_id": "B01",
+        "model": "AliServer Thor01-2U",
+        "slot": 11,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B01_13": {
+        "id": "B01_13",
+        "rack_id": "B01",
+        "model": "AliServer Thor01-2U",
+        "slot": 13,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B01_15": {
+        "id": "B01_15",
+        "rack_id": "B01",
+        "model": "SA5212M4",
+        "slot": 15,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B01_17": {
+        "id": "B01_17",
+        "rack_id": "B01",
+        "model": "AliServer Thor01-2U",
+        "slot": 17,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B01_19": {
+        "id": "B01_19",
+        "rack_id": "B01",
+        "model": "AliServer Thor04-2U",
+        "slot": 19,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B01_21": {
+        "id": "B01_21",
+        "rack_id": "B01",
+        "model": "K800G3-10G",
+        "slot": 21,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B01_23": {
+        "id": "B01_23",
+        "rack_id": "B01",
+        "model": "K800G3-10G",
+        "slot": 23,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B01_25": {
+        "id": "B01_25",
+        "rack_id": "B01",
+        "model": "R2-1218R-TH",
+        "slot": 25,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B01_27": {
+        "id": "B01_27",
+        "rack_id": "B01",
+        "model": "AliServer Thor01-2U",
+        "slot": 27,
+        "heat_load": 528.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B01_29": {
+        "id": "B01_29",
+        "rack_id": "B01",
+        "model": "SA5212M4",
+        "slot": 29,
+        "heat_load": 376.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B01_31": {
+        "id": "B01_31",
+        "rack_id": "B01",
+        "model": "K800G3-10G",
+        "slot": 31,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B01_33": {
+        "id": "B01_33",
+        "rack_id": "B01",
+        "model": "K800G3-10G",
+        "slot": 33,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B01_35": {
+        "id": "B01_35",
+        "rack_id": "B01",
+        "model": "SA5212M4",
+        "slot": 35,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B01_37": {
+        "id": "B01_37",
+        "rack_id": "B01",
+        "model": "SA5212M4",
+        "slot": 37,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B02_01": {
+        "id": "B02_01",
+        "rack_id": "B02",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B02_06": {
+        "id": "B02_06",
+        "rack_id": "B02",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B02_11": {
+        "id": "B02_11",
+        "rack_id": "B02",
+        "model": "NF5280M4",
+        "slot": 11,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "NF5280M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B02_13": {
+        "id": "B02_13",
+        "rack_id": "B02",
+        "model": "NF5280M4",
+        "slot": 13,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "NF5280M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B02_15": {
+        "id": "B02_15",
+        "rack_id": "B02",
+        "model": "K800G3-10G",
+        "slot": 15,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B02_17": {
+        "id": "B02_17",
+        "rack_id": "B02",
+        "model": "K800G3-10G",
+        "slot": 17,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B02_19": {
+        "id": "B02_19",
+        "rack_id": "B02",
+        "model": "K800G3-10G",
+        "slot": 19,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B02_27": {
+        "id": "B02_27",
+        "rack_id": "B02",
+        "model": "ThinkServer SD350X",
+        "slot": 27,
+        "heat_load": 1492.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer SD350X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B02_29": {
+        "id": "B02_29",
+        "rack_id": "B02",
+        "model": "K800G3-10G",
+        "slot": 29,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B02_31": {
+        "id": "B02_31",
+        "rack_id": "B02",
+        "model": "K800G3-10G",
+        "slot": 31,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B02_33": {
+        "id": "B02_33",
+        "rack_id": "B02",
+        "model": "K800G3-10G",
+        "slot": 33,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B02_35": {
+        "id": "B02_35",
+        "rack_id": "B02",
+        "model": "K800G3-10G",
+        "slot": 35,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B02_37": {
+        "id": "B02_37",
+        "rack_id": "B02",
+        "model": "ThinkServer RD452X",
+        "slot": 37,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B03_01": {
+        "id": "B03_01",
+        "rack_id": "B03",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B03_06": {
+        "id": "B03_06",
+        "rack_id": "B03",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B03_11": {
+        "id": "B03_11",
+        "rack_id": "B03",
+        "model": "AliServer Thor01-2U",
+        "slot": 11,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B03_13": {
+        "id": "B03_13",
+        "rack_id": "B03",
+        "model": "AliServer Thor01-2U",
+        "slot": 13,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B03_15": {
+        "id": "B03_15",
+        "rack_id": "B03",
+        "model": "AliServer Thor01-2U",
+        "slot": 15,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B03_17": {
+        "id": "B03_17",
+        "rack_id": "B03",
+        "model": "AliServer Thor04-2U",
+        "slot": 17,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B03_19": {
+        "id": "B03_19",
+        "rack_id": "B03",
+        "model": "K800G3-10G",
+        "slot": 19,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B03_21": {
+        "id": "B03_21",
+        "rack_id": "B03",
+        "model": "K800G3-10G",
+        "slot": 21,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B03_23": {
+        "id": "B03_23",
+        "rack_id": "B03",
+        "model": "SA5212M4",
+        "slot": 23,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B03_25": {
+        "id": "B03_25",
+        "rack_id": "B03",
+        "model": "R2-1218R-TH",
+        "slot": 25,
+        "heat_load": 226.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B03_27": {
+        "id": "B03_27",
+        "rack_id": "B03",
+        "model": "R2-1218R-TH",
+        "slot": 27,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B03_29": {
+        "id": "B03_29",
+        "rack_id": "B03",
+        "model": "AliServer Thor01-2U",
+        "slot": 29,
+        "heat_load": 528.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B03_31": {
+        "id": "B03_31",
+        "rack_id": "B03",
+        "model": "SA5212M4",
+        "slot": 31,
+        "heat_load": 376.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B03_33": {
+        "id": "B03_33",
+        "rack_id": "B03",
+        "model": "S5BA3UPI",
+        "slot": 33,
+        "heat_load": 528.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S5BA3UPI",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B03_35": {
+        "id": "B03_35",
+        "rack_id": "B03",
+        "model": "SA5212M4",
+        "slot": 35,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B03_37": {
+        "id": "B03_37",
+        "rack_id": "B03",
+        "model": "SA5212M4",
+        "slot": 37,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B04_01": {
+        "id": "B04_01",
+        "rack_id": "B04",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B04_06": {
+        "id": "B04_06",
+        "rack_id": "B04",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B04_11": {
+        "id": "B04_11",
+        "rack_id": "B04",
+        "model": "AliServer Thor01-2U",
+        "slot": 11,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B04_13": {
+        "id": "B04_13",
+        "rack_id": "B04",
+        "model": "AliServer Thor01-2U",
+        "slot": 13,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B04_15": {
+        "id": "B04_15",
+        "rack_id": "B04",
+        "model": "AliServer Thor04-2U",
+        "slot": 15,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B04_17": {
+        "id": "B04_17",
+        "rack_id": "B04",
+        "model": "AliServer Thor04-2U",
+        "slot": 17,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B04_19": {
+        "id": "B04_19",
+        "rack_id": "B04",
+        "model": "K800G3-10G",
+        "slot": 19,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B04_21": {
+        "id": "B04_21",
+        "rack_id": "B04",
+        "model": "SA5212M4",
+        "slot": 21,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B04_23": {
+        "id": "B04_23",
+        "rack_id": "B04",
+        "model": "ThinkServer RD452X",
+        "slot": 23,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B04_25": {
+        "id": "B04_25",
+        "rack_id": "B04",
+        "model": "R2-1218R-TH",
+        "slot": 25,
+        "heat_load": 226.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B04_27": {
+        "id": "B04_27",
+        "rack_id": "B04",
+        "model": "R2-1218R-TH",
+        "slot": 27,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B04_29": {
+        "id": "B04_29",
+        "rack_id": "B04",
+        "model": "AliServer Thor01-2U",
+        "slot": 29,
+        "heat_load": 528.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B04_31": {
+        "id": "B04_31",
+        "rack_id": "B04",
+        "model": "SA5212M4",
+        "slot": 31,
+        "heat_load": 376.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B04_33": {
+        "id": "B04_33",
+        "rack_id": "B04",
+        "model": "S5BA3UPI",
+        "slot": 33,
+        "heat_load": 528.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S5BA3UPI",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B04_35": {
+        "id": "B04_35",
+        "rack_id": "B04",
+        "model": "SA5212M4",
+        "slot": 35,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B04_37": {
+        "id": "B04_37",
+        "rack_id": "B04",
+        "model": "SA5212M4",
+        "slot": 37,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B05_01": {
+        "id": "B05_01",
+        "rack_id": "B05",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B05_06": {
+        "id": "B05_06",
+        "rack_id": "B05",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B05_11": {
+        "id": "B05_11",
+        "rack_id": "B05",
+        "model": "K800G3-10G",
+        "slot": 11,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B05_13": {
+        "id": "B05_13",
+        "rack_id": "B05",
+        "model": "K800G3-10G",
+        "slot": 13,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B05_15": {
+        "id": "B05_15",
+        "rack_id": "B05",
+        "model": "K800G3-10G",
+        "slot": 15,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B05_17": {
+        "id": "B05_17",
+        "rack_id": "B05",
+        "model": "NF5280M4",
+        "slot": 17,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "NF5280M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B05_19": {
+        "id": "B05_19",
+        "rack_id": "B05",
+        "model": "NF5280M4",
+        "slot": 19,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "NF5280M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B05_21": {
+        "id": "B05_21",
+        "rack_id": "B05",
+        "model": "NF5280M4",
+        "slot": 21,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "NF5280M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B05_23": {
+        "id": "B05_23",
+        "rack_id": "B05",
+        "model": "K800G3-10G",
+        "slot": 23,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B05_25": {
+        "id": "B05_25",
+        "rack_id": "B05",
+        "model": "K800G3-10G",
+        "slot": 25,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B05_27": {
+        "id": "B05_27",
+        "rack_id": "B05",
+        "model": "K800G3-10G",
+        "slot": 27,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B05_35": {
+        "id": "B05_35",
+        "rack_id": "B05",
+        "model": "ThinkServer SD350X",
+        "slot": 35,
+        "heat_load": 1492.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer SD350X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B05_37": {
+        "id": "B05_37",
+        "rack_id": "B05",
+        "model": "K800G3-10G",
+        "slot": 37,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B06_01": {
+        "id": "B06_01",
+        "rack_id": "B06",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B06_06": {
+        "id": "B06_06",
+        "rack_id": "B06",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B06_11": {
+        "id": "B06_11",
+        "rack_id": "B06",
+        "model": "AliServer Thor01-2U",
+        "slot": 11,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B06_13": {
+        "id": "B06_13",
+        "rack_id": "B06",
+        "model": "AliServer Thor01-2U",
+        "slot": 13,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B06_15": {
+        "id": "B06_15",
+        "rack_id": "B06",
+        "model": "AliServer Thor04-2U",
+        "slot": 15,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B06_17": {
+        "id": "B06_17",
+        "rack_id": "B06",
+        "model": "AliServer Thor04-2U",
+        "slot": 17,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor04-2U",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B06_19": {
+        "id": "B06_19",
+        "rack_id": "B06",
+        "model": "K800G3-10G",
+        "slot": 19,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B06_21": {
+        "id": "B06_21",
+        "rack_id": "B06",
+        "model": "K800G3-10G",
+        "slot": 21,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B06_23": {
+        "id": "B06_23",
+        "rack_id": "B06",
+        "model": "K800G3-10G",
+        "slot": 23,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B06_25": {
+        "id": "B06_25",
+        "rack_id": "B06",
+        "model": "R2-1218R-TH",
+        "slot": 25,
+        "heat_load": 226.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B06_27": {
+        "id": "B06_27",
+        "rack_id": "B06",
+        "model": "R2-1218R-TH",
+        "slot": 27,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B06_29": {
+        "id": "B06_29",
+        "rack_id": "B06",
+        "model": "SA5212M4",
+        "slot": 29,
+        "heat_load": 376.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B06_31": {
+        "id": "B06_31",
+        "rack_id": "B06",
+        "model": "AliServer Thor01-2U",
+        "slot": 31,
+        "heat_load": 528.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B06_33": {
+        "id": "B06_33",
+        "rack_id": "B06",
+        "model": "S5BA3UPI",
+        "slot": 33,
+        "heat_load": 528.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S5BA3UPI",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B06_35": {
+        "id": "B06_35",
+        "rack_id": "B06",
+        "model": "SA5212M4",
+        "slot": 35,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B06_37": {
+        "id": "B06_37",
+        "rack_id": "B06",
+        "model": "SA5212M4",
+        "slot": 37,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B07_01": {
+        "id": "B07_01",
+        "rack_id": "B07",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B07_06": {
+        "id": "B07_06",
+        "rack_id": "B07",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B07_11": {
+        "id": "B07_11",
+        "rack_id": "B07",
+        "model": "AliServer Thor01-2U",
+        "slot": 11,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B07_13": {
+        "id": "B07_13",
+        "rack_id": "B07",
+        "model": "K800G3-10G",
+        "slot": 13,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B07_15": {
+        "id": "B07_15",
+        "rack_id": "B07",
+        "model": "AliServer Thor01-2U",
+        "slot": 15,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B07_17": {
+        "id": "B07_17",
+        "rack_id": "B07",
+        "model": "AliServer Thor01-2U",
+        "slot": 17,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B07_19": {
+        "id": "B07_19",
+        "rack_id": "B07",
+        "model": "K800G3-10G",
+        "slot": 19,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B07_21": {
+        "id": "B07_21",
+        "rack_id": "B07",
+        "model": "K800G3-10G",
+        "slot": 21,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B07_23": {
+        "id": "B07_23",
+        "rack_id": "B07",
+        "model": "K800G3-10G",
+        "slot": 23,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B07_25": {
+        "id": "B07_25",
+        "rack_id": "B07",
+        "model": "R2-1218R-TH",
+        "slot": 25,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B07_27": {
+        "id": "B07_27",
+        "rack_id": "B07",
+        "model": "AliServer Thor01-2U",
+        "slot": 27,
+        "heat_load": 528.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B07_29": {
+        "id": "B07_29",
+        "rack_id": "B07",
+        "model": "SA5212M4",
+        "slot": 29,
+        "heat_load": 376.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B07_31": {
+        "id": "B07_31",
+        "rack_id": "B07",
+        "model": "K800G3-10G",
+        "slot": 31,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B07_33": {
+        "id": "B07_33",
+        "rack_id": "B07",
+        "model": "SA5212M4",
+        "slot": 33,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B07_35": {
+        "id": "B07_35",
+        "rack_id": "B07",
+        "model": "SA5212M4",
+        "slot": 35,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B07_37": {
+        "id": "B07_37",
+        "rack_id": "B07",
+        "model": "RH2288H V3",
+        "slot": 37,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "RH2288H V3",
+          "manufacture": "Huawei",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B08_01": {
+        "id": "B08_01",
+        "rack_id": "B08",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B08_06": {
+        "id": "B08_06",
+        "rack_id": "B08",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B08_11": {
+        "id": "B08_11",
+        "rack_id": "B08",
+        "model": "K800G3-10G",
+        "slot": 11,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B08_13": {
+        "id": "B08_13",
+        "rack_id": "B08",
+        "model": "K800G3-10G",
+        "slot": 13,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B08_15": {
+        "id": "B08_15",
+        "rack_id": "B08",
+        "model": "NF5280M4",
+        "slot": 15,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "NF5280M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B08_17": {
+        "id": "B08_17",
+        "rack_id": "B08",
+        "model": "NF5280M4",
+        "slot": 17,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "NF5280M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B08_19": {
+        "id": "B08_19",
+        "rack_id": "B08",
+        "model": "NF5280M4",
+        "slot": 19,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "NF5280M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B08_21": {
+        "id": "B08_21",
+        "rack_id": "B08",
+        "model": "NF5280M4",
+        "slot": 21,
+        "heat_load": 449.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "NF5280M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B08_23": {
+        "id": "B08_23",
+        "rack_id": "B08",
+        "model": "K800G3-10G",
+        "slot": 23,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B08_25": {
+        "id": "B08_25",
+        "rack_id": "B08",
+        "model": "K800G3-10G",
+        "slot": 25,
+        "heat_load": 430.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B08_27": {
+        "id": "B08_27",
+        "rack_id": "B08",
+        "model": "NF5280M4",
+        "slot": 27,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "NF5280M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B08_35": {
+        "id": "B08_35",
+        "rack_id": "B08",
+        "model": "ThinkServer SD350X",
+        "slot": 35,
+        "heat_load": 1492.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer SD350X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B08_37": {
+        "id": "B08_37",
+        "rack_id": "B08",
+        "model": "ThinkServer RD452X",
+        "slot": 37,
+        "heat_load": 424.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B09_01": {
+        "id": "B09_01",
+        "rack_id": "B09",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B09_06": {
+        "id": "B09_06",
+        "rack_id": "B09",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B09_11": {
+        "id": "B09_11",
+        "rack_id": "B09",
+        "model": "AliServer Thor01-2U",
+        "slot": 11,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B09_13": {
+        "id": "B09_13",
+        "rack_id": "B09",
+        "model": "AliServer Thor01-2U",
+        "slot": 13,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B09_15": {
+        "id": "B09_15",
+        "rack_id": "B09",
+        "model": "K800G3-10G",
+        "slot": 15,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B09_17": {
+        "id": "B09_17",
+        "rack_id": "B09",
+        "model": "K800G3-10G",
+        "slot": 17,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B09_19": {
+        "id": "B09_19",
+        "rack_id": "B09",
+        "model": "K800G3-10G",
+        "slot": 19,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B09_21": {
+        "id": "B09_21",
+        "rack_id": "B09",
+        "model": "ThinkServer RD452X",
+        "slot": 21,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B09_23": {
+        "id": "B09_23",
+        "rack_id": "B09",
+        "model": "ThinkServer RD452X",
+        "slot": 23,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B09_25": {
+        "id": "B09_25",
+        "rack_id": "B09",
+        "model": "R2-1218R-TH",
+        "slot": 25,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B09_27": {
+        "id": "B09_27",
+        "rack_id": "B09",
+        "model": "AliServer Thor01-2U",
+        "slot": 27,
+        "heat_load": 528.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B09_29": {
+        "id": "B09_29",
+        "rack_id": "B09",
+        "model": "S5BA3UPI",
+        "slot": 29,
+        "heat_load": 528.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S5BA3UPI",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B09_35": {
+        "id": "B09_35",
+        "rack_id": "B09",
+        "model": "SA5212M4",
+        "slot": 35,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B09_37": {
+        "id": "B09_37",
+        "rack_id": "B09",
+        "model": "SA5212M4",
+        "slot": 37,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B10_01": {
+        "id": "B10_01",
+        "rack_id": "B10",
+        "model": "Pokemon",
+        "slot": 1,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "Pokemon",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B10_06": {
+        "id": "B10_06",
+        "rack_id": "B10",
+        "model": "S2PA",
+        "slot": 6,
+        "heat_load": 1660.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 4,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "S2PA",
+          "manufacture": "QUANTA",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B10_11": {
+        "id": "B10_11",
+        "rack_id": "B10",
+        "model": "AliServer Thor01-2U",
+        "slot": 11,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B10_13": {
+        "id": "B10_13",
+        "rack_id": "B10",
+        "model": "AliServer Thor01-2U",
+        "slot": 13,
+        "heat_load": 535.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B10_15": {
+        "id": "B10_15",
+        "rack_id": "B10",
+        "model": "K800G3-10G",
+        "slot": 15,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B10_17": {
+        "id": "B10_17",
+        "rack_id": "B10",
+        "model": "K800G3-10G",
+        "slot": 17,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B10_19": {
+        "id": "B10_19",
+        "rack_id": "B10",
+        "model": "ThinkServer RD452X",
+        "slot": 19,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "ThinkServer RD452X",
+          "manufacture": "LENOVO",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B10_21": {
+        "id": "B10_21",
+        "rack_id": "B10",
+        "model": "K800G3-10G",
+        "slot": 21,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B10_23": {
+        "id": "B10_23",
+        "rack_id": "B10",
+        "model": "K800G3-10G",
+        "slot": 23,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B10_25": {
+        "id": "B10_25",
+        "rack_id": "B10",
+        "model": "R2-1218R-TH",
+        "slot": 25,
+        "heat_load": 526.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "R2-1218R-TH",
+          "manufacture": "Foxconn",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B10_27": {
+        "id": "B10_27",
+        "rack_id": "B10",
+        "model": "AliServer Thor01-2U",
+        "slot": 27,
+        "heat_load": 528.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "AliServer Thor01-2U",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            0.005,
+            0.1
+          ],
+          "flow_rate_type": "constant"
+        }
+      },
+      "B10_29": {
+        "id": "B10_29",
+        "rack_id": "B10",
+        "model": "SA5212M4",
+        "slot": 29,
+        "heat_load": 376.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B10_31": {
+        "id": "B10_31",
+        "rack_id": "B10",
+        "model": "K800G3-10G",
+        "slot": 31,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B10_33": {
+        "id": "B10_33",
+        "rack_id": "B10",
+        "model": "K800G3-10G",
+        "slot": 33,
+        "heat_load": 511.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "K800G3-10G",
+          "manufacture": "Inventec",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B10_35": {
+        "id": "B10_35",
+        "rack_id": "B10",
+        "model": "SA5212M4",
+        "slot": 35,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      },
+      "B10_37": {
+        "id": "B10_37",
+        "rack_id": "B10",
+        "model": "SA5212M4",
+        "slot": 37,
+        "heat_load": 530.0,
+        "flow_rate": 0.02,
+        "dynamic_flow_rate_high": null,
+        "dynamic_temperature_high": null,
+        "dynamic_temperature_low": null,
+        "occupation": 2,
+        "orientation": 180,
+        "width": 0.6,
+        "meta": {
+          "model": "SA5212M4",
+          "manufacture": "INSPUR",
+          "flow_rate_bound": [
+            5e-06,
+            0.0005
+          ],
+          "flow_rate_type": "ratio"
+        }
+      }
+    },
+    "sensors": {
+      "sensor_1": {
+        "x": 3.0,
+        "y": 0.61,
+        "z": 2.0,
+        "id": "sensor_1",
+        "meta": {
+          "aisle": "cold"
+        }
+      },
+      "sensor_2": {
+        "x": 5.0,
+        "y": 0.61,
+        "z": 2.0,
+        "id": "sensor_2",
+        "meta": {
+          "aisle": "cold"
+        }
+      },
+      "sensor_3": {
+        "x": 8.0,
+        "y": 0.61,
+        "z": 2.0,
+        "id": "sensor_3",
+        "meta": {
+          "aisle": "cold"
+        }
+      },
+      "sensor_4": {
+        "x": 3.0,
+        "y": 5.39,
+        "z": 2.0,
+        "id": "sensor_4",
+        "meta": {
+          "aisle": "cold"
+        }
+      },
+      "sensor_5": {
+        "x": 5.0,
+        "y": 5.39,
+        "z": 2.0,
+        "id": "sensor_5",
+        "meta": {
+          "aisle": "cold"
+        }
+      },
+      "sensor_6": {
+        "x": 8.0,
+        "y": 5.39,
+        "z": 2.0,
+        "id": "sensor_6",
+        "meta": {
+          "aisle": "cold"
+        }
+      }
+    }
+  }
+}

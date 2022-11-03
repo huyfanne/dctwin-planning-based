@@ -1,0 +1,216 @@
+logging_config {
+    log_dir: "co-sim"
+    level: DEBUG
+    verbose: true
+}
+
+cosim_env_config {
+    cfd: {
+        geometry_file: "model/geometry/room.json"
+        idf2room_map: "model/geometry/idf2room.json"
+        pod_dir: "model/POD"
+        pod_method: "GP"
+        object_mesh_index: "model/POD/object_mesh_index.json"
+        observations: [
+           {
+              exposed: true
+              variable_name: "sensor_1"
+              normalize_config: {
+                 method: LINEAR
+                 lb: 18
+                 ub: 35
+              }
+           },
+           {
+              exposed: true
+              variable_name: "sensor_2"
+              normalize_config: {
+                 method: LINEAR
+                 lb: 18
+                 ub: 35
+              }
+           },
+           {
+              exposed: true
+              variable_name: "sensor_3"
+              normalize_config: {
+                 method: LINEAR
+                 lb: 18
+                 ub: 35
+              }
+           },
+           {
+              exposed: true
+              variable_name: "sensor_4"
+              normalize_config: {
+                 method: LINEAR
+                 lb: 18
+                 ub: 35
+              }
+           },
+           {
+              exposed: true
+              variable_name: "sensor_5"
+              normalize_config: {
+                 method: LINEAR
+                 lb: 18
+                 ub: 35
+              }
+           },
+           {
+              exposed: true
+              variable_name: "sensor_6"
+              normalize_config: {
+                 method: LINEAR
+                 lb: 18
+                 ub: 35
+              }
+           }
+        ]
+    },
+    eplus: {
+        model_file: "model/idf/1ZoneDataCenterHVAC_Alibaba.idf"
+        weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
+
+        network: "host"
+        host: "localhost"
+
+        return_temp_lb: 20.0
+        return_temp_ub: 40.0
+        return_temp_init: 25.0
+
+        simulation_time_config: {
+            begin_month: 9
+            begin_day_of_month: 1
+            end_month: 9
+            end_day_of_month: 7
+            number_of_timesteps_per_hour: 4
+        }
+
+        actions: [
+            {
+                control_type: PRE_SCHEDULED
+                variable_name: "cpu_loading_schedule"
+                input_source: "data/workloads/schedule/schedule.json"
+                schedule_config:{
+                    initial_value: 1.0
+                    lb: 0
+                    ub: 1
+                    schedule_type: ITE
+                    scheduled_ite_equipment_name: "WestDataCenter_Equip"
+                }
+                normalize_config: {
+                    method: LINEAR
+                    lb: 0
+                    ub: 1
+                }
+            },
+            {
+                variable_name: "ACU1_setpoint"
+                actuator_config: {
+                    actuated_component_unique_name: "west air loop outlet node"
+                    actuated_component_type: System_Node_Setpoint
+                    actuated_component_control_type: Temperature_Setpoint
+                }
+            },
+            {
+                variable_name: "ACU1_flow_rate"
+                actuator_config: {
+                    actuated_component_unique_name: "west zone supply fan"
+                    actuated_component_type: Fan
+                    actuated_component_control_type: Fan_Air_Mass_Flow_Rate
+                }
+            },
+            {
+                variable_name: "chw_supply_temperature"
+                control_type: FIXED
+                default_unnormed_value: 7.0
+                actuator_config: {
+                    actuated_component_unique_name: "CW Supply Outlet Node"
+                    actuated_component_type: System_Node_Setpoint
+                    actuated_component_control_type: Temperature_Setpoint
+                }
+            }
+        ]
+        observations: [
+           {
+              exposed: true
+              variable_name: "cpu_loading_schedule"
+              observation_type: EXTERNAL
+              normalize_config: {
+                 method: LINEAR
+                 lb: 0
+                 ub: 1
+              }
+           },
+           {
+              exposed: false
+              variable_name: "IT load"
+              output_variable_config: {
+                 key_value: "westdatacenter_equip"
+                 variable_name: "ITE Total Heat Gain to Zone Rate"
+                 reporting_frequency: "timestep"
+              }
+              normalize_config: {
+                 method: LINEAR
+                 lb: 0
+                 ub: 3e6
+              }
+           },
+           {
+              exposed: false
+              variable_name: "HVAC_power"
+              output_variable_config: {
+                 key_value: "Whole Building"
+                 variable_name: "Facility Total HVAC Electricity Demand Rate"
+                 reporting_frequency: "timestep"
+              }
+           },
+           {
+              exposed: false
+              variable_name: "supply air temperature"
+              output_variable_config: {
+                 key_value: "west air loop outlet node"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+           },
+           {
+              exposed: false
+              variable_name: "supply air flow rate"
+              output_variable_config: {
+                 key_value: "west air loop outlet node"
+                 variable_name: "System Node Mass Flow Rate"
+                 reporting_frequency: "timestep"
+              }
+           },
+           {
+              exposed: false
+              variable_name: "chw temperature"
+              output_variable_config: {
+                 key_value: "CW Supply Outlet Node"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+           },
+           {
+              exposed: false
+              variable_name: "chw mass flow rate"
+              output_variable_config: {
+                 key_value: "CW Supply Outlet Node"
+                 variable_name: "System Node Mass Flow Rate"
+                 reporting_frequency: "timestep"
+              }
+           },
+           {
+              exposed: false
+              variable_name: "crac power"
+              output_variable_config: {
+                 key_value: "West Zone Supply Fan"
+                 variable_name: "Fan Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+           }
+        ]
+    }
+}

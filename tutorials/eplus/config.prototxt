@@ -1,0 +1,726 @@
+logging_config {
+    log_dir: "eplus"
+    level: DEBUG
+    verbose: true
+}
+
+eplus_env_config {
+    model_file: "model/idf/5DC_4CH.idf"
+    weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
+    network: "host"
+    host: "localhost"
+    simulation_time_config: {
+        begin_month: 4
+        begin_day_of_month: 4
+        end_month: 4
+        end_day_of_month: 10
+        number_of_timesteps_per_hour: 4
+    }
+    use_unnormed_obs: false
+    actions: [
+        {
+            control_type: PRE_SCHEDULED
+            variable_name: "cpu_loading_schedule1"
+            input_source: "data/workloads/schedule/schedule.json"
+            schedule_config:{
+                initial_value: 1.0
+                lb: 0
+                ub: 1
+                schedule_type: ITE
+                scheduled_ite_equipment_name: "DataHall_1_Equip"
+            }
+        },
+        {
+            control_type: PRE_SCHEDULED
+            variable_name: "cpu_loading_schedule2"
+            input_source: "data/workloads/schedule/schedule.json"
+            schedule_config:{
+                initial_value: 1.0
+                lb: 0
+                ub: 1
+                schedule_type: ITE
+                scheduled_ite_equipment_name: "DataHall_2_Equip"
+            }
+        },
+        {
+            control_type: PRE_SCHEDULED
+            variable_name: "cpu_loading_schedule3"
+            input_source: "data/workloads/schedule/schedule.json"
+            schedule_config:{
+                initial_value: 1.0
+                lb: 0
+                ub: 1
+                schedule_type: ITE
+                scheduled_ite_equipment_name: "DataHall_3_Equip"
+            }
+        },
+        {
+            control_type: PRE_SCHEDULED
+            variable_name: "cpu_loading_schedule4"
+            input_source: "data/workloads/schedule/schedule.json"
+            schedule_config:{
+                initial_value: 1.0
+                lb: 0
+                ub: 1
+                schedule_type: ITE
+                scheduled_ite_equipment_name: "DataHall_4_Equip"
+            }
+        },
+        {
+            control_type: PRE_SCHEDULED
+            variable_name: "cpu_loading_schedule5"
+            input_source: "data/workloads/schedule/schedule.json"
+            schedule_config:{
+                initial_value: 1.0
+                lb: 0
+                ub: 1
+                schedule_type: ITE
+                scheduled_ite_equipment_name: "DataHall_5_Equip"
+            }
+        },
+        {
+            variable_name: "chw_supply_temperature"
+            actuator_config: {
+                actuated_component_unique_name: "node ch_lp_04"
+                actuated_component_type: System_Node_Setpoint
+                actuated_component_control_type: Temperature_Setpoint
+            }
+        },
+        {
+            variable_name: "dc1_supply_temperature"
+            control_type: FIXED
+            default_unnormed_value: 17
+            actuator_config: {
+                actuated_component_unique_name: "node air_supply_t_set_dc1"
+                actuated_component_type: System_Node_Setpoint
+                actuated_component_control_type: Temperature_Setpoint
+            }
+        },
+        {
+            variable_name: "dc2_supply_temperature"
+            control_type: FIXED
+            default_unnormed_value: 17
+            actuator_config: {
+                actuated_component_unique_name: "node air_supply_t_set_dc2"
+                actuated_component_type: System_Node_Setpoint
+                actuated_component_control_type: Temperature_Setpoint
+            }
+        },
+        {
+            variable_name: "dc3_supply_temperature"
+            control_type: FIXED
+            default_unnormed_value: 17
+            actuator_config: {
+                actuated_component_unique_name: "node air_supply_t_set_dc3"
+                actuated_component_type: System_Node_Setpoint
+                actuated_component_control_type: Temperature_Setpoint
+            }
+        },
+        {
+            variable_name: "dc4_supply_temperature"
+            control_type: FIXED
+            default_unnormed_value: 17
+            actuator_config: {
+                actuated_component_unique_name: "node air_supply_t_set_dc4"
+                actuated_component_type: System_Node_Setpoint
+                actuated_component_control_type: Temperature_Setpoint
+            }
+        },
+        {
+            variable_name: "dc5_supply_temperature"
+            control_type: FIXED
+            default_unnormed_value: 17
+            actuator_config: {
+                actuated_component_unique_name: "node air_supply_t_set_dc5"
+                actuated_component_type: System_Node_Setpoint
+                actuated_component_control_type: Temperature_Setpoint
+            }
+        }
+    ]
+    observations: [
+        {
+             exposed: true
+             variable_name: "cpu_loading_schedule1"
+             observation_type: EXTERNAL
+             normalize_config: {
+                 method: LINEAR
+                 lb: 0
+                 ub: 1
+             }
+        },
+        {
+             exposed: true
+             variable_name: "dh-1 IT load"
+             output_variable_config: {
+                 key_value: "datahall_1_equip"
+                 variable_name: "ITE Total Heat Gain to Zone Rate"
+                 reporting_frequency: "timestep"
+             }
+             normalize_config: {
+                 method: LINEAR
+                 lb: 0
+                 ub: 2023987.5
+             }
+        },
+        {
+             exposed: true
+             variable_name: "dh-2 IT load"
+             output_variable_config: {
+                 key_value: "datahall_2_equip"
+                 variable_name: "ITE Total Heat Gain to Zone Rate"
+                 reporting_frequency: "timestep"
+             }
+             normalize_config: {
+                 method: LINEAR
+                 lb: 0
+                 ub: 2169020.6
+             }
+        },
+        {
+             exposed: true
+             variable_name: "dh-3 IT load"
+             output_variable_config: {
+                 key_value: "datahall_3_equip"
+                 variable_name: "ITE Total Heat Gain to Zone Rate"
+                 reporting_frequency: "timestep"
+             }
+             normalize_config: {
+                 method: LINEAR
+                 lb: 0
+                 ub:1669990.4
+             }
+        },
+        {
+             exposed: true
+             variable_name: "dh-4 IT load"
+             output_variable_config: {
+                 key_value: "datahall_4_equip"
+                 variable_name: "ITE Total Heat Gain to Zone Rate"
+                 reporting_frequency: "timestep"
+             }
+             normalize_config: {
+                 method: LINEAR
+                 lb: 0
+                 ub: 1224984.6
+             }
+        },
+        {
+             exposed: true
+             variable_name: "dh-5 IT load"
+             output_variable_config: {
+                 key_value: "datahall_5_equip"
+                 variable_name: "ITE Total Heat Gain to Zone Rate"
+                 reporting_frequency: "timestep"
+             }
+             normalize_config: {
+                 method: LINEAR
+                 lb: 0
+                 ub: 1252000.4
+             }
+        },
+        {
+             exposed: false
+             variable_name: "dh-1 supply temperature"
+             output_variable_config: {
+                 key_value: "node air_supply_t_set_dc1"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+             }
+        },
+        {
+             exposed: false
+             variable_name: "dh-2 supply temperature"
+             output_variable_config: {
+                 key_value: "node air_supply_t_set_dc2"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+             }
+        },
+        {
+             exposed: false
+             variable_name: "dh-3 supply temperature"
+             output_variable_config: {
+                 key_value: "node air_supply_t_set_dc3"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+             }
+        },
+        {
+             exposed: false
+             variable_name: "dh-4 supply temperature"
+             output_variable_config: {
+                 key_value: "node air_supply_t_set_dc4"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+             }
+        },
+        {
+             exposed: false
+             variable_name: "dh-5 supply temperature"
+             output_variable_config: {
+                 key_value: "node air_supply_t_set_dc5"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+             }
+        },
+        {
+              exposed: false
+              variable_name: "Total HVAC Power"
+              output_variable_config: {
+                 key_value: "Whole Building"
+                 variable_name: "Facility Total HVAC Electricity Demand Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "by pass flow rate"
+              output_variable_config: {
+                 key_value: "node ch_lp_bypass_02"
+                 variable_name: "System Node Mass Flow Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "chw supply temperature"
+              output_variable_config: {
+                 key_value: "node ch_lp_04"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "chw return temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_08"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "chw flow rate"
+              output_variable_config: {
+                 key_value: "Node CW_D1"
+                 variable_name: "System Node Mass Flow Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "cw temperature"
+              output_variable_config: {
+                 key_value: "Node CW_Setpoint"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "cw flow rate"
+              output_variable_config: {
+                 key_value: "node ch_lp_04"
+                 variable_name: "System Node Mass Flow Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CH-3-CPR-01 power"
+              output_variable_config: {
+                 key_value: "CH-3-CPR-01"
+                 variable_name: "Chiller Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CH-3-CPR-02 power"
+              output_variable_config: {
+                 key_value: "CH-3-CPR-02"
+                 variable_name: "Chiller Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CH-3-CPR-03 power"
+              output_variable_config: {
+                 key_value: "CH-3-CPR-03"
+                 variable_name: "Chiller Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CH-3-CPR-04 power"
+              output_variable_config: {
+                 key_value: "CH-3-CPR-04"
+                 variable_name: "Chiller Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CH-3-CPR-05 power"
+              output_variable_config: {
+                 key_value: "CH-3-CPR-05"
+                 variable_name: "Chiller Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CHW Pump power"
+              output_variable_config: {
+                 key_value: "chwp_sum"
+                 variable_name: "Pump Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CT_1300RT_01 power"
+              output_variable_config: {
+                 key_value: "CT_1300RT_01"
+                 variable_name: "Cooling Tower Fan Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CCT_1300RT_02 power"
+              output_variable_config: {
+                 key_value: "CT_1300RT_02"
+                 variable_name: "Cooling Tower Fan Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CT_1300RT_03 power"
+              output_variable_config: {
+                 key_value: "CT_1300RT_03"
+                 variable_name: "Cooling Tower Fan Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CT_650RT_01 power"
+              output_variable_config: {
+                 key_value: "CT_650RT_01"
+                 variable_name: "Cooling Tower Fan Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CT_650RT_02 power"
+              output_variable_config: {
+                 key_value: "CT_650RT_02"
+                 variable_name: "Cooling Tower Fan Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CW Pump power"
+              output_variable_config: {
+                 key_value: "cwp_sum"
+                 variable_name: "Pump Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "Total Power"
+              output_variable_config: {
+                 key_value: "Whole Building"
+                 variable_name: "Facility Total Building Electricity Demand Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CRAC1 power"
+              output_variable_config: {
+                 key_value: "Fan_for_DC1"
+                 variable_name: "Fan Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CRAC2 power"
+              output_variable_config: {
+                 key_value: "Fan_for_DC2"
+                 variable_name: "Fan Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CRAC3 power"
+              output_variable_config: {
+                 key_value: "Fan_for_DC3"
+                 variable_name: "Fan Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CRAC4 power"
+              output_variable_config: {
+                 key_value: "Fan_for_DC4"
+                 variable_name: "Fan Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "CRAC5 power"
+              output_variable_config: {
+                 key_value: "Fan_for_DC5"
+                 variable_name: "Fan Electricity Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "tz1 temperature"
+              output_variable_config: {
+                 key_value: "TZ DC 1"
+                 variable_name: "Zone Air Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "tz2 temperature"
+              output_variable_config: {
+                 key_value: "TZ DC 2"
+                 variable_name: "Zone Air Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "tz3 temperature"
+              output_variable_config: {
+                 key_value: "TZ DC 3"
+                 variable_name: "Zone Air Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "tz4 temperature"
+              output_variable_config: {
+                 key_value: "TZ DC 4"
+                 variable_name: "Zone Air Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "tz5 temperature"
+              output_variable_config: {
+                 key_value: "TZ DC 5"
+                 variable_name: "Zone Air Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "coil1 cooling rate"
+              output_variable_config: {
+                 key_value: "Cooiling_coil_for_DC1"
+                 variable_name: "Cooling Coil Sensible Cooling Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "coil2 cooling rate"
+              output_variable_config: {
+                 key_value: "Cooiling_coil_for_DC2"
+                 variable_name: "Cooling Coil Sensible Cooling Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "coil3 cooling rate"
+              output_variable_config: {
+                 key_value: "Cooiling_coil_for_DC3"
+                 variable_name: "Cooling Coil Sensible Cooling Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "coil4 cooling rate"
+              output_variable_config: {
+                 key_value: "Cooiling_coil_for_DC4"
+                 variable_name: "Cooling Coil Sensible Cooling Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "coil5 cooling rate"
+              output_variable_config: {
+                 key_value: "Cooiling_coil_for_DC5"
+                 variable_name: "Cooling Coil Sensible Cooling Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "coil6 cooling rate"
+              output_variable_config: {
+                 key_value: "Cooiling_coil_for_accessories"
+                 variable_name: "Cooling Coil Sensible Cooling Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "dc1 return temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_DC01_02"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "dc2 return temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_DC02_02"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "dc3 return temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_DC03_02"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "dc4 return temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_DC04_02"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "dc5 return temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_DC05_02"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "chiller1 leaving temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_Branch01_02"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "chiller2 leaving temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_Branch02_02"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "chiller3 leaving temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_Branch03_02"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "chiller4 leaving temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_Branch04_02"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "chiller3 leaving temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_Branch05_02"
+                 variable_name: "System Node Temperature"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "chiller1 leaving temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_Branch01_02"
+                 variable_name: "System Node Mass Flow Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "chiller2 leaving temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_Branch02_02"
+                 variable_name: "System Node Mass Flow Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "chiller3 leaving temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_Branch03_02"
+                 variable_name: "System Node Mass Flow Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "chiller4 leaving temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_Branch04_02"
+                 variable_name: "System Node Mass Flow Rate"
+                 reporting_frequency: "timestep"
+              }
+        },
+        {
+              exposed: false
+              variable_name: "chiller3 leaving temperature"
+              output_variable_config: {
+                 key_value: "Node CH_LP_Branch05_02"
+                 variable_name: "System Node Mass Flow Rate"
+                 reporting_frequency: "timestep"
+              }
+        }
+    ]
+}

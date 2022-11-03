@@ -1,0 +1,16 @@
+logging_config {
+    log_dir: "batch-cfd"
+    level: DEBUG
+    verbose: true
+}
+
+hybrid_env_config {
+    cfd: {
+        geometry_file: "model/geometry/room.json"
+        idf2room_map: "model/geometry/idf2room.json"
+        mesh_dir: "log/base"
+    },
+    eplus: {
+        model_file: "model/idf/1ZoneDataCenterHVAC_Alibaba.idf"
+    }
+}
