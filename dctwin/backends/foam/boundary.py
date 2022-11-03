@@ -181,9 +181,11 @@ class ServerBoundary(Boundary):
         value = f"({t_sink}+({self.heat_load}/{self.flow_value}))"
         if self.flow_rate == 0:
             outlet = self.zero_gradient
-        elif self.object.dynamic_flow_rate_high is not None and \
-            self.object.dynamic_temperature_high is not None and \
-            self.object.dynamic_temperature_low is not None:
+        elif (
+            self.object.dynamic_flow_rate_high is not None
+            and self.object.dynamic_temperature_high is not None
+            and self.object.dynamic_temperature_low is not None
+        ):
             outlet = self.dynamic_t
         else:
             outlet = f"""
@@ -230,9 +232,11 @@ class ServerBoundary(Boundary):
 
     @property
     def U(self):
-        if self.object.dynamic_flow_rate_high is not None and \
-            self.object.dynamic_temperature_high is not None and \
-            self.object.dynamic_temperature_low is not None:
+        if (
+            self.object.dynamic_flow_rate_high is not None
+            and self.object.dynamic_temperature_high is not None
+            and self.object.dynamic_temperature_low is not None
+        ):
             inlet = self.dynamic_inlet
             outlet = self.dynamic_outlet
         else:

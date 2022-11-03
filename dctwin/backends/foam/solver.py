@@ -9,29 +9,39 @@ import shutil
 import time
 from logging import Logger
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Tuple
 
-from dctwin.backend import template_env
-from dctwin.backend.core import Backend
-from dctwin.backend.foam.boundary import ACUBoundary, RoomBoundary, ServerBoundary
-from dctwin.backend.foam.core import generate_control_dict
-from dctwin.backend.foam.reader import read_internal_field
-from dctwin.config import environ
+from dctwin.backends.core import Backend
+from dctwin.backends.foam.boundary import (
+    ACUBoundary,
+    RoomBoundary,
+    ServerBoundary
+)
+
+from dctwin.backends.foam.utils import generate_control_dict, read_internal_field
 from dctwin.models import ACU, Server
 from dctwin.models.constructions import Room
+from dctwin.utils import template_env, config
 
 logger = Logger(__file__)
 
 
 class Builder:
-    def __init__(self, room: Room, last_state_case=None):
+    """
+    A class to render the template of the foam configuration file
+
+    :param room: the room to be simulated
+    :param last_state_case: the last state of the case, if it is None,
+        the state will be reset to the initial state
+    """
+    def __init__(self, room: Room, last_state_case=None) -> None:
         self.room = room
         self.room_dz = room.height
         self.acu_list = list(room.objects.acus.values())
         self.server_list = list(room.objects.servers.values())
         self.last_state_case = last_state_case
 
-    def run(self):
+    def run(self) -> None:
         self.render("alphat")
         self.render("epsilon")
         self.render("nut")
@@ -50,7 +60,7 @@ class Builder:
             self.render("U")
 
     @classmethod
-    def get_k_and_epsilon(cls, obj_list: List[Union[ACU, Server]]):
+    def get_k_and_epsilon(cls, obj_list: List[Union[ACU, Server]]) -> Tuple[float, float]:
         """Get the minimum value greater than 0"""
         _obj_list = [acu for acu in obj_list if acu.k != 0]
         if len(_obj_list) == 0:
@@ -58,10 +68,10 @@ class Builder:
         obj = min(_obj_list, key=lambda x: x.k)
         return obj.k, obj.epsilon
 
-    def render(self, filename, internal_field=None):
+    def render(self, filename, internal_field=None) -> None:
         acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_list)
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_list)
-        with open(Path(environ.CASE_DIR, f"0/{filename}"), "w") as f:
+        with open(Path(config.CASE_DIR, f"0/{filename}"), "w") as f:
             f.write(
                 template_env.get_template(f"0/{filename}.j2").render(
                     init_temperature=24 + 273.15,
@@ -80,45 +90,20 @@ class Builder:
             )
 
 
-def parse_result(room: Room, case: Union[str, Path], **kwargs):
-    results = []
-    with open(f"{case}/postProcessing/probes/0/T") as f:
-        for i in f:
-            if i.startswith("#"):
-                continue
-            else:
-                results.append(
-                    list(map(lambda x: round(float(x) - 273.15, 2), i.split()[1:]))
-                )
-    probe_results = results[-1]
-    assert len(room.probes) == len(probe_results)
-
-    results = []
-    for i, sensor in enumerate(room.probes):
-        if len(kwargs) == 0:
-            data = sensor.dict()
-            data["result"] = probe_results[i]
-            results.append(data)
-        else:
-            for k, v in kwargs.items():
-                if sensor.meta.get(k) == v:
-                    data = sensor.dict()
-                    data["result"] = probe_results[i]
-                    results.append(data)
-    return results
-
-
 class SolverBackend(Backend):
     docker_image = "openfoamplus/of_v1912_centos73"
+
     only_save_latest = True
+    write_interval = 10
+    end_time = 500
 
     @property
     @abc.abstractmethod
-    def solver(self):
+    def solver(self) -> str:
         raise NotImplementedError
 
     @property
-    def command(self):
+    def command(self) -> str:
         if self.process_num > 1:
             latest_time = "-latestTime" if self.only_save_latest else ""
             command = (
@@ -138,7 +123,7 @@ class SolverBackend(Backend):
     @classmethod
     def probe_result(cls) -> list:
         results = []
-        with open(f"{environ.CASE_DIR}/postProcessing/probes/0/T") as f:
+        with open(f"{config.CASE_DIR}/postProcessing/probes/0/T") as f:
             for i in f:
                 if i.startswith("#"):
                     continue
@@ -148,35 +133,32 @@ class SolverBackend(Backend):
                     )
         return results[-1]
 
-    def generate_control_dict(self, room: Room):
+    def generate_control_dict(self, room: Room) -> None:
         raise NotImplementedError
 
     def run(
         self,
         room: Room,
-        mesh_path=None,
-        output_dir=None,
         dry_run: bool = False,
         last_state_case=None,
         process_num: int = None,
         write_interval: int = None,
         end_time: int = None,
         stream: bool = False,
-    ):
+    ) -> None:
         if process_num is not None:
             self.process_num = process_num
 
-        if output_dir is not None and mesh_path is not None:
-            output_path = Path(output_dir)
-            output_path.mkdir(exist_ok=True)
-            environ.CASE_DIR = Path(output_dir).absolute()
-            if not Path(f"{output_dir}/0").exists():
-                shutil.copytree(f"{mesh_path}/0", f"{output_dir}/0")
-            if not Path(f"{output_dir}/constant").exists():
-                shutil.copytree(f"{mesh_path}/constant", f"{output_dir}/constant")
-            if not Path(f"{output_dir}/system").exists():
-                shutil.copytree(f"{mesh_path}/system", f"{output_dir}/system")
-            Path(environ.CASE_DIR, "case.foam").touch(exist_ok=True)
+        if config.cfd.mesh_dir != Path("") and config.CASE_DIR != Path(""):
+            config.CASE_DIR.mkdir(parents=True, exist_ok=True)
+            config.CASE_DIR = Path(config.CASE_DIR).absolute()
+            if not Path(f"{config.CASE_DIR}/0").exists():
+                shutil.copytree(f"{config.cfd.mesh_dir}/0", f"{config.CASE_DIR}/0")
+            if not Path(f"{config.CASE_DIR}/constant").exists():
+                shutil.copytree(f"{config.cfd.mesh_dir}/constant", f"{config.CASE_DIR}/constant")
+            if not Path(f"{config.CASE_DIR}/system").exists():
+                shutil.copytree(f"{config.cfd.mesh_dir}/system", f"{config.CASE_DIR}/system")
+            Path(config.CASE_DIR, "case.foam").touch(exist_ok=True)
             time.sleep(1)
 
         if write_interval is not None:
@@ -202,7 +184,7 @@ class SteadySolverBackend(SolverBackend):
         self,
         room: Room,
         delta_t=1,
-    ):
+    ) -> None:
         generate_control_dict(
             room.probes,
             steady=True,
@@ -222,7 +204,7 @@ class TransientSolverBackend(SolverBackend):
         self,
         room: Room,
         delta_t=1e-5,
-    ):
+    ) -> None:
         generate_control_dict(
             room.probes,
             steady=False,
