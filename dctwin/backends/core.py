@@ -1,0 +1,102 @@
+import abc
+from loguru import logger
+from typing import Union
+
+from docker import DockerClient, from_env
+from docker.errors import ContainerError, ImageNotFound
+
+from dctwin.utils import config
+
+
+class Backend(abc.ABC):
+    """
+    Base class for DCTwin Backend. All backend should inherit this class.
+    The Backend is to support the simulation of various simulators (EnergyPlus, OpenFoam, etc.) which is dockerized.
+    It mainly takes care of the following tasks:
+    1. Check the docker image of specific simulator
+    2. Run the docker container of specific simulator
+
+    :param client: docker client
+    :param process_num: number of cores for simulation
+    """
+    volume_data_dir = "/data"
+    volume_geometry_dir = f"{volume_data_dir}/constant/triSurface"
+
+    def __init__(self, client: DockerClient = None, process_num: int = 1) -> None:
+        self.client = client
+        if self.client is None:
+            self.client = from_env()
+        self.process_num = process_num
+        self.container = None
+
+    @property
+    @abc.abstractmethod
+    def docker_image(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def command(self) -> Union[list, str]:
+        pass
+
+    @abc.abstractmethod
+    def run(self, **kwargs) -> None:
+        pass
+
+    def check_image(self) -> None:
+        try:
+            self.client.images.get(self.docker_image)
+        except ImageNotFound:
+            logger.info(f"docker image({self.docker_image}) not existed, try to pull...")
+            self.client.images.pull(self.docker_image)
+
+    def run_container(
+        self,
+        environment: dict = None,
+        auto_remove: bool = True,
+        user: int = None,
+        working_dir: str = None,
+        stream: bool = False,
+        command: list = None,
+        background: bool = False,
+        **kwargs,
+    ) -> None:
+        command = self.command if command is None else command
+        logger.info(f"docker mount: {config.CASE_DIR}")
+        logger.info("docker run: " + (" ".join(command)))
+        self.check_image()
+        try:
+            self.client.close()
+            self.container = self.client.containers.run(
+                self.docker_image,
+                command=command,
+                auto_remove=auto_remove,
+                volumes={
+                    str(config.CASE_DIR): {
+                        "bind": self.volume_data_dir,
+                        "mode": "rw",
+                    },
+                    "/etc/passwd": {
+                        "bind": "/etc/passwd",
+                        "mode": "ro",
+                    },
+                },
+                user=user,
+                environment=environment,
+                working_dir=working_dir
+                if working_dir is not None else self.volume_data_dir,
+                detach=True,
+                **kwargs,        
+            )
+            if background:
+                return None
+            output_stream = self.container.logs(stream=True, follow=True)
+            if stream:
+                return output_stream
+            else:
+                for log in output_stream:
+                    if config.BACKEND_LOG_PRINT:
+                        logger.info(log.decode("utf-8").strip())
+        except ContainerError as e:
+            logger.info(str(e.stderr))
+            raise e
