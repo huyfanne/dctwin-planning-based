@@ -7,7 +7,6 @@ import abc
 import os
 import shutil
 import time
-from logging import Logger
 from pathlib import Path
 from typing import List, Union, Tuple
 
@@ -22,8 +21,6 @@ from dctwin.backends.foam.utils import generate_control_dict, read_internal_fiel
 from dctwin.models import ACU, Server
 from dctwin.models.constructions import Room
 from dctwin.utils import template_env, config
-
-logger = Logger(__file__)
 
 
 class Builder:

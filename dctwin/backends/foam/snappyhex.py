@@ -1,8 +1,6 @@
 import os
-from logging import Logger
+from loguru import logger
 from typing import Optional
-
-import click
 
 from dctwin.backends.core import Backend
 from dctwin.backends.foam.utils import (
@@ -12,9 +10,6 @@ from dctwin.backends.foam.utils import (
 )
 
 from dctwin.models.constructions import Room
-
-
-logger = Logger(__name__)
 
 
 class SnappyHexBackend(Backend):
@@ -60,4 +55,4 @@ class SnappyHexBackend(Backend):
         if dry_run:
             return
         self.run_container(user=os.getuid())
-        click.echo("***** Mesh finished *****\n\n")
+        logger.info("***** Mesh finished *****\n\n")
