@@ -27,7 +27,6 @@ class CoSimManager:
         write_interval: int = None,
         end_time: int = None,
         field_config: Dict = None,
-        print_backend_log: bool = False,
         pod_method: str = "GP",
         docker_client: docker.DockerClient = None,
     ) -> None:
@@ -40,7 +39,6 @@ class CoSimManager:
             write_interval=write_interval,
             end_time=end_time,
             field_config=field_config,
-            print_backend_log=print_backend_log,
             pod_method=pod_method,
             docker_client=docker_client,
         )

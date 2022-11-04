@@ -50,7 +50,6 @@ class CFDManager:
         write_interval: int = 50,
         end_time: int = 100,
         field_config: Dict = None,
-        print_backend_log: bool = False,
         pod_method: str = "GP",
         docker_client: docker.DockerClient = None,
     ) -> None:
@@ -69,7 +68,6 @@ class CFDManager:
         self.write_interval = write_interval
         self.end_time = end_time
         self.field_config = field_config
-        config.BACKEND_LOG_PRINT = print_backend_log
         self.steady = steady
         self.pod_method = pod_method
 
