@@ -108,6 +108,9 @@ class Config:
         self.BACKEND_LOG_PRINT = (
             self._environ.get("BACKEND_LOG_PRINT", "true").lower() == "true"
         )
+        self.PRESERVE_FOAM_LOG = (
+            self._environ.get("BACKEND_LOG_PRINT", "true").lower() == "true"
+        )
         # solver
         self.SOLVER_TURBULENCE = (
             self._environ.get("SOLVER_TURBULENCE", "true").lower() == "true"
