@@ -202,12 +202,12 @@ class CFDManager:
                     )
             if boundary_conditions:
                 self.parser.update_boundary_conditions(**boundary_conditions)
-                if save_boundary_conditions:
-                    save_json_file(
-                        path=config.CASE_DIR.joinpath("boundary_conditions.json"),
-                        saved_dict=boundary_conditions,
-                    )
             self.solve(dry_run=dry_run, stream=False)
+            if save_boundary_conditions:
+                save_json_file(
+                    path=config.CASE_DIR.joinpath("boundary_conditions.json"),
+                    saved_dict=boundary_conditions,
+                )
             self.last_state_case = config.CASE_DIR.joinpath(str(self.end_time)) \
                 if not self.steady else None
             results = read_temperature(config.CASE_DIR, str(self.end_time))

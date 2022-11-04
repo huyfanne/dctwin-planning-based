@@ -166,6 +166,8 @@ class IDFParser:
             num_components = int((len(branch) - 2) / 4)
             for idx in range(num_components):
                 component_names.add(branch[f"component_{idx + 1}_name"].name)
+        for equipment in self.epm.ElectricEquipment_ITE_AirCooled:
+            component_names.add(equipment.cpu_loading_schedule_name.name)
         return component_names
 
     def _get_crac_fan_info(self) -> List:
@@ -465,7 +467,8 @@ class IDFParser:
         actuated_component_unique_name = actuator_config.actuated_component_unique_name
         component_type = actuator_config.DESCRIPTOR.EnumValueName("ComponentType",
                                                                   actuator_config.actuated_component_type)
-        component_type = " ".join(component_type.split("_"))
+        component_type = " ".join(component_type.split("_")) if not component_type.startswith("Schedule")\
+            else ":".join(component_type.split("_"))
         control_type = actuator_config.DESCRIPTOR.EnumValueName("ControlType",
                                                                 actuator_config.actuated_component_control_type)
         control_type = " ".join(control_type.split("_"))
