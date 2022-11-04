@@ -165,7 +165,7 @@ class CoSimManager:
         self._pre_process(episode_idx=episode_idx)
         cfd_obs = self.cfd_manager.run(
             case_index=self.step_idx,
-            episode_idx=episode_idx,
+            episode_index=episode_idx,
             **init_boundary_condition
         )
         self.cfd_sensor_obs, return_temp = self._post_processing(
@@ -229,7 +229,7 @@ class CoSimManager:
         # run CFD/POD simulation
         temperature = self.cfd_manager.run(
             case_index=self.step_idx,
-            episode_idx=self.episode_idx,
+            episode_index=self.episode_idx,
             **boundary_conditions
         )
         # post-processing CFD/POD simulation result to obtain return temperature
