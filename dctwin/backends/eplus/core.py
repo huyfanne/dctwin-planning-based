@@ -7,6 +7,8 @@ import opyplus as op
 from pathlib import Path
 from typing import List, Tuple, Union, Optional
 import xml.etree.ElementTree as ET
+
+from docker import DockerClient
 from loguru import logger
 from dctwin.utils import EPlusEnvConfig
 from dctwin.backends.eplus.eplus_logger import EPlusOutputFormatter
@@ -21,6 +23,7 @@ class EplusBackend(Backend):
     :param proto_config: the configuration of the eplus model
     :param host: The host to connect to (default: localhost)
     :param network: The network to connect to (default: host)
+    :param docker_client: The docker client to use (default: None)
     """
     docker_image = "ghcr.io/cap-dcwiz/energyplus-9-5-0:latest"
     _version = 2
@@ -33,10 +36,11 @@ class EplusBackend(Backend):
         proto_config: EPlusEnvConfig,
         host: Optional[str] = "localhost",
         network: Optional[str] = "host",
+        docker_client: DockerClient = None,
         *args,
         **kwargs
     ) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__(client=docker_client, *args, **kwargs)
         self._network = network
         self._host = host
         self._socket = None
