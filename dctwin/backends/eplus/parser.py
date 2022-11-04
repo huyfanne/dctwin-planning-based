@@ -53,7 +53,7 @@ class IDFParser:
         "Facility Total Building Electricity Demand Rate",
     ]
 
-    variable_name_EMS = ["Power Usage Effectiveness"]
+    variable_name_ems = ["Power Usage Effectiveness"]
 
     def __init__(
         self,
@@ -628,13 +628,15 @@ class IDFParser:
 
     def compute_server_flow_rate(
         self,
-        server_heat_loads: np.ndarray,
+        utilization: Union[float, np.ndarray],
+        inlet_temperature: Optional[Union[float, np.ndarray]],
         name: str,
     ) -> np.ndarray:
         """
         Compute air flow rate for each server
         """
-        server_flow_rates = self.design_flow_rate_per_watt[name] * server_heat_loads
+        flow_frac = self._fun_flow_as_load_temp(utilization, inlet_temperature, name)
+        server_flow_rates = self.design_air_volumetric_flow_rate[name] * flow_frac
         return server_flow_rates
 
     def compute_server_outlet_temperature(

@@ -16,8 +16,8 @@ try:
 
     geompy = geomBuilder.New()
     smesh = smeshBuilder.New()
-except ImportError:
-    raise
+except Exception:
+    raise ImportError("salome not found")
 
 # Init
 SRC_PATH = Path(os.getcwd(), "scripts/room.json")
