@@ -184,7 +184,7 @@ message CFDEnvConfig {
   required string geometry_file = 1; // path of room.json file
   required string idf2room_map = 2; // path of facility map file
   optional string pod_dir = 3; // path of pod mode file
-  optional string object_mesh_index = 4;// path of object mesh index
+  optional string object_mesh_index = 4 [default = "object_mesh_index.json"];// path of object mesh index
   optional int64 process_num = 5 [default = 8]; // path of pod mode file
   optional bool steady = 6 [default = true]; // use steady-state simulation
   optional int64 write_interval = 7 [default = 100]; // path of object mesh index

@@ -48,7 +48,7 @@ class CFDConfig:
         self.base_config: Config = base_config
         self.geometry_file = Path(os.environ.get("GEOMETRY_FILE", ""))
         self.mesh_dir: Path = Path(os.environ.get("MESH_DIR", ""))
-        self.object_mesh_index: Path = Path(os.environ.get("OBJECT_MESH_INDEX", ""))
+        self.object_mesh_index: Path = Path(os.environ.get("OBJECT_MESH_INDEX", "object_mesh_index.json"))
         self.pod_dir: Path = Path(os.environ.get("POD_DIR", ""))
         self.num_modes: int = os.environ.get("NUM_MODES", 5)
 
