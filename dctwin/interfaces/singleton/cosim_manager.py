@@ -47,6 +47,7 @@ class CoSimManager:
 
         self.eplus_manager = eplus_backend
         self.cfd_sensor_obs = None
+        self.episode_idx, self.step_idx = 1, 1
         self.server_inlet_temps = {}
 
         with open(config.co_sim.idf2room_map, "r") as f:
@@ -155,6 +156,7 @@ class CoSimManager:
         return boundary_conditions
 
     def run(self, episode_idx) -> Tuple[np.ndarray, Any]:
+        self.episode_idx = episode_idx
         eplus_obs, done = self.eplus_manager.run(episode_idx)
         init_boundary_condition = self.cfd_manager.parser.format_boundary_conditions
         init_boundary_condition = self._scale_server_flow_rate(
@@ -162,6 +164,8 @@ class CoSimManager:
         )
         self._pre_process(episode_idx=episode_idx)
         cfd_obs = self.cfd_manager.run(
+            case_index=self.step_idx,
+            episode_idx=episode_idx,
             **init_boundary_condition
         )
         self.cfd_sensor_obs, return_temp = self._post_processing(
@@ -220,9 +224,12 @@ class CoSimManager:
         temperature is obtained from CFD/POD simulation and feeds bach to Eplus to
         compute the corresponding power consumption.
         """
+        self.step_idx += 1
         boundary_conditions = self._map_boundary_conditions(parsed_actions)
         # run CFD/POD simulation
         temperature = self.cfd_manager.run(
+            case_index=self.step_idx,
+            episode_idx=self.episode_idx,
             **boundary_conditions
         )
         # post-processing CFD/POD simulation result to obtain return temperature

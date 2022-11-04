@@ -120,9 +120,9 @@ class PODBuilder:
             print(f'Parameter name: {param_name:42} value = {param}')
         logger.info("Training is done")
 
-    def run(self):
+    def run(self, end_time: str = "500"):
         logger.info("Reading temperature fields")
-        self.temperatures = read_temperature_fields()
+        self.temperatures = read_temperature_fields(end_time)
         logger.info(f"Read {self.temperatures.shape[0]} temperature fields with dim = {self.temperatures.shape[1]}")
         logger.info("Reading mesh coordinates")
         self.mesh_points = read_mesh_coordinates()

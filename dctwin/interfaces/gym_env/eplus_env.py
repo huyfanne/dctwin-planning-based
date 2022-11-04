@@ -1,3 +1,4 @@
+import docker
 from typing import (
     Callable,
     List,
@@ -30,6 +31,7 @@ class EPlusEnv(BaseEnv):
         config: EPlusEnvConfig,
         reward_fn: Optional[Callable] = None,
         schedule_fn: Optional[Callable] = None,
+        docker_client: docker.DockerClient = None,
         task_id: Optional[str] = "0",
     ) -> None:
         super().__init__(
@@ -41,7 +43,9 @@ class EPlusEnv(BaseEnv):
         self._set_eplus_environ()
         self.eplus_backend = EplusBackend(
             proto_config=config,
-            host=config.host, network=config.network,
+            host=config.host,
+            network=config.network,
+            docker_client=docker_client,
         )
 
     def _set_eplus_environ(self) -> None:

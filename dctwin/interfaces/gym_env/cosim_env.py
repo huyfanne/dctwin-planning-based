@@ -1,3 +1,4 @@
+import docker
 from numpy import ndarray
 from typing import (
     Optional,
@@ -36,18 +37,28 @@ class CoSimEnv(EPlusEnv):
         config: CoSimEnvConfig,
         reward_fn: Optional[Callable] = None,
         schedule_fn: Optional[Callable] = None,
+        docker_client: docker.DockerClient = None,
         task_id: Optional[str] = "0",
     ) -> None:
-        self.cfd_config = config.cfd
         super().__init__(
             config=config.eplus,
             reward_fn=reward_fn,
             schedule_fn=schedule_fn,
+            docker_client=docker_client,
             task_id=task_id,
         )
+        self.cfd_config = config.cfd
         self._set_cosim_environ()
         self.co_sim_manager = CoSimManager(
             room=Room.load(cosim_env.cfd.geometry_file),
+            write_interval=config.cfd.write_interval,
+            end_time=config.cfd.end_time,
+            field_config=config.cfd.field_config,
+            mesh_process=config.cfd.process_num,
+            solve_process=config.cfd.process_num,
+            steady=config.cfd.steady,
+            pod_method=config.cfd.pod_method,
+            docker_client=docker_client,
             eplus_backend=self.eplus_backend,
         )
         # append cfd observations to co-sim observations,

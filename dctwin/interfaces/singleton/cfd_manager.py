@@ -151,6 +151,7 @@ class CFDManager:
     def run(
         self,
         case_index: int = 1,
+        episode_index: int = None,
         dry_run: bool = False,
         remove_foam_log: bool = True,
         save_mesh_index: bool = True,
@@ -159,6 +160,8 @@ class CFDManager:
     ) -> np.ndarray:
         """Run the whole simulation: geometry -> mesh -> solve
         :param case_index: case index for different simulation (default: 1)
+        :param episode_index: episode index for different simulation (default: None)
+            only used for co-simulation
         :param dry_run: whether to dry run
         :param remove_foam_log: whether to remove the log of OpenFOAM
         :param save_mesh_index: whether to save the mesh index
@@ -184,7 +187,10 @@ class CFDManager:
 
         else:
             # use full-fledged CFD simulation
-            run_geometry, run_mesh = check_base_dir(case_index)
+            run_geometry, run_mesh = check_base_dir(
+                episode_idx=episode_index,
+                case_index=case_index
+            )
             if run_geometry:
                 self.build_geometry(dry_run=dry_run)
             if run_mesh:
@@ -207,7 +213,7 @@ class CFDManager:
             self.solve(dry_run=dry_run, stream=False)
             self.last_state_case = config.CASE_DIR.joinpath(str(self.end_time)) \
                 if not self.steady else None
-            results = read_temperature(config.CASE_DIR)
+            results = read_temperature(config.CASE_DIR, str(self.end_time))
 
             if remove_foam_log and not run_mesh and not run_geometry:
                 shutil.rmtree(config.CASE_DIR)

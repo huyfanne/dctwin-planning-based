@@ -1,4 +1,5 @@
 import json
+
 from typing import Tuple
 from loguru import logger
 
@@ -51,41 +52,27 @@ def read_mesh_coordinates():
     return np.concatenate([x, y, z], axis=1)
 
 
-def get_end_time_dir(case_dir: Path):
-    irrelevant_dir_file = [
-        "0", "constant", "postProcessing", "system",
-        "case.foam", "boundary_condition.json"
-    ]
-    end_time = ""
-    for _dir in case_dir.iterdir():
-        if _dir.name not in irrelevant_dir_file:
-            end_time = _dir.name
-    return end_time
-
-
-def read_temperature(solution_dir: Path):
-    timename = get_end_time_dir(solution_dir)
+def read_temperature(solution_dir: Path, end_time: str = "500"):
     logger.info(
         f"Reading temperature from "
-        f"{solution_dir.joinpath(timename, 'T')}"
+        f"{solution_dir.joinpath(end_time, 'T')}"
     )
     temperature = fluidfoam.readof.readscalar(
-        solution_dir, timename, "T", verbose=False
+        solution_dir, end_time, "T", verbose=False
     )
     temperature -= 273.15
     return temperature
 
 
-def read_temperature_fields() -> np.ndarray:
-    log_dir = Path(config.CASE_DIR)
+def read_temperature_fields(end_time: str = "500") -> np.ndarray:
     experiment_dir_names = []
-    subfolders = [f for f in Path(log_dir).iterdir() if f.is_dir()]
+    subfolders = [f for f in config.CASE_DIR.iterdir() if f.is_dir()]
     for subfloder in subfolders:
         experiment_dir_names.append(subfloder)
     temperatures = []
     for experiment_dir_name in sorted(experiment_dir_names):
         try:
-            temperature = read_temperature(experiment_dir_name)
+            temperature = read_temperature(experiment_dir_name, end_time=end_time)
             temperatures.append(temperature)
         except Exception:
             raise FileNotFoundError(
@@ -144,15 +131,20 @@ def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
     return object_mesh_index
 
 
-def check_base_dir(index) -> Tuple[bool, bool]:
+def check_base_dir(case_index: int,  episode_idx : int = None) -> Tuple[bool, bool]:
     if config.cfd.mesh_dir != Path(""):
         base_case_path = Path(config.cfd.mesh_dir)
         assert Path.is_dir(base_case_path), "mesh is not a directory"
         assert Path.exists(base_case_path), "mesh directory not exists"
         run_geometry, run_mesh, mesh_path = False, False, base_case_path
-        config.CASE_DIR = Path(config.LOG_DIR).joinpath(
-            f"simulation-{index}"
-        )
+        if episode_idx is None:
+            config.CASE_DIR = Path(config.LOG_DIR).joinpath(
+                f"simulation-{case_index}"
+            )
+        else:
+            config.CASE_DIR = Path(config.LOG_DIR).joinpath(
+                "cfd_output", f"episode-{episode_idx}", f"simulation-{case_index}"
+            )
     else:
         run_geometry, run_mesh = True, True
         config.CASE_DIR = Path(config.LOG_DIR).joinpath("base")
