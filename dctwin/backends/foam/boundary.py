@@ -5,6 +5,7 @@ from dctwin.models.objects import ACU, Server
 
 
 class Boundary(abc.ABC):
+    """A class to generate the boundary condition of the foam simulation"""
 
     zero_gradient = """
     {

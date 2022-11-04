@@ -14,7 +14,7 @@ from dctwin.utils import (
 from .resizers import LinearResizer
 
 
-def validator(method):
+def validator(method) -> callable:
     def validated_call(self):
         if self.control_type != ActionControlType.PRE_SCHEDULED:
             logger.error(
@@ -55,31 +55,31 @@ class ScalarDataItem:
             self.set_normed_value(config.default_unnormed_value)
         self.default_value = self.normed_value if self.normed_value is not None else 0.
 
-    def set_unnormed_value(self, unnormed_value):
+    def set_unnormed_value(self, unnormed_value) -> None:
         if self.resizer is not None:
             self.normed_value = self.resizer.norm(unnormed_value)
         else:
             self.normed_value = unnormed_value
 
-    def set_normed_value(self, normed_value):
+    def set_normed_value(self, normed_value) -> None:
         self.normed_value = normed_value
 
-    def get_normed_value(self):
+    def get_normed_value(self) -> float:
         return self.normed_value
 
-    def get_unnormed_value(self):
+    def get_unnormed_value(self) -> float:
         if self.resizer is not None:
             return self.resizer.denorm(self.normed_value)
         else:
             return self.normed_value
 
-    def reset_to_default_value(self):
+    def reset_to_default_value(self) -> None:
         self.normed_value = self.default_value
 
 
 class Observation(ScalarDataItem):
 
-    def __init__(self, config: Union[EPlusObservationConfig, CFDObservationConfig]):
+    def __init__(self, config: Union[EPlusObservationConfig, CFDObservationConfig]) -> None:
         super().__init__(config)
         self.exposed = config.exposed
         if type(config) == EPlusObservationConfig:
@@ -93,7 +93,7 @@ ActionControlType = EPlusActionConfig.ControlType
 
 class Action(ScalarDataItem):
     # noinspection PyBroadException
-    def __init__(self, config: EPlusActionConfig):
+    def __init__(self, config: EPlusActionConfig) -> None:
         super().__init__(config)
         self.control_type = config.control_type
 
@@ -144,7 +144,7 @@ class Action(ScalarDataItem):
         """
         return self.schedule[self.schedule_idx]
 
-    def reset(self):
+    def reset(self) -> None:
         """reset value using default value, and reset input source idx (if any)"""
         self.reset_to_default_value()
         if hasattr(self, "schedule_idx"):

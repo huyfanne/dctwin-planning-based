@@ -1,7 +1,7 @@
 import gzip
 import os
 import shutil
-from loguru import logger
+# from loguru import logger
 
 
 class EPlusOutputFormatter:
@@ -11,10 +11,10 @@ class EPlusOutputFormatter:
     ]
 
     @classmethod
-    def group_into_csv(cls, episode_dir: str):
+    def group_into_csv(cls, episode_dir: str) -> None:
         file_csv = episode_dir + '/eplusout.csv'
         file_csv_gz = episode_dir + '/eplusout.csv.gz'
-        file_err = episode_dir + '/eplusout.err'
+        # file_err = episode_dir + '/eplusout.err'
         # files_to_preserve ['eplusout.csv', 'eplusout.err', 'eplustbl.htm']
         files_to_clean = ['eplusmtr.csv', 'eplusout.audit', 'eplusout.bnd',
                           'eplusout.dxf', 'eplusout.eio', 'eplusout.edd',
@@ -44,7 +44,7 @@ class EPlusOutputFormatter:
                     os.remove(file_path)
 
     @classmethod
-    def _count_severe_errors(cls, file):
+    def _count_severe_errors(cls, file : str) -> int:
 
         if not os.path.isfile(file):
             return -1  # Error count is unknown

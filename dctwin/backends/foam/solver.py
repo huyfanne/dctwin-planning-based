@@ -88,6 +88,9 @@ class Builder:
 
 
 class SolverBackend(Backend):
+    """
+    Backend for OpenFOAM solver. The class is inherited from the core Backend
+    """
     docker_image = "openfoamplus/of_v1912_centos73"
 
     only_save_latest = True

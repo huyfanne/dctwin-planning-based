@@ -4,7 +4,12 @@ from dctwin.models import Room
 
 
 class RoomParser:
+    """
+    A class to parse the room model and get the boundary conditions needed by the solver
 
+    :param room_path: the path of the room model
+    :param room: the room model
+    """
     def __init__(
         self,
         room_path: Path = Path(""),

@@ -14,6 +14,21 @@ from dctwin.models import Room
 
 
 class CoSimManager:
+    """
+    A class to manage the co-simulation between CFD and E+.
+
+    :param room: the room object model for data hall
+    :param eplus_backend: the E+ backend to be used
+    :param mesh_process: the number of processes to be used for meshing
+    :param solve_process: the number of processes to be used for solving
+    :param steady: whether to run steady state simulation
+    :param write_interval: the interval to write the results
+    :param end_time: the end time of the simulation
+    :param field_config: the configuration of the field variables
+    :param pod_method: the method to be used for POD
+    :param docker_client: the docker client to be used for running the docker container
+
+    """
 
     rho_air = 1.19  # air density kg/m^3
 
@@ -202,11 +217,11 @@ class CoSimManager:
                     inlet_temperature=self.server_inlet_temps[server_id],
                     name=it_equipment.name
                 )
-                mass_flow_rate = self.eplus_manager.idf_parser.compute_server_flow_rate(
-                    heat_load,
+                volume_flow_rate = self.eplus_manager.idf_parser.compute_server_flow_rate(
+                    utilization=parsed_actions["cpu_loading_schedule"],
+                    inlet_temperature=self.server_inlet_temps[server_id],
                     name=it_equipment.name
                 )
-                volume_flow_rate = mass_flow_rate / self.rho_air
                 boundary_conditions["server_powers"][server_id] = heat_load
                 boundary_conditions["server_flow_rates"][server_id] = volume_flow_rate
 

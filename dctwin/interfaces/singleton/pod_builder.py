@@ -1,7 +1,7 @@
 import pickle
 import gpytorch
 import torch
-
+from typing import Tuple
 import numpy as np
 from scipy import linalg
 from pathlib import Path
@@ -23,6 +23,14 @@ from dctwin.backends.rom.pod.models import BatchIndependentMultiTaskGPModel
 
 
 class PODBuilder:
+    """
+    A class method to build POD model from the CFD simulation data
+
+    :param room: Room object model (see dctwin.models.room)
+    :param num_modes: number of POD modes to be used to reconstruct the temperature field
+    :param max_iter: maximum number of iterations for the training process of the GP model
+    :param tol: tolerance for the training process of the GP model
+    """
 
     def __init__(
         self,
@@ -42,10 +50,10 @@ class PODBuilder:
         self.correlation_matrix = None
         self.pod_modes, self.eigen_values = None, None
 
-    def _calc_mean_temperature_field(self):
+    def _calc_mean_temperature_field(self) -> np.ndarray:
         return np.mean(self.temperatures, axis=0)
 
-    def _build_correlation_matrix(self):
+    def _build_correlation_matrix(self) -> np.ndarray:
         num_observation = self.temperatures.shape[0]
         residual_temperature_fields = self.temperatures - self.mean_temperature
         correlation_matrix = np.dot(
@@ -54,7 +62,7 @@ class PODBuilder:
                                                           )
         return correlation_matrix
 
-    def _calc_pod_modes(self):
+    def _calc_pod_modes(self) -> Tuple[np.ndarray, np.ndarray]:
         # first_step: solve eigenvalue problem for the correlation matrix
         eigen_values, eigen_vectors = linalg.eig(self.correlation_matrix)
         # second step: calculate spatial mode (n_point, n_observation)
@@ -63,7 +71,7 @@ class PODBuilder:
         phi /= sqrt_diagonals  # normalize so that phi^T * phi is an identity matrix
         return phi, np.real(eigen_values)
 
-    def _compute_coef(self):
+    def _compute_coef(self) -> np.ndarray:
         coefs = []
         available_modes = self.pod_modes.shape[1]
         for temperature in self.temperatures:
@@ -75,7 +83,7 @@ class PODBuilder:
         coefs = np.array(coefs)
         return coefs
 
-    def _build_estimator(self):
+    def _build_estimator(self) -> None:
         self.train_bc = torch.FloatTensor(
             read_boundary_conditions(self.room)
         )
@@ -120,7 +128,7 @@ class PODBuilder:
             print(f'Parameter name: {param_name:42} value = {param}')
         logger.info("Training is done")
 
-    def run(self, end_time: str = "500"):
+    def run(self, end_time: str = "500") -> None:
         logger.info("Reading temperature fields")
         self.temperatures = read_temperature_fields(end_time)
         logger.info(f"Read {self.temperatures.shape[0]} temperature fields with dim = {self.temperatures.shape[1]}")
@@ -136,7 +144,7 @@ class PODBuilder:
         logger.info("Building GP predictors for POD coefficients")
         self._build_estimator()
 
-    def save(self, save_path: Path):
+    def save(self, save_path: Path) -> None:
         if not save_path.exists():
             save_path.mkdir(parents=True, exist_ok=True)
         data_dict = {

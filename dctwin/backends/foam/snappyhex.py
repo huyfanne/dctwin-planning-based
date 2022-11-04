@@ -13,6 +13,9 @@ from dctwin.models.constructions import Room
 
 
 class SnappyHexBackend(Backend):
+    """
+    Backend for snappyHexMesh. The class is inherited from the core Backend.
+    """
     docker_image = "openfoamplus/of_v1912_centos73"
 
     @property
