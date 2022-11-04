@@ -131,7 +131,7 @@ def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
     return object_mesh_index
 
 
-def check_base_dir(case_index: int,  episode_idx : int = None) -> Tuple[bool, bool]:
+def check_base_dir(case_idx: int,  episode_idx: int = None) -> Tuple[bool, bool]:
     if config.cfd.mesh_dir != Path(""):
         base_case_path = Path(config.cfd.mesh_dir)
         assert Path.is_dir(base_case_path), "mesh is not a directory"
@@ -139,11 +139,11 @@ def check_base_dir(case_index: int,  episode_idx : int = None) -> Tuple[bool, bo
         run_geometry, run_mesh, mesh_path = False, False, base_case_path
         if episode_idx is None:
             config.CASE_DIR = Path(config.LOG_DIR).joinpath(
-                f"simulation-{case_index}"
+                f"simulation-{case_idx}"
             )
         else:
             config.CASE_DIR = Path(config.LOG_DIR).joinpath(
-                "cfd_output", f"episode-{episode_idx}", f"simulation-{case_index}"
+                "cfd_output", f"episode-{episode_idx}", f"simulation-{case_idx}"
             )
     else:
         run_geometry, run_mesh = True, True

@@ -22,6 +22,11 @@ from .utils import (
 )
 
 from dctwin.utils import config
+from dctwin.utils.errors import (
+    GeometryBuildError,
+    MeshBuildError,
+    FoamSolveError,
+)
 from dctwin.models import Room
 from dctwin.backends.foam.parser import RoomParser
 
@@ -37,7 +42,6 @@ class CFDManager:
     :param write_interval: write interval for simulation, can be set as 5, 10, 100, etc.
     :param end_time: end time for transient simulation, can be set as 50, 100, 500 etc. Normally 100-500 is enough.
     :param field_config: field configuration for meshing
-    :param print_backend_log: whether to print the backend log
     :param docker_client: docker client
 
     """
@@ -104,8 +108,7 @@ class CFDManager:
             logger.info("start building geometry ...")
             self.geometry_backend.run(room=self.room, dry_run=dry_run)
         except Exception:
-            logger.critical("Failed to build geometry")
-            exit(-1)
+            raise GeometryBuildError("Failed to build geometry")
 
     def mesh(self, dry_run: bool = False) -> None:
         """Mesh the geometry
@@ -119,8 +122,7 @@ class CFDManager:
                 dry_run=dry_run,
             )
         except Exception:
-            logger.critical("Failed to mesh")
-            exit(-1)
+            raise MeshBuildError("Failed to mesh geometry")
 
     def solve(
         self,
@@ -143,25 +145,22 @@ class CFDManager:
                 stream=stream,
             )
         except Exception:
-            logger.critical("Failed to solve")
-            exit(-1)
+            raise FoamSolveError("Failed to solve the simulation")
 
     def run(
         self,
-        case_index: int = 1,
-        episode_index: int = None,
+        case_idx: int = 1,
+        episode_idx: int = None,
         dry_run: bool = False,
-        remove_foam_log: bool = True,
         save_mesh_index: bool = True,
-        save_boundary_conditions: bool = False,
+        save_boundary_conditions: bool = True,
         **boundary_conditions
     ) -> np.ndarray:
         """Run the whole simulation: geometry -> mesh -> solve
-        :param case_index: case index for different simulation (default: 1)
-        :param episode_index: episode index for different simulation (default: None)
+        :param case_idx: case index for different simulation (default: 1)
+        :param episode_idx: episode index for different simulation (default: None)
             only used for co-simulation
         :param dry_run: whether to dry run
-        :param remove_foam_log: whether to remove the log of OpenFOAM
         :param save_mesh_index: whether to save the mesh index
         :param save_boundary_conditions: whether to save the boundary conditions
         :param boundary_conditions: boundary conditions for simulation
@@ -186,8 +185,8 @@ class CFDManager:
         else:
             # use full-fledged CFD simulation
             run_geometry, run_mesh = check_base_dir(
-                episode_idx=episode_index,
-                case_index=case_index
+                episode_idx=episode_idx,
+                case_idx=case_idx
             )
             if run_geometry:
                 self.build_geometry(dry_run=dry_run)
@@ -213,7 +212,7 @@ class CFDManager:
                 if not self.steady else None
             results = read_temperature(config.CASE_DIR, str(self.end_time))
 
-            if remove_foam_log and not run_mesh and not run_geometry:
+            if not config.PRESERVE_FOAM_LOG and not run_mesh and not run_geometry:
                 shutil.rmtree(config.CASE_DIR)
 
         return results
