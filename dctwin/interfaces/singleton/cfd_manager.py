@@ -186,7 +186,7 @@ class CFDManager:
             # use full-fledged CFD simulation
             run_geometry, run_mesh = check_base_dir(
                 episode_idx=episode_idx,
-                case_idx=case_idx
+                case_idx=case_idx,
             )
             if run_geometry:
                 self.build_geometry(dry_run=dry_run)
