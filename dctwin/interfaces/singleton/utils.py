@@ -22,7 +22,7 @@ def read_boundary_conditions(
     num_cracs = len(room.objects.acus)
     boundary_conditions = np.zeros((len(subfolders), 2 * num_cracs + 2))
     for idx, subfolder in enumerate(subfolders):
-        with open(Path(subfolder).joinpath("boundary condition.json"), "r") as f:
+        with open(Path(subfolder).joinpath("boundary_conditions.json"), "r") as f:
             boundary_condition_dict = json.load(f)
         boundary_conditions[idx, 0] = np.sum(list(boundary_condition_dict["server_powers"].values()))
         boundary_conditions[idx, 1] = np.sum(list(boundary_condition_dict["server_flow_rates"].values()))
