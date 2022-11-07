@@ -167,7 +167,8 @@ class IDFParser:
             for idx in range(num_components):
                 component_names.add(branch[f"component_{idx + 1}_name"].name)
         for equipment in self.epm.ElectricEquipment_ITE_AirCooled:
-            component_names.add(equipment.cpu_loading_schedule_name.name)
+            if equipment.cpu_loading_schedule_name is not None:
+                component_names.add(equipment.cpu_loading_schedule_name.name)
         return component_names
 
     def _get_crac_fan_info(self) -> List:
