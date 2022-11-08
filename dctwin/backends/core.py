@@ -47,7 +47,7 @@ class Backend(abc.ABC):
         try:
             self.client.images.get(self.docker_image)
         except ImageNotFound:
-            logger.info(f"docker image({self.docker_image}) not existed, try to pull...")
+            logger.info(f"docker image ({self.docker_image}) not existed, try to pull ...")
             self.client.images.pull(self.docker_image)
 
     def run_container(

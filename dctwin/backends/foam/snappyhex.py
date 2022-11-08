@@ -16,7 +16,7 @@ class SnappyHexBackend(Backend):
     """
     Backend for snappyHexMesh. The class is inherited from the core Backend.
     """
-    docker_image = "openfoamplus/of_v1912_centos73"
+    docker_image = "ghcr.io/cap-dcwiz/openfoam-v1912-centos72:latest"
 
     @property
     def command(self) -> str:

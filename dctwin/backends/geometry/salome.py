@@ -11,7 +11,7 @@ class SalomeBackend(Backend):
     """
     A class to manage the geometry generation using Salome.
     """
-    docker_image = "charact3/salome-9"
+    docker_image = "ghcr.io/cap-dcwiz/salome-9-debian10:latest"
 
     def run(self, room: Room, dry_run: bool = False):
         self._pre_process(room)
