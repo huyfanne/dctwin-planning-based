@@ -43,6 +43,7 @@ def read_object_mesh_index() -> Union[Dict, None]:
 def read_mesh_coordinates() -> np.ndarray:
     assert Path(config.cfd.mesh_dir).exists(), \
         "mesh files not found"
+    logger.info(f"Reading mesh coordinates from {config.cfd.mesh_dir}")
     x, y, z = fluidfoam.readof.readmesh(
         str(config.cfd.mesh_dir), verbose=False
     )

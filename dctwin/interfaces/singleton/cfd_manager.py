@@ -63,7 +63,7 @@ class CFDManager:
         self.solver_backend: Union[
             None, TransientSolverBackend, SteadySolverBackend
         ] = None
-        self.pod_backend: Optional[PODBackend] = None
+        self.pod_backend: Optional[PODBackend] = PODBackend.load()
 
         self.room = room
         self.steady = steady

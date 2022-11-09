@@ -14,9 +14,10 @@ class BatchIndependentMultiTaskGPModel(gpytorch.models.ExactGP):
         likelihood: gpytorch.likelihoods.Likelihood,
         num_modes: int
     ) -> None:
-        super().__init__(train_x, train_y[:, :num_modes], likelihood)
         self.num_samples, self.num_features = train_x.size()
         self.num_modes = num_modes
+        train_target = (train_y[:, :num_modes] - train_y[:, :num_modes].mean(dim=0)) / train_y[:, :num_modes].std(dim=0)
+        super().__init__(train_x, train_target, likelihood)
         self.train_x_mean = torch.nn.Parameter(train_x.mean(dim=0), requires_grad=False)
         self.train_x_std = torch.nn.Parameter(train_x.std(dim=0), requires_grad=False)
         self.train_y_mean = torch.nn.Parameter(train_y[:, :num_modes].mean(dim=0), requires_grad=False)
@@ -28,7 +29,7 @@ class BatchIndependentMultiTaskGPModel(gpytorch.models.ExactGP):
         )
 
     def get_normalized_target(self):
-        return (self.train_targets - self.train_y_mean) / (self.train_y_std + 1e-6)
+        return (self.train_targets - self.train_y_mean) / self.train_y_std
 
     def forward(self, x: torch.Tensor):
         """
@@ -36,7 +37,7 @@ class BatchIndependentMultiTaskGPModel(gpytorch.models.ExactGP):
         Note: the input x is not normalized and it should be normalized
         to make the prediction result stable.
         """
-        x = (x - self.train_x_mean) / (self.train_x_std + 1e-6)
+        x = (x - self.train_x_mean) / self.train_x_std
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         dist = gpytorch.distributions.MultitaskMultivariateNormal.from_batch_mvn(

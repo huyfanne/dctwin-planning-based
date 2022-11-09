@@ -1,5 +1,7 @@
 import pickle
 from typing import Dict, Union
+
+import loguru
 import numpy as np
 import cvxpy as cp
 from pathlib import Path
@@ -228,10 +230,11 @@ class PODBackend(Backend):
             dist = self.model(bc_tensor)
             prediction = self.likelihood(dist)
             coef_tensor = prediction.mean
+            coef_tensor = self.model.train_y_std * coef_tensor + self.model.train_y_mean
             coef_std_tensor = prediction.stddev
         coef = coef_tensor.detach().cpu().numpy().ravel()
         coef_std = coef_std_tensor.detach().cpu().numpy().ravel()
-
+        # loguru.logger.info(f"GP prediction: {[round(val, 3) for val in coef]}")
         if local_search:
             # physics-guided local search (rectification) on the coarse estimation from GP models
             self.coefs = self._local_search(
@@ -285,6 +288,7 @@ class PODBackend(Backend):
         else:
             raise NotImplementedError(f"{pod_method} not implemented")
         # reconstruct temperature field
+        print(self.coefs)
         reconstruct = self.mean_obs + np.dot(self.coefs, np.transpose(used_modes))
         return reconstruct
 
@@ -297,7 +301,7 @@ class PODBackend(Backend):
             pod = cls()
             # load pod modes, mean temperature field,
             # training boundary conditions and training labels (POD coefficients)
-            with open(Path(config.cfd.pod_dir).joinpath("data.pkl"), "rb") as f:
+            with open(Path(config.cfd.pod_dir).joinpath("pod_data.pkl"), "rb") as f:
                 data = pickle.load(f)
                 assert isinstance(data, dict), "data.pkl should be a dictionary!"
                 try:

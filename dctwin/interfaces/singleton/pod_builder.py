@@ -1,7 +1,7 @@
+import json
 import pickle
 import gpytorch
 import torch
-from typing import Tuple
 import numpy as np
 from scipy import linalg
 from pathlib import Path
@@ -16,7 +16,7 @@ from .utils import (
     calc_object_mesh_index,
     read_mesh_coordinates,
     read_temperature_fields,
-    read_boundary_conditions
+    read_boundary_conditions, read_object_mesh_index
 )
 
 from dctwin.backends.rom.pod.models import BatchIndependentMultiTaskGPModel
@@ -37,7 +37,7 @@ class PODBuilder:
         room: Room,
         num_modes: int = 0,
         max_iter: int = 1000,
-        tol: float = 1e-6,
+        tol: float = 1e-3,
     ) -> None:
         self.num_modes = num_modes
         self.room = room
@@ -50,25 +50,25 @@ class PODBuilder:
         self.correlation_matrix = None
         self.pod_modes, self.eigen_values = None, None
 
-    def _calc_mean_temperature_field(self) -> np.ndarray:
+    def _calc_mean_temperature_field(self):
         return np.mean(self.temperatures, axis=0)
 
-    def _build_correlation_matrix(self) -> np.ndarray:
+
+    def _build_correlation_matrix(self):
         num_observation = self.temperatures.shape[0]
         residual_temperature_fields = self.temperatures - self.mean_temperature
-        correlation_matrix = np.dot(
-            residual_temperature_fields,
-            np.transpose(residual_temperature_fields)) / (num_observation - 1
-                                                          )
+        correlation_matrix = np.dot(residual_temperature_fields, np.transpose(residual_temperature_fields)) / (num_observation - 1)
         return correlation_matrix
 
-    def _calc_pod_modes(self) -> Tuple[np.ndarray, np.ndarray]:
+    def _calc_pod_modes(self):
         # first_step: solve eigenvalue problem for the correlation matrix
         eigen_values, eigen_vectors = linalg.eig(self.correlation_matrix)
+
         # second step: calculate spatial mode (n_point, n_observation)
         phi = np.dot(np.transpose(self.temperatures - self.mean_temperature), eigen_vectors)
         sqrt_diagonals = np.sqrt(np.diag(np.dot(np.transpose(phi), phi)))
-        phi /= sqrt_diagonals  # normalize so that phi^T * phi is an identity matrix
+        phi /= sqrt_diagonals # normalize so that phi^T * phi is an identity matrix
+
         return phi, np.real(eigen_values)
 
     def _compute_coef(self) -> np.ndarray:
@@ -104,7 +104,7 @@ class PODBuilder:
         self.likelihood.train()
         logger.info("Start training")
         # Use the adam optimizer
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=0.05)  # Includes GaussianLikelihood parameters
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=0.5)  # Includes GaussianLikelihood parameters
         # "Loss" for GPs - the marginal log likelihood
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
         # train the multi-output GP model with Adam Optimizer (Stochastic Gradient Descend)
@@ -115,6 +115,7 @@ class PODBuilder:
         for _ in pbar:
             optimizer.zero_grad()
             dist = self.model(self.train_bc)
+            # loss = -mll(dist, self.train_coef[:, :self.num_modes])
             loss = -mll(dist, normalized_targets)
             if torch.abs(loss - prev_loss) <= self.tol:
                 break
@@ -136,10 +137,12 @@ class PODBuilder:
         self.mesh_points = read_mesh_coordinates()
         logger.info("Calculating object mesh index")
         self.object_mesh_index = calc_object_mesh_index(self.room, self.mesh_points)
+        # self.object_mesh_index = read_object_mesh_index()
         logger.info("Calculating mean temperature field")
         self.mean_temperature = self._calc_mean_temperature_field()
         logger.info("Building correlation matrix and solve eigenvalue problem")
         self.correlation_matrix = self._build_correlation_matrix()
+        logger.info("Calculating POD modes")
         self.pod_modes, self.eigen_values = self._calc_pod_modes()
         logger.info("Building GP predictors for POD coefficients")
         self._build_estimator()
@@ -157,3 +160,5 @@ class PODBuilder:
         torch.save(self.likelihood.state_dict(), save_path.joinpath("likelihood.pth"))
         with open(save_path.joinpath("pod_data.pkl"), "wb") as f:
             pickle.dump(data_dict, f)
+        with open(save_path.joinpath("object_mesh_index.json"), "w") as f:
+            json.dump(self.object_mesh_index, f, indent=4)

@@ -639,6 +639,8 @@ class IDFParser:
         """
         Compute air flow rate for each server
         """
+        if inlet_temperature is None:
+            inlet_temperature = 0
         flow_frac = self._fun_flow_as_load_temp(utilization, inlet_temperature, name)
         server_flow_rates = self.design_air_volumetric_flow_rate[name] * flow_frac
         return server_flow_rates
