@@ -36,7 +36,7 @@ def read_object_mesh_index(room: Room = None) -> Union[Dict, None]:
         with open(config.cfd.object_mesh_index, "r") as f:
             object_mesh_index = json.load(f)
     except FileNotFoundError:
-        if room is not None:
+        if room is not None and Path(config.cfd.mesh_dir) != Path(""):
             object_mesh_index = calc_object_mesh_index(
                 room=room, mesh_points=read_mesh_coordinates(),
             )
