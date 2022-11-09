@@ -111,12 +111,10 @@ class PODBuilder:
         pbar = tqdm(range(self.max_iter))
         prev_loss = torch.inf
         iter_ = 0
-        normalized_targets = self.model.get_normalized_target()
         for _ in pbar:
             optimizer.zero_grad()
-            dist = self.model(self.train_bc)
-            # loss = -mll(dist, self.train_coef[:, :self.num_modes])
-            loss = -mll(dist, normalized_targets)
+            dist = self.model(self.model.normalize_input(self.train_bc))
+            loss = -mll(dist, self.model.train_targets)
             if torch.abs(loss - prev_loss) <= self.tol:
                 break
             else:
@@ -134,10 +132,10 @@ class PODBuilder:
         self.temperatures = read_temperature_fields(end_time)
         logger.info(f"Read {self.temperatures.shape[0]} temperature fields with dim = {self.temperatures.shape[1]}")
         logger.info("Reading mesh coordinates")
-        self.mesh_points = read_mesh_coordinates()
+        # self.mesh_points = read_mesh_coordinates()
         logger.info("Calculating object mesh index")
-        self.object_mesh_index = calc_object_mesh_index(self.room, self.mesh_points)
-        # self.object_mesh_index = read_object_mesh_index()
+        # self.object_mesh_index = calc_object_mesh_index(self.room, self.mesh_points)
+        self.object_mesh_index = read_object_mesh_index()
         logger.info("Calculating mean temperature field")
         self.mean_temperature = self._calc_mean_temperature_field()
         logger.info("Building correlation matrix and solve eigenvalue problem")
