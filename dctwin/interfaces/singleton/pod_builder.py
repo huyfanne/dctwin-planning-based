@@ -125,8 +125,6 @@ class PODBuilder:
             pbar.set_description("Iter = {:d}, Loss = {:.3f}".format(iter_, loss.item()))
             iter_ += 1
             optimizer.step()
-        for param_name, param in self.model.named_parameters():
-            logger.info(f'Parameter name: {param_name:42} value = {param}')
         logger.info("Training is done")
 
     def run(self, end_time: str = "500") -> None:
