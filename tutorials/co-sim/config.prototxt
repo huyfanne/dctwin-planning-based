@@ -5,12 +5,12 @@ logging_config {
 }
 
 cosim_env_config {
+    idf2room_map: "model/idf2room.json"
     cfd: {
         geometry_file: "model/geometry/room.json"
-        idf2room_map: "model/geometry/idf2room.json"
-        pod_dir: "model/POD"
-        pod_method: "GP"
-        object_mesh_index: "model/POD/object_mesh_index.json"
+        end_time: 50
+        write_interval: 10
+        process_num: 8
         observations: [
            {
               exposed: true
