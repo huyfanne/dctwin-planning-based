@@ -53,21 +53,21 @@ class PODBuilder:
     def _calc_mean_temperature_field(self):
         return np.mean(self.temperatures, axis=0)
 
-
     def _build_correlation_matrix(self):
         num_observation = self.temperatures.shape[0]
         residual_temperature_fields = self.temperatures - self.mean_temperature
-        correlation_matrix = np.dot(residual_temperature_fields, np.transpose(residual_temperature_fields)) / (num_observation - 1)
+        correlation_matrix = np.dot(
+            residual_temperature_fields, np.transpose(residual_temperature_fields)
+        ) / (num_observation - 1)
         return correlation_matrix
 
     def _calc_pod_modes(self):
         # first_step: solve eigenvalue problem for the correlation matrix
         eigen_values, eigen_vectors = linalg.eig(self.correlation_matrix)
-
         # second step: calculate spatial mode (n_point, n_observation)
         phi = np.dot(np.transpose(self.temperatures - self.mean_temperature), eigen_vectors)
         sqrt_diagonals = np.sqrt(np.diag(np.dot(np.transpose(phi), phi)))
-        phi /= sqrt_diagonals # normalize so that phi^T * phi is an identity matrix
+        phi /= sqrt_diagonals  # normalize so that phi^T * phi is an identity matrix
 
         return phi, np.real(eigen_values)
 
@@ -111,10 +111,12 @@ class PODBuilder:
         pbar = tqdm(range(self.max_iter))
         prev_loss = torch.inf
         iter_ = 0
+        normalized_input = self.model.get_normalized_input()
+        normalized_targets = self.model.get_normalized_target()
         for _ in pbar:
             optimizer.zero_grad()
-            dist = self.model(self.model.normalize_input(self.train_bc))
-            loss = -mll(dist, self.model.train_targets)
+            dist = self.model(normalized_input)
+            loss = -mll(dist, normalized_targets)
             if torch.abs(loss - prev_loss) <= self.tol:
                 break
             else:
@@ -124,7 +126,7 @@ class PODBuilder:
             iter_ += 1
             optimizer.step()
         for param_name, param in self.model.named_parameters():
-            print(f'Parameter name: {param_name:42} value = {param}')
+            logger.info(f'Parameter name: {param_name:42} value = {param}')
         logger.info("Training is done")
 
     def run(self, end_time: str = "500") -> None:
@@ -132,10 +134,10 @@ class PODBuilder:
         self.temperatures = read_temperature_fields(end_time)
         logger.info(f"Read {self.temperatures.shape[0]} temperature fields with dim = {self.temperatures.shape[1]}")
         logger.info("Reading mesh coordinates")
+        self.object_mesh_index = read_object_mesh_index(self.room)
         # self.mesh_points = read_mesh_coordinates()
-        logger.info("Calculating object mesh index")
+        # logger.info("Calculating object mesh index")
         # self.object_mesh_index = calc_object_mesh_index(self.room, self.mesh_points)
-        self.object_mesh_index = read_object_mesh_index()
         logger.info("Calculating mean temperature field")
         self.mean_temperature = self._calc_mean_temperature_field()
         logger.info("Building correlation matrix and solve eigenvalue problem")

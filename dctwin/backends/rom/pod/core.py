@@ -226,15 +226,14 @@ class PODBackend(Backend):
         bc = np.concatenate([[q_server_tot], [m_server_tot], crac_supply_temperature, crac_flow_rate]).reshape(1, -1)
         bc_tensor = torch.FloatTensor(bc)
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
-            dist = self.model(self.model.normalize_input(bc_tensor))
+            bc_tensor = (bc_tensor - self.model.train_x_mean) / self.model.train_x_std
+            dist = self.model(bc_tensor)
             prediction = self.likelihood(dist)
             coef_tensor = prediction.mean
             coef_tensor = self.model.train_y_std * coef_tensor + self.model.train_y_mean
             coef_std_tensor = prediction.stddev
-            coef_std_tensor = self.model.train_y_std * coef_std_tensor + self.model.train_y_mean
         coef = coef_tensor.detach().cpu().numpy().ravel()
         coef_std = coef_std_tensor.detach().cpu().numpy().ravel()
-        # loguru.logger.info(f"GP prediction: {[round(val, 3) for val in coef]}")
         if local_search:
             # physics-guided local search (rectification) on the coarse estimation from GP models
             self.coefs = self._local_search(
