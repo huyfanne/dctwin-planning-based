@@ -31,12 +31,17 @@ def read_boundary_conditions(
     return boundary_conditions
 
 
-def read_object_mesh_index() -> Union[Dict, None]:
+def read_object_mesh_index(room: Room = None) -> Union[Dict, None]:
     try:
         with open(config.cfd.object_mesh_index, "r") as f:
             object_mesh_index = json.load(f)
     except FileNotFoundError:
-        return None
+        if room is not None and Path(config.cfd.mesh_dir) != Path(""):
+            object_mesh_index = calc_object_mesh_index(
+                room=room, mesh_points=read_mesh_coordinates(),
+            )
+        else:
+            return None
     return object_mesh_index
 
 

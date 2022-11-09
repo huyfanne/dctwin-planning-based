@@ -29,7 +29,6 @@ class CoSimEnv(EPlusEnv):
         Why? we tried to use a templated function with params, but turns out it's bad
     :param schedule_fn: the callback facility schedule function defined by the user
         e.g., the IT utilization schedule
-    :param task_id: the identity of the current environment (defined for multi-task learning)
     """
 
     def __init__(
@@ -38,15 +37,16 @@ class CoSimEnv(EPlusEnv):
         reward_fn: Optional[Callable] = None,
         schedule_fn: Optional[Callable] = None,
         docker_client: docker.DockerClient = None,
-        task_id: Optional[str] = "0",
+        **kwargs,
     ) -> None:
         super().__init__(
             config=config.eplus,
             reward_fn=reward_fn,
             schedule_fn=schedule_fn,
             docker_client=docker_client,
-            task_id=task_id,
+            **kwargs,
         )
+        cosim_env.co_sim.idf2room_map = Path(config.idf2room_map)
         self.cfd_config = config.cfd
         self._set_cosim_environ()
         self.co_sim_manager = CoSimManager(
@@ -83,7 +83,6 @@ class CoSimEnv(EPlusEnv):
         cosim_env.cfd.pod_dir = Path(self.cfd_config.pod_dir)
         cosim_env.cfd.mesh_dir = Path(self.cfd_config.mesh_dir)
         cosim_env.cfd.object_mesh_index = Path(self.cfd_config.object_mesh_index)
-        cosim_env.co_sim.idf2room_map = Path(self.cfd_config.idf2room_map)
 
     def _get_actions_to_sent(self) -> Dict[str, List]:
         """

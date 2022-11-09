@@ -24,7 +24,6 @@ class EPlusEnv(BaseEnv):
         Why? we tried to use a templated function with params, but turns out it's bad
     :param schedule_fn: the callback facility schedule function defined by the user
         e.g., the IT utilization schedule
-    :param task_id: the identity of the current environment (defined for multi-task learning)
     """
     def __init__(
         self,
@@ -32,13 +31,13 @@ class EPlusEnv(BaseEnv):
         reward_fn: Optional[Callable] = None,
         schedule_fn: Optional[Callable] = None,
         docker_client: docker.DockerClient = None,
-        task_id: Optional[str] = "0",
+        **kwargs,
     ) -> None:
         super().__init__(
             config=config,
             reward_fn=reward_fn,
             schedule_fn=schedule_fn,
-            task_id=task_id,
+            **kwargs,
         )
         self._set_eplus_environ()
         self.eplus_backend = EplusBackend(

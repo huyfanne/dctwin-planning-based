@@ -91,7 +91,7 @@ class SolverBackend(Backend):
     """
     Backend for OpenFOAM solver. The class is inherited from the core Backend
     """
-    docker_image = "openfoamplus/of_v1912_centos73"
+    docker_image = "ghcr.io/cap-dcwiz/openfoam-v1912-centos72:latest"
 
     only_save_latest = True
     write_interval = 10

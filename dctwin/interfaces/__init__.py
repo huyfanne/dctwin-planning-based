@@ -1,11 +1,7 @@
 from gym.envs.registration import register
 from loguru import logger
 
-
-from .gym_env import BaseEnv
-from .gym_env import EPlusEnv
-from .gym_env import CoSimEnv
-
+from .gym_env import BaseEnv, EPlusEnv, CoSimEnv
 from .singleton import CFDManager, CoSimManager, PODBuilder
 
 
