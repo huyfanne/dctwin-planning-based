@@ -1,7 +1,6 @@
 import pickle
 from typing import Dict, Union
 
-import loguru
 import numpy as np
 import cvxpy as cp
 from pathlib import Path
@@ -227,6 +226,7 @@ class PODBackend(Backend):
         bc = np.concatenate([[q_server_tot], [m_server_tot], crac_supply_temperature, crac_flow_rate]).reshape(1, -1)
         bc_tensor = torch.FloatTensor(bc)
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
+            bc_tensor = (bc_tensor - self.model.train_x_mean) / self.model.train_x_std
             dist = self.model(bc_tensor)
             prediction = self.likelihood(dist)
             coef_tensor = prediction.mean
@@ -234,7 +234,6 @@ class PODBackend(Backend):
             coef_std_tensor = prediction.stddev
         coef = coef_tensor.detach().cpu().numpy().ravel()
         coef_std = coef_std_tensor.detach().cpu().numpy().ravel()
-        # loguru.logger.info(f"GP prediction: {[round(val, 3) for val in coef]}")
         if local_search:
             # physics-guided local search (rectification) on the coarse estimation from GP models
             self.coefs = self._local_search(
@@ -288,7 +287,6 @@ class PODBackend(Backend):
         else:
             raise NotImplementedError(f"{pod_method} not implemented")
         # reconstruct temperature field
-        print(self.coefs)
         reconstruct = self.mean_obs + np.dot(self.coefs, np.transpose(used_modes))
         return reconstruct
 
