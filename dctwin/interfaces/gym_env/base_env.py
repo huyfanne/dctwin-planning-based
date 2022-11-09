@@ -31,6 +31,7 @@ class BaseEnv(gym.Env):
     :param schedule_fn: the callback facility schedule function defined by the user
         e.g., the IT utilization schedule
     :param task_id: the identity of the current environment (defined for multi-task learning)
+    :param num_constraints: the number of constraints in the environment (defined 0)
      """
 
     def __init__(
@@ -39,6 +40,7 @@ class BaseEnv(gym.Env):
         reward_fn: Callable,
         schedule_fn: Callable,
         task_id: Optional[str] = "0",
+        num_constraints: Optional[int] = 0,
     ) -> None:
         super().__init__()
         # set up basics
@@ -61,10 +63,10 @@ class BaseEnv(gym.Env):
 
         # others
         self.last_obs = None
-        self._timestamp: datetime = datetime.now()
-        self.tags = config.tags
         self.episode_idx = 0
         self._task_id = task_id
+        self._num_constraints = num_constraints
+        self._timestamp: datetime = datetime.now()
 
     def _set_observations(self):
         self._observations = [Observation(config=oc) for oc in self._config.observations]
@@ -119,6 +121,15 @@ class BaseEnv(gym.Env):
     @property
     def observations(self):
         return self._observations
+
+    @property
+    def num_constraints(self):
+        if self._num_constraints == 0:
+            raise NotImplementedError(
+                "environment constraints are not defined"
+            )
+        else:
+            return self._num_constraints
 
     def _get_space(
         self,
