@@ -16,7 +16,7 @@ from .utils import (
     calc_object_mesh_index,
     read_mesh_coordinates,
     read_temperature_fields,
-    read_boundary_conditions, read_object_mesh_index
+    read_boundary_conditions,
 )
 
 from dctwin.backends.rom.pod.models import BatchIndependentMultiTaskGPModel
@@ -125,8 +125,6 @@ class PODBuilder:
             pbar.set_description("Iter = {:d}, Loss = {:.3f}".format(iter_, loss.item()))
             iter_ += 1
             optimizer.step()
-        for param_name, param in self.model.named_parameters():
-            logger.info(f'Parameter name: {param_name:42} value = {param}')
         logger.info("Training is done")
 
     def run(self, end_time: str = "500") -> None:
@@ -134,10 +132,9 @@ class PODBuilder:
         self.temperatures = read_temperature_fields(end_time)
         logger.info(f"Read {self.temperatures.shape[0]} temperature fields with dim = {self.temperatures.shape[1]}")
         logger.info("Reading mesh coordinates")
-        self.object_mesh_index = read_object_mesh_index(self.room)
-        # self.mesh_points = read_mesh_coordinates()
-        # logger.info("Calculating object mesh index")
-        # self.object_mesh_index = calc_object_mesh_index(self.room, self.mesh_points)
+        self.mesh_points = read_mesh_coordinates()
+        logger.info("Calculating object mesh index")
+        self.object_mesh_index = calc_object_mesh_index(self.room, self.mesh_points)
         logger.info("Calculating mean temperature field")
         self.mean_temperature = self._calc_mean_temperature_field()
         logger.info("Building correlation matrix and solve eigenvalue problem")
