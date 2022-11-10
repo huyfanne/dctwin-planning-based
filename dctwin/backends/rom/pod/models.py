@@ -41,7 +41,6 @@ class BatchIndependentMultiTaskGPModel(gpytorch.models.ExactGP):
         Note: the input x is not normalized and it should be normalized
         to make the prediction result stable.
         """
-        # x = (x - self.train_x_mean) / self.train_x_std
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         dist = gpytorch.distributions.MultitaskMultivariateNormal.from_batch_mvn(

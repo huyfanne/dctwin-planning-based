@@ -252,7 +252,6 @@ class CoSimManager:
             temperature=temperature,
             **boundary_conditions
         )
-        print(return_temp)
         # add two approach temperatures (a.k.a. return temperature actually) to the end of the raw action array
         send_actions = []
         for value in parsed_actions.values():
