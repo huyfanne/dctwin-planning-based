@@ -3,6 +3,10 @@ import gpytorch
 
 
 class BatchIndependentMultiTaskGPModel(gpytorch.models.ExactGP):
+    """
+    Define the Batch Independent Multi Task GP model according to the following tutorials:
+    https://docs.gpytorch.ai/en/stable/examples/03_Multitask_Exact_GPs/Batch_Independent_Multioutput_GP.html
+    """
     def __init__(self,
         train_x: torch.Tensor,
         train_y: torch.Tensor,
@@ -25,8 +29,8 @@ class BatchIndependentMultiTaskGPModel(gpytorch.models.ExactGP):
     def get_normalized_target(self):
         return (self.train_targets - self.train_y_mean) / (self.train_y_std + 1e-6)
 
-    def forward(self, x: torch.Tensor):
-        x = (x - self.train_x_mean) / (self.train_x_std + 1e-6)
+    def forward(self, x: torch.Tensor) -> gpytorch.distributions.MultitaskMultivariateNormal:
+        x = (x - self.train_x_mean) / (self.train_x_std + 1e-6)  # here the input is normalized
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         dist = gpytorch.distributions.MultitaskMultivariateNormal.from_batch_mvn(
