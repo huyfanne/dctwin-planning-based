@@ -1,4 +1,3 @@
-import json
 import pickle
 import gpytorch
 import torch
@@ -11,8 +10,6 @@ from tqdm import tqdm
 from loguru import logger
 
 from dctwin.models import Room
-
-import GPy
 
 from .utils import (
     read_temperature_fields,
@@ -55,7 +52,9 @@ class PODBuilder:
     def _build_correlation_matrix(self):
         num_observation = self.temperatures.shape[0]
         residual_temperature_fields = self.temperatures - self.mean_temperature
-        correlation_matrix = np.dot(residual_temperature_fields, np.transpose(residual_temperature_fields)) / (num_observation - 1)
+        correlation_matrix = np.dot(
+            residual_temperature_fields, np.transpose(residual_temperature_fields)
+        ) / (num_observation - 1)
         return correlation_matrix
 
     def _calc_pod_modes(self):
@@ -64,7 +63,7 @@ class PODBuilder:
         # second step: calculate spatial mode (n_point, n_observation)
         phi = np.dot(np.transpose(self.temperatures - self.mean_temperature), eigen_vectors)
         sqrt_diagonals = np.sqrt(np.diag(np.dot(np.transpose(phi), phi)))
-        phi /= sqrt_diagonals # normalize so that phi^T * phi is an identity matrix
+        phi /= sqrt_diagonals  # normalize so that phi^T * phi is an identity matrix
         return phi, np.real(eigen_values)
 
     def _compute_coef(self) -> np.ndarray:
@@ -102,7 +101,7 @@ class PODBuilder:
         # train the multi-output GP model with Adam Optimizer (Stochastic Gradient Descend)
         pbar = tqdm(range(self.max_iter))
         prev_loss = 1e3
-        iter = 0
+        iter_ = 0
         normalized_targets = self.model.get_normalized_target()
         for _ in pbar:
             optimizer.zero_grad()
@@ -113,26 +112,11 @@ class PODBuilder:
             else:
                 prev_loss = loss
             loss.backward()
-            pbar.set_description("Iter = {:d}, Loss = {:.3f}".format(iter, loss.item()))
-            iter += 1
+            pbar.set_description("Iter = {:d}, Loss = {:.3f}".format(iter_, loss.item()))
+            iter_ += 1
             optimizer.step()
         for param_name, param in self.model.named_parameters():
             print(f'Parameter name: {param_name:42} value = {param}')
-
-    def _build_estimator_gpy(self) -> None:
-        self.train_bc = torch.FloatTensor(
-            read_boundary_conditions(self.room)
-        )
-        self.train_coef = torch.FloatTensor(self._compute_coef())
-        logger.info("Training inputs (boundary conditions) and outputs (coefficient) are ready")
-        m = GPy.models.GPRegression(
-            self.train_bc,
-            self.train_coef,
-            kernel=GPy.kern.RBF(input_dim=self.train_bc.shape[1], ARD=True),
-            normalizer=True,
-        )
-        m.optimize(messages=True)
-        np.save('model/POD/model', m.param_array)
 
     def run(self, end_time: str = "500") -> None:
         logger.info("Reading temperature fields")

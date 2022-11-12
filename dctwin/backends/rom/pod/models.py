@@ -3,15 +3,16 @@ import gpytorch
 
 
 class BatchIndependentMultiTaskGPModel(gpytorch.models.ExactGP):
-    def __init__(self,
+    def __init__(
+        self,
         train_x: torch.Tensor,
         train_y: torch.Tensor,
         likelihood: gpytorch.likelihoods.Likelihood,
         num_modes: int
-    ):
+    ) -> None:
         super().__init__(train_x, train_y[:, :num_modes], likelihood)
         self.num_samples, self.num_features = train_x.size()
-        self.num_modes =  num_modes
+        self.num_modes = num_modes
         self.train_x_mean = torch.nn.Parameter(train_x.mean(dim=0), requires_grad=False)
         self.train_x_std = torch.nn.Parameter(train_x.std(dim=0), requires_grad=False)
         self.train_y_mean = torch.nn.Parameter(train_y[:, :num_modes].mean(dim=0), requires_grad=False)
@@ -22,10 +23,10 @@ class BatchIndependentMultiTaskGPModel(gpytorch.models.ExactGP):
             batch_shape=torch.Size([num_modes])
         )
 
-    def get_normalized_target(self):
+    def get_normalized_target(self) -> torch.Tensor:
         return (self.train_targets - self.train_y_mean) / (self.train_y_std + 1e-6)
 
-    def forward(self, x: torch.Tensor):
+    def forward(self, x: torch.Tensor) -> gpytorch.distributions.MultitaskMultivariateNormal:
         x = (x - self.train_x_mean) / (self.train_x_std + 1e-6)
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)

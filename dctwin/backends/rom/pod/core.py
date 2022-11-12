@@ -69,9 +69,9 @@ class PODBackend(Backend):
                     cp.Minimize(cp.norm(x - y, 2)),
                     constraints=[
                         cp.SOC(c.T @ x + d, A @ x + b), # server energy balance violation
-                        E @ x <= ub, # trust region upper bounds
-                        E @ x >= lb, # trust region lower bounds
-                        F @ x == g # room energy balance
+                        E @ x <= ub,  # trust region upper bounds
+                        E @ x >= lb,  # trust region lower bounds
+                        F @ x == g  # room energy balance
                     ]
                 )
                 assert prob.is_dcp()
@@ -80,8 +80,8 @@ class PODBackend(Backend):
                 prob = cp.Problem(
                     cp.Minimize(cp.norm(x - y, 2)),
                     constraints=[
-                        cp.SOC(c.T @ x + d, A @ x + b), # server energy balance violation
-                        F @ x == g # room energy balance
+                        cp.SOC(c.T @ x + d, A @ x + b),  # server energy balance violation
+                        F @ x == g  # room energy balance
                     ]
                 )
                 assert prob.is_dcp()
@@ -140,8 +140,8 @@ class PODBackend(Backend):
 
         if coef_std is None:
             # solve the rectification without trust region constraints
-            prob, params, vars = make_problem(trust_region=False)
-            layer = CvxpyLayer(prob, params, vars)
+            prob, params, vars_ = make_problem(trust_region=False)
+            layer = CvxpyLayer(prob, params, vars_)
             coef = layer(
                 A, b, c, d, F, g, coef_hat,
             )[0]
@@ -153,8 +153,8 @@ class PODBackend(Backend):
                 upperbound = coef_hat + beta * coef_std
                 lowerbound = coef_hat - beta * coef_std
                 I = torch.eye(n)
-                prob, params, vars = make_problem(trust_region=True)
-                layer = CvxpyLayer(prob, params, vars)
+                prob, params, vars_ = make_problem(trust_region=True)
+                layer = CvxpyLayer(prob, params, vars_)
                 try:
                     coef = layer(
                         A, b, c, d, I, upperbound, lowerbound, F, g, coef_hat,
@@ -164,7 +164,6 @@ class PODBackend(Backend):
                     beta *= 2
             loguru.logger.warning("Local search infeasible. Use GP coarsely estimated POD coefficients instead.")
             return coef_hat.detach().cpu().numpy()
-
 
     def _flux_matching(
         self,
@@ -270,7 +269,7 @@ class PODBackend(Backend):
         else:
             self.coefs = np.asarray(coef)
 
-    def docker_image(self):
+    def docker_image(self) -> str:
         raise NotImplementedError("Docker image is not available for this model.")
 
     def command(self) -> Union[list, str]:
