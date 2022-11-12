@@ -40,10 +40,10 @@ class PODBackend(Backend):
         self,
         used_modes,
         object_mesh_index,
-        crac_flow_rate: Dict,
+        crac_volume_flow_rate: Dict,
         crac_supply_temperature: Dict,
         server_heat_loads: Dict,
-        server_flow_rates: Dict,
+        server_mass_flow_rates: Dict,
         coef_hat: torch.Tensor,
         coef_std: Union[torch.Tensor, None]
     ) -> np.ndarray:
@@ -97,14 +97,14 @@ class PODBackend(Backend):
         q_server = []
         m_server = []
         sp_crac = []
-        m_crac = []
+        v_crac = []
         used_modes = torch.from_numpy(used_modes).float()
         coef_hat = coef_hat.float()
 
         # parse the boundary conditions into torch.Tensor format
         for server_name, server_mesh_indices in object_mesh_index["servers"].items():
             q_server.append(server_heat_loads[server_name])
-            m_server.append(server_flow_rates[server_name])
+            m_server.append(server_mass_flow_rates[server_name])
             mean_temp_inlet.append(self.mean_obs[server_mesh_indices["inlet"]])
             mean_temp_outlet.append(self.mean_obs[server_mesh_indices["outlet"]])
             phi_inlet.append(used_modes[server_mesh_indices["inlet"], :])
@@ -114,12 +114,12 @@ class PODBackend(Backend):
             mean_temp_return.append(self.mean_obs[crac_mesh_indices["return"]])
             phi_return.append(used_modes[crac_mesh_indices["return"], :])
             sp_crac.append(crac_supply_temperature[crac_name])
-            m_crac.append(crac_flow_rate[crac_name])
+            v_crac.append(crac_volume_flow_rate[crac_name])
 
         q_server = torch.tensor(q_server, dtype=torch.float32)
         m_server = torch.tensor(m_server, dtype=torch.float32)
         sp_crac = torch.tensor(sp_crac, dtype=torch.float32)
-        m_crac = torch.tensor(m_crac, dtype=torch.float32)
+        v_crac = torch.tensor(v_crac, dtype=torch.float32)
         mean_temp_inlet = torch.tensor(mean_temp_inlet, dtype=torch.float32)
         mean_temp_outlet = torch.tensor(mean_temp_outlet, dtype=torch.float32)
         mean_temp_return = torch.tensor(mean_temp_return, dtype=torch.float32)
@@ -138,8 +138,8 @@ class PODBackend(Backend):
         d = torch.linalg.norm(A @ coef_hat.T + b)  # use the GP coarse estimation as initialization
 
         # equality constraint: exact room energy balance
-        F = phi_return * m_crac.view((1, -1))
-        g = q_server.sum() / (self.c_p * self.rho_air) - torch.sum((mean_temp_return - sp_crac) * m_crac)
+        F = phi_return * v_crac.view((1, -1))
+        g = q_server.sum() / (self.c_p * self.rho_air) - torch.sum((mean_temp_return - sp_crac) * v_crac)
 
         if coef_std is None:
             # solve the rectification without trust region constraints
