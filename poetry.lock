@@ -122,12 +122,42 @@ scipy = ">=1.1.0"
 scs = ">=1.1.6"
 
 [[package]]
+name = "cvxpylayers"
+version = "0.1.5"
+description = "Differentiable convex optimization layers"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+cvxpy = ">=1.1.0a4"
+diffcp = ">=1.0.13"
+numpy = ">=1.15"
+scipy = ">=1.1.0"
+
+[[package]]
 name = "cycler"
 version = "0.11.0"
 description = "Composable style cycles"
 category = "main"
 optional = false
 python-versions = ">=3.6"
+
+[[package]]
+name = "diffcp"
+version = "1.0.19"
+description = ""
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+ecos = "*"
+numpy = ">=1.15"
+pybind11 = ">=2.4"
+scipy = ">=1.1.0"
+scs = ">=2.0.2"
+threadpoolctl = ">=1.1"
 
 [[package]]
 name = "docker"
@@ -527,6 +557,17 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
+name = "pybind11"
+version = "2.10.1"
+description = "Seamless operability between C++11 and Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+global = ["pybind11-global (==2.10.1)"]
+
+[[package]]
 name = "pycodestyle"
 version = "2.9.1"
 description = "Python style guide checker"
@@ -896,7 +937,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "339044428a48459c2456e69925bdaa50f0a55e8947dcac4f7f8e6adbbfc9da59"
+content-hash = "f097a40174dde683d5c79364c4ec5970a0689f1d9ac4d7b86cfc79d70232d348"
 
 [metadata.files]
 attrs = [
@@ -1066,9 +1107,30 @@ cvxpy = [
     {file = "cvxpy-1.2.1-cp39-cp39-win_amd64.whl", hash = "sha256:8df52e9b0817d15814f3cdc7861c65b6f4e5554d90429fe4cfecb7bdd91994cf"},
     {file = "cvxpy-1.2.1.tar.gz", hash = "sha256:6d67642643d1ddb2f2af59b466b87d42c4a2e367831ad7b43c33b59eefa5b50e"},
 ]
+cvxpylayers = [
+    {file = "cvxpylayers-0.1.5.tar.gz", hash = "sha256:e10882fab76c7d682a1686f9e8f65b8ce20324db9e157f203c82dd5bc4e112ae"},
+]
 cycler = [
     {file = "cycler-0.11.0-py3-none-any.whl", hash = "sha256:3a27e95f763a428a739d2add979fa7494c912a32c17c4c38c4d5f082cad165a3"},
     {file = "cycler-0.11.0.tar.gz", hash = "sha256:9c87405839a19696e837b3b818fed3f5f69f16f1eec1a1ad77e043dcea9c772f"},
+]
+diffcp = [
+    {file = "diffcp-1.0.19-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:039da8830b9749857e99b753a6151c87bff811212dd9eed10b1513932cc78441"},
+    {file = "diffcp-1.0.19-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1c6b49ec06ae7acf2a6feabbc7ff9d9bbe7da3236f53af8b39377dda65e10998"},
+    {file = "diffcp-1.0.19-cp310-cp310-win_amd64.whl", hash = "sha256:4dcfe32954f97048c86186c242a2e9db838f948b56ddb8936e28b82a7ab0ee82"},
+    {file = "diffcp-1.0.19-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:3e79be4359201f3dbac04f01a2ae354fa3604a7a9436d21ef9cf46d6a7b9851b"},
+    {file = "diffcp-1.0.19-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:10c6353a035a068c42db39f5f7f8a1f5a30f5860b82800f07983ee827d05e102"},
+    {file = "diffcp-1.0.19-cp36-cp36m-win_amd64.whl", hash = "sha256:0bbacb866760bb341a581803f40c2253e99abbe71cbce34b0f8ee2ff2d314da9"},
+    {file = "diffcp-1.0.19-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:7449f0cb8addd32e97ddc98769d0b6917e889b568b40b178564e0f86e0021779"},
+    {file = "diffcp-1.0.19-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:dae60a0f455ea5da768df723afbc99d9bb92e004f67982720f0a1fac67cfe67b"},
+    {file = "diffcp-1.0.19-cp37-cp37m-win_amd64.whl", hash = "sha256:9ffe7bdfa9b1bb984e2c3f6a02e025b30d8510dba7a59a225d823ef6780d9a5b"},
+    {file = "diffcp-1.0.19-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:35eab8a52cc0062cf45b08d34ac4ada32408144470e6eff56be405ede9afbfda"},
+    {file = "diffcp-1.0.19-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d9af2df1fa5f94c59802a32f673a69810b886a0831e2224637fc721bb6515f6e"},
+    {file = "diffcp-1.0.19-cp38-cp38-win_amd64.whl", hash = "sha256:1478b1ab7788da582d2ad611ff822908b471cadcaa623b7d8e4f3ef1824472a0"},
+    {file = "diffcp-1.0.19-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:8d384a1974f953112738016fbebd7fd03ad451de18dc4b5ebac03abf1e83108f"},
+    {file = "diffcp-1.0.19-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9d25f13146e4173a4656d7882fe6480878d682ea0fcf896c7707f93d3e21fc22"},
+    {file = "diffcp-1.0.19-cp39-cp39-win_amd64.whl", hash = "sha256:f5df21ef931c6093955ae633af71410774b2eb2dd9de55a27ad11ab606e39bc9"},
+    {file = "diffcp-1.0.19.tar.gz", hash = "sha256:7b78d09d5ace65db55fb34177bd16b7c5dd4eed51283b66a5f2376a00de46376"},
 ]
 docker = [
     {file = "docker-6.0.0-py3-none-any.whl", hash = "sha256:6e06ee8eca46cd88733df09b6b80c24a1a556bc5cb1e1ae54b2c239886d245cf"},
@@ -1515,6 +1577,10 @@ protobuf = [
     {file = "protobuf-3.19.0-cp39-cp39-win_amd64.whl", hash = "sha256:a74432e9d28a6072a2359a0f49f81eb14dd718e7dbbfb6c0789b456c49e1f130"},
     {file = "protobuf-3.19.0-py2.py3-none-any.whl", hash = "sha256:c96e94d3e523a82caa3e5f74b35dd1c4884199358d01c950d95c341255ff48bc"},
     {file = "protobuf-3.19.0.tar.gz", hash = "sha256:6a1dc6584d24ef86f5b104bcad64fa0fe06ed36e5687f426e0445d363a041d18"},
+]
+pybind11 = [
+    {file = "pybind11-2.10.1-py3-none-any.whl", hash = "sha256:ebf3eeac46859a2e10077ae45378ba3f33d999a9064697a3464fba1a4a04fc0a"},
+    {file = "pybind11-2.10.1.tar.gz", hash = "sha256:c9571b8a6607c8e90ea156a2a455383b9911f89da414e9f5e251ab58dc3e3c71"},
 ]
 pycodestyle = [
     {file = "pycodestyle-2.9.1-py2.py3-none-any.whl", hash = "sha256:d1735fc58b418fd7c5f658d28d943854f8a849b01a5d0a1e6f3f3fdd0166804b"},
