@@ -12,9 +12,9 @@ from loguru import logger
 
 from dctwin.models import Room
 
+import GPy
+
 from .utils import (
-    calc_object_mesh_index,
-    read_mesh_coordinates,
     read_temperature_fields,
     read_boundary_conditions,
 )
@@ -37,7 +37,7 @@ class PODBuilder:
         room: Room,
         num_modes: int = 0,
         max_iter: int = 1000,
-        tol: float = 1e-3,
+        tol: float = 1e-6,
     ) -> None:
         self.num_modes = num_modes
         self.room = room
@@ -45,7 +45,6 @@ class PODBuilder:
         self.tol = tol
         self.temperatures = None
         self.mesh_points = None
-        self.object_mesh_index = None
         self.mean_temperature = None
         self.correlation_matrix = None
         self.pod_modes, self.eigen_values = None, None
@@ -56,9 +55,7 @@ class PODBuilder:
     def _build_correlation_matrix(self):
         num_observation = self.temperatures.shape[0]
         residual_temperature_fields = self.temperatures - self.mean_temperature
-        correlation_matrix = np.dot(
-            residual_temperature_fields, np.transpose(residual_temperature_fields)
-        ) / (num_observation - 1)
+        correlation_matrix = np.dot(residual_temperature_fields, np.transpose(residual_temperature_fields)) / (num_observation - 1)
         return correlation_matrix
 
     def _calc_pod_modes(self):
@@ -67,8 +64,7 @@ class PODBuilder:
         # second step: calculate spatial mode (n_point, n_observation)
         phi = np.dot(np.transpose(self.temperatures - self.mean_temperature), eigen_vectors)
         sqrt_diagonals = np.sqrt(np.diag(np.dot(np.transpose(phi), phi)))
-        phi /= sqrt_diagonals  # normalize so that phi^T * phi is an identity matrix
-
+        phi /= sqrt_diagonals # normalize so that phi^T * phi is an identity matrix
         return phi, np.real(eigen_values)
 
     def _compute_coef(self) -> np.ndarray:
@@ -84,57 +80,64 @@ class PODBuilder:
         return coefs
 
     def _build_estimator(self) -> None:
+        # prepare data
         self.train_bc = torch.FloatTensor(
             read_boundary_conditions(self.room)
         )
         self.train_coef = torch.FloatTensor(self._compute_coef())
-        logger.info("Training inputs (boundary conditions) and outputs (coefficient) are ready")
-        self.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(
-            num_tasks=self.num_modes
-        )
+        self.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=self.num_modes)
         self.model = BatchIndependentMultiTaskGPModel(
             train_x=self.train_bc,
             train_y=self.train_coef,
             likelihood=self.likelihood,
             num_modes=self.num_modes
         )
-        logger.info("Gaussian Likelihood and MultiTaskGPModel are ready")
         # specify the GP model and the likelihood model in the training mode (require gradient)
         self.model.train()
         self.likelihood.train()
-        logger.info("Start training")
         # Use the adam optimizer
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=0.5)  # Includes GaussianLikelihood parameters
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=0.05)  # Includes GaussianLikelihood parameters
         # "Loss" for GPs - the marginal log likelihood
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
         # train the multi-output GP model with Adam Optimizer (Stochastic Gradient Descend)
         pbar = tqdm(range(self.max_iter))
-        prev_loss = torch.inf
-        iter_ = 0
-        normalized_input = self.model.get_normalized_input()
+        prev_loss = 1e3
+        iter = 0
         normalized_targets = self.model.get_normalized_target()
         for _ in pbar:
             optimizer.zero_grad()
-            dist = self.model(normalized_input)
+            dist = self.model(self.train_bc)
             loss = -mll(dist, normalized_targets)
-            if torch.abs(loss - prev_loss) <= self.tol:
+            if torch.abs(loss - prev_loss) <= 1e-9:
                 break
             else:
                 prev_loss = loss
             loss.backward()
-            pbar.set_description("Iter = {:d}, Loss = {:.3f}".format(iter_, loss.item()))
-            iter_ += 1
+            pbar.set_description("Iter = {:d}, Loss = {:.3f}".format(iter, loss.item()))
+            iter += 1
             optimizer.step()
-        logger.info("Training is done")
+        for param_name, param in self.model.named_parameters():
+            print(f'Parameter name: {param_name:42} value = {param}')
+
+    def _build_estimator_gpy(self) -> None:
+        self.train_bc = torch.FloatTensor(
+            read_boundary_conditions(self.room)
+        )
+        self.train_coef = torch.FloatTensor(self._compute_coef())
+        logger.info("Training inputs (boundary conditions) and outputs (coefficient) are ready")
+        m = GPy.models.GPRegression(
+            self.train_bc,
+            self.train_coef,
+            kernel=GPy.kern.RBF(input_dim=self.train_bc.shape[1], ARD=True),
+            normalizer=True,
+        )
+        m.optimize(messages=True)
+        np.save('model/POD/model', m.param_array)
 
     def run(self, end_time: str = "500") -> None:
         logger.info("Reading temperature fields")
         self.temperatures = read_temperature_fields(end_time)
         logger.info(f"Read {self.temperatures.shape[0]} temperature fields with dim = {self.temperatures.shape[1]}")
-        logger.info("Reading mesh coordinates")
-        self.mesh_points = read_mesh_coordinates()
-        logger.info("Calculating object mesh index")
-        self.object_mesh_index = calc_object_mesh_index(self.room, self.mesh_points)
         logger.info("Calculating mean temperature field")
         self.mean_temperature = self._calc_mean_temperature_field()
         logger.info("Building correlation matrix and solve eigenvalue problem")
@@ -157,5 +160,3 @@ class PODBuilder:
         torch.save(self.likelihood.state_dict(), save_path.joinpath("likelihood.pth"))
         with open(save_path.joinpath("pod_data.pkl"), "wb") as f:
             pickle.dump(data_dict, f)
-        with open(save_path.joinpath("object_mesh_index.json"), "w") as f:
-            json.dump(self.object_mesh_index, f, indent=4)

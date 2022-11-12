@@ -21,7 +21,7 @@ def read_boundary_conditions(
     subfolders = [f for f in Path(config.CASE_DIR).iterdir() if f.is_dir()]
     num_cracs = len(room.objects.acus)
     boundary_conditions = np.zeros((len(subfolders), 2 * num_cracs + 2))
-    for idx, subfolder in enumerate(subfolders):
+    for idx, subfolder in enumerate(sorted(subfolders, key=lambda x: int(x.name.split("-")[-1]))):
         with open(Path(subfolder).joinpath("boundary_conditions.json"), "r") as f:
             boundary_condition_dict = json.load(f)
         boundary_conditions[idx, 0] = np.sum(list(boundary_condition_dict["server_powers"].values()))
@@ -71,19 +71,16 @@ def read_temperature(solution_dir: Path, end_time: str = "500"):
 
 
 def read_temperature_fields(end_time: str = "500") -> np.ndarray:
-    experiment_dir_names = []
     subfolders = [f for f in config.CASE_DIR.iterdir() if f.is_dir()]
-    for subfloder in subfolders:
-        experiment_dir_names.append(subfloder)
     temperatures = []
-    for experiment_dir_name in sorted(experiment_dir_names):
+    for subfloder in sorted(subfolders, key=lambda x: int(x.name.split("-")[-1])):
         try:
-            temperature = read_temperature(experiment_dir_name, end_time=end_time)
+            temperature = read_temperature(subfloder, end_time=end_time)
             temperatures.append(temperature)
         except Exception:
             raise FileNotFoundError(
                 f"fail to read temperature for "
-                f"{experiment_dir_name.name}"
+                f"{subfloder.name}"
             )
     return np.asarray(temperatures)
 
