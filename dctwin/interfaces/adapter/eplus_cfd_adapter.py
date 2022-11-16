@@ -8,12 +8,12 @@ from pathlib import Path
 
 from dctwin.utils import config
 
-from .cfd_manager import CFDManager
+from dctwin.interfaces.manager import CFDManager
 from dctwin.backends import EplusBackend
 from dctwin.models import Room
 
 
-class CoSimManager:
+class EplusCFDAdapter:
     """
     A class to manage the co-simulation between CFD and E+.
 
