@@ -1,7 +1,6 @@
 import pickle
 from typing import Dict, Union
 
-from diffcp import SolverError
 import loguru
 import numpy as np
 import cvxpy as cp
@@ -38,15 +37,15 @@ class PODBackend(Backend):
 
     def _local_search(
         self,
-        used_modes,
-        object_mesh_index,
+        used_modes: torch.Tensor,
+        object_mesh_index: Dict,
         crac_volume_flow_rate: Dict,
         crac_supply_temperature: Dict,
         server_heat_loads: Dict,
         server_mass_flow_rates: Dict,
         coef_hat: torch.Tensor,
         coef_std: Union[torch.Tensor, None]
-    ) -> np.ndarray:
+    ) -> torch.Tensor:
 
         def make_problem(trust_region=True):
             """Here we solve the rectification problem without trust region constraint to make it always feasible"""
@@ -98,8 +97,6 @@ class PODBackend(Backend):
         m_server = []
         sp_crac = []
         v_crac = []
-        used_modes = torch.from_numpy(used_modes).float()
-        coef_hat = coef_hat.float()
 
         # parse the boundary conditions into torch.Tensor format
         for server_name, server_mesh_indices in object_mesh_index["servers"].items():
@@ -148,7 +145,7 @@ class PODBackend(Backend):
             coef = layer(
                 A, b, c, d, F, g, coef_hat,
             )[0]
-            return coef.detach().cpu().numpy()[:, :self.num_modes]
+            return coef
         else:
             # solve the rectification problem with trust region constraints
             beta = 1.0
@@ -162,12 +159,12 @@ class PODBackend(Backend):
                     coef = layer(
                         A, b, c, d, I, upperbound, lowerbound, F, g, coef_hat,
                     )[0]
-                    return coef.detach().cpu().numpy()[:, :self.num_modes]
-                except SolverError:
+                    return coef
+                except Exception:
                     # Here solver error means the trust region is too small
                     beta *= 2
             loguru.logger.warning("Local search infeasible. Use GP coarsely estimated POD coefficients instead.")
-            return coef_hat.detach().cpu().numpy()
+            return coef_hat
 
     def _flux_matching(
         self,
@@ -219,7 +216,7 @@ class PODBackend(Backend):
 
     def _gp(
         self,
-        used_modes: np.ndarray,
+        used_modes: torch.Tensor,
         object_mesh_index: Dict,
         server_powers: Dict,
         server_flow_rates: Dict,
@@ -239,14 +236,14 @@ class PODBackend(Backend):
         :param local_search: whether to use local search to find the POD coefficients
         """
         # compute total heat load and total server flow rate
-        q_server_tot = np.sum(list(server_powers.values()))
-        m_server_tot = np.sum(list(server_flow_rates.values()))
+        q_server_tot = np.sum(list(server_powers.values()), keepdims=True)
+        m_server_tot = np.sum(list(server_flow_rates.values()), keepdims=True)
 
         # predict POD coefficients with Gaussian Model
         bc = np.concatenate(
             [
-                [q_server_tot],
-                [m_server_tot],
+                q_server_tot,
+                m_server_tot,
                 np.asarray(list(crac_setpoints.values())).reshape(-1),
                 np.asarray(list(crac_flow_rates.values())).reshape(-1)
             ]
@@ -256,7 +253,7 @@ class PODBackend(Backend):
             dist = self.model(bc_tensor)
             prediction = self.likelihood(dist)
             coef = prediction.mean
-            coef_std = prediction.stddev * self.model.train_y_std
+            # coef_std = prediction.stddev * self.model.train_y_std
 
         # physics-guided local search (rectification) on the coarse estimation from GP models
         if local_search:
@@ -268,16 +265,56 @@ class PODBackend(Backend):
                 server_powers,
                 server_flow_rates,
                 coef,
-                coef_std
+                None
             )
         else:
-            self.coefs = np.asarray(coef)
+            self.coefs = coef
 
     def docker_image(self):
         raise NotImplementedError("Docker image is not available for this model.")
 
     def command(self) -> Union[list, str]:
         raise NotImplementedError("Command is not available for this model.")
+
+    @classmethod
+    def load(cls):
+        """
+        Load the POD modes, mean temperature filed, offline trained GP models from the saved file.
+        """
+        try:
+            pod = cls()
+            # load pod modes, mean temperature field,
+            # training boundary conditions and training labels (POD coefficients)
+            with open(Path(config.cfd.pod_dir).joinpath("pod_data.pkl"), "rb") as f:
+                data = pickle.load(f)
+                assert isinstance(data, dict), "data.pkl should be a dictionary!"
+                try:
+                    pod.modes = data["modes"].float()
+                    pod.mean_obs = data["mean_obs"].float()
+                    pod.train_bc = data["train_bc"].float()
+                    pod.train_coef = data["train_coef"].float()
+                except KeyError:
+                    raise KeyError(
+                        f"Key not found in the saved data file. "
+                        f"Keys in the saved data file include: "
+                        f"{data.keys()}"
+                    )
+            pod.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=pod.num_modes)
+            pod.model = BatchIndependentMultiTaskGPModel(
+                train_x=pod.train_bc,
+                train_y=pod.train_coef,
+                likelihood=pod.likelihood,
+                num_modes=pod.num_modes
+            )
+            # load optimized parameters of the multi-output GP model
+            pod.model.load_state_dict(torch.load(Path(config.cfd.pod_dir).joinpath("model.pth")))
+            pod.likelihood.load_state_dict(torch.load(Path(config.cfd.pod_dir).joinpath("likelihood.pth")))
+            # switch to evaluation mode
+            pod.model.eval()
+            pod.likelihood.eval()
+        except FileNotFoundError:
+            pod = None
+        return pod
 
     def run(
         self,
@@ -318,45 +355,5 @@ class PODBackend(Backend):
         else:
             raise NotImplementedError(f"{pod_method} not implemented")
         # reconstruct temperature field
-        reconstruct = self.mean_obs + np.matmul(self.coefs, np.transpose(used_modes))
-        return reconstruct.ravel()
-
-    @classmethod
-    def load(cls):
-        """
-        Load the POD modes, mean temperature filed, offline trained GP models from the saved file.
-        """
-        try:
-            pod = cls()
-            # load pod modes, mean temperature field,
-            # training boundary conditions and training labels (POD coefficients)
-            with open(Path(config.cfd.pod_dir).joinpath("pod_data.pkl"), "rb") as f:
-                data = pickle.load(f)
-                assert isinstance(data, dict), "data.pkl should be a dictionary!"
-                try:
-                    pod.modes = data["modes"]
-                    pod.mean_obs = data["mean_obs"]
-                    pod.train_bc = data["train_bc"]
-                    pod.train_coef = data["train_coef"]
-                except KeyError:
-                    raise KeyError(
-                        f"Key not found in the saved data file. "
-                        f"Keys in the saved data file include: "
-                        f"{data.keys()}"
-                    )
-            pod.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=pod.num_modes)
-            pod.model = BatchIndependentMultiTaskGPModel(
-                train_x=pod.train_bc,
-                train_y=pod.train_coef,
-                likelihood=pod.likelihood,
-                num_modes=pod.num_modes
-            )
-            # load optimized parameters of the multi-output GP model
-            pod.model.load_state_dict(torch.load(Path(config.cfd.pod_dir).joinpath("model.pth")))
-            pod.likelihood.load_state_dict(torch.load(Path(config.cfd.pod_dir).joinpath("likelihood.pth")))
-            # switch to evaluation mode
-            pod.model.eval()
-            pod.likelihood.eval()
-        except FileNotFoundError:
-            pod = None
-        return pod
+        reconstruct = self.mean_obs + torch.matmul(self.coefs, used_modes.T)
+        return reconstruct

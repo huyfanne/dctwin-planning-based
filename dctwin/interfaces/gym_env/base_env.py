@@ -447,3 +447,10 @@ class BaseEnv(gym.Env):
             a.set_unnormed_value(unnormed_value)
             normed_act = a.get_normed_value()
             return normed_act
+
+    def get_full_actions_list(
+        self,
+        raw_actions: np.ndarray
+    ):
+        self._prepare_actions(raw_actions)
+        return np.asarray([action.get_unnormed_value() for action in self._actions])

@@ -136,8 +136,8 @@ class PODBuilder:
         if not save_path.exists():
             save_path.mkdir(parents=True, exist_ok=True)
         data_dict = {
-            "mean_obs": self.mean_temperature,
-            "modes": self.pod_modes,
+            "mean_obs": torch.from_numpy(self.mean_temperature),
+            "modes": torch.from_numpy(self.pod_modes),
             "train_bc": self.train_bc,
             "train_coef": self.train_coef,
         }

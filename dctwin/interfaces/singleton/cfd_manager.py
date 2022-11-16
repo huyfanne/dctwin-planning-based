@@ -164,11 +164,10 @@ class CFDManager:
         :param save_mesh_index: whether to save the mesh index
         :param save_boundary_conditions: whether to save the boundary conditions
         :param boundary_conditions: boundary conditions for simulation
-           e.g., boundary_conditions = {
+           i.e., boundary_conditions = {
             "crac_setpoints": {}, "crac_flow_rates": {},
             "server_powers": {}, "server_flow_rates": {}
             }
-
         :return: temperature fields
         """
         if self.pod_backend is not None:
@@ -181,7 +180,6 @@ class CFDManager:
                 pod_method=self.pod_method,
                 **boundary_conditions
             )
-
         else:
             # use full-fledged CFD simulation
             run_geometry, run_mesh = check_base_dir(

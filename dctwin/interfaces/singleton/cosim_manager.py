@@ -6,6 +6,8 @@ import numpy as np
 from typing import Dict, Tuple, Any, Union, List
 from pathlib import Path
 
+import torch
+
 from dctwin.utils import config
 
 from .cfd_manager import CFDManager
@@ -95,7 +97,7 @@ class CoSimManager:
 
     def _post_processing(
         self,
-        temperature: np.ndarray,
+        temperature: Union[torch.Tensor, np.ndarray],
         server_powers: Dict,
         server_flow_rates: Dict,
         crac_setpoints: Dict,
@@ -105,6 +107,9 @@ class CoSimManager:
         """Post-processing to collect sensor observation, server inlet temperature
         and CRAC return temperature
         """
+        # transform temperature to numpy array
+        if type(temperature) == torch.Tensor:
+            temperature = temperature.detach().cpu().numpy().ravel()
         # get return temperature for each air loop
         return_temps = {}
         for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
