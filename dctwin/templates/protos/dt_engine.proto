@@ -158,6 +158,7 @@ message EPlusEnvConfig {
 message EnvParams{
   optional string task_id = 1 [default = "0"];
   optional int32 num_constraints = 2 [default = 0];
+  optional int32 last_episode_idx = 3;
 }
 
 message ObjectMeshConfig{
