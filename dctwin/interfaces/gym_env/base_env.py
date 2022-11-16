@@ -41,6 +41,7 @@ class BaseEnv(gym.Env):
         schedule_fn: Callable,
         task_id: Optional[str] = "0",
         num_constraints: Optional[int] = 0,
+        last_episode_idx: Optional[int] = None,
     ) -> None:
         super().__init__()
         # set up basics
@@ -63,7 +64,10 @@ class BaseEnv(gym.Env):
 
         # others
         self.last_obs = None
-        self.episode_idx = 0
+        if last_episode_idx is not None:
+            self.episode_idx = last_episode_idx
+        else:
+            self.episode_idx = 0
         self._task_id = task_id
         self._num_constraints = num_constraints
         self._timestamp: datetime = datetime.now()
