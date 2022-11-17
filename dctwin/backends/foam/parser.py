@@ -56,24 +56,24 @@ class RoomParser:
     def update_boundary_conditions(
         self,
         crac_setpoints: Dict,
-        crac_flow_rates: Dict,
+        crac_volume_flow_rates: Dict,
         server_powers: Dict,
-        server_flow_rates: Dict
+        server_volume_flow_rates: Dict
     ) -> None:
-        self._update_crac_boundary(crac_setpoints, crac_flow_rates)
-        self._update_server_boundary(server_powers, server_flow_rates)
+        self._update_crac_boundary(crac_setpoints, crac_volume_flow_rates)
+        self._update_server_boundary(server_powers, server_volume_flow_rates)
 
     @property
     def format_boundary_conditions(self):
         boundary_conditions = {
-            "crac_setpoints": {}, "crac_flow_rates": {},
-            "server_powers": {}, "server_flow_rates": {}
+            "crac_setpoints": {}, "crac_volume_flow_rates": {},
+            "server_powers": {}, "server_volume_flow_rates": {}
         }
         for uid, prop in self.model.objects.servers.items():
             boundary_conditions["server_powers"][uid] = prop.heat_load
-            boundary_conditions["server_flow_rates"][uid] = prop.flow_rate
+            boundary_conditions["server_volume_flow_rates"][uid] = prop.flow_rate
         for uid, prop in self.model.objects.acus.items():
             boundary_conditions["crac_setpoints"][uid] = prop.supply_temperature
-            boundary_conditions["crac_flow_rates"][uid] = prop.flow_rate
+            boundary_conditions["crac_volume_flow_rates"][uid] = prop.flow_rate
 
         return boundary_conditions

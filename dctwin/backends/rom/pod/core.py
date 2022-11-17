@@ -35,34 +35,70 @@ class PODBackend(Backend):
         self.modes = None
         self.num_modes = config.cfd.num_modes
 
+    def _prepare_mode_data(self, object_mesh_index: Dict):
+        used_modes = self.modes[:, :self.num_modes]
+        phi_return = []
+        phi_inlet = []
+        phi_outlet = []
+        mean_temp_inlet = []
+        mean_temp_outlet = []
+        mean_temp_return = []
+        for server_name, server_mesh_indices in object_mesh_index["servers"].items():
+            mean_temp_inlet.append(self.mean_obs[server_mesh_indices["inlet"]])
+            mean_temp_outlet.append(self.mean_obs[server_mesh_indices["outlet"]])
+            phi_inlet.append(used_modes[server_mesh_indices["inlet"], :])
+            phi_outlet.append(used_modes[server_mesh_indices["outlet"], :])
+
+        for crac_name, crac_mesh_indices in object_mesh_index["cracs"].items():
+            mean_temp_return.append(self.mean_obs[crac_mesh_indices["return"]])
+            phi_return.append(used_modes[crac_mesh_indices["return"], :])
+
+        mean_temp_inlet = torch.tensor(mean_temp_inlet, dtype=torch.float32, requires_grad=False)
+        mean_temp_outlet = torch.tensor(mean_temp_outlet, dtype=torch.float32, requires_grad=False)
+        mean_temp_return = torch.tensor(mean_temp_return, dtype=torch.float32, requires_grad=False)
+        phi_inlet = torch.vstack(phi_inlet)
+        phi_outlet = torch.vstack(phi_outlet)
+        phi_return = torch.vstack(phi_return)
+        return {
+            "mean_temp_inlet": mean_temp_inlet,
+            "mean_temp_outlet": mean_temp_outlet,
+            "mean_temp_return": mean_temp_return,
+            "phi_inlet": phi_inlet,
+            "phi_outlet": phi_outlet,
+            "phi_return": phi_return,
+        }
     def _local_search(
         self,
-        used_modes: torch.Tensor,
-        object_mesh_index: Dict,
-        crac_volume_flow_rate: Dict,
-        crac_supply_temperature: Dict,
-        server_heat_loads: Dict,
-        server_mass_flow_rates: Dict,
+        crac_volume_flow_rate: torch.Tensor,
+        crac_setpoints: torch.Tensor,
+        server_powers: torch.Tensor,
+        server_volume_flow_rates: torch.Tensor,
         coef_hat: torch.Tensor,
-        coef_std: Union[torch.Tensor, None]
+        coef_std: Union[torch.Tensor, None],
+        mean_temp_inlet: torch.Tensor,
+        mean_temp_outlet: torch.Tensor,
+        mean_temp_return: torch.Tensor,
+        phi_inlet: torch.Tensor,
+        phi_outlet: torch.Tensor,
+        phi_return: torch.Tensor,
     ) -> torch.Tensor:
 
         def make_problem(trust_region=True):
             """Here we solve the rectification problem without trust region constraint to make it always feasible"""
-            x = cp.Variable(n)
-            y = cp.Parameter(n)
+            x = cp.Variable(num_modes)
+            y = cp.Parameter(num_modes)
 
-            A = cp.Parameter((num_server, n))
+            A = cp.Parameter((num_server, num_modes))
             b = cp.Parameter(num_server)
-            c = cp.Parameter(n)
+            c = cp.Parameter(num_modes)
             d = cp.Parameter()
 
-            F = cp.Parameter(n)
+            F = cp.Parameter(num_modes)
             g = cp.Parameter()
 
-            E = cp.Parameter((n, n))
-            ub = cp.Parameter(n)
-            lb = cp.Parameter(n)
+            E = cp.Parameter((num_modes, num_modes))
+            ub = cp.Parameter(num_modes)
+            lb = cp.Parameter(num_modes)
 
             if trust_region:
                 prob = cp.Problem(
@@ -87,61 +123,25 @@ class PODBackend(Backend):
                 assert prob.is_dcp()
                 return prob, [A, b, c, d, F, g, y], [x]
 
-        phi_return = []
-        phi_inlet = []
-        phi_outlet = []
-        mean_temp_inlet = []
-        mean_temp_outlet = []
-        mean_temp_return = []
-        q_server = []
-        m_server = []
-        sp_crac = []
-        v_crac = []
-
-        # parse the boundary conditions into torch.Tensor format
-        for server_name, server_mesh_indices in object_mesh_index["servers"].items():
-            q_server.append(server_heat_loads[server_name])
-            m_server.append(server_mass_flow_rates[server_name])
-            mean_temp_inlet.append(self.mean_obs[server_mesh_indices["inlet"]])
-            mean_temp_outlet.append(self.mean_obs[server_mesh_indices["outlet"]])
-            phi_inlet.append(used_modes[server_mesh_indices["inlet"], :])
-            phi_outlet.append(used_modes[server_mesh_indices["outlet"], :])
-
-        for crac_name, crac_mesh_indices in object_mesh_index["cracs"].items():
-            mean_temp_return.append(self.mean_obs[crac_mesh_indices["return"]])
-            phi_return.append(used_modes[crac_mesh_indices["return"], :])
-            sp_crac.append(crac_supply_temperature[crac_name])
-            v_crac.append(crac_volume_flow_rate[crac_name])
-
-        q_server = torch.tensor(q_server, dtype=torch.float32)
-        m_server = torch.tensor(m_server, dtype=torch.float32)
-        sp_crac = torch.tensor(sp_crac, dtype=torch.float32)
-        v_crac = torch.tensor(v_crac, dtype=torch.float32)
-        mean_temp_inlet = torch.tensor(mean_temp_inlet, dtype=torch.float32)
-        mean_temp_outlet = torch.tensor(mean_temp_outlet, dtype=torch.float32)
-        mean_temp_return = torch.tensor(mean_temp_return, dtype=torch.float32)
-        phi_inlet = torch.vstack(phi_inlet)
-        phi_outlet = torch.vstack(phi_outlet)
-        phi_return = torch.vstack(phi_return)
-
         # setup problem dimensions
         num_server = phi_inlet.shape[0]
-        n = self.num_modes
+        num_modes = self.num_modes
 
         # server energy balance violation as a second order cone constraint
         A = phi_outlet - phi_inlet
-        b = (mean_temp_outlet - mean_temp_inlet) - q_server / (self.c_p * self.rho_air * m_server)
-        c = torch.zeros(n)
+        b = (mean_temp_outlet - mean_temp_inlet) - server_powers / (self.c_p * self.rho_air * server_volume_flow_rates)
+        c = torch.zeros(num_modes)
         d = torch.linalg.norm(A @ coef_hat.T + b)  # use the GP coarse estimation as initialization
 
         # equality constraint: exact room energy balance
-        F = phi_return * v_crac.view((1, -1))
-        g = q_server.sum() / (self.c_p * self.rho_air) - torch.sum((mean_temp_return - sp_crac) * v_crac)
+        F = phi_return * crac_setpoints.view((1, -1))
+        g = server_powers.sum() / (self.c_p * self.rho_air) - \
+            torch.sum((mean_temp_return - crac_setpoints) * crac_volume_flow_rate)
 
         if coef_std is None:
             # solve the rectification without trust region constraints
-            prob, parameters, variables = make_problem(trust_region=False)
-            layer = CvxpyLayer(prob, parameters, variables)
+            problem, parameters, variables = make_problem(trust_region=False)
+            layer = CvxpyLayer(problem, parameters, variables)
             coef = layer(
                 A, b, c, d, F, g, coef_hat,
             )[0]
@@ -149,12 +149,12 @@ class PODBackend(Backend):
         else:
             # solve the rectification problem with trust region constraints
             beta = 1.0
-            for i in range(20):
+            problem, parameters, variables = make_problem(trust_region=True)
+            layer = CvxpyLayer(problem, parameters, variables)
+            I = torch.eye(num_modes)
+            for i in range(5):
                 upperbound = coef_hat + beta * coef_std
                 lowerbound = coef_hat - beta * coef_std
-                I = torch.eye(n)
-                prob, parameters, variables = make_problem(trust_region=True)
-                layer = CvxpyLayer(prob, parameters, variables)
                 try:
                     coef = layer(
                         A, b, c, d, I, upperbound, lowerbound, F, g, coef_hat,
@@ -162,18 +162,22 @@ class PODBackend(Backend):
                     return coef
                 except Exception:
                     # Here solver error means the trust region is too small
-                    beta *= 2
-            loguru.logger.warning("Local search infeasible. Use GP coarsely estimated POD coefficients instead.")
+                    beta *= 1.1
+            # loguru.logger.warning("Local search infeasible. Use GP coarsely estimated POD coefficients instead.")
             return coef_hat
 
     def _flux_matching(
         self,
-        used_modes: np.ndarray,
-        object_mesh_index: Dict,
-        server_powers: Dict,
-        server_flow_rates: Dict,
-        crac_setpoints: Dict,
-        crac_flow_rates: Dict,
+        server_powers: torch.Tensor,
+        server_volume_flow_rates: torch.Tensor,
+        crac_setpoints: torch.Tensor,
+        crac_volume_flow_rates: torch.Tensor,
+        mean_temp_inlet: torch.Tensor,
+        mean_temp_outlet: torch.Tensor,
+        mean_temp_return: torch.Tensor,
+        phi_inlet: torch.Tensor,
+        phi_outlet: torch.Tensor,
+        phi_return: torch.Tensor,
     ) -> None:
         """
         Implement flux matching based on the paper
@@ -186,42 +190,34 @@ class PODBackend(Backend):
         :param crac_setpoints: the setpoint of the CRACs
         :param crac_flow_rates: the flow rate of the CRACs
         """
-        a, b = [], []
-
-        # map the nearest mesh index for local area, i.e., server inlet/outlet and crac return
-        server_inlet_index = [object_mesh_index["servers"][each]["inlet"] for each in server_powers.keys()]
-        server_outlet_index = [object_mesh_index["servers"][each]["outlet"] for each in server_powers.keys()]
-        crac_return_index = [object_mesh_index["cracs"][each]["return"] for each in crac_setpoints.keys()]
         # select boundary conditions within the air loop
-        all_server_heat_load = np.asarray([server_powers[each] for each in server_powers.keys()])
-        all_server_flow = np.asarray([server_flow_rates[each] for each in server_powers.keys()])
-        phi_server_matrix = used_modes[server_outlet_index, :] - used_modes[server_inlet_index, :]
-        server_array = all_server_heat_load / (self.c_p * self.rho_air * all_server_flow)
-        server_array -= (self.mean_obs[server_outlet_index] - self.mean_obs[server_inlet_index])
+        phi_server_matrix = phi_outlet - phi_inlet
+        server_array = server_powers / (self.c_p * self.rho_air * server_volume_flow_rates)
+        server_array -= (mean_temp_outlet - mean_temp_inlet)
 
-        all_crac_setpoint = np.asarray([crac_setpoints[each] for each in crac_setpoints.keys()])
-        all_crac_flow = np.asarray([crac_flow_rates[each] for each in crac_setpoints.keys()])
-        phi_crac_matrix = np.sum(used_modes[crac_return_index, :] * all_crac_flow.reshape(-1, 1), axis=0).reshape(1, -1)
-        crac_array = np.sum(all_server_heat_load) / (self.c_p * self.rho_air)
-        crac_array -= np.sum((self.mean_obs[crac_return_index] - all_crac_setpoint) * all_crac_flow, axis=0)
-        a.append(np.concatenate([phi_server_matrix, phi_crac_matrix], axis=0))
-        b.append(np.concatenate([server_array, np.array([crac_array])], axis=0))
+        phi_crac_matrix = torch.sum(phi_return * crac_volume_flow_rates.view(-1, 1)).view(1, -1)
+        crac_array = torch.sum(server_powers.sum()) / (self.c_p * self.rho_air)
+        crac_array -= np.sum((mean_temp_return - crac_setpoints) * crac_volume_flow_rates, axis=0)
 
         # assemble all matrices and arrays into a big linear system
-        a = np.concatenate(a, axis=0)
-        b = np.concatenate(b, axis=0)
+        a = torch.cat([phi_server_matrix, phi_crac_matrix], dim=0)
+        b = torch.cat([server_array, crac_array], dim=0)
         assert a.shape[0] > self.num_modes, "equations are fewer than number of coefficients"
         # solve the least square for optimal coefficients
-        self.coefs, _ = np.linalg.lstsq(a, b, rcond=None)[:2]
+        self.coefs, _ = torch.linalg.lstsq(a, b)[:2]
 
     def _gp(
         self,
-        used_modes: torch.Tensor,
-        object_mesh_index: Dict,
-        server_powers: Dict,
-        server_flow_rates: Dict,
-        crac_setpoints: Dict,
-        crac_flow_rates: Dict,
+        server_powers: torch.Tensor,
+        server_volume_flow_rates: torch.Tensor,
+        crac_setpoints: torch.Tensor,
+        crac_volume_flow_rate: torch.Tensor,
+        mean_temp_inlet: torch.Tensor,
+        mean_temp_outlet: torch.Tensor,
+        mean_temp_return: torch.Tensor,
+        phi_inlet: torch.Tensor,
+        phi_outlet: torch.Tensor,
+        phi_return: torch.Tensor,
         local_search: bool = True,
     ) -> None:
         """
@@ -235,37 +231,39 @@ class PODBackend(Backend):
         :param crac_flow_rates: the flow rate of the CRACs
         :param local_search: whether to use local search to find the POD coefficients
         """
-        # compute total heat load and total server flow rate
-        q_server_tot = np.sum(list(server_powers.values()), keepdims=True)
-        m_server_tot = np.sum(list(server_flow_rates.values()), keepdims=True)
 
-        # predict POD coefficients with Gaussian Model
-        bc = np.concatenate(
+        # build the input tensor to the GP model
+        inputs = torch.cat(
             [
-                q_server_tot,
-                m_server_tot,
-                np.asarray(list(crac_setpoints.values())).reshape(-1),
-                np.asarray(list(crac_flow_rates.values())).reshape(-1)
-            ]
-        ).reshape(1, -1)
-        bc_tensor = torch.FloatTensor(bc)
+                server_powers.sum().view(1, -1),
+                server_volume_flow_rates.sum().view(1, -1),
+                crac_setpoints.view(1, -1),
+                crac_volume_flow_rate.view(1, -1)
+            ],
+            dim=1
+        )
+        # predict POD coefficients with Gaussian Model
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
-            dist = self.model(bc_tensor)
+            dist = self.model(inputs)
             prediction = self.likelihood(dist)
             coef = prediction.mean
-            # coef_std = prediction.stddev * self.model.train_y_std
+            coef_std = prediction.stddev * self.model.train_y_std
 
         # physics-guided local search (rectification) on the coarse estimation from GP models
         if local_search:
             self.coefs = self._local_search(
-                used_modes,
-                object_mesh_index,
-                crac_flow_rates,
-                crac_setpoints,
-                server_powers,
-                server_flow_rates,
-                coef,
-                None
+                server_powers=server_powers,
+                server_volume_flow_rates=server_volume_flow_rates,
+                crac_volume_flow_rate=crac_volume_flow_rate,
+                crac_setpoints=crac_setpoints,
+                coef_hat=coef,
+                coef_std=coef_std,
+                mean_temp_inlet=mean_temp_inlet,
+                mean_temp_outlet=mean_temp_outlet,
+                mean_temp_return=mean_temp_return,
+                phi_inlet=phi_inlet,
+                phi_outlet=phi_outlet,
+                phi_return=phi_return,
             )
         else:
             self.coefs = coef
@@ -319,41 +317,50 @@ class PODBackend(Backend):
     def run(
         self,
         object_mesh_index: Dict,
+        server_powers: torch.Tensor,
+        server_volume_flow_rates: torch.Tensor,
+        crac_setpoints: torch.Tensor,
+        crac_volume_flow_rates: torch.Tensor,
         pod_method: str = "GP-Flux",
-        **boundary_conditions
     ) -> np.ndarray:
         """
         Run certain POD coefficient estimation algorithm to predict the temperature field.
-
         :param object_mesh_index: the mesh indices of the CRACs and servers
         :param pod_method: the POD coefficient estimation algorithm
         :param boundary_conditions: the boundary conditions for the temperature field calculation. Boundary conditions
             include server power, server flow rate, CRAC setpoint, and CRAC flow rate.
         """
         assert self.modes is not None, "POD modes are not computed or loaded"
-        used_modes = self.modes[:, :self.num_modes]
+        mode_data = self._prepare_mode_data(object_mesh_index)
         # POD coefficients calculation for a new test case
         if pod_method == "Flux":
             self._flux_matching(
-                used_modes=used_modes,
-                object_mesh_index=object_mesh_index,
-                **boundary_conditions
+                server_powers=server_powers,
+                server_volume_flow_rates=server_volume_flow_rates,
+                crac_setpoints=crac_setpoints,
+                crac_volume_flow_rates=crac_volume_flow_rates,
+                **mode_data
             )
         elif pod_method == "GP":
             self._gp(
-                used_modes=used_modes,
-                object_mesh_index=object_mesh_index,
+                server_powers=server_powers,
+                server_volume_flow_rates=server_volume_flow_rates,
+                crac_setpoints=crac_setpoints,
+                crac_volume_flow_rate=crac_volume_flow_rates,
                 local_search=False,
-                **boundary_conditions
+                **mode_data
             )
         elif pod_method == "GP-Flux":
             self._gp(
-                used_modes=used_modes,
-                object_mesh_index=object_mesh_index,
-                **boundary_conditions
+                server_powers=server_powers,
+                server_volume_flow_rates=server_volume_flow_rates,
+                crac_setpoints=crac_setpoints,
+                crac_volume_flow_rate=crac_volume_flow_rates,
+                local_search=True,
+                **mode_data
             )
         else:
             raise NotImplementedError(f"{pod_method} not implemented")
         # reconstruct temperature field
-        reconstruct = self.mean_obs + torch.matmul(self.coefs, used_modes.T)
+        reconstruct = self.mean_obs + torch.matmul(self.coefs, self.modes[:, :self.num_modes].T)
         return reconstruct
