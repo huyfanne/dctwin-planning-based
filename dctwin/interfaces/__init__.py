@@ -1,9 +1,9 @@
 from gym.envs.registration import register
 from loguru import logger
 
-from .gym_env import BaseEnv, EPlusEnv, CoSimEnv
-from .manager import CFDManager, PODBuilder
-from .adapter import EplusCFDAdapter
+from .gym_envs import BaseEnv, EPlusEnv, CoSimEnv
+from .managers import CFDManager, PODBuilder
+from .adapters import EplusCFDAdapter
 
 
 registry = dict(

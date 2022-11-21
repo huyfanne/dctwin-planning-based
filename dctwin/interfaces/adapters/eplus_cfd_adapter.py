@@ -10,7 +10,7 @@ import torch
 
 from dctwin.utils import config
 
-from dctwin.interfaces.manager import CFDManager
+from dctwin.interfaces.managers import CFDManager
 from dctwin.backends import EplusBackend
 from dctwin.models import Room
 
