@@ -35,7 +35,6 @@ from dctwin.backends.foam.parser import RoomParser
 class CFDManager:
     """
     A manager for the whole CFD simulation for data hall thermal analysis
-
     :param room: room model
     :param mesh_process: number of cores for meshing
     :param solve_process: number of cores for solving
@@ -44,7 +43,6 @@ class CFDManager:
     :param end_time: end time for transient simulation, can be set as 50, 100, 500 etc. Normally 100-500 is enough.
     :param field_config: field configuration for meshing
     :param docker_client: docker client
-
     """
     def __init__(
         self,

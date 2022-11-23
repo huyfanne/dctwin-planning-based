@@ -584,12 +584,27 @@ class IDFParser:
             ) != "EXTERNAL":
                 self._set_observation(observation_config)
 
+    def batch_set_inlet_temperature_schedule(self, env_config: EPlusEnvConfig) -> Optional[List[EPlusActionConfig]]:
+        schedules = []
+        for ite in self.zone_ite_equipments:
+            if ite.air_flow_calculation_method == "flowcontrolwithapproachtemperatures":
+                config = EPlusActionConfig()
+                config.variable_name = f"{ite.name} inlet approached temperature schedule"
+                config.schedule_config.lb = env_config.inlet_appraoched_temp_lb
+                config.schedule_config.ub = env_config.inlet_appraoched_temp_ub
+                config.schedule_config.initial_value = env_config.inlet_appraoched_temp_init
+                config.schedule_config.scheduled_ite_equipment_name = ite.name
+                config.schedule_config.schedule_type = 1
+                self._set_external_schedule(config)
+                schedules.append(config)
+        return schedules if len(schedules) > 0 else None
+
     def batch_set_return_temperature_schedule(self, env_config: EPlusEnvConfig) -> Optional[List[EPlusActionConfig]]:
         schedules = []
         for ite in self.zone_ite_equipments:
             if ite.air_flow_calculation_method == "flowcontrolwithapproachtemperatures":
                 config = EPlusActionConfig()
-                config.variable_name = f"{ite.name} return temperature"
+                config.variable_name = f"{ite.name} return temperature schedule"
                 config.schedule_config.lb = env_config.return_temp_lb
                 config.schedule_config.ub = env_config.return_temp_ub
                 config.schedule_config.initial_value = env_config.return_temp_init
