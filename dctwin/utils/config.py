@@ -24,6 +24,7 @@ class EplusConfig:
         self.engine_config_file: Path = Path(
             os.environ.get("EPLUS_ENGINE_CONFIG", "engine.prototxt")
         )
+        self.case_dir: Path = Path(os.environ.get("EPLUS_OUTPUT_DIR", ""))
 
     def __setattr__(self, __name: str, __value: typing.Any) -> None:
         value = __value
@@ -49,7 +50,7 @@ class CFDConfig:
         self.object_mesh_index: Path = Path(os.environ.get("OBJECT_MESH_INDEX", "object_mesh_index.json"))
         self.pod_dir: Path = Path(os.environ.get("POD_DIR", ""))
         self.num_modes: int = os.environ.get("NUM_MODES", 5)
-
+        self.case_dir: Path = Path(os.environ.get("CFD_CASE_DIR", ""))
         self.file_handler: TextIO = TextIO()
         self.log_handler: csv.DictWriter = csv.DictWriter(
             self.file_handler, fieldnames=["time", "mode", "value"]

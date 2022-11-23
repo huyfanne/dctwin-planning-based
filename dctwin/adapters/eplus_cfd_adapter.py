@@ -70,16 +70,16 @@ class EplusCFDAdapter:
 
     def _pre_process(self, episode_idx: int = 0) -> None:
         """ create case directory and backup model files"""
-        config.CASE_DIR = Path(config.LOG_DIR).joinpath(
+        config.cfd.case_dir = Path(config.LOG_DIR).joinpath(
             "cfd_output", f"episode-{episode_idx}"
         )
-        Path(config.CASE_DIR).mkdir(exist_ok=True, parents=True)
-        room_path = Path(config.CASE_DIR).joinpath(config.cfd.geometry_file.name)
-        idf2room_path = Path(config.CASE_DIR).joinpath(config.co_sim.idf2room_map.name)
+        Path(config.cfd.case_dir).mkdir(exist_ok=True, parents=True)
+        room_path = Path(config.cfd.case_dir).joinpath(config.cfd.geometry_file.name)
+        idf2room_path = Path(config.cfd.case_dir).joinpath(config.co_sim.idf2room_map.name)
         shutil.copy(config.cfd.geometry_file, room_path)
         shutil.copy(config.co_sim.idf2room_map, idf2room_path)
         # init log file for cfd results
-        filename = Path(config.CASE_DIR).joinpath('cfd_log.csv')
+        filename = Path(config.cfd.case_dir).joinpath('cfd_log.csv')
         config.cfd.file_handler = open(filename, "wt")
         config.cfd.log_handler = csv.DictWriter(
             config.cfd.file_handler,

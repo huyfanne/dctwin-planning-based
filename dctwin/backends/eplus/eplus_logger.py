@@ -13,7 +13,6 @@ class EPlusOutputFormatter:
     @classmethod
     def group_into_csv(cls, episode_dir: str) -> None:
         file_csv = episode_dir + '/eplusout.csv'
-        file_csv_gz = episode_dir + '/eplusout.csv.gz'
         # file_err = episode_dir + '/eplusout.err'
         # files_to_preserve ['eplusout.csv', 'eplusout.err', 'eplustbl.htm']
         files_to_clean = ['eplusmtr.csv', 'eplusout.audit', 'eplusout.bnd',
@@ -21,7 +20,8 @@ class EPlusOutputFormatter:
                           'eplusout.end', 'eplusout.eso', 'eplusout.mdd',
                           'eplusout.mtd', 'eplusout.mtr', 'eplusout.rdd',
                           'eplusout.rvaudit', 'eplusout.shd', 'eplusssz.csv',
-                          'epluszsz.csv', 'sqlite.err']
+                          'epluszsz.csv', 'sqlite.err', 'eplusout.dbg', 'eplustbl.htm'
+                          ]
 
         # Check for any severe error
         # num_errors = cls._count_severe_errors(file_err)
@@ -32,16 +32,17 @@ class EPlusOutputFormatter:
 
         # Compress csv file and remove unnecessary files
         # If csv file is not present in some reason, preserve all other files for inspection
-        if os.path.isfile(file_csv):
-            with open(file_csv, 'rb') as f_in:
-                with gzip.open(file_csv_gz, 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-            os.remove(file_csv)
+        for file in files_to_clean:
+            file_path = episode_dir + '/' + file
+            if os.path.isfile(file_path):
+                os.remove(file_path)
 
-            for file in files_to_clean:
-                file_path = episode_dir + '/' + file
-                if os.path.isfile(file_path):
-                    os.remove(file_path)
+        assert os.path.isfile(file_csv), 'eplusout.csv not found!'
+        # if os.path.isfile(file_csv):
+        #     with open(file_csv, 'rb') as f_in:
+        #         with gzip.open(file_csv_gz, 'wb') as f_out:
+        #             shutil.copyfileobj(f_in, f_out)
+        #     os.remove(file_csv)
 
     @classmethod
     def _count_severe_errors(cls, file : str) -> int:
