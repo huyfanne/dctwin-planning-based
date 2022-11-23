@@ -213,6 +213,8 @@ class EplusCFDAdapter:
 
         # compute server power and volumetric flow rate
         for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
+            assert len(self.idf2room_mapper[it_equipment.name]["servers"]) == self.eplus_manager.idf_parser.number_of_units[it_equipment.name], \
+                "The number of servers in the room should be equal to the number of units in the idf file."
             for server_id in self.idf2room_mapper[it_equipment.name]["servers"]:
                 # The calculation assumes that the servers are homogeneous and use the same curve
                 # parameters for power and flow rate models.
