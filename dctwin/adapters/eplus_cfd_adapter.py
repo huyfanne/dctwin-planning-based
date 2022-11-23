@@ -47,7 +47,7 @@ class EplusCFDAdapter:
         pod_method: str = "GP",
         docker_client: docker.DockerClient = None,
     ) -> None:
-        
+
         self.cfd_manager = CFDManager(
             room=room,
             mesh_process=mesh_process,
@@ -234,16 +234,21 @@ class EplusCFDAdapter:
         boundary_conditions = self._scale_server_flow_rate(boundary_conditions=boundary_conditions)
         return boundary_conditions
 
-    def _compute_equivalent_inlet_temperature(self, utilization: float, total_server_power: float) -> List[float]:
+    def _compute_equivalent_delta_inlet_temperature(
+        self,
+        parsed_actions: Dict,
+        total_server_power: float
+    ) -> List[float]:
         server_inlet_temps = []
         for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
             equation = self.eplus_manager.idf_parser.compute_server_power(
-                utilization=utilization,
+                utilization=parsed_actions["cpu_loading_schedule"],
                 inlet_temperature=symbols("inlet_temperature", positive=True),
                 name=it_equipment.name,
-            ) - total_server_power
+            ) - total_server_power / len(self.idf2room_mapper[it_equipment.name]["servers"])
             inlet_temp = solve(equation)
-            server_inlet_temps += inlet_temp
+            uid = self.idf2room_mapper[it_equipment.name]["crac"]
+            server_inlet_temps += inlet_temp - parsed_actions[f"{uid}_setpoint"]
         return server_inlet_temps
 
     def send_action(self, parsed_actions) -> None:
@@ -267,14 +272,18 @@ class EplusCFDAdapter:
             temperature=temperature,
             **boundary_conditions
         )
-        inlet_temperatures = self._compute_equivalent_inlet_temperature(
-            utilization=parsed_actions["cpu_loading_schedule"],
+        inlet_temperatures = self._compute_equivalent_delta_inlet_temperature(
+            parsed_actions=parsed_actions,
             total_server_power=total_server_power,
         )
         # add two approach temperatures (a.k.a. return temperature actually) to the end of the raw action array
         send_actions = []
         for value in parsed_actions.values():
             send_actions.append(value)
+        if inlet_temperatures is not None:
+            send_actions += inlet_temperatures
+        else:
+            send_actions += [0.0]
         send_actions += inlet_temperatures
         send_actions += return_temp
         # send raw action array to Eplus to proceed the energy simulation
