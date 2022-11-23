@@ -239,17 +239,20 @@ class EplusCFDAdapter:
         parsed_actions: Dict,
         total_server_power: float
     ) -> List[float]:
-        server_inlet_temps = []
+        delta_inlet_temps, delta = [], 0
         for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
             equation = self.eplus_manager.idf_parser.compute_server_power(
                 utilization=parsed_actions["cpu_loading_schedule"],
                 inlet_temperature=symbols("inlet_temperature", positive=True),
                 name=it_equipment.name,
             ) - total_server_power / len(self.idf2room_mapper[it_equipment.name]["servers"])
-            inlet_temp = solve(equation)
+            inlet_temp_list = solve(equation)
             uid = self.idf2room_mapper[it_equipment.name]["crac"]
-            server_inlet_temps.append(inlet_temp[0] - parsed_actions[f"{uid}_setpoint"])
-        return server_inlet_temps
+            for value in inlet_temp_list:
+                if value > parsed_actions[f"{uid}_setpoint"]:
+                    delta = value - parsed_actions[f"{uid}_setpoint"]
+            delta_inlet_temps.append(delta)
+        return delta_inlet_temps
 
     def send_action(self, parsed_actions) -> None:
         """
