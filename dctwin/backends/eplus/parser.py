@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from sympy import Symbol
+
 from dctwin.utils import (
     EPlusActionConfig,
     EPlusObservationConfig,
@@ -288,7 +290,7 @@ class IDFParser:
     def _fun_power_as_load_temp(
         self,
         cpu_loading: Union[float, np.ndarray],
-        server_inlet_temperature: Union[float, np.ndarray],
+        server_inlet_temperature: Union[float, np.ndarray, Symbol],
         name: str
     ) -> Union[float, np.ndarray]:
         """
@@ -307,19 +309,20 @@ class IDFParser:
         min_factor = self.power_as_load_temp_parameter[name][10]
         max_factor = self.power_as_load_temp_parameter[name][11]
         cpu_loading = np.clip(cpu_loading, min_x, max_x)
-        server_inlet_temperature = np.clip(server_inlet_temperature, min_y, max_y)
+        if not isinstance(server_inlet_temperature, Symbol):
+            server_inlet_temperature = np.clip(server_inlet_temperature, min_y, max_y)
         factor = constant + \
                  cpu_loading * coef_cpu + \
                  cpu_loading ** 2 * coef_cpu_squre + \
                  server_inlet_temperature * coef_in_temp + \
                  server_inlet_temperature ** 2 * coef_in_temp_squre + \
                  cpu_loading * server_inlet_temperature * coef_cross
-        return np.clip(factor, min_factor, max_factor)
+        return np.clip(factor, min_factor, max_factor) if not isinstance(factor, Symbol) else factor
 
     def _fun_flow_as_load_temp(
         self,
         cpu_loading: Union[float, np.ndarray],
-        server_inlet_temperature: Union[float, np.ndarray],
+        server_inlet_temperature: Union[float, np.ndarray, Symbol],
         name: str
     ) -> Union[float, np.ndarray]:
         """
@@ -338,14 +341,15 @@ class IDFParser:
         min_factor = self.flow_as_load_temp_parameter[name][10]
         max_factor = self.flow_as_load_temp_parameter[name][11]
         cpu_loading = np.clip(cpu_loading, min_x, max_x)
-        server_inlet_temperature = np.clip(server_inlet_temperature, min_y, max_y)
+        if not isinstance(server_inlet_temperature, Symbol):
+            server_inlet_temperature = np.clip(server_inlet_temperature, min_y, max_y)
         factor = constant + \
                  cpu_loading * coef_cpu + \
                  cpu_loading ** 2 * coef_cpu_squre + \
                  server_inlet_temperature * coef_in_temp + \
                  server_inlet_temperature ** 2 * coef_in_temp_squre + \
                  cpu_loading * server_inlet_temperature * coef_cross
-        return np.clip(factor, min_factor, max_factor)
+        return np.clip(factor, min_factor, max_factor) if not isinstance(factor, Symbol) else factor
 
     def _fun_power_as_flow(
         self,
@@ -513,7 +517,7 @@ class IDFParser:
     def _compute_cpu_power(
         self,
         utilization: Union[float, np.ndarray],
-        inlet_temperature: Union[float, np.ndarray],
+        inlet_temperature: Union[float, np.ndarray, Symbol],
         name: str,
     ) -> Union[float, np.ndarray]:
         """
@@ -531,7 +535,7 @@ class IDFParser:
     def _compute_fan_power(
         self,
         utilization: Union[float, np.ndarray],
-        inlet_temperature: Union[float, np.ndarray],
+        inlet_temperature: Union[float, np.ndarray, Symbol],
         name: str,
     ) -> Union[float, np.ndarray]:
         """
@@ -618,7 +622,7 @@ class IDFParser:
     def compute_server_power(
         self,
         utilization: Union[float, np.ndarray],
-        inlet_temperature: Optional[Union[float, np.ndarray]],
+        inlet_temperature: Optional[Union[float, np.ndarray, Symbol]],
         name: str,
     ) -> np.ndarray:
         """
