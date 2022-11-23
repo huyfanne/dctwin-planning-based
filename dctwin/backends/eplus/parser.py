@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sympy import Symbol
+from sympy import Symbol, Add
 
 from dctwin.utils import (
     EPlusActionConfig,
@@ -317,7 +317,7 @@ class IDFParser:
                  server_inlet_temperature * coef_in_temp + \
                  server_inlet_temperature ** 2 * coef_in_temp_squre + \
                  cpu_loading * server_inlet_temperature * coef_cross
-        return np.clip(factor, min_factor, max_factor) if not isinstance(factor, Symbol) else factor
+        return np.clip(factor, min_factor, max_factor) if not isinstance(factor, Add) else factor
 
     def _fun_flow_as_load_temp(
         self,
@@ -349,7 +349,7 @@ class IDFParser:
                  server_inlet_temperature * coef_in_temp + \
                  server_inlet_temperature ** 2 * coef_in_temp_squre + \
                  cpu_loading * server_inlet_temperature * coef_cross
-        return np.clip(factor, min_factor, max_factor) if not isinstance(factor, Symbol) else factor
+        return np.clip(factor, min_factor, max_factor) if not isinstance(factor, Add) else factor
 
     def _fun_power_as_flow(
         self,
