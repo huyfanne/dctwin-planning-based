@@ -248,7 +248,7 @@ class EplusCFDAdapter:
             ) - total_server_power / len(self.idf2room_mapper[it_equipment.name]["servers"])
             inlet_temp = solve(equation)
             uid = self.idf2room_mapper[it_equipment.name]["crac"]
-            server_inlet_temps += inlet_temp - parsed_actions[f"{uid}_setpoint"]
+            server_inlet_temps.append(inlet_temp[0] - parsed_actions[f"{uid}_setpoint"])
         return server_inlet_temps
 
     def send_action(self, parsed_actions) -> None:
