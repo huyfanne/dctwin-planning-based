@@ -11,7 +11,7 @@ from typing import (
 )
 
 from pathlib import Path
-from dctwin.interfaces.adapter import EplusCFDAdapter
+from dctwin.interfaces.adapters import EplusCFDAdapter
 from dctwin.utils import CoSimEnvConfig
 from dctwin.utils import config as cosim_env
 from dctwin.models import Room
