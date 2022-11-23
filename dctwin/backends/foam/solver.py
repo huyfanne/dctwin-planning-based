@@ -68,7 +68,7 @@ class Builder:
     def render(self, filename, internal_field=None) -> None:
         acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_list)
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_list)
-        with open(Path(config.CASE_DIR, f"0/{filename}"), "w") as f:
+        with open(Path(config.cfd.case_dir, f"0/{filename}"), "w") as f:
             f.write(
                 template_env.get_template(f"0/{filename}.j2").render(
                     init_temperature=24 + 273.15,
@@ -123,7 +123,7 @@ class SolverBackend(Backend):
     @classmethod
     def probe_result(cls) -> list:
         results = []
-        with open(f"{config.CASE_DIR}/postProcessing/probes/0/T") as f:
+        with open(f"{config.cfd.case_dir}/postProcessing/probes/0/T") as f:
             for i in f:
                 if i.startswith("#"):
                     continue
@@ -149,16 +149,16 @@ class SolverBackend(Backend):
         if process_num is not None:
             self.process_num = process_num
 
-        if config.cfd.mesh_dir != Path("") and config.CASE_DIR != Path(""):
-            config.CASE_DIR.mkdir(parents=True, exist_ok=True)
-            config.CASE_DIR = Path(config.CASE_DIR).absolute()
-            if not Path(f"{config.CASE_DIR}/0").exists():
-                shutil.copytree(f"{config.cfd.mesh_dir}/0", f"{config.CASE_DIR}/0")
-            if not Path(f"{config.CASE_DIR}/constant").exists():
-                shutil.copytree(f"{config.cfd.mesh_dir}/constant", f"{config.CASE_DIR}/constant")
-            if not Path(f"{config.CASE_DIR}/system").exists():
-                shutil.copytree(f"{config.cfd.mesh_dir}/system", f"{config.CASE_DIR}/system")
-            Path(config.CASE_DIR, "case.foam").touch(exist_ok=True)
+        if config.cfd.mesh_dir != Path("") and config.cfd.case_dir != Path(""):
+            config.cfd.case_dir.mkdir(parents=True, exist_ok=True)
+            config.cfd.case_dir = Path(config.cfd.case_dir).absolute()
+            if not Path(f"{config.cfd.case_dir}/0").exists():
+                shutil.copytree(f"{config.cfd.mesh_dir}/0", f"{config.cfd.case_dir}/0")
+            if not Path(f"{config.cfd.case_dir}/constant").exists():
+                shutil.copytree(f"{config.cfd.mesh_dir}/constant", f"{config.cfd.case_dir}/constant")
+            if not Path(f"{config.cfd.case_dir}/system").exists():
+                shutil.copytree(f"{config.cfd.mesh_dir}/system", f"{config.cfd.case_dir}/system")
+            Path(config.cfd.case_dir, "case.foam").touch(exist_ok=True)
             time.sleep(1)
 
         if write_interval is not None:
