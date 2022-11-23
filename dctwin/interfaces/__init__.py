@@ -6,8 +6,8 @@ from .managers import CFDManager, PODBuilder
 
 
 registry = dict(
-    eplus_env_config=('EplusEnv-v0', 'dctwin.interfaces.gym_env.eplus_env:EPlusEnv'),
-    cosim_env_config=('CoSimEnv-v0', 'dctwin.interfaces.gym_env.cosim_env:CoSimEnv'),
+    eplus_env_config=('EplusEnv-v0', 'dctwin.interfaces.gym_envs.eplus_env:EPlusEnv'),
+    cosim_env_config=('CoSimEnv-v0', 'dctwin.interfaces.gym_envs.cosim_env:CoSimEnv'),
 )
 
 for env_id, entry_point in registry.values():
