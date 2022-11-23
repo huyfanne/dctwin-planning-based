@@ -275,7 +275,7 @@ class EplusCFDAdapter:
             temperature=temperature,
             **boundary_conditions
         )
-        inlet_temperatures = self._compute_equivalent_delta_inlet_temperature(
+        delta_inlet_temperatures = self._compute_equivalent_delta_inlet_temperature(
             parsed_actions=parsed_actions,
             total_server_power=total_server_power,
         )
@@ -283,11 +283,10 @@ class EplusCFDAdapter:
         send_actions = []
         for value in parsed_actions.values():
             send_actions.append(value)
-        if inlet_temperatures is not None:
-            send_actions += inlet_temperatures
+        if delta_inlet_temperatures is not None:
+            send_actions += delta_inlet_temperatures
         else:
             send_actions += [0.0]
-        send_actions += inlet_temperatures
         send_actions += return_temp
         # send raw action array to Eplus to proceed the energy simulation
         self.eplus_manager.send_action(send_actions)
