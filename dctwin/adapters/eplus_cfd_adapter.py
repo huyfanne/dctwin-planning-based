@@ -236,12 +236,12 @@ class EplusCFDAdapter:
         boundary_conditions = self._scale_server_flow_rate(boundary_conditions=boundary_conditions)
         return boundary_conditions
 
-    def _compute_equivalent_delta_inlet_temperature(
+    def _compute_equivalent_inlet_temperature(
         self,
         parsed_actions: Dict,
         total_server_power: float
     ) -> List[float]:
-        delta_inlet_temps, delta = [], 0
+        server_inlet_temps, server_inlet_temp = [], 0
         for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
             equation = self.eplus_manager.idf_parser.compute_server_power(
                 utilization=parsed_actions["cpu_loading_schedule"],
@@ -252,9 +252,9 @@ class EplusCFDAdapter:
             uid = self.idf2room_mapper[it_equipment.name]["crac"]
             for value in inlet_temp_list:
                 if value > parsed_actions[f"{uid}_setpoint"]:
-                    delta = value - parsed_actions[f"{uid}_setpoint"]
-            delta_inlet_temps.append(delta)
-        return delta_inlet_temps
+                    server_inlet_temp = value
+            server_inlet_temps.append(server_inlet_temp)
+        return server_inlet_temps
 
     def send_action(self, parsed_actions) -> None:
         """
@@ -277,7 +277,7 @@ class EplusCFDAdapter:
             temperature=temperature,
             **boundary_conditions
         )
-        delta_inlet_temperatures = self._compute_equivalent_delta_inlet_temperature(
+        delta_inlet_temperatures = self._compute_equivalent_inlet_temperature(
             parsed_actions=parsed_actions,
             total_server_power=total_server_power,
         )
