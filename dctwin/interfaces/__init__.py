@@ -3,7 +3,6 @@ from loguru import logger
 
 from .gym_envs import BaseEnv, EPlusEnv, CoSimEnv
 from .managers import CFDManager, PODBuilder
-from .adapters import EplusCFDAdapter
 
 
 registry = dict(
@@ -32,6 +31,5 @@ __all__ = [
     "EPlusEnv",
     "CoSimEnv",
     "CFDManager",
-    "EplusCFDAdapter",
     "PODBuilder",
 ]
