@@ -243,7 +243,7 @@ class PODBackend(Backend):
             dim=1
         )
         # predict POD coefficients with Gaussian Model
-        with torch.no_grad(), gpytorch.settings.fast_pred_var():
+        with gpytorch.settings.fast_pred_var():
             dist = self.model(inputs)
             prediction = self.likelihood(dist)
             coef = prediction.mean

@@ -9,6 +9,7 @@ from typing import List, Tuple, Union, Optional
 import xml.etree.ElementTree as ET
 
 from docker import DockerClient
+from docker.errors import ContainerError
 from loguru import logger
 from dctwin.utils import EPlusEnvConfig
 from dctwin.backends.eplus.eplus_logger import EPlusOutputFormatter
@@ -83,9 +84,60 @@ class EplusBackend(Backend):
         _ = ET.SubElement(ipc, 'socket', {'port': str(port), 'hostname': host})
         tree = ET.ElementTree(top)
         ET.indent(tree, space="\t", level=0)
-        with open(config.CASE_DIR.joinpath("socket.cfg"), 'wb') as f:
+        with open(config.eplus.case_dir.joinpath("socket.cfg"), 'wb') as f:
             f.write('<?xml version="1.0" encoding="ISO-8859-1"?>\n'.encode("ISO-8859-1"))
             tree.write(f)
+
+    def run_container(
+        self,
+        environment: dict = None,
+        auto_remove: bool = True,
+        user: int = None,
+        working_dir: str = None,
+        stream: bool = False,
+        command: list = None,
+        background: bool = False,
+        **kwargs,
+    ) -> None:
+        command = self.command if command is None else command
+        logger.info(f"docker mount: {config.eplus.case_dir}")
+        logger.info("docker run: " + (" ".join(command)))
+        self.check_image()
+        try:
+            self.client.close()
+            self.container = self.client.containers.run(
+                self.docker_image,
+                command=command,
+                auto_remove=auto_remove,
+                volumes={
+                    str(config.eplus.case_dir): {
+                        "bind": self.volume_data_dir,
+                        "mode": "rw",
+                    },
+                    "/etc/passwd": {
+                        "bind": "/etc/passwd",
+                        "mode": "ro",
+                    },
+                },
+                user=user,
+                environment=environment,
+                working_dir=working_dir
+                if working_dir is not None else self.volume_data_dir,
+                detach=True,
+                **kwargs,
+            )
+            if background:
+                return None
+            output_stream = self.container.logs(stream=True, follow=True)
+            if stream:
+                return output_stream
+            else:
+                for log in output_stream:
+                    if config.BACKEND_LOG_PRINT:
+                        logger.info(log.decode("utf-8").strip())
+        except ContainerError as e:
+            logger.info(str(e.stderr))
+            raise e
 
     def run(self, episode_idx: int = 0) -> Tuple[Union[float, None], Union[float, None]]:
         self._pre_process(episode_idx)
@@ -124,22 +176,22 @@ class EplusBackend(Backend):
         self.idf_parser.save_cfg_xml(
             observation_configs=self._proto_config.observations,
             action_configs=self._proto_config.actions,
-            save_path=config.CASE_DIR.joinpath("variables.cfg"),
+            save_path=config.eplus.case_dir.joinpath("variables.cfg"),
             schedule_configs=schedule_configs,
         )
 
     def _pre_process(self, episode_idx: int = 0) -> None:
         # create case folder
-        config.CASE_DIR = Path(config.LOG_DIR).joinpath(
-            f"eplus_output/episode_{episode_idx}"
+        config.eplus.case_dir = Path(config.LOG_DIR).joinpath(
+            f"eplus_output/episode-{episode_idx}"
         )
-        Path(config.CASE_DIR).mkdir(parents=True, exist_ok=True)
+        Path(config.eplus.case_dir).mkdir(parents=True, exist_ok=True)
         # copy idf and weather files to the CASE folder
         if config.eplus.idf_file.exists() and config.eplus.weather_file.exists():
-            weather_path = Path(config.CASE_DIR).joinpath(
+            weather_path = Path(config.eplus.case_dir).joinpath(
                 config.eplus.weather_file.name
             )
-            idf_path = Path(config.CASE_DIR).joinpath(
+            idf_path = Path(config.eplus.case_dir).joinpath(
                 config.eplus.idf_file.name
             )
             shutil.copy(config.eplus.idf_file, idf_path)
@@ -159,9 +211,9 @@ class EplusBackend(Backend):
         """process the output of the energyplus simulation"""
         time.sleep(10)
         try:
-            EPlusOutputFormatter.group_into_csv(str(config.CASE_DIR))
+            EPlusOutputFormatter.group_into_csv(str(config.eplus.case_dir))
         except FileNotFoundError:
-            logger.exception(f"Failed to clean output dir {config.CASE_DIR}")
+            logger.info(f"Failed to clean output dir {config.eplus.case_dir}")
 
     def _run_backend(self) -> Tuple[Union[float, None], Union[float, None]]:
         self.run_container(
@@ -247,7 +299,6 @@ class EplusBackend(Backend):
 
     def close(self) -> None:
         self.send_action([])
-        self.container.stop()
         self._post_process()
 
     def __del__(self) -> None:
