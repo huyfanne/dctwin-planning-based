@@ -244,14 +244,14 @@ class CFDManager:
             self.solve(dry_run=dry_run, stream=False)
             if save_boundary_conditions:
                 save_json_file(
-                    path=config.CASE_DIR.joinpath("boundary_conditions.json"),
+                    path=config.cfd.case_dir.joinpath("boundary_conditions.json"),
                     saved_dict=boundary_conditions,
                 )
-            self.last_state_case = config.CASE_DIR.joinpath(str(self.end_time)) \
+            self.last_state_case = config.cfd.case_dir.joinpath(str(self.end_time)) \
                 if not self.steady else None
-            results = read_temperature(config.CASE_DIR, str(self.end_time))
+            results = read_temperature(config.cfd.case_dir, str(self.end_time))
 
             if not config.PRESERVE_FOAM_LOG and not run_mesh and not run_geometry:
-                shutil.rmtree(config.CASE_DIR)
+                shutil.rmtree(config.cfd.case_dir)
 
         return results
