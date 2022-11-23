@@ -168,9 +168,13 @@ class EplusBackend(Backend):
         self.idf_parser.batch_set_observations(observation_configs)
         self.idf_parser.set_simulation_time(self._proto_config.simulation_time_config)
         self.idf_parser.set_external_interface()
-        schedule_configs = self.idf_parser.batch_set_return_temperature_schedule(
+        inlet_schedule_configs = self.idf_parser.batch_set_inlet_temperature_schedule(
+            env_config=self._proto_config
+        )
+        ret_schedule_configs = self.idf_parser.batch_set_return_temperature_schedule(
             env_config=self._proto_config,
         )
+        schedule_configs = inlet_schedule_configs + ret_schedule_configs
         self.idf_parser.save(save_path=str(idf_path))
         logger.info("Generating BCVTB Config ...")
         self.idf_parser.save_cfg_xml(

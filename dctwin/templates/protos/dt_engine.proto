@@ -146,13 +146,16 @@ message EPlusEnvConfig {
   repeated EPlusObservationConfig observations = 9;
   optional bool use_unnormed_obs = 10 [default = false];
 
-  optional float return_temp_lb = 11; // used for co-simulation
-  optional float return_temp_ub = 12;
-  optional float return_temp_init = 13;
-  optional string host = 14 [default = "localhost"];
-  optional string network = 15 [default = "host"];
+  required float return_temp_lb = 11; // used for co-simulation
+  required float return_temp_ub = 12;
+  required float return_temp_init = 13;
+  required float inlet_appraoched_temp_lb = 14;
+  required float inlet_appraoched_temp_ub = 15;
+  required float inlet_appraoched_temp_init = 16;
 
-  optional EnvParams env_params = 16;
+  optional string host = 17 [default = "localhost"];
+  optional string network = 18 [default = "host"];
+  optional EnvParams env_params = 19;
 }
 
 message EnvParams{
