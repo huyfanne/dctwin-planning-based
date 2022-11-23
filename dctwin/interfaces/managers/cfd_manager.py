@@ -249,7 +249,7 @@ class CFDManager:
                 if not self.steady else None
             results = read_temperature(config.cfd.case_dir, str(self.end_time))
 
-            if not config.PRESERVE_FOAM_LOG and not run_mesh and not run_geometry:
+            if not config.cfd.PRESERVE_FOAM_LOG and not run_mesh and not run_geometry:
                 shutil.rmtree(config.cfd.case_dir)
 
         return results

@@ -5,7 +5,7 @@ import docker
 import numpy as np
 from typing import Dict, Tuple, Any, Union, List
 from pathlib import Path
-
+from sympy import symbols, solve
 import torch
 
 from dctwin.utils import config
@@ -103,7 +103,7 @@ class EplusCFDAdapter:
         crac_setpoints: Dict,
         crac_volume_flow_rates: Dict,
         log_to_csv: bool = True
-    ) -> Tuple[list[Any], list[Any]]:
+    ) -> Tuple[list[Any], list[Any], float]:
         """Post-processing to collect sensor observation, server inlet temperature
         and CRAC return temperature
         """
@@ -152,7 +152,7 @@ class EplusCFDAdapter:
             config.cfd.log_handler.writerow(cfd_log_dict)
             config.cfd.file_handler.flush()
 
-        return cfd_sensor_obs_list, return_temps
+        return cfd_sensor_obs_list, return_temps, total_server_powers
 
     def _scale_server_flow_rate(
         self,
@@ -186,7 +186,7 @@ class EplusCFDAdapter:
             episode_idx=episode_idx,
             **init_boundary_condition
         )
-        self.cfd_sensor_obs, return_temp = self._post_processing(
+        self.cfd_sensor_obs, return_temp, _ = self._post_processing(
             temperature=cfd_obs,
             **init_boundary_condition
         )
@@ -234,6 +234,18 @@ class EplusCFDAdapter:
         boundary_conditions = self._scale_server_flow_rate(boundary_conditions=boundary_conditions)
         return boundary_conditions
 
+    def _compute_equivalent_inlet_temperature(self, utilization: float, total_server_power: float) -> List[float]:
+        server_inlet_temps = []
+        for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
+            equation = self.eplus_manager.idf_parser.compute_server_power(
+                utilization=utilization,
+                inlet_temperature=symbols("inlet_temperature", positive=True),
+                name=it_equipment.name,
+            ) - total_server_power
+            inlet_temp = solve(equation)
+            server_inlet_temps += inlet_temp
+        return server_inlet_temps
+
     def send_action(self, parsed_actions) -> None:
         """
         Run simulation with hybrid environment. The data hall simulation is
@@ -251,14 +263,19 @@ class EplusCFDAdapter:
             **boundary_conditions
         )
         # post-processing CFD/POD simulation result to obtain return temperature
-        self.cfd_sensor_obs, return_temp = self._post_processing(
+        self.cfd_sensor_obs, return_temp, total_server_power = self._post_processing(
             temperature=temperature,
             **boundary_conditions
+        )
+        inlet_temperatures = self._compute_equivalent_inlet_temperature(
+            utilization=parsed_actions["cpu_loading_schedule"],
+            total_server_power=total_server_power,
         )
         # add two approach temperatures (a.k.a. return temperature actually) to the end of the raw action array
         send_actions = []
         for value in parsed_actions.values():
             send_actions.append(value)
+        send_actions += inlet_temperatures
         send_actions += return_temp
         # send raw action array to Eplus to proceed the energy simulation
         self.eplus_manager.send_action(send_actions)

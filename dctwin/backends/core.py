@@ -62,7 +62,7 @@ class Backend(abc.ABC):
         **kwargs,
     ) -> None:
         command = self.command if command is None else command
-        logger.info(f"docker mount: {config.CASE_DIR}")
+        logger.info(f"docker mount: {config.cfd.case_dir}")
         logger.info("docker run: " + (" ".join(command)))
         self.check_image()
         try:
@@ -72,7 +72,7 @@ class Backend(abc.ABC):
                 command=command,
                 auto_remove=auto_remove,
                 volumes={
-                    str(config.CASE_DIR): {
+                    str(config.cfd.case_dir): {
                         "bind": self.volume_data_dir,
                         "mode": "rw",
                     },

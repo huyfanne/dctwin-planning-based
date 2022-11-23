@@ -18,7 +18,7 @@ import fluidfoam
 def read_boundary_conditions(
     room: Room,
 ) -> np.ndarray:
-    subfolders = [f for f in Path(config.CASE_DIR).iterdir() if f.is_dir()]
+    subfolders = [f for f in Path(config.cfd.case_dir).iterdir() if f.is_dir()]
     num_cracs = len(room.objects.acus)
     boundary_conditions = np.zeros((len(subfolders), 2 * num_cracs + 2))
     for idx, subfolder in enumerate(sorted(subfolders, key=lambda x: int(x.name.split("-")[-1]))):
@@ -71,7 +71,7 @@ def read_temperature(solution_dir: Path, end_time: str = "500"):
 
 
 def read_temperature_fields(end_time: str = "500") -> np.ndarray:
-    subfolders = [f for f in config.CASE_DIR.iterdir() if f.is_dir()]
+    subfolders = [f for f in config.cfd.case_dir.iterdir() if f.is_dir()]
     temperatures = []
     for subfloder in sorted(subfolders, key=lambda x: int(x.name.split("-")[-1])):
         try:
@@ -141,17 +141,17 @@ def check_base_dir(case_idx: int,  episode_idx: int = None) -> Tuple[bool, bool]
         assert Path.exists(base_case_path), "mesh directory not exists"
         run_geometry, run_mesh, mesh_path = False, False, base_case_path
         if episode_idx is None:
-            config.CASE_DIR = Path(config.LOG_DIR).joinpath(
+            config.cfd.case_dir = Path(config.LOG_DIR).joinpath(
                 f"simulation-{case_idx}"
             )
         else:
-            config.CASE_DIR = Path(config.LOG_DIR).joinpath(
+            config.cfd.case_dir = Path(config.LOG_DIR).joinpath(
                 "cfd_output", f"episode-{episode_idx}", f"simulation-{case_idx}"
             )
     else:
         run_geometry, run_mesh = True, True
-        config.CASE_DIR = Path(config.LOG_DIR).joinpath("base")
-        config.cfd.mesh_dir = config.CASE_DIR
+        config.cfd.case_dir = Path(config.LOG_DIR).joinpath("base")
+        config.cfd.mesh_dir = config.cfd.case_dir
     return run_geometry, run_mesh
 
 

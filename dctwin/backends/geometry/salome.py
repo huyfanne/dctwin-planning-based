@@ -30,7 +30,7 @@ class SalomeBackend(Backend):
 
     def _pre_process(self, room: Room):
         """Prepare files needed"""
-        config.CASE_DIR.mkdir(parents=True, exist_ok=True)
+        config.cfd.case_dir.mkdir(parents=True, exist_ok=True)
         config.geometry_dir.mkdir(parents=True, exist_ok=True)
 
         geometry_script = Path(config.geometry_dir, "geometry_script.py")
