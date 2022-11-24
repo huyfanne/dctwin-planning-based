@@ -221,14 +221,15 @@ class CFDManager:
             )
         else:
             # use full-fledged CFD simulation
-            run_geometry, run_mesh = check_base_dir(
+            run_geometry, run_mesh, run_solver = check_base_dir(
                 episode_idx=episode_idx,
                 case_idx=case_idx,
+                dry_run=config.cfd.dry_run,
             )
             if run_geometry:
-                self.build_geometry(dry_run=dry_run)
+                self.build_geometry()
             if run_mesh:
-                self.mesh(dry_run=dry_run)
+                self.mesh()
                 if save_mesh_index and self.object_mesh_index is None:
                     self.object_mesh_index = calc_object_mesh_index(
                         room=self.room, mesh_points=read_mesh_coordinates(),
@@ -239,7 +240,7 @@ class CFDManager:
                     )
             if boundary_conditions:
                 self.parser.update_boundary_conditions(**boundary_conditions)
-            self.solve(dry_run=dry_run, stream=False)
+            self.solve(dry_run=not run_solver, stream=False)
             if save_boundary_conditions:
                 save_json_file(
                     path=config.cfd.case_dir.joinpath("boundary_conditions.json"),

@@ -83,6 +83,7 @@ class CoSimEnv(EPlusEnv):
         cosim_env.cfd.pod_dir = Path(self.cfd_config.pod_dir)
         cosim_env.cfd.mesh_dir = Path(self.cfd_config.mesh_dir)
         cosim_env.cfd.object_mesh_index = Path(self.cfd_config.object_mesh_index)
+        cosim_env.cfd.dry_run = self.cfd_config.dry_run
 
     def _get_actions_to_sent(self) -> Dict[str, List]:
         """
