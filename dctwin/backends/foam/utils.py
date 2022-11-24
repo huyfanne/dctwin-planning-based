@@ -154,7 +154,7 @@ def generate_snappy_dict(
     room: Room, field_config: Optional[dict] = None, process_num: int = 1
 ) -> None:
     """Generate the snappyHexMeshDict file"""
-    files = os.listdir(Path(config.geometry_dir))
+    files = os.listdir(Path(config.cfd.geometry_dir))
     files.sort()
     files = list(filter(lambda x: ".stl" in x, files))
     new_field_config = {
