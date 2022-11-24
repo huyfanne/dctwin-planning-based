@@ -31,10 +31,10 @@ class SalomeBackend(Backend):
     def _pre_process(self, room: Room):
         """Prepare files needed"""
         config.cfd.case_dir.mkdir(parents=True, exist_ok=True)
-        config.geometry_dir.mkdir(parents=True, exist_ok=True)
+        config.cfd.geometry_dir.mkdir(parents=True, exist_ok=True)
 
-        geometry_script = Path(config.geometry_dir, "geometry_script.py")
-        geometry_description = Path(config.geometry_dir, "geometry.json")
+        geometry_script = Path(config.cfd.geometry_dir, "geometry_script.py")
+        geometry_description = Path(config.cfd.geometry_dir, "geometry.json")
         with open(geometry_description, "w") as f:
             f.write(room.json())
         template = template_env.get_template("salome/geometry_script.py")

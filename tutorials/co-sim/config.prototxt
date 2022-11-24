@@ -8,9 +8,10 @@ cosim_env_config {
     idf2room_map: "model/idf2room.json"
     cfd: {
         geometry_file: "model/geometry/room.json"
-        end_time: 50
+        end_time: 100
         write_interval: 10
-        process_num: 8
+        process_num: 16
+        dry_run: true
         observations: [
            {
               exposed: true
@@ -73,7 +74,7 @@ cosim_env_config {
         weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
 
         network: "host"
-        host: "localhost"
+        host: "host.docker.internal"
 
         return_temp_lb: 20.0
         return_temp_ub: 40.0
@@ -89,20 +90,11 @@ cosim_env_config {
 
         actions: [
             {
-                control_type: PRE_SCHEDULED
                 variable_name: "cpu_loading_schedule"
-                input_source: "data/workloads/schedule/schedule.json"
-                schedule_config:{
-                    initial_value: 1.0
-                    lb: 0
-                    ub: 1
-                    schedule_type: ITE
-                    scheduled_ite_equipment_name: "WestDataCenter_Equip"
-                }
-                normalize_config: {
-                    method: LINEAR
-                    lb: 0
-                    ub: 1
+                actuator_config: {
+                    actuated_component_unique_name: "Data Center CPU Loading Schedule"
+                    actuated_component_type: Schedule_Constant
+                    actuated_component_control_type: Schedule_Value
                 }
             },
             {
@@ -123,8 +115,6 @@ cosim_env_config {
             },
             {
                 variable_name: "chw_supply_temperature"
-                control_type: FIXED
-                default_unnormed_value: 7.0
                 actuator_config: {
                     actuated_component_unique_name: "CW Supply Outlet Node"
                     actuated_component_type: System_Node_Setpoint
