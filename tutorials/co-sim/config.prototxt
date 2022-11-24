@@ -122,7 +122,7 @@ cosim_env_config {
                 }
             }
         ]
-        observations: {
+        observations: [
            {
               exposed: false
               variable_name: "IT load"
