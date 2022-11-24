@@ -53,6 +53,7 @@ class CFDConfig:
         self.pod_dir: Path = Path(os.environ.get("POD_DIR", ""))
         self.num_modes: int = os.environ.get("NUM_MODES", 5)
         self.case_dir: Path = Path(os.environ.get("CFD_CASE_DIR", ""))
+        self.dry_run: bool = False
         self.file_handler: TextIO = TextIO()
         self.log_handler: csv.DictWriter = csv.DictWriter(
             self.file_handler, fieldnames=["time", "mode", "value"]

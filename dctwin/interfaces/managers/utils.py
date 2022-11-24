@@ -134,32 +134,24 @@ def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
     return object_mesh_index
 
 
-def check_base_dir(case_idx: int,  episode_idx: int = None, dry_run: bool = False) -> tuple[bool, bool, bool]:
+def check_base_dir(case_idx: int,  episode_idx: int = None) -> tuple[bool, bool]:
     if config.cfd.mesh_dir != Path(""):
         base_case_path = Path(config.cfd.mesh_dir)
         assert Path.is_dir(base_case_path), "mesh is not a directory"
         assert Path.exists(base_case_path), "mesh directory not exists"
         run_geometry, run_mesh, mesh_path = False, False, base_case_path
-        if dry_run:
-            run_solver = False
-        else:
-            run_solver = True
         if episode_idx is None:
             config.cfd.case_dir = Path(config.LOG_DIR).joinpath(
                 f"simulation-{case_idx}"
             )
-        elif not dry_run:
-            config.cfd.case_dir = Path(config.LOG_DIR).joinpath(
-                "cfd_output", f"episode-{episode_idx}", f"simulation-{case_idx}"
-            )
         else:
             config.cfd.case_dir = Path(config.LOG_DIR).joinpath("base")
     else:
-        run_geometry, run_mesh, run_solver = True, True, True
+        run_geometry, run_mesh = True, True
         config.cfd.case_dir = Path(config.LOG_DIR).joinpath("base")
         config.cfd.mesh_dir = config.cfd.case_dir
 
-    return run_geometry, run_mesh, run_solver
+    return run_geometry, run_mesh
 
 def save_json_file(path: Union[Path, str], saved_dict: Dict) -> None:
     with open(path, "w") as f:

@@ -184,6 +184,7 @@ class EplusCFDAdapter:
         cfd_obs = self.cfd_manager.run(
             case_idx=self.step_idx,
             episode_idx=episode_idx,
+            dry_run=config.cfd.dry_run,
             **init_boundary_condition
         )
         self.cfd_sensor_obs, return_temp, _ = self._post_processing(
@@ -192,7 +193,28 @@ class EplusCFDAdapter:
         )
         return np.concatenate([eplus_obs, self.cfd_sensor_obs], axis=0), done
 
-    def _map_boundary_conditions(self, parsed_actions: Dict) -> Dict:
+    def _compute_equivalent_inlet_temperature(
+        self,
+        parsed_actions: Dict,
+        total_server_power: float
+    ) -> List[float]:
+        server_inlet_temps = []
+        for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
+            equation = self.eplus_manager.idf_parser.compute_server_power(
+                utilization=parsed_actions["cpu_loading_schedule"],
+                inlet_temperature=symbols("inlet_temperature", positive=True),
+                name=it_equipment.name,
+            ) * len(self.idf2room_mapper[it_equipment.name]["servers"]) - total_server_power
+            inlet_temp_list = solve(equation)
+            uid = self.idf2room_mapper[it_equipment.name]["crac"]
+            server_inlet_temp = parsed_actions[f"{uid}_setpoint"]
+            for value in inlet_temp_list:
+                if value > parsed_actions[f"{uid}_setpoint"]:
+                    server_inlet_temp = value
+            server_inlet_temps.append(server_inlet_temp)
+        return server_inlet_temps
+
+    def map_boundary_conditions(self, parsed_actions: Dict) -> Dict:
         """
         Map the action dict into boundary condition dict with a given format.
         Boundary conditions should include supply temperature, supply
@@ -236,27 +258,6 @@ class EplusCFDAdapter:
         boundary_conditions = self._scale_server_flow_rate(boundary_conditions=boundary_conditions)
         return boundary_conditions
 
-    def _compute_equivalent_inlet_temperature(
-        self,
-        parsed_actions: Dict,
-        total_server_power: float
-    ) -> List[float]:
-        server_inlet_temps = []
-        for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
-            equation = self.eplus_manager.idf_parser.compute_server_power(
-                utilization=parsed_actions["cpu_loading_schedule"],
-                inlet_temperature=symbols("inlet_temperature", positive=True),
-                name=it_equipment.name,
-            ) * len(self.idf2room_mapper[it_equipment.name]["servers"]) - total_server_power
-            inlet_temp_list = solve(equation)
-            uid = self.idf2room_mapper[it_equipment.name]["crac"]
-            server_inlet_temp = parsed_actions[f"{uid}_setpoint"]
-            for value in inlet_temp_list:
-                if value > parsed_actions[f"{uid}_setpoint"]:
-                    server_inlet_temp = value
-            server_inlet_temps.append(server_inlet_temp)
-        return server_inlet_temps
-
     def send_action(self, parsed_actions) -> None:
         """
         Run simulation with hybrid environment. The data hall simulation is
@@ -266,11 +267,12 @@ class EplusCFDAdapter:
         compute the corresponding power consumption.
         """
         self.step_idx += 1
-        boundary_conditions = self._map_boundary_conditions(parsed_actions)
+        boundary_conditions = self.map_boundary_conditions(parsed_actions)
         # run CFD/POD simulation
         temperature = self.cfd_manager.run(
             case_idx=self.step_idx,
             episode_idx=self.episode_idx,
+            dry_run=config.cfd.dry_run,
             **boundary_conditions
         )
         # post-processing CFD/POD simulation result to obtain return temperature
