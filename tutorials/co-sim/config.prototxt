@@ -124,16 +124,6 @@ cosim_env_config {
         ]
         observations: [
            {
-              exposed: true
-              variable_name: "cpu_loading_schedule"
-              observation_type: EXTERNAL
-              normalize_config: {
-                 method: LINEAR
-                 lb: 0
-                 ub: 1
-              }
-           },
-           {
               exposed: false
               variable_name: "IT load"
               output_variable_config: {
