@@ -9,7 +9,6 @@ from typing import List, Tuple, Union, Optional
 import xml.etree.ElementTree as ET
 
 from docker import DockerClient
-from docker.errors import ContainerError
 from loguru import logger
 from dctwin.utils import EPlusEnvConfig
 from dctwin.backends.eplus.eplus_logger import EPlusOutputFormatter
@@ -87,57 +86,6 @@ class EplusBackend(Backend):
         with open(config.eplus.case_dir.joinpath("socket.cfg"), 'wb') as f:
             f.write('<?xml version="1.0" encoding="ISO-8859-1"?>\n'.encode("ISO-8859-1"))
             tree.write(f)
-
-    def run_container(
-        self,
-        environment: dict = None,
-        auto_remove: bool = True,
-        user: int = None,
-        working_dir: str = None,
-        stream: bool = False,
-        command: list = None,
-        background: bool = False,
-        **kwargs,
-    ) -> None:
-        command = self.command if command is None else command
-        logger.info(f"docker mount: {config.eplus.case_dir}")
-        logger.info("docker run: " + (" ".join(command)))
-        self.check_image()
-        try:
-            self.client.close()
-            self.container = self.client.containers.run(
-                self.docker_image,
-                command=command,
-                auto_remove=auto_remove,
-                volumes={
-                    str(config.eplus.case_dir): {
-                        "bind": self.volume_data_dir,
-                        "mode": "rw",
-                    },
-                    "/etc/passwd": {
-                        "bind": "/etc/passwd",
-                        "mode": "ro",
-                    },
-                },
-                user=user,
-                environment=environment,
-                working_dir=working_dir
-                if working_dir is not None else self.volume_data_dir,
-                detach=True,
-                **kwargs,
-            )
-            if background:
-                return None
-            output_stream = self.container.logs(stream=True, follow=True)
-            if stream:
-                return output_stream
-            else:
-                for log in output_stream:
-                    if config.BACKEND_LOG_PRINT:
-                        logger.info(log.decode("utf-8").strip())
-        except ContainerError as e:
-            logger.info(str(e.stderr))
-            raise e
 
     def run(self, episode_idx: int = 0) -> Tuple[Union[float, None], Union[float, None]]:
         self._pre_process(episode_idx)
