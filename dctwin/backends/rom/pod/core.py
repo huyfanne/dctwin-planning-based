@@ -1,7 +1,6 @@
 import pickle
 from typing import Dict, Union
-
-import loguru
+from loguru import logger
 import numpy as np
 import cvxpy as cp
 from pathlib import Path
@@ -35,14 +34,11 @@ class PODBackend(Backend):
         self.modes = None
         self.num_modes = config.cfd.num_modes
 
-    def _prepare_mode_data(self, object_mesh_index: Dict):
+    def _prepare_mode_data(self, object_mesh_index: Dict) -> Dict:
         used_modes = self.modes[:, :self.num_modes]
-        phi_return = []
-        phi_inlet = []
-        phi_outlet = []
-        mean_temp_inlet = []
-        mean_temp_outlet = []
-        mean_temp_return = []
+        phi_return, phi_inlet, phi_outlet = [], [], []
+        mean_temp_inlet, mean_temp_outlet, mean_temp_return = [], [], []
+
         for server_name, server_mesh_indices in object_mesh_index["servers"].items():
             mean_temp_inlet.append(self.mean_obs[server_mesh_indices["inlet"]])
             mean_temp_outlet.append(self.mean_obs[server_mesh_indices["outlet"]])
@@ -59,6 +55,7 @@ class PODBackend(Backend):
         phi_inlet = torch.vstack(phi_inlet)
         phi_outlet = torch.vstack(phi_outlet)
         phi_return = torch.vstack(phi_return)
+
         return {
             "mean_temp_inlet": mean_temp_inlet,
             "mean_temp_outlet": mean_temp_outlet,
@@ -67,6 +64,7 @@ class PODBackend(Backend):
             "phi_outlet": phi_outlet,
             "phi_return": phi_return,
         }
+
     def _local_search(
         self,
         crac_volume_flow_rate: torch.Tensor,
@@ -183,12 +181,16 @@ class PODBackend(Backend):
         Implement flux matching based on the paper
         "Proper Orthogonal Decomposition for Reduced Order Thermal Modeling of Air Cooled Data Centers"
 
-        :param used_modes: the POD modes used for prediction
-        :param object_mesh_index: the mesh indices of the CRACs and servers
         :param server_powers: the power of the servers
-        :param server_flow_rates: the flow rate of the servers
+        :param server_volume_flow_rates: the flow rate of the servers
         :param crac_setpoints: the setpoint of the CRACs
-        :param crac_flow_rates: the flow rate of the CRACs
+        :param crac_volume_flow_rates: the flow rate of the CRACs
+        :param mean_temp_inlet: the inlet temperature of the servers
+        :param mean_temp_outlet: the outlet temperature of the servers
+        :param mean_temp_return: the return temperature of the CRACs
+        :param phi_inlet: the inlet flux of the servers
+        :param phi_outlet: the outlet flux of the servers
+        :param phi_return: the return flux of the CRACs
         """
         # select boundary conditions within the air loop
         phi_server_matrix = phi_outlet - phi_inlet
@@ -222,16 +224,18 @@ class PODBackend(Backend):
     ) -> None:
         """
         Implement POD coefficient estimation based on Gaussian Process Regression.
-
-        :param used_modes: the POD modes used for prediction
-        :param object_mesh_index: the mesh indices of the CRACs and servers
         :param server_powers: the power of the servers
-        :param server_flow_rates: the flow rate of the servers
+        :param server_volume_flow_rates: the flow rate of the servers
         :param crac_setpoints: the setpoint of the CRACs
-        :param crac_flow_rates: the flow rate of the CRACs
-        :param local_search: whether to use local search to find the POD coefficients
+        :param crac_volume_flow_rate: the flow rate of the CRACs
+        :param mean_temp_inlet: the inlet temperature of the servers
+        :param mean_temp_outlet: the outlet temperature of the servers
+        :param mean_temp_return: the return temperature of the CRACs
+        :param phi_inlet: the inlet flux of the servers
+        :param phi_outlet: the outlet flux of the servers
+        :param phi_return: the return flux of the CRACs
+        :param local_search: whether to use local search to improve the estimation
         """
-
         # build the input tensor to the GP model
         inputs = torch.cat(
             [
@@ -268,7 +272,7 @@ class PODBackend(Backend):
         else:
             self.coefs = coef
 
-    def docker_image(self):
+    def docker_image(self) -> str:
         raise NotImplementedError("Docker image is not available for this model.")
 
     def command(self) -> Union[list, str]:
@@ -311,6 +315,7 @@ class PODBackend(Backend):
             pod.model.eval()
             pod.likelihood.eval()
         except FileNotFoundError:
+            logger.info("POD data not found. Run simulation with CFD backend.")
             pod = None
         return pod
 
@@ -326,9 +331,11 @@ class PODBackend(Backend):
         """
         Run certain POD coefficient estimation algorithm to predict the temperature field.
         :param object_mesh_index: the mesh indices of the CRACs and servers
+        :param server_powers: the power of the servers
+        :param server_volume_flow_rates: the flow rate of the servers
+        :param crac_setpoints: the setpoint of the CRACs
+        :param crac_volume_flow_rates: the flow rate of the CRACs
         :param pod_method: the POD coefficient estimation algorithm
-        :param boundary_conditions: the boundary conditions for the temperature field calculation. Boundary conditions
-            include server power, server flow rate, CRAC setpoint, and CRAC flow rate.
         """
         assert self.modes is not None, "POD modes are not computed or loaded"
         mode_data = self._prepare_mode_data(object_mesh_index)

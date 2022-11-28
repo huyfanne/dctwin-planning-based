@@ -153,6 +153,7 @@ def check_base_dir(case_idx: int,  episode_idx: int = None) -> tuple[bool, bool]
 
     return run_geometry, run_mesh
 
+
 def save_json_file(path: Union[Path, str], saved_dict: Dict) -> None:
     with open(path, "w") as f:
         json.dump(saved_dict, f, indent=4)
