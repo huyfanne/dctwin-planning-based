@@ -62,7 +62,7 @@ class CFDManager:
         self.solver_backend: Union[
             None, TransientSolverBackend, SteadySolverBackend
         ] = None
-        self.pod_backend: Optional[PODBackend] = PODBackend.load()
+        self.pod_backend: Optional[PODBackend] = None
 
         self.room = room
         self.steady = steady
@@ -107,18 +107,15 @@ class CFDManager:
         crac_volume_flow_rates: Dict,
         server_powers: Dict,
         server_volume_flow_rates: Dict,
-    ):
+    ) -> Dict:
         """
         Map boundary conditions to tensor
-        :param crac_volume_flow_rate: CRAC volume flow rate dict
-        :param crac_supply_temperature: CRAC supply temperature dict
-        :param server_heat_loads: server heat loads dict
+        :param crac_setpoints: CRAC supply temperature dict
+        :param crac_volume_flow_rates: CRAC volume flow rate dict
+        :param server_powers: server heat loads dict
         :param server_volume_flow_rates: server volume flow rates dict
         """
-        q_server = []
-        v_server = []
-        sp_crac = []
-        v_crac = []
+        q_server, v_server, sp_crac, v_crac = [], [], [], []
         # parse the boundary conditions into torch.Tensor format
         for server_name, server_mesh_indices in self.object_mesh_index["servers"].items():
             q_server.append(server_powers[server_name])
@@ -137,9 +134,8 @@ class CFDManager:
             "server_powers": q_server,
             "server_volume_flow_rates": v_server,
             "crac_setpoints": sp_crac,
-            "crac_volume_flow_rates": v_crac
+            "crac_volume_flow_rates": v_crac,
         }
-
 
     def build_geometry(self, dry_run: bool = False) -> None:
         """Build geometry from room model"""
@@ -204,8 +200,8 @@ class CFDManager:
         :param save_boundary_conditions: whether to save the boundary conditions
         :param boundary_conditions: boundary conditions for simulation
            i.e., boundary_conditions = {
-            "crac_setpoints": {}, "crac_flow_rates": {},
-            "server_powers": {}, "server_flow_rates": {}
+            "crac_setpoints": {}, "crac_volume_flow_rates": {},
+            "server_powers": {}, "server_volume_flow_rates": {}
             }
         :return: temperature fields
         """
