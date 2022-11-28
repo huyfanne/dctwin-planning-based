@@ -11,7 +11,7 @@ cosim_env_config {
         end_time: 100
         write_interval: 10
         process_num: 16
-        dry_run: true
+        dry_run: false
         observations: [
            {
               exposed: true

@@ -145,6 +145,10 @@ def check_base_dir(case_idx: int,  episode_idx: int = None) -> tuple[bool, bool]
                 f"simulation-{case_idx}"
             )
         else:
+            config.cfd.case_dir = Path(config.LOG_DIR).joinpath(
+                "cfd_output", f"episode-{episode_idx}", f"simulation-{case_idx}"
+            )
+        if config.cfd.dry_run:
             config.cfd.case_dir = Path(config.LOG_DIR).joinpath("base")
     else:
         run_geometry, run_mesh = True, True

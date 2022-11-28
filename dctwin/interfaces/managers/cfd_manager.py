@@ -163,7 +163,6 @@ class CFDManager:
         stream: bool = False,
     ) -> None:
         """Solve the simulation
-        :param dry_run: whether to dry run
         :param stream: whether to stream the output
         """
         try:
