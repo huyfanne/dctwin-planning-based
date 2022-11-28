@@ -139,7 +139,6 @@ class SolverBackend(Backend):
     def run(
         self,
         room: Room,
-        dry_run: bool = False,
         last_state_case=None,
         process_num: int = None,
         write_interval: int = None,
@@ -170,7 +169,7 @@ class SolverBackend(Backend):
         builder = Builder(room, last_state_case)
         builder.run()
 
-        if dry_run:
+        if config.cfd.dry_run:
             return
         return self.run_container(user=os.getuid(), stream=stream)
 

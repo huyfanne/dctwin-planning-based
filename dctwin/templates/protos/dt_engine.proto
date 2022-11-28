@@ -198,7 +198,7 @@ message CFDEnvConfig {
   optional string pod_method = 11 [default = "GP-Flux"]; // POD coefficients calculation method
   repeated CFDObservationConfig observations = 12;
   optional bool use_unnormed_obs = 13 [default = false];
-  optional bool dry_run = 14 [default = true];
+  optional bool dry_run = 14 [default = false];
 }
 
 

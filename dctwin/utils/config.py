@@ -32,11 +32,11 @@ class EplusConfig:
             value = Path(__value)
         super().__setattr__(__name, value)
 
-    def check_idf(self):
+    def check_idf(self) -> None:
         if not self.idf_file.exists():
             raise EplusConfigError(f"idf file not exists: {self.idf_file}")
 
-    def check_weather(self):
+    def check_weather(self) -> None:
         if not self.weather_file.exists():
             raise EplusConfigError(f"weather file not exists: {self.weather_file}")
 
@@ -78,18 +78,18 @@ class CFDConfig:
         self.case_dir = Path(case_dir)
 
     @property
-    def geometry_dir(self):
+    def geometry_dir(self) -> Path:
         return Path(self.case_dir, "constant/triSurface")
 
-    def check_object_mesh_index(self):
+    def check_object_mesh_index(self) -> None:
         if not self.object_mesh_index.exists():
             raise PODConfigError(f"invalid object mesh index file: {self.object_mesh_index}")
 
-    def check_mesh(self):
+    def check_mesh(self) -> None:
         if not self.mesh_dir.exists():
             raise PODConfigError(f"invalid mesh directory: {self.mesh_dir}")
 
-    def check_pod(self):
+    def check_pod(self) -> None:
         if not self.pod_dir.exists():
             raise PODConfigError(f"invalid pod directory: {self.pod_dir}")
 
@@ -102,7 +102,7 @@ class CoSimConfig:
         self.timestamp: datetime.datetime = os.environ.get(
             "TIME_STEP", datetime.datetime.now())  # time step to sync CFD and Eplus
 
-    def check_map_file(self):
+    def check_map_file(self) -> None:
         if not self.idf2room_map.exists():
             raise EplusConfigError(f"invalid map file: {self.idf2room_map}")
 
@@ -113,7 +113,7 @@ class Config:
     """
     BACKEND_LOG_PRINT: bool
 
-    def __init__(self, env: typing.MutableMapping = os.environ):
+    def __init__(self, env: typing.MutableMapping = os.environ) -> None:
         self._environ = env
         # directory for experiment log, should be set by the user
         self.LOG_DIR = self._environ.get("LOG_DIR", Path("log").absolute())

@@ -137,15 +137,15 @@ class CFDManager:
             "crac_volume_flow_rates": v_crac,
         }
 
-    def build_geometry(self, dry_run: bool = False) -> None:
+    def build_geometry(self) -> None:
         """Build geometry from room model"""
         try:
             logger.info("start building geometry ...")
-            self.geometry_backend.run(room=self.room, dry_run=dry_run)
+            self.geometry_backend.run(room=self.room)
         except Exception:
             raise GeometryBuildError("Failed to build geometry")
 
-    def mesh(self, dry_run: bool = False) -> None:
+    def mesh(self) -> None:
         """Mesh the geometry
         """
         try:
@@ -154,14 +154,12 @@ class CFDManager:
                 room=self.room,
                 process_num=self.mesh_process,
                 field_config=self.field_config,
-                dry_run=dry_run,
             )
         except Exception:
             raise MeshBuildError("Failed to mesh geometry")
 
     def solve(
         self,
-        dry_run: bool = False,
         stream: bool = False,
     ) -> None:
         """Solve the simulation
@@ -176,7 +174,6 @@ class CFDManager:
                 end_time=self.end_time,
                 write_interval=self.write_interval,
                 last_state_case=self.last_state_case,
-                dry_run=dry_run,
                 stream=stream,
             )
         except Exception:
@@ -186,7 +183,6 @@ class CFDManager:
         self,
         case_idx: int = 1,
         episode_idx: int = None,
-        dry_run: bool = False,
         save_mesh_index: bool = True,
         save_boundary_conditions: bool = True,
         **boundary_conditions
@@ -195,7 +191,6 @@ class CFDManager:
         :param case_idx: case index for different simulation (default: 1)
         :param episode_idx: episode index for different simulation (default: None)
             only used for co-simulation
-        :param dry_run: whether to dry run
         :param save_mesh_index: whether to save the mesh index
         :param save_boundary_conditions: whether to save the boundary conditions
         :param boundary_conditions: boundary conditions for simulation
@@ -235,7 +230,7 @@ class CFDManager:
                     )
             if boundary_conditions:
                 self.parser.update_boundary_conditions(**boundary_conditions)
-            self.solve(dry_run=dry_run, stream=False)
+            self.solve(stream=False)
             if save_boundary_conditions:
                 save_json_file(
                     path=config.cfd.case_dir.joinpath("boundary_conditions.json"),

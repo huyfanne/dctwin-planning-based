@@ -13,9 +13,9 @@ class SalomeBackend(Backend):
     """
     docker_image = "ghcr.io/cap-dcwiz/salome-9-debian10:latest"
 
-    def run(self, room: Room, dry_run: bool = False):
+    def run(self, room: Room):
         self._pre_process(room)
-        if not dry_run:
+        if not config.cfd.dry_run:
             self._run_backend()
         self._post_process()
 

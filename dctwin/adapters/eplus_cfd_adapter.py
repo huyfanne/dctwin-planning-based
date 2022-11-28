@@ -184,7 +184,6 @@ class EplusCFDAdapter:
         cfd_obs = self.cfd_manager.run(
             case_idx=self.step_idx,
             episode_idx=episode_idx,
-            dry_run=config.cfd.dry_run,
             **init_boundary_condition
         )
         self.cfd_sensor_obs, return_temp, _ = self._post_processing(
@@ -272,7 +271,6 @@ class EplusCFDAdapter:
         temperature = self.cfd_manager.run(
             case_idx=self.step_idx,
             episode_idx=self.episode_idx,
-            dry_run=config.cfd.dry_run,
             **boundary_conditions
         )
         # post-processing CFD/POD simulation result to obtain return temperature
