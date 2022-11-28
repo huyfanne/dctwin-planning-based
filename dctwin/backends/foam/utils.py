@@ -119,7 +119,7 @@ def generate_block_dict(room: Room) -> None:
         if vertex.y > v_max.y:
             v_max.y = vertex.y
 
-    base_size = config.base_size
+    base_size = config.cfd.base_size
     x_cells = math.ceil((v_max.x - v_min.x) / base_size)
     if base_size * x_cells != (v_max.x - v_min.x):
         v_max.x = x_cells * base_size - v_min.x

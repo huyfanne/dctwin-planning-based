@@ -45,7 +45,7 @@ class CFDConfig:
     """CFD configuration"""
     SOLVER_TURBULENCE: bool
 
-    def __init__(self, base_config) -> None:
+    def __init__(self, base_config, base_size: float = 0.2) -> None:
         self.base_config: Config = base_config
         self.geometry_file = Path(os.environ.get("GEOMETRY_FILE", ""))
         self.mesh_dir: Path = Path(os.environ.get("MESH_DIR", ""))
@@ -54,6 +54,8 @@ class CFDConfig:
         self.num_modes: int = os.environ.get("NUM_MODES", 5)
         self.case_dir: Path = Path(os.environ.get("CFD_CASE_DIR", ""))
         self.dry_run: bool = False
+        self.base_size: float = base_size
+
         self.file_handler: TextIO = TextIO()
         self.log_handler: csv.DictWriter = csv.DictWriter(
             self.file_handler, fieldnames=["time", "mode", "value"]
@@ -71,7 +73,6 @@ class CFDConfig:
         if __name in ("mesh_dir", "pod+dir", "object_mesh_index"):
             value = Path(__value)
         super().__setattr__(__name, value)
-
 
     def set_case_dir(self, case_dir: typing.Union[str, Path]) -> None:
         self.case_dir = Path(case_dir)
@@ -109,11 +110,10 @@ class CoSimConfig:
 class Config:
     """Base configuration
     :param env: environment variables
-    :param base_size: base size of the meshing, default 0.2
     """
     BACKEND_LOG_PRINT: bool
 
-    def __init__(self, env: typing.MutableMapping = os.environ, base_size: float = 0.2):
+    def __init__(self, env: typing.MutableMapping = os.environ):
         self._environ = env
         # directory for experiment log, should be set by the user
         self.LOG_DIR = self._environ.get("LOG_DIR", Path("log").absolute())
@@ -122,7 +122,6 @@ class Config:
         self.BACKEND_LOG_PRINT = (
             self._environ.get("BACKEND_LOG_PRINT", "true").lower() == "true"
         )
-        self.base_size: float = base_size
 
         self.eplus = EplusConfig(self)
         self.cfd = CFDConfig(self)
