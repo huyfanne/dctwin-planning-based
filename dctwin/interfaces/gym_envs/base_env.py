@@ -263,9 +263,7 @@ class BaseEnv(gym.Env):
             return 0.0
         self._reward.set_unnormed_value(
             self._reward_fn(
-                self,
-                [o.get_unnormed_value() for o in self._observations],
-                self.last_obs
+                self, # the observation can be inspected by calling the class inspect methods
             )
         )
         return self._reward.get_unnormed_value()
@@ -451,10 +449,3 @@ class BaseEnv(gym.Env):
             a.set_unnormed_value(unnormed_value)
             normed_act = a.get_normed_value()
             return normed_act
-
-    def get_full_actions_list(
-        self,
-        raw_actions: np.ndarray
-    ):
-        self._prepare_actions(raw_actions)
-        return np.asarray([action.get_unnormed_value() for action in self._actions])

@@ -1,6 +1,4 @@
-import gzip
 import os
-import shutil
 # from loguru import logger
 
 
@@ -38,14 +36,9 @@ class EPlusOutputFormatter:
                 os.remove(file_path)
 
         assert os.path.isfile(file_csv), 'eplusout.csv not found!'
-        # if os.path.isfile(file_csv):
-        #     with open(file_csv, 'rb') as f_in:
-        #         with gzip.open(file_csv_gz, 'wb') as f_out:
-        #             shutil.copyfileobj(f_in, f_out)
-        #     os.remove(file_csv)
 
     @classmethod
-    def _count_severe_errors(cls, file : str) -> int:
+    def _count_severe_errors(cls, file: str) -> int:
 
         if not os.path.isfile(file):
             return -1  # Error count is unknown

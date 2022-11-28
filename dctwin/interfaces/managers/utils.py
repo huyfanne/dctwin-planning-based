@@ -90,13 +90,13 @@ def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
     def find_nearest_mesh_index(
         object_coodrinate: Vertex,
         mesh_coordinates: np.ndarray
-    ):
+    ) -> int:
         coordinates_array = np.asarray(
             [[object_coodrinate.x, object_coodrinate.y, object_coodrinate.z]]
         )
-        return np.argmin(
+        return int(np.argmin(
             np.sum((coordinates_array - mesh_coordinates) ** 2, axis=1)
-        )
+        ))
 
     object_mesh_index = {"servers": {}, "cracs": {}, "sensors": {}}
     for ser_idx, ser in enumerate(room.objects.servers.values()):
