@@ -56,5 +56,5 @@ class SnappyHexBackend(Backend):
         )
         if config.cfd.dry_run:
             return
-        self.run_container(user=os.getuid())
+        self.run_container(user=os.getuid(), case_dir=config.cfd.case_dir)
         logger.info("***** Mesh finished *****\n\n")

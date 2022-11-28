@@ -1,4 +1,6 @@
 import abc
+from pathlib import Path
+
 from loguru import logger
 from typing import Union
 
@@ -52,6 +54,7 @@ class Backend(abc.ABC):
 
     def run_container(
         self,
+        case_dir: Union[Path, str],
         environment: dict = None,
         auto_remove: bool = True,
         user: int = None,
@@ -72,7 +75,7 @@ class Backend(abc.ABC):
                 command=command,
                 auto_remove=auto_remove,
                 volumes={
-                    str(config.cfd.case_dir): {
+                    str(case_dir): {
                         "bind": self.volume_data_dir,
                         "mode": "rw",
                     },

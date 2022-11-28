@@ -50,6 +50,7 @@ class SalomeBackend(Backend):
         working_path = self.volume_geometry_dir
         geometry_file = f"{working_path}/geometry.json"
         self.run_container(
+            case_dir=config.cfd.case_dir,
             environment={
                 "SRC_PATH": geometry_file,
                 "OUTPUT_PATH": working_path,

@@ -174,6 +174,7 @@ class EplusBackend(Backend):
             },
             background=True,
             network=self._network,
+            case_dir=config.eplus.case_dir,
         )
         try:
             self._conn, addr = self._socket.accept()

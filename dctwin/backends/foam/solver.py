@@ -171,7 +171,7 @@ class SolverBackend(Backend):
 
         if config.cfd.dry_run:
             return
-        return self.run_container(user=os.getuid(), stream=stream)
+        return self.run_container(user=os.getuid(), stream=stream, case_dir=config.cfd.case_dir)
 
 
 class SteadySolverBackend(SolverBackend):
