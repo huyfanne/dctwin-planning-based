@@ -149,9 +149,9 @@ message EPlusEnvConfig {
   required float return_temp_lb = 11; // used for co-simulation
   required float return_temp_ub = 12;
   required float return_temp_init = 13;
-  required float inlet_appraoched_temp_lb = 14;
-  required float inlet_appraoched_temp_ub = 15;
-  required float inlet_appraoched_temp_init = 16;
+  required float inlet_temp_lb = 14;
+  required float inlet_temp_ub = 15;
+  required float inlet_temp_init = 16;
 
   optional string host = 17 [default = "localhost"];
   optional string network = 18 [default = "host"];

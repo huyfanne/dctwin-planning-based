@@ -122,7 +122,10 @@ class EplusBackend(Backend):
         ret_schedule_configs = self.idf_parser.batch_set_return_temperature_schedule(
             env_config=self._proto_config,
         )
-        schedule_configs = inlet_schedule_configs + ret_schedule_configs
+        if inlet_schedule_configs is None and ret_schedule_configs is None:
+            schedule_configs = None
+        else:
+            schedule_configs = inlet_schedule_configs + ret_schedule_configs
         self.idf_parser.save(save_path=str(idf_path))
         logger.info("Generating BCVTB Config ...")
         self.idf_parser.save_cfg_xml(

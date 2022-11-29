@@ -65,7 +65,7 @@ class Backend(abc.ABC):
         **kwargs,
     ) -> None:
         command = self.command if command is None else command
-        logger.info(f"docker mount: {config.cfd.case_dir}")
+        logger.info(f"docker mount: {case_dir}")
         logger.info("docker run: " + (" ".join(command)))
         self.check_image()
         try:

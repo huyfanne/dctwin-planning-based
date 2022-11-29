@@ -590,9 +590,9 @@ class IDFParser:
             if ite.air_flow_calculation_method == "flowcontrolwithapproachtemperatures":
                 config = EPlusActionConfig()
                 config.variable_name = f"{ite.name} inlet approached temperature schedule"
-                config.schedule_config.lb = env_config.inlet_appraoched_temp_lb
-                config.schedule_config.ub = env_config.inlet_appraoched_temp_ub
-                config.schedule_config.initial_value = env_config.inlet_appraoched_temp_init
+                config.schedule_config.lb = env_config.inlet_temp_lb
+                config.schedule_config.ub = env_config.inlet_temp_ub
+                config.schedule_config.initial_value = env_config.inlet_temp_init
                 config.schedule_config.scheduled_ite_equipment_name = ite.name
                 config.schedule_config.schedule_type = 1
                 self._set_external_schedule(config)
