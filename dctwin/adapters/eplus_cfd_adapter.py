@@ -188,6 +188,7 @@ class EplusCFDAdapter:
         )
         self.cfd_sensor_obs, return_temp, _ = self._post_processing(
             temperature=cfd_obs,
+            log_to_csv=False,
             **init_boundary_condition
         )
         return np.concatenate([eplus_obs, self.cfd_sensor_obs], axis=0), done
