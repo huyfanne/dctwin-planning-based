@@ -80,7 +80,7 @@ class EplusCFDAdapter:
         shutil.copy(config.co_sim.idf2room_map, idf2room_path)
         # init log file for cfd results
         filename = Path(config.cfd.case_dir).joinpath('cfd_log.csv')
-        config.cfd.file_handler = open(filename, "wt")
+        config.cfd.file_handler = open(filename, "wt", newline='')
         config.cfd.log_handler = csv.DictWriter(
             config.cfd.file_handler,
             fieldnames=(

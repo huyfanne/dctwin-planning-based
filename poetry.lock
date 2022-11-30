@@ -380,7 +380,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "linear-operator"
-version = "0.2.0"
+version = "0.3.0"
 description = "A linear operator implementation, primarily designed for finite-dimensional positive definite operators (i.e. kernel matrices)."
 category = "main"
 optional = false
@@ -1506,8 +1506,8 @@ kiwisolver = [
     {file = "kiwisolver-1.4.4.tar.gz", hash = "sha256:d41997519fcba4a1e46eb4a2fe31bc12f0ff957b2b81bac28db24744f333e955"},
 ]
 linear-operator = [
-    {file = "linear_operator-0.2.0-py3-none-any.whl", hash = "sha256:14c687de5aad42e16eed5c0712285e8dd497b5a3b1d8ce7bb71f6b5acb15290f"},
-    {file = "linear_operator-0.2.0.tar.gz", hash = "sha256:55fc7804b9bd050f61d68542fcb4a5870ec1dbd10f663c159cb3dfb29e8ec7f2"},
+    {file = "linear_operator-0.3.0-py3-none-any.whl", hash = "sha256:262b1028ed3cd1ae70d79a3a29b0210301576d9e426a68b8767acdd4abb116a6"},
+    {file = "linear_operator-0.3.0.tar.gz", hash = "sha256:84bf572631a7e1576de6920d81600ca0fedcf6bda2f29dbaf440d6e72ce6abab"},
 ]
 loguru = [
     {file = "loguru-0.6.0-py3-none-any.whl", hash = "sha256:4e2414d534a2ab57573365b3e6d0234dfb1d84b68b7f3b948e6fb743860a77c3"},
