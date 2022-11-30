@@ -89,7 +89,7 @@ def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
 
     def find_nearest_mesh_index(
         object_coodrinate: Vertex,
-        mesh_coordinates: np.ndarray
+        mesh_coordinates: np.ndarray,
     ) -> int:
         coordinates_array = np.asarray(
             [[object_coodrinate.x, object_coodrinate.y, object_coodrinate.z]]
@@ -134,7 +134,7 @@ def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
     return object_mesh_index
 
 
-def check_base_dir(case_idx: int,  episode_idx: int = None) -> tuple[bool, bool]:
+def check_base_dir(case_idx: int,  episode_idx: int = None) -> Tuple[bool, bool]:
     if config.cfd.mesh_dir != Path(""):
         base_case_path = Path(config.cfd.mesh_dir)
         assert Path.is_dir(base_case_path), "mesh is not a directory"
