@@ -246,7 +246,7 @@ class EplusBackend(Backend):
             )
             exit(-1)
         if self._cur_sim_time >= self._end_sim_time:
-            # logger.debug("Came to the end of one episode, terminating")
+            logger.debug("Came to the end of one episode, terminating")
             done = True
             self.close()
         else:
