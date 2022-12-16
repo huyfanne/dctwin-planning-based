@@ -41,4 +41,5 @@ class LinearResizer(Resizer):
             #     f"expected range: [{original_lb}, {original_ub}]; got: {value}"
             # )
             value = np.clip(value, original_lb, original_ub)
+            # pass
         return new_lb + (value - original_lb) / (original_ub - original_lb) * (new_ub - new_lb)

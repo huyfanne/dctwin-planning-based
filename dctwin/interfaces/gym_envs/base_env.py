@@ -389,10 +389,7 @@ class BaseEnv(gym.Env):
 
     def inspect_action_by_name(self, action_name: str):
         a = self._find_scalar_item(self._actions, action_name)
-        if a.control_type == 3:  # PRE_SCHEDULED
-            return self.inspect_next_scheduled_action_value(action_name)
-        else:
-            return a.get_unnormed_value()
+        return a.get_unnormed_value()
 
     def get_normed_obs_by_name(
         self,

@@ -150,18 +150,16 @@ class RoomParser:
                     prop.supply_temperature = crac_setpoints[uid]
                     self._crac_setpoints_dict[uid] = crac_setpoints[uid]
                 except KeyError:
-                    self._crac_setpoints_dict[uid] = prop.supply_temperature
-                    logger.warning(
-                        f"CRAC {uid} setpoint is missing, use default value in the model file"
+                    logger.critical(
+                        f"CRAC {uid} setpoint is missing"
                     )
             if crac_volume_flow_rates is not None:
                 try:
                     prop.flow_rate = crac_volume_flow_rates[uid]
                     self._crac_volume_flow_rates_dict[uid] = crac_volume_flow_rates[uid]
                 except KeyError:
-                    self._crac_volume_flow_rates_dict[uid] = prop.flow_rate
-                    logger.warning(
-                        f"CRAC {uid} volume flow rate is missing, use default value in the model file"
+                    logger.critical(
+                        f"CRAC {uid} volume flow rate is missing"
                     )
 
     def _update_server_boundary(
@@ -175,15 +173,13 @@ class RoomParser:
                     prop.heat_load = server_powers[uid]
                     self._server_load_dict[uid] = server_powers[uid]
                 except KeyError:
-                    self._server_load_dict[uid] = prop.heat_load
-                    logger.warning(f"server {uid} power is missing, use default value in the model file")
+                    logger.critical(f"server {uid} power is missing")
             if server_volume_flow_rates is not None:
                 try:
                     prop.flow_rate = server_volume_flow_rates[uid]
                     self._server_flow_rate_dict[uid] = server_volume_flow_rates[uid]
                 except KeyError:
-                    self._server_flow_rate_dict[uid] = prop.flow_rate
-                    logger.warning(f"server {uid} volume flow rate is missing, use default value in the model file")
+                    logger.critical(f"server {uid} volume flow rate is missing")
 
     def update_boundary_conditions(
         self,

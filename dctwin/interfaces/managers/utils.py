@@ -25,9 +25,9 @@ def read_boundary_conditions(
         with open(Path(subfolder).joinpath("boundary_conditions.json"), "r") as f:
             boundary_condition_dict = json.load(f)
         boundary_conditions[idx, 0] = np.sum(list(boundary_condition_dict["server_powers"].values()))
-        boundary_conditions[idx, 1] = np.sum(list(boundary_condition_dict["server_flow_rates"].values()))
+        boundary_conditions[idx, 1] = np.sum(list(boundary_condition_dict["server_volume_flow_rates"].values()))
         boundary_conditions[idx, 2:num_cracs+2] = np.array(list(boundary_condition_dict["crac_setpoints"].values()))
-        boundary_conditions[idx, num_cracs+2:] = np.array(list(boundary_condition_dict["crac_flow_rates"].values()))
+        boundary_conditions[idx, num_cracs+2:] = np.array(list(boundary_condition_dict["crac_volume_flow_rates"].values()))
     return boundary_conditions
 
 
