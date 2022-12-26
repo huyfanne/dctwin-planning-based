@@ -103,7 +103,7 @@ class EplusCFDAdapter:
         crac_setpoints: Dict,
         crac_volume_flow_rates: Dict,
         log_to_csv: bool = True
-    ) -> Tuple[list[Any], list[Any], float]:
+    ) -> Tuple[list[Any], list[Any], List]:
         """Post-processing to collect sensor observation, server inlet temperature
         and CRAC return temperature
         """
@@ -132,6 +132,11 @@ class EplusCFDAdapter:
             total_server_powers += server_powers[server_id]
             total_server_flow_rates += server_volume_flow_rates[server_id]
 
+        zone_server_powers = [0.0 for _ in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled]
+        for idx, it_equipment in enumerate(self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled):
+            for server in self.idf2room_mapper[it_equipment.name]["servers"]:
+                zone_server_powers[idx] += server_powers[server]
+
         # get server inlet temperature
         for server_id, server_temp in self.cfd_manager.object_mesh_index["servers"].items():
             inlet_temp = temperature[int(server_temp["inlet"])]
@@ -152,7 +157,7 @@ class EplusCFDAdapter:
             config.cfd.log_handler.writerow(cfd_log_dict)
             config.cfd.file_handler.flush()
 
-        return cfd_sensor_obs_list, return_temps, total_server_powers
+        return cfd_sensor_obs_list, return_temps, zone_server_powers
 
     def _scale_server_flow_rate(
         self,
@@ -162,13 +167,19 @@ class EplusCFDAdapter:
         """
         scale total server flow rate as a ratio of total supply air flow rate
         """
+        sum_crac_volume_flow_rate = 0
+        sum_server_volume_flow_rate = 0
         for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
             uid = self.idf2room_mapper[it_equipment.name]["crac"]
-            supply_flow_rate = boundary_conditions["crac_volume_flow_rates"][uid]
-            sum_server_flow_rate = 0
+            sum_crac_volume_flow_rate += boundary_conditions["crac_volume_flow_rates"][uid]
+            # skip the CRACs that are not open (they do not take charge of certain servers)
+            if len(self.idf2room_mapper[it_equipment.name]["servers"]) == 0:
+                continue
             for server_id in self.idf2room_mapper[it_equipment.name]["servers"]:
-                sum_server_flow_rate += boundary_conditions["server_volume_flow_rates"][server_id]
-            scale_factor = supply_flow_rate * crac2server_flow_ratio / sum_server_flow_rate
+                sum_server_volume_flow_rate += boundary_conditions["server_volume_flow_rates"][server_id]
+        # scale server flow rate
+        scale_factor = sum_crac_volume_flow_rate * crac2server_flow_ratio / sum_server_volume_flow_rate
+        for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
             for server_id in self.idf2room_mapper[it_equipment.name]["servers"]:
                 boundary_conditions["server_volume_flow_rates"][server_id] *= scale_factor
         return boundary_conditions
@@ -196,15 +207,15 @@ class EplusCFDAdapter:
     def _compute_equivalent_inlet_temperature(
         self,
         parsed_actions: Dict,
-        total_server_power: float
+        zone_server_powers: List[float],
     ) -> List[float]:
         server_inlet_temps = []
-        for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
+        for idx, it_equipment in enumerate(self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled):
             equation = self.eplus_manager.idf_parser.compute_server_power(
-                utilization=parsed_actions["cpu_loading_schedule"],
+                utilization=parsed_actions[f"cpu_loading_schedule{idx + 1}"],
                 inlet_temperature=symbols("inlet_temperature", positive=True),
                 name=it_equipment.name,
-            ) * len(self.idf2room_mapper[it_equipment.name]["servers"]) - total_server_power
+            ) * len(self.idf2room_mapper[it_equipment.name]["servers"]) - zone_server_powers[idx]
             inlet_temp_list = solve(equation)
             uid = self.idf2room_mapper[it_equipment.name]["crac"]
             server_inlet_temp = parsed_actions[f"{uid}_setpoint"]
@@ -235,7 +246,7 @@ class EplusCFDAdapter:
             boundary_conditions["crac_volume_flow_rates"][uid] = parsed_actions[f"{uid}_flow_rate"] / self.rho_air
 
         # compute server power and volumetric flow rate
-        for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
+        for idx, it_equipment in enumerate(self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled):
             # assert len(self.idf2room_mapper[it_equipment.name]["servers"]) == self.eplus_manager.idf_parser.number_of_units[it_equipment.name], \
             #     "The number of servers in the room should be equal to the number of units in the idf file."
             for server_id in self.idf2room_mapper[it_equipment.name]["servers"]:
@@ -243,12 +254,12 @@ class EplusCFDAdapter:
                 # parameters for power and flow rate models.
                 # TODO: can be extended to heterogeneous servers with different curve parameters
                 heat_load = self.eplus_manager.idf_parser.compute_server_power(
-                    utilization=parsed_actions["cpu_loading_schedule"],
+                    utilization=parsed_actions[f"cpu_loading_schedule{idx + 1}"],
                     inlet_temperature=self.server_inlet_temps[server_id],
                     name=it_equipment.name
                 )
                 volume_flow_rate = self.eplus_manager.idf_parser.compute_server_flow_rate(
-                    utilization=parsed_actions["cpu_loading_schedule"],
+                    utilization=parsed_actions[f"cpu_loading_schedule{idx + 1}"],
                     inlet_temperature=self.server_inlet_temps[server_id],
                     name=it_equipment.name
                 )
@@ -276,13 +287,13 @@ class EplusCFDAdapter:
             **boundary_conditions
         )
         # post-processing CFD/POD simulation result to obtain return temperature
-        self.cfd_sensor_obs, return_temp, total_server_power = self._post_processing(
+        self.cfd_sensor_obs, return_temp, zone_server_powers = self._post_processing(
             temperature=temperature,
             **boundary_conditions
         )
         server_inlet_temperatures = self._compute_equivalent_inlet_temperature(
             parsed_actions=parsed_actions,
-            total_server_power=total_server_power,
+            zone_server_powers=zone_server_powers,
         )
         # add two approach temperatures (a.k.a. return temperature actually) to the end of the raw action array
         send_actions = []

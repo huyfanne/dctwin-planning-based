@@ -18,7 +18,7 @@ import fluidfoam
 def read_boundary_conditions(
     room: Room,
 ) -> np.ndarray:
-    subfolders = [f for f in Path(config.cfd.case_dir).iterdir() if f.is_dir()]
+    subfolders = [f for f in Path(config.cfd.case_dir).iterdir() if f.is_dir() and f.name != "base"]
     num_cracs = len(room.objects.acus)
     boundary_conditions = np.zeros((len(subfolders), 2 * num_cracs + 2))
     for idx, subfolder in enumerate(sorted(subfolders, key=lambda x: int(x.name.split("-")[-1]))):
@@ -71,7 +71,7 @@ def read_temperature(solution_dir: Path, end_time: str = "500"):
 
 
 def read_temperature_fields(end_time: str = "500") -> np.ndarray:
-    subfolders = [f for f in config.cfd.case_dir.iterdir() if f.is_dir()]
+    subfolders = [f for f in config.cfd.case_dir.iterdir() if f.is_dir() and f.name != "base"]
     temperatures = []
     for subfloder in sorted(subfolders, key=lambda x: int(x.name.split("-")[-1])):
         try:
