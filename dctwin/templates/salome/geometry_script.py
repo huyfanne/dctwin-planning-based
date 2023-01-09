@@ -227,7 +227,7 @@ class ServerModel:
     @classmethod
     def from_dict(cls, model_data: dict):
         obj = cls()
-        slot_height = 0.05
+        slot_height = 0.045
         obj.size = {
             "dx": model_data["width"],
             "dy": model_data["depth"],
@@ -328,7 +328,7 @@ class RackModel:
                 pass
         for slot in slots:
             z = placement["z"]
-            z += 0.05 * (slot - 1)
+            z += 0.045 * (slot - 1)
             mesh = util.copy_mesh(
                 f"rack_panel_{rack_id}_{slot}",
                 self.rack_blanking_mesh,
@@ -366,7 +366,7 @@ class Builder:
         self.floor_height = (
             0 if self.raised_floor is None else self.raised_floor["height"]
         )
-        self.slot_height = 0.05
+        self.slot_height = 0.045
 
         self.ceiling_face = None
         self.floor_face = None
@@ -377,7 +377,7 @@ class Builder:
             models[k] = ACUModel.from_dict(v)
         for acu in self.acus.values():
             model = models[acu["model"]]
-            new_placement = {**acu["placement"], "z": self.floor_height}
+            new_placement = {**acu["placement"]}
             model.make_acu(acu["id"], new_placement, acu["orientation"])
 
     def make_racks(self):
@@ -385,7 +385,7 @@ class Builder:
             self.computed_rack_models[k] = RackModel.from_dict(v)
         for rack in self.racks.values():
             model = self.computed_rack_models[rack["model"]]
-            new_placement = {**rack["placement"], "z": self.floor_height}
+            new_placement = {**rack["placement"]}
             model.make(rack["id"], new_placement, rack["orientation"])
 
     def make_servers(self):
@@ -421,7 +421,6 @@ class Builder:
                     **rack["placement"],
                     "z": offset
                     + self.slot_height * (server["slot"] - 1)
-                    + self.floor_height,
                 },
                 rack["orientation"],
             )
@@ -478,7 +477,7 @@ class Builder:
                 {
                     "x": placement["x"] + size["dx"] / 2,
                     "y": placement["y"],
-                    "z": (size["dz"] - placement["z"]) / 2 + self.floor_height,
+                    "z": (size["dz"] / 2) + placement["z"],
                 },
             )
 
@@ -515,7 +514,7 @@ class Builder:
 
     def make_containments(self):
         for index, contaiment in enumerate(self.contaiments):
-            new_placement = {**contaiment["placement"], "z": self.floor_height}
+            new_placement = {**contaiment["placement"]}
             box = util.make_box(contaiment["size"], new_placement)
             exclude_faces = []
             for face in list(SalomeUtil.SUB_FACE_SIZE_INDICES):
