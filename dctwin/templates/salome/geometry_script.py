@@ -284,11 +284,8 @@ class RackModel:
         group = util.group_by_faces(box, exclude=["front", "rear"])
         self.rack_wall_mesh = util.mesh(group, 0.1, 2)
 
-        blanking_box = util.make_box({**self.size, "dz": 0.05})
-        blanking = util.group_by_faces(
-            blanking_box, exclude=["top", "bottom", "left", "right", "rear"]
-        )
-        self.rack_blanking_mesh = util.mesh(blanking, 0.05, 1)
+        blanking_box = util.make_box({**self.size, "dz": 0.05, "dy": 0.1})
+        self.rack_blanking_mesh = util.mesh(blanking_box, 0.05, 1)
         self.is_meshed = True
 
     def make(self, rack_id, placement, orientation):
@@ -329,6 +326,7 @@ class RackModel:
         for slot in slots:
             z = placement["z"]
             z += 0.045 * (slot - 1)
+            z += self.first_slot_offset
             mesh = util.copy_mesh(
                 f"rack_panel_{rack_id}_{slot}",
                 self.rack_blanking_mesh,
