@@ -181,8 +181,8 @@ class CFDManager:
         self,
         case_idx: int = 1,
         episode_idx: int = None,
-        save_mesh_index: bool = False,
-        save_boundary_conditions: bool = False,
+        save_mesh_index: bool = True,
+        save_boundary_conditions: bool = True,
         **boundary_conditions
     ) -> np.ndarray:
         """Run the whole simulation: geometry -> mesh -> solve
@@ -214,10 +214,10 @@ class CFDManager:
                 episode_idx=episode_idx,
                 case_idx=case_idx,
             )
-            if run_geometry:
-                self.build_geometry()
+            # if run_geometry:
+            #     self.build_geometry()
             if run_mesh:
-                self.mesh()
+                # self.mesh()
                 if save_mesh_index and self.object_mesh_index is None:
                     self.object_mesh_index = calc_object_mesh_index(
                         room=self.room, mesh_points=read_mesh_coordinates(),

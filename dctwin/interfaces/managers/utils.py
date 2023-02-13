@@ -19,7 +19,7 @@ def read_boundary_conditions(
     room: Room,
 ) -> np.ndarray:
     subfolders = [f for f in Path(config.cfd.case_dir).iterdir() if f.is_dir() and f.name != "base"]
-    num_cracs = len(room.objects.acus)
+    num_cracs = len(room.constructions.acus)
     boundary_conditions = np.zeros((len(subfolders), 2 * num_cracs + 2))
     for idx, subfolder in enumerate(sorted(subfolders, key=lambda x: int(x.name.split("-")[-1]))):
         with open(Path(subfolder).joinpath("boundary_conditions.json"), "r") as f:
@@ -99,37 +99,39 @@ def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
         ))
 
     object_mesh_index = {"servers": {}, "cracs": {}, "sensors": {}}
-    for ser_idx, ser in enumerate(room.objects.servers.values()):
-        inlet_center, outlet_center = room.server_patch_positions(ser.id)
-        nearest_inlet_mesh_index = find_nearest_mesh_index(inlet_center, mesh_points)
-        nearest_outlet_mesh_index = find_nearest_mesh_index(outlet_center, mesh_points)
-        object_mesh_index["servers"].update(
-            {
-                f"{ser.id}":
-                    {
-                        "inlet": int(nearest_inlet_mesh_index),
-                        "outlet": int(nearest_outlet_mesh_index)
-                    }
-            }
-        )
 
-    for acu_idx, acu in enumerate(room.objects.acus.values()):
-        return_center, supply_center = room.acu_patch_positions(acu.id)
+    for rack in room.constructions.racks.values():
+        for ser_idx, ser in rack.constructions.servers.items():
+            inlet_center, outlet_center = room.server_patch_positions(ser_idx)
+            nearest_inlet_mesh_index = find_nearest_mesh_index(inlet_center, mesh_points)
+            nearest_outlet_mesh_index = find_nearest_mesh_index(outlet_center, mesh_points)
+            object_mesh_index["servers"].update(
+                {
+                    f"{ser_idx}":
+                        {
+                            "inlet": int(nearest_inlet_mesh_index),
+                            "outlet": int(nearest_outlet_mesh_index)
+                        }
+                }
+            )
+
+    for acu_idx, acu in room.constructions.acus.items():
+        return_center, supply_center = room.acu_patch_positions(acu_idx)
         nearest_supply_mesh_index = find_nearest_mesh_index(supply_center, mesh_points)
         nearest_return_mesh_index = find_nearest_mesh_index(return_center, mesh_points)
         object_mesh_index["cracs"].update(
             {
-                f"{acu.id}":
+                f"{acu_idx}":
                     {
                         "supply": int(nearest_supply_mesh_index),
                         "return": int(nearest_return_mesh_index)
                     }
             }
         )
-    for sen_idx, sen_loc in enumerate(room.probes):
-        nearest_sensor_mesh_index = find_nearest_mesh_index(sen_loc, mesh_points)
+    for sen_idx, sen in room.constructions.sensors.items():
+        nearest_sensor_mesh_index = find_nearest_mesh_index(sen.geometry.location, mesh_points)
         object_mesh_index["sensors"].update(
-            {f"{sen_loc.id}": int(nearest_sensor_mesh_index)})
+            {f"{sen_idx}": int(nearest_sensor_mesh_index)})
 
     return object_mesh_index
 

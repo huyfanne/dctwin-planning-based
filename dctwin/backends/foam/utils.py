@@ -230,7 +230,6 @@ def generate_snappy_dict(
             )
         )
 
-    print(list(room.constructions.racks.values())[0])
     first_rack: Rack = list(room.constructions.racks.values())[0]
     location = Vertex(
         x=first_rack.geometry.location.x,

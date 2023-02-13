@@ -5,7 +5,8 @@ from typing import List, Optional, OrderedDict, Union, Tuple, Dict
 
 from dctwin.models.basics import Face, Size, Vertex
 from dctwin.models.geometry_utils import rotate
-from dctwin.models.geometry_model import RoomGeometryModel, ACUModel, ACUFace, RackModel, ServerModel, BoxModel, BoxFaces
+from dctwin.models.geometry_model import RoomGeometryModel, ACUModel, ACUFace, RackModel, ServerModel, BoxModel, \
+    BoxFaces
 from pydantic import BaseModel, Field, validator, root_validator
 from dctwin.models.convert_to_snake_case import convert_json_file
 
@@ -383,141 +384,99 @@ class Room(BaseModel):
         cls._validate_id(acus)
         cls._concat_acu_model_attributes(acus, geometry_model["acus"], inputs["acus"])
         cls._validate_rack_and_server_id(racks)
-        cls._concat_rack_and_server_model_attributes(racks, geometry_model["racks"], geometry_model["servers"], inputs["servers"])
+        cls._concat_rack_and_server_model_attributes(racks, geometry_model["racks"], geometry_model["servers"],
+                                                     inputs["servers"])
         cls._validate_id(sensors)
 
         # print(values["constructions"]["boxes"])
 
         return values
 
-    #
-    #     @validator("servers")
-    #     def validate_servers(cls, v, values):
-    #         all_slots = dict()
-    #         for server in v.values():
-    #             server_model = values["server_models"][server.model]
-    #             server.occupation = server_model.occupation
-    #
-    #             rack = values["racks"].get(server.rack_id)
-    #             if rack is None:
-    #                 raise ValueError(
-    #                     f"invalid rack id: {server.rack_id} in Server({server.id})"
-    #                 )
-    #             rack_model = values["rack_models"][rack.model]
+    def server_patch_positions(self, server_id: str) -> Tuple[Vertex, Vertex]:
+        """Get the center point position of server inlet and outlet"""
 
-    #             if server.slot < 1 or server.slot + server.occupation > rack_model.slot + 1:
-    #                 raise ValueError(
-    #                     f"invalid server slot/occupation: "
-    #                     f"Server({server.id}, slot={server.slot}, "
-    #                     f"occupation={server.occupation})"
-    #                 )
-    #             if server.rack_id not in all_slots:
-    #                 all_slots[rack.id] = dict()
-    #
-    #             for i in range(server.slot, server.slot + server.occupation):
-    #                 if i not in all_slots[server.rack_id]:
-    #                     all_slots[server.rack_id][i] = server.id
-    #                 else:
-    #                     raise ValueError(
-    #                         f"invalid server slot/occupation: "
-    #                         f"Server({server.id}) has collision with "
-    #                         f"Server({all_slots[server.rack_id][i]})"
-    #                     )
-    #
-    #         return v
-    # TODO: REVISIT SERVER_PATCH_POSITIONS
-    # def server_patch_positions(self, server_id: str) -> Tuple[Vertex, Vertex]:
-    #     """Get the center point position of server inlet and outlet"""
-    #     server: Server = self.objects.servers.get(server_id)
-    #     rack: Rack = self.objects.racks.get(server.rack_id)
-    #     rack_model = self.objects.rack_models[rack.model]
-    #     server_model = self.objects.server_models[server.model]
-    #
-    #     z = (
-    #         rack_model.first_slot_offset
-    #         + (server.occupation / 2 + server.slot - 1) * 0.045
-    #     )
-    #     if self.constructions.raised_floor is not None:
-    #         z += self.constructions.raised_floor.height
-    #     z = round(z, 3)
-    #
-    #     # inlet
-    #     inlet_x = rack.placement.x + rack.size.dx / 2
-    #     inlet_y = rack.placement.y
-    #
-    #     inlet_x, inlet_y = rotate(
-    #         (rack.placement.x, rack.placement.y), (inlet_x, inlet_y), rack.orientation
-    #     )
-    #     inlet = Vertex(x=round(inlet_x, 3), y=round(inlet_y, 3), z=z)
-    #
-    #     # outlet
-    #     outlet_x = rack.placement.x + rack.size.dx / 2
-    #     outlet_y = rack.placement.y + server_model.depth
-    #     outlet_x, outlet_y = rotate(
-    #         (rack.placement.x, rack.placement.y), (outlet_x, outlet_y), rack.orientation
-    #     )
-    #     outlet = Vertex(x=round(outlet_x, 3), y=round(outlet_y, 3), z=z)
-    #     return inlet, outlet
+        for rack_id, rack in self.constructions.racks.items():
+            if server_id in rack.constructions.servers:
+                server = rack.constructions.servers.get(server_id)
+                server_rack = rack
 
-    # def acu_patch_positions(self, acu_id: str) -> Tuple[Vertex, Vertex]:
-    #     """Get the center point position of acu return and supply"""
-    #     acu: ACU = self.objects.acus.get(acu_id)
-    #     acu_model = self.objects.acu_models[acu.model]
-    #
-    #     def get_raw_point(face):
-    #         if face.side == Face.front:
-    #             x = acu.placement.x + acu.size.dx / 2 + face.offset.x
-    #             y = acu.placement.y
-    #             z = acu.placement.z + acu.size.dz / 2 + face.offset.y
-    #         elif face.side == Face.rear:
-    #             x = acu.placement.x + acu.size.dx / 2 + face.offset.x
-    #             y = acu.placement.y + acu.size.dy
-    #             z = acu.placement.z + acu.size.dz / 2 + face.offset.y
-    #         elif face.side == Face.left:
-    #             x = acu.placement.x
-    #             y = acu.placement.y + acu.size.dy / 2 - face.offset.x
-    #             z = acu.placement.z + acu.size.dz / 2 + face.offset.y
-    #         elif face.side == Face.right:
-    #             x = acu.placement.x + acu.size.dx
-    #             y = acu.placement.y + acu.size.dy / 2 - face.offset.x
-    #             z = acu.placement.z + acu.size.dz / 2 + face.offset.y
-    #         elif face.side == Face.top:
-    #             x = acu.placement.x + acu.size.dx / 2 + face.offset.x
-    #             y = acu.placement.y + acu.size.dy / 2 + face.offset.y
-    #             z = acu.size.dz
-    #         elif face.side == Face.bottom:
-    #             x = acu.placement.x + acu.size.dx / 2 + face.offset.x
-    #             y = acu.placement.y + acu.size.dy / 2 + face.offset.y
-    #             z = 0
-    #         else:
-    #             raise ValueError(f"not supported: face.side={face.side}")
-    #         if self.constructions.raised_floor is not None:
-    #             z += self.constructions.raised_floor.height
-    #         return round(x, 3), round(y, 3), round(z, 3)
-    #
-    #     def get_center_coordinate(face):
-    #         x, y, z = get_raw_point(face)
-    #         x, y = rotate(
-    #             (acu.placement.x, acu.placement.y), (x, y), acu.orientation
-    #         )
-    #         return Vertex(x=round(x, 3), y=round(y, 3), z=z)
-    #
-    #     inlet = get_center_coordinate(acu_model.return_face)
-    #     outlet = get_center_coordinate(acu_model.supply_face)
-    #
-    #     return inlet, outlet
+        rack: Rack = server_rack
+        # rack_model = self.objects.rack_models[rack.model]
+        # server_model = self.objects.server_models[server.model]
 
-    # @property
-    # def probes(self):
-    #     return list(self.objects.sensors.values())
-    #
-    # @validator("objects")
-    # def validate_objects(cls, v):
-    #     for server in v.servers.values():
-    #         rack = v.racks[server.rack_id]
-    #         server.orientation = rack.orientation
-    #         server.width = v.rack_models[rack.model].size.dx
-    #     return v
+        z = rack.geometry.location.z + rack.geometry.first_slot_offset + 0.045 * (
+                server.geometry.slot_position - 1)
+        z = round(z, 3)
+
+        # inlet
+        inlet_x = rack.geometry.location.x + rack.geometry.size.x / 2
+        inlet_y = rack.geometry.location.y
+
+        inlet_x, inlet_y = rotate(
+            (rack.geometry.location.x, rack.geometry.location.y), (inlet_x, inlet_y), rack.geometry.orientation
+        )
+        inlet = Vertex(x=round(inlet_x, 3), y=round(inlet_y, 3), z=z)
+
+        # outlet
+        outlet_x = rack.geometry.location.x + rack.geometry.size.x / 2
+        outlet_y = rack.geometry.location.y + server.geometry.depth
+        outlet_x, outlet_y = rotate(
+            (rack.geometry.location.x, rack.geometry.location.y), (outlet_x, outlet_y), rack.geometry.orientation
+        )
+        outlet = Vertex(x=round(outlet_x, 3), y=round(outlet_y, 3), z=z)
+        return inlet, outlet
+
+    def acu_patch_positions(self, acu_id: str) -> Tuple[Vertex, Vertex]:
+        """Get the center point position of acu return and supply"""
+        acu: ACU = self.constructions.acus.get(acu_id)
+
+        def get_raw_point(face):
+            if face.side == Face.front:
+                x = acu.geometry.location.x + acu.geometry.size.x / 2 + face.offset.x
+                y = acu.geometry.location.y
+                z = acu.geometry.location.z + acu.geometry.size.z / 2 + face.offset.y
+            elif face.side == Face.rear:
+                x = acu.geometry.location.x + acu.geometry.size.x / 2 + face.offset.x
+                y = acu.geometry.location.y + acu.geometry.size.y
+                z = acu.geometry.location.z + acu.geometry.size.z / 2 + face.offset.y
+            elif face.side == Face.left:
+                x = acu.geometry.location.x
+                y = acu.geometry.location.y + acu.geometry.size.y / 2 - face.offset.x
+                z = acu.geometry.location.z + acu.geometry.size.z / 2 + face.offset.y
+            elif face.side == Face.right:
+                x = acu.geometry.location.x + acu.geometry.size.x
+                y = acu.geometry.location.y + acu.geometry.size.y / 2 - face.offset.x
+                z = acu.geometry.location.z + acu.geometry.size.z / 2 + face.offset.y
+            elif face.side == Face.top:
+                x = acu.geometry.location.x + acu.geometry.size.x / 2 + face.offset.x
+                y = acu.geometry.location.y + acu.geometry.size.y / 2 + face.offset.y
+                z = acu.geometry.size.z
+            elif face.side == Face.bottom:
+                x = acu.geometry.location.x + acu.geometry.size.x / 2 + face.offset.x
+                y = acu.geometry.location.y + acu.geometry.size.y / 2 + face.offset.y
+                z = 0
+            else:
+                raise ValueError(f"not supported: face.side={face.side}")
+            if self.constructions.raised_floor is not None:
+                z += self.constructions.raised_floor.geometry.height
+            return round(x, 3), round(y, 3), round(z, 3)
+
+        def get_center_coordinate(face):
+            x, y, z = get_raw_point(face)
+            x, y = rotate(
+                (acu.geometry.location.x, acu.geometry.location.y), (x, y), acu.geometry.orientation
+            )
+            return Vertex(x=round(x, 3), y=round(y, 3), z=z)
+
+        inlet = get_center_coordinate(acu.geometry.return_face)
+        outlet = get_center_coordinate(acu.geometry.supply_face)
+
+        return inlet, outlet
+
+    @property
+    def probes(self):
+        return list(self.constructions.sensors.values())
+
 
     def dump(self, file_path: Union[str, Path]) -> None:
         with open(file_path, "w") as f:

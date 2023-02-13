@@ -15,7 +15,6 @@ class RoomParser:
     :param room: the room model
     """
 
-    # todo, update model structure in roomparser
     def __init__(
         self,
         room_path: Path = Path(""),
@@ -58,31 +57,39 @@ class RoomParser:
 
     @property
     def num_crac(self) -> int:
-        return len(self.model.objects.acus.items())
+        return len(self.model.constructions.acus.items())
 
     @property
     def num_ser(self) -> int:
-        return len(self.model.objects.servers.items())
+        count = 0
+        for rack in self.model.constructions.racks.values():
+            for server in rack.constructions.servers.values():
+                count += 1
+        return count
 
     @property
     def num_sen(self) -> int:
-        return len(self.model.objects.sensors.items())
+        return len(self.model.constructions.sensors.items())
 
     @property
     def crac_list(self) -> list:
-        return list(self.model.objects.acus.keys())
+        return list(self.model.constructions.acus.keys())
 
     @property
     def ser_list(self) -> List:
-        return list(self.model.objects.servers.keys())
+        server_list = []
+        for rack in self.model.constructions.racks.values():
+            for server_key, server in rack.constructions.servers.items():
+                server_list.append(server_key)
+        return server_list
 
     @property
     def rack_list(self) -> List:
-        return list(self.model.objects.racks.keys())
+        return list(self.model.constructions.racks.keys())
 
     @property
     def sen_list(self) -> List:
-        return list(self.model.objects.sensors.keys())
+        return list(self.model.constructions.sensors.keys())
 
     @property
     def server_type_list(self) -> List:
@@ -109,9 +116,9 @@ class RoomParser:
         """ Get the distance matrix of the ACU to sensor connections
         """
         acu2sen_dis = np.zeros([self.num_crac, self.num_sen])
-        for acu_idx, acu in enumerate(self.model.objects.acus.values()):
+        for acu_idx, acu in enumerate(self.model.constructions.acus.values()):
             for sen_idx, sen_loc in enumerate(self.model.probes):
-                acu_loc = acu.placement
+                acu_loc = acu.geometry.placement
                 acu2sen_dis[acu_idx][sen_idx] = self.euclidean_distance(acu_loc, sen_loc)
         return acu2sen_dis
 
@@ -120,10 +127,11 @@ class RoomParser:
         """ Get the distance matrix of the server to sensor connections
         """
         ser2sen_dis = np.zeros([self.num_ser, self.num_sen])
-        for ser_idx, ser in enumerate(self.model.objects.servers.values()):
-            for sen_idx, sen_loc in enumerate(self.model.probes):
-                ser_loc_i, ser_loc_o = self.model.server_patch_positions(ser.id)
-                ser2sen_dis[ser_idx][sen_idx] = self.euclidean_distance(ser_loc_o, sen_loc)
+        for rack in self.model.constructions.racks.values():
+            for ser_idx, ser in enumerate(rack.constructions.servers.values()):
+                for sen_idx, sen_loc in enumerate(self.model.probes):
+                    ser_loc_i, ser_loc_o = self.model.server_patch_positions(ser.id)
+                    ser2sen_dis[ser_idx][sen_idx] = self.euclidean_distance(ser_loc_o, sen_loc)
         return ser2sen_dis
 
     @property
@@ -131,11 +139,12 @@ class RoomParser:
         """ Get the distance matrix of the acu to server connections
         """
         acu2ser_dis = np.zeros([self.num_crac, self.num_ser])
-        for acu_idx, acu in enumerate(self.model.objects.acus.values()):
-            for ser_idx, ser in enumerate(self.model.objects.servers.values()):
-                acu_loc = acu.placement
-                ser_loc, _ = self.model.server_patch_positions(ser.id)
-                acu2ser_dis[acu_idx][ser_idx] = self.euclidean_distance(acu_loc, ser_loc)
+        for acu_idx, acu in enumerate(self.model.constructions.acus.values()):
+            for rack in self.model.constructions.racks.values():
+                for ser_idx, ser in enumerate(rack.constructions.servers.values()):
+                    acu_loc = acu.geometry.placement
+                    ser_loc, _ = self.model.server_patch_positions(ser.id)
+                    acu2ser_dis[acu_idx][ser_idx] = self.euclidean_distance(acu_loc, ser_loc)
         return acu2ser_dis
 
     @staticmethod
@@ -147,7 +156,7 @@ class RoomParser:
         crac_setpoints: Dict,
         crac_volume_flow_rates: Dict,
     ) -> None:
-        for uid, prop in self.model.objects.acus.items():
+        for uid, prop in self.model.constructions.acus.items():
             if crac_setpoints is not None:
                 try:
                     prop.supply_temperature = crac_setpoints[uid]
@@ -170,19 +179,20 @@ class RoomParser:
         server_powers: Dict,
         server_volume_flow_rates: Dict,
     ) -> None:
-        for uid, prop in self.model.objects.servers.items():
-            if server_powers is not None:
-                try:
-                    prop.heat_load = server_powers[uid]
-                    self._server_load_dict[uid] = server_powers[uid]
-                except KeyError:
-                    logger.critical(f"server {uid} power is missing")
-            if server_volume_flow_rates is not None:
-                try:
-                    prop.flow_rate = server_volume_flow_rates[uid]
-                    self._server_flow_rate_dict[uid] = server_volume_flow_rates[uid]
-                except KeyError:
-                    logger.critical(f"server {uid} volume flow rate is missing")
+        for rack in self.model.constructions.racks.values():
+            for uid, prop in rack.constructions.servers.items():
+                if server_powers is not None:
+                    try:
+                        prop.heat_load = server_powers[uid]
+                        self._server_load_dict[uid] = server_powers[uid]
+                    except KeyError:
+                        logger.critical(f"server {uid} power is missing")
+                if server_volume_flow_rates is not None:
+                    try:
+                        prop.flow_rate = server_volume_flow_rates[uid]
+                        self._server_flow_rate_dict[uid] = server_volume_flow_rates[uid]
+                    except KeyError:
+                        logger.critical(f"server {uid} volume flow rate is missing")
 
     def update_boundary_conditions(
         self,
@@ -200,11 +210,12 @@ class RoomParser:
             "crac_setpoints": {}, "crac_volume_flow_rates": {},
             "server_powers": {}, "server_volume_flow_rates": {}
         }
-        for uid, prop in self.model.objects.servers.items():
-            boundary_conditions["server_powers"][uid] = prop.heat_load
-            boundary_conditions["server_volume_flow_rates"][uid] = prop.flow_rate
-        for uid, prop in self.model.objects.acus.items():
-            boundary_conditions["crac_setpoints"][uid] = prop.supply_temperature
-            boundary_conditions["crac_volume_flow_rates"][uid] = prop.flow_rate
+        for rack in self.model.constructions.racks.values():
+            for uid, prop in rack.constructions.servers.items():
+                boundary_conditions["server_powers"][uid] = prop.heat_load
+                boundary_conditions["server_volume_flow_rates"][uid] = prop.flow_rate
+        for uid, prop in self.model.constructions.acus.items():
+            boundary_conditions["crac_setpoints"][uid] = prop.geometry.supply_temperature
+            boundary_conditions["crac_volume_flow_rates"][uid] = prop.geometry.flow_rate
 
         return boundary_conditions

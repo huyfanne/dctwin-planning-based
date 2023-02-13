@@ -73,21 +73,6 @@ class Builder:
 
         acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_dict)
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_dict)
-        if filename == "T":
-            print(template_env.get_template(f"0/{filename}.j2").render(
-                init_temperature=24 + 273.15,
-                p_rgh=round(self.room_dz * 9.81, 10),
-                acu_boundaries=[ACUBoundary(key, acu) for key, acu in self.acu_dict.items()],
-                server_boundaries=[
-                    ServerBoundary(key, server) for key, server in self.server_dict.items()
-                ],
-                room_boundary=RoomBoundary(self.room),
-                acu_k=acu_k,
-                acu_epsilon=acu_epsilon,
-                server_k=server_k,
-                server_epsilon=server_epsilon,
-                internal_field=internal_field,
-            ))
         with open(Path(config.cfd.case_dir, f"0/{filename}"), "w") as f:
             f.write(
                 template_env.get_template(f"0/{filename}.j2").render(
@@ -224,7 +209,7 @@ class TransientSolverBackend(SolverBackend):
         delta_t=1e-5,
     ) -> None:
         generate_control_dict(
-            room.probes,
+            probes=list([x.geometry.location for x in room.constructions.sensors.values()]),
             steady=False,
             delta_t=delta_t,
             write_interval=self.write_interval,
