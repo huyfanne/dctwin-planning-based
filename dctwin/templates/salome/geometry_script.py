@@ -73,7 +73,7 @@ class SalomeUtil:
         return geompy.MakePosition(obj, self.base_lcs, new_cs)
 
     def make_box(self, size, placement=None):
-        box = self.geom.MakeBoxDXDYDZ(size["dx"], size["dy"], size["dz"])
+        box = self.geom.MakeBoxDXDYDZ(size["x"], size["y"], size["z"])
         if placement is not None:
             return self.move_placement(box, placement)
         return box
@@ -229,9 +229,9 @@ class ServerModel:
         obj = cls()
         slot_height = 0.045
         obj.size = {
-            "dx": model_data["width"],
-            "dy": model_data["depth"],
-            "dz": model_data["occupation"] * slot_height,
+            "x": model_data["width"],
+            "y": model_data["depth"],
+            "z": model_data["slot_occupation"] * slot_height,
         }
         obj.is_meshed = False
         return obj
@@ -284,7 +284,7 @@ class RackModel:
         group = util.group_by_faces(box, exclude=["front", "rear"])
         self.rack_wall_mesh = util.mesh(group, 0.1, 2)
 
-        blanking_box = util.make_box({**self.size, "dz": 0.05, "dy": 0.1})
+        blanking_box = util.make_box({**self.size, "z": 0.05, "y": 0.1})
         self.rack_blanking_mesh = util.mesh(blanking_box, 0.05, 1)
         self.is_meshed = True
 
@@ -300,24 +300,6 @@ class RackModel:
             self.mesh()
 
         meshes = []
-        meshes.append(
-            util.copy_mesh(
-                f"rack_panel_default_{rack_id}",
-                self.rack_blanking_mesh,
-                {**placement, "z": 0},
-                orientation,
-                is_export=False,
-            )
-        )
-        meshes.append(
-            util.copy_mesh(
-                f"rack_panel_default_{rack_id}",
-                self.rack_blanking_mesh,
-                {**placement, "z": 0.05},
-                orientation,
-                is_export=False,
-            )
-        )
         if not self.first_slot_offset:
             try:
                 slots.remove(1)
@@ -342,252 +324,239 @@ class RackModel:
 
 
 class Builder:
-    def __init__(self) -> None:
-        self.partition_wall_list: list = list(
-            room["constructions"]["partition_walls"].values()
-        )
-        self.contaiments: list = list(room["constructions"]["containments"].values())
-        self.pillars: list = list(room["constructions"]["pillars"].values())
-        self.ceiling: dict = room["constructions"].get("ceiling", None)
-        self.raised_floor: dict = room["constructions"].get("raised_floor", None)
-        self.acus: dict = room["objects"]["acus"]
-        self.racks: dict = room["objects"]["racks"]
-        self.server_list: list = list(room["objects"]["servers"].values())
+    # def __init__(self) -> None:
+        # self.partition_wall_list: list = list(
+        #     room["constructions"]["partition_walls"].values()
+        # )
+        # self.contaiments: list = list(room["constructions"]["containments"].values())
+        # self.pillars: list = list(room["constructions"]["pillars"].values())
+        # self.ceiling: dict = room["constructions"].get("false_ceiling", None)
+        # self.raised_floor: dict = room["constructions"].get("raised_floor", None)
+        # self.acus: dict = room["constructions"]["acus"]
+        # self.racks: dict = room["constructions"]["racks"]
+        # self.server_list: list = list(room["objects"]["servers"].values())
 
-        self.acu_models: dict = room["objects"]["acu_models"]
-        self.rack_models: dict = room["objects"]["rack_models"]
-        self.server_models: dict = room["objects"]["server_models"]
+        # self.acu_models: dict = room["objects"]["acu_models"]
+        # self.rack_models: dict = room["objects"]["rack_models"]
+        # self.server_models: dict = room["objects"]["server_models"]
 
-        self.computed_rack_models: dict = dict()
+        # self.computed_rack_models: dict = dict()
 
-        self.room_height = room["height"]
-        self.floor_height = (
-            0 if self.raised_floor is None else self.raised_floor["height"]
-        )
-        self.slot_height = 0.045
+        # self.room_height = room["geometry"]["height"]
 
-        self.ceiling_face = None
-        self.floor_face = None
+        # self.floor_height = (
+        #     0 if self.raised_floor is None else self.raised_floor["geometry"]["height"]
+        # )
+
+        # self.slot_height = 0.045
+
+        # self.ceiling_face = None
+        # self.floor_face = None
 
     def make_acus(self):
-        models = dict()
-        for k, v in self.acu_models.items():
-            models[k] = ACUModel.from_dict(v)
-        for acu in self.acus.values():
-            model = models[acu["model"]]
-            new_placement = {**acu["placement"]}
-            model.make_acu(acu["id"], new_placement, acu["orientation"])
+        acu_models = {}
+        for acu_model_key, acu_model in room["geometry_model"]["acus"].items():
+            acu_models[acu_model_key] = ACUModel.from_dict(acu_model)
+        for acu_key, acu in room["constructions"]["acus"].items():
+            model = acu_models[acu["geometry"]["model"]]
+            model.make_acu(acu_key, acu["geometry"]["location"], acu["geometry"]["orientation"])
 
     def make_racks(self):
-        for k, v in self.rack_models.items():
-            self.computed_rack_models[k] = RackModel.from_dict(v)
-        for rack in self.racks.values():
-            model = self.computed_rack_models[rack["model"]]
-            new_placement = {**rack["placement"]}
-            model.make(rack["id"], new_placement, rack["orientation"])
+        slot_height = 0.045
+        rack_models = {}
+        server_models = {}
+        for rack_model_key, rack_model in room["geometry_model"]["racks"].items():
+            rack_models[rack_model_key] = RackModel.from_dict(rack_model)
+        for server_model_key, server_model in room["geometry_model"]["servers"].items():
+            server_models[server_model_key] = ServerModel.from_dict(server_model)
 
-    def make_servers(self):
-        models = dict()
-        for k, v in self.server_models.items():
-            models[k] = ServerModel.from_dict(v)
+        for rack_key, rack in room["constructions"]["racks"].items():
+            rack_model = rack_models[rack["geometry"]["model"]]
+            rack_model.make(rack_key, rack["geometry"]["location"], rack["geometry"]["orientation"])
 
-        rack_blanking_panels = dict()
-        for server in self.server_list:
-            model = models[server["model"]]
-            rack = self.racks[server["rack_id"]]
-            blanking_panels = rack_blanking_panels.get(
-                rack["id"], list(range(1, self.rack_models[rack["model"]]["slot"] + 1))
-            )
-            rack_blanking_panels[rack["id"]] = [
-                panel
-                for panel in blanking_panels
-                if panel
-                not in [
-                    x
-                    for x in range(
-                        server["slot"],
-                        server["slot"]
-                        + self.server_models[server["model"]]["occupation"],
-                    )
-                ]
-            ]
+            available_slots = {}
+            for slot in range(1, rack["geometry"]["slot"] + 1):
+                available_slots[slot] = True
 
-            offset = self.rack_models[rack["model"]]["first_slot_offset"]
-            model.make(
-                server["id"],
-                {
-                    **rack["placement"],
-                    "z": offset
-                    + self.slot_height * (server["slot"] - 1)
-                },
-                rack["orientation"],
-            )
+            for server_key, server in rack["constructions"]["servers"].items():
+                server_model = server_models[server["geometry"]["model"]]
+                server_starting_slot = server["geometry"]["slot_position"]
+                server_ending_slot = server["geometry"]["slot_position"] + server["geometry"]["slot_occupation"]
+                for server_slot in range(server_starting_slot, server_ending_slot):
+                    available_slots[server_slot] = False
 
-        for rack_id, blanking_panels in rack_blanking_panels.items():
-            rack = self.racks[rack_id]
-            has_blanking_panel = rack.get("has_blanking_panel", False)
-            if has_blanking_panel:
-                if len(self.computed_rack_models) == 0:
-                    for k, v in self.rack_models.items():
-                        self.computed_rack_models[k] = RackModel.from_dict(v)
-                rack_model: RackModel = self.computed_rack_models[rack["model"]]
+                server_height = rack["geometry"]["location"]["z"] + rack["geometry"]["first_slot_offset"] + slot_height * (server_starting_slot - 1)
+                server_model.make(
+                    server_key,
+                    {**rack["geometry"]["location"],"z": server_height},
+                    rack["geometry"]["orientation"],
+                )
+
+            if rack["geometry"]["has_blanking_panel"]:
+                blanking_panels = []
+                for slot, is_available in available_slots.items():
+                    if is_available:
+                        blanking_panels.append(slot)
+                print(blanking_panels)
                 rack_model.make_blanking(
-                    rack["id"],
-                    rack["placement"],
-                    rack["orientation"],
+                    rack_key,
+                    rack["geometry"]["location"],
+                    rack["geometry"]["orientation"],
                     slots=blanking_panels,
                 )
 
-    def make_pillars(self):
-        for i, pillar in enumerate(self.pillars):
-            placement, size = pillar["placement"], pillar["size"]
-            placement["z"] = 0
-            size["dz"] = self.room_height
-            box = util.make_box(size, placement)
-            contaiment_box = util.group_by_faces(box)
-            util.export_stl(util.mesh(contaiment_box, 0.5, 2), f"pillar_{i}")
 
-    def make_partition_walls(self):
-        for i, wall in enumerate(self.partition_wall_list):
-            placement, size = wall["placement"], wall["size"]
-            basic_face = util.geom.MakeFaceHW(size["dz"], size["dx"], 3)
-            for vent_opening in wall["vent_opening_list"]:
-                vent_face = util.geom.MakeFaceHW(
-                    vent_opening["length"], vent_opening["width"], 3
-                )
-                vent_face = util.geom.MakeTranslation(
-                    vent_face,
-                    (
-                        vent_opening["offset_h"]
-                        - (size["dx"] - vent_opening["length"]) / 2
-                    ),
-                    0,
-                    (
-                        vent_opening["offset_v"]
-                        - (size["dz"] - vent_opening["width"]) / 2
-                    ),
-                )
-                basic_face = util.geom.MakeCut(basic_face, vent_face)
-            vector = util.geom.MakeVectorDXDYDZ(0, 1, 0)
-            _box = util.geom.MakePrismVecH(basic_face, vector, size["dy"])
-            box = util.move_placement(
-                _box,
-                {
-                    "x": placement["x"] + size["dx"] / 2,
-                    "y": placement["y"],
-                    "z": (size["dz"] / 2) + placement["z"],
-                },
-            )
 
-            group = util.group_by_faces(box)
-            mesh_obj = util.mesh(group, 1, 4)
-            util.export_stl(mesh_obj, f"partition_wall_{i}")
+
+
+    # todo: add back the vent opening for boxes according to this logic
+    # def make_partition_walls(self):
+    #     for i, wall in enumerate(self.partition_wall_list):
+    #         placement, size = wall["placement"], wall["size"]
+    #         basic_face = util.geom.MakeFaceHW(size["dz"], size["dx"], 3)
+    #         for vent_opening in wall["vent_opening_list"]:
+    #             vent_face = util.geom.MakeFaceHW(
+    #                 vent_opening["length"], vent_opening["width"], 3
+    #             )
+    #             vent_face = util.geom.MakeTranslation(
+    #                 vent_face,
+    #                 (
+    #                     vent_opening["offset_h"]
+    #                     - (size["dx"] - vent_opening["length"]) / 2
+    #                 ),
+    #                 0,
+    #                 (
+    #                     vent_opening["offset_v"]
+    #                     - (size["dz"] - vent_opening["width"]) / 2
+    #                 ),
+    #             )
+    #             basic_face = util.geom.MakeCut(basic_face, vent_face)
+    #         vector = util.geom.MakeVectorDXDYDZ(0, 1, 0)
+    #         _box = util.geom.MakePrismVecH(basic_face, vector, size["dy"])
+    #         box = util.move_placement(
+    #             _box,
+    #             {
+    #                 "x": placement["x"] + size["dx"] / 2,
+    #                 "y": placement["y"],
+    #                 "z": (size["dz"] / 2) + placement["z"],
+    #             },
+    #         )
+    #
+    #         group = util.group_by_faces(box)
+    #         mesh_obj = util.mesh(group, 1, 4)
+    #         util.export_stl(mesh_obj, f"partition_wall_{i}")
 
     def make_room(self):
         oz = geompy.MakeVectorDXDYDZ(0, 0, 1)
         vertices = []
-        for vertex in room["plane_outline"]:
+        for vertex in room["geometry"]["plane"]:
             vertices.append(geompy.MakeVertex(vertex["x"], vertex["y"], vertex["z"]))
         lines = []
         for i in range(len(vertices)):
             start, end = i, i + 1 if i < len(vertices) - 1 else 0
             lines.append(geompy.MakeLineTwoPnt(vertices[start], vertices[end]))
         face = geompy.MakeFaceWires(lines, 1)
-        prism = geompy.MakePrismVecH(face, oz, room["height"])
+        prism = geompy.MakePrismVecH(face, oz, room["geometry"]["height"])
         # Setup raised floor
         room_box = util.move_placement(prism, {"x": 0, "y": 0, "z": 0})
         box_faces = util.group_by_faces(room_box)
         util.export_stl(util.mesh(box_faces, 2, 6), "room_wall_1")
 
         # Make ceiling
-        if self.ceiling is not None:
-            self.ceiling_face = util.move_placement(
-                face, {"x": 0, "y": 0, "z": self.ceiling["height"]}
-            )
-        # Make floor
-        if self.raised_floor is not None:
-            self.floor_face = util.move_placement(
-                face, {"x": 0, "y": 0, "z": self.floor_height}
+        false_ceiling = room["constructions"].get("false_ceiling", None)
+        if false_ceiling is not None:
+            ceiling_face = util.move_placement(
+                face, {"x": 0, "y": 0, "z": false_ceiling["geometry"]["height"]}
             )
 
-    def make_containments(self):
-        for index, contaiment in enumerate(self.contaiments):
-            new_placement = {**contaiment["placement"]}
-            box = util.make_box(contaiment["size"], new_placement)
+            opening_faces = []
+            opening_list = false_ceiling["geometry"]["openings"].values()
+            for opening in opening_list:
+                # Just for cutting face
+                opening["size"]["z"] = 0.1
+                opening["location"]["z"] = false_ceiling["geometry"]["height"]
+                box = util.make_box(opening["size"], opening["location"])
+                opening_faces.append(util.sub_face(box, "bottom"))
+
+            ceiling_face = util.geom.MakeCutList(ceiling_face, opening_faces)
+            util.export_stl(util.mesh(ceiling_face, 0.5, 5), "ceiling_1")
+
+        # Make floor
+        raised_floor = room["constructions"].get("raised_floor", None)
+        if raised_floor is not None:
+            floor_face = util.move_placement(
+                face, {"x": 0, "y": 0, "z": raised_floor["geometry"]["height"]}
+            )
+
+            opening_faces = []
+            opening_list = raised_floor["geometry"]["openings"].values()
+            for opening in opening_list:
+                # Just for cutting face
+                opening["size"]["z"] = 0.1
+                opening["location"]["z"] = raised_floor["geometry"]["height"]
+                box = util.make_box(opening["size"], opening["location"])
+                opening_faces.append(util.sub_face(box, "bottom"))
+
+            floor_face = util.geom.MakeCutList(floor_face, opening_faces)
+            util.export_stl(util.mesh(floor_face, 0.5, 5), "floor_1")
+
+    def make_boxes(self):
+        boxes_types_index = {}
+        for box in room["constructions"]["boxes"].values():
+            if(box['geometry']['model'] not in boxes_types_index):
+                boxes_types_index[box['geometry']['model']]=1
+            else:
+                boxes_types_index[box['geometry']['model']] += 1
+            geometry_box = util.make_box(box["geometry"]["size"], box["geometry"]["location"])
             exclude_faces = []
             for face in list(SalomeUtil.SUB_FACE_SIZE_INDICES):
-                if not contaiment[face]:
+                if not box["geometry"]["faces"][face]:
                     exclude_faces.append(face)
-            contaiment_box = util.group_by_faces(box, exclude=exclude_faces)
-            util.export_stl(util.mesh(contaiment_box, 0.5, 2), f"containment_{index}")
+            geometry_box = util.group_by_faces(geometry_box, exclude=exclude_faces)
+            util.export_stl(util.mesh(geometry_box, 0.5, 2), f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}")
 
-    def make_ceiling(self):
-        if self.ceiling is None:
-            return
-        duct_faces = []
+    # def make_ceiling(self):
+    #     if self.ceiling is None:
+    #         return
+    #     duct_faces = []
+    #
+    #     # duct out
+    #     duct_list = self.ceiling["duct_list"]
+    #     for index, duct in enumerate(duct_list):
+    #         box = util.make_box(duct["size"], duct["placement"])
+    #         duct_box = util.group_by_faces(box, exclude=["top", "bottom"])
+    #         util.export_stl(util.mesh(duct_box, 0.5, 2), f"ceiling_duct_{index}")
+    #         duct_faces.append(util.sub_face(box, "top"))
+    #
+    #     self.ceiling_face = util.geom.MakeCutList(self.ceiling_face, duct_faces)
+    #     util.export_stl(util.mesh(self.ceiling_face, 0.5, 5), "ceiling_1")
 
-        # duct out
-        duct_list = self.ceiling["duct_list"]
-        for index, duct in enumerate(duct_list):
-            box = util.make_box(duct["size"], duct["placement"])
-            duct_box = util.group_by_faces(box, exclude=["top", "bottom"])
-            util.export_stl(util.mesh(duct_box, 0.5, 2), f"ceiling_duct_{index}")
-            duct_faces.append(util.sub_face(box, "top"))
+    # def make_floor(self):
+    #     if self.raised_floor is None:
+    #         return
+    #     opening_faces = []
+    #     opening_list = self.raised_floor["opening_list"]
+    #     for opening in opening_list:
+    #         # Just for cutting face
+    #         opening["size"]["dz"] = 0.1
+    #         opening["placement"]["z"] = self.floor_height
+    #         box = util.make_box(opening["size"], opening["placement"])
+    #         opening_faces.append(util.sub_face(box, "bottom"))
+    #
+    #     self.floor_face = util.geom.MakeCutList(self.floor_face, opening_faces)
+    #     util.export_stl(util.mesh(self.floor_face, 0.5, 5), "floor_1")
 
-        self.ceiling_face = util.geom.MakeCutList(self.ceiling_face, duct_faces)
-        util.export_stl(util.mesh(self.ceiling_face, 0.5, 5), "ceiling_1")
-
-    def make_floor(self):
-        if self.raised_floor is None:
-            return
-        opening_faces = []
-        opening_list = self.raised_floor["opening_list"]
-        for opening in opening_list:
-            # Just for cutting face
-            opening["size"]["dz"] = 0.1
-            opening["placement"]["z"] = self.floor_height
-            box = util.make_box(opening["size"], opening["placement"])
-            opening_faces.append(util.sub_face(box, "bottom"))
-
-        self.floor_face = util.geom.MakeCutList(self.floor_face, opening_faces)
-        util.export_stl(util.mesh(self.floor_face, 0.5, 5), "floor_1")
-
-    def run(self, runner_id, runner_count):
-        if runner_id is None or runner_count is None:
-            self.make_room()
-            self.make_ceiling()
-            self.make_floor()
-            self.make_containments()
-            self.make_pillars()
-            self.make_partition_walls()
-            self.make_acus()
-            self.make_racks()
-            self.make_servers()
-        else:
-            runner_id = int(runner_id)
-            runner_count = int(runner_count)
-            if runner_id == 0:
-                self.make_room()
-                self.make_ceiling()
-                self.make_partition_walls()
-                self.make_acus()
-                self.make_racks()
-            else:
-                server_num = int(len(self.server_list) / runner_count)
-                start = (runner_id - 1) * server_num
-                end = (
-                    len(self.server_list)
-                    if runner_id == runner_count
-                    else runner_id * server_num
-                )
-                self.server_list = self.server_list[start:end]
-                self.make_servers()
+    def run(self):
+        print('runn start')
+        # print(room)
+        self.make_room()
+        self.make_boxes()
+        self.make_acus()
+        self.make_racks()
 
 
 def main():
-    runner_id = os.getenv("RUNNER_ID")
-    runner_count = os.getenv("RUNNER_COUNT")
-    Builder().run(runner_id, runner_count)
+    Builder().run()
     if SAVE_HDF:
         salome.myStudy.SaveAs("output.hdf", False, False)
 

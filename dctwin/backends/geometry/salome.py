@@ -3,7 +3,7 @@ from pathlib import Path
 
 from loguru import logger
 from dctwin.backends.core import Backend
-from dctwin.models.constructions import Room
+from dctwin.models.room import Room
 from dctwin.utils import template_env, config
 
 

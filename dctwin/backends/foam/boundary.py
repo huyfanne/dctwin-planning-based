@@ -1,7 +1,7 @@
 import abc
 
-from dctwin.models.constructions import Room
-from dctwin.models.objects import ACU, Server
+from dctwin.models.room import Room
+from dctwin.models.room import ACU, Server
 
 
 class Boundary(abc.ABC):
@@ -35,63 +35,54 @@ class RoomBoundary(Boundary):
 
     def generate_boundary(self, type_define):
         ceiling = f"ceiling_1 {type_define}"
-        if self.room.constructions.ceiling is None:
+        if self.room.constructions.false_ceiling is None:
             ceiling = ""
-        else:
-            ceiling = ceiling + "\n".join(
-                [
-                    f"ceiling_duct_{index} {type_define}"
-                    for index, _ in enumerate(self.room.constructions.ceiling.duct_list)
-                ]
-            )
 
         floor = f"floor_1 {type_define}"
         if self.room.constructions.raised_floor is None:
             floor = ""
 
-        containments_boundary = "\n".join(
+        boxes_types_index = {}
+        boxes_name_list = []
+        for box in self.room.constructions.boxes.values():
+            if (box.geometry.model not in boxes_types_index):
+                boxes_types_index[box.geometry.model] = 1
+            else:
+                boxes_types_index[box.geometry.model] += 1
+            boxes_name_list.append(f"box_{box.geometry.model}_{boxes_types_index[box.geometry.model]}")
+        boxes_boundary = "\n".join(
             [
-                f"containment_{index} {type_define}"
-                for index, _ in enumerate(list(self.room.constructions.containments))
-            ]
-        )
-        partition_wall_boundary = "\n".join(
-            [
-                f"partition_wall_{index} {type_define}"
-                for index, _ in enumerate(list(self.room.constructions.partition_walls))
-            ]
-        )
-        pillar_boundary = "\n".join(
-            [
-                f"pillar_{index} {type_define}"
-                for index, _ in enumerate(list(self.room.constructions.pillars))
+                f"{box_name} {type_define}"
+                for box_name in boxes_name_list
             ]
         )
 
         rack_boundary = "\n".join(
             [
-                f"rack_wall_{rack.id} {type_define}"
-                for rack in self.room.objects.racks.values()
+                f"rack_wall_{key} {type_define}"
+                for key, rack in self.room.constructions.racks.items()
             ]
         )
+        rack_with_panel = []
+        for key, rack in self.room.constructions.racks.items():
+            if rack.geometry.has_blanking_panel:
+                rack_with_panel.append(key)
+
         rack_panel_boundary = "\n".join(
             [
-                f"rack_panel_{rack.id} {type_define}"
-                for rack in filter(
-                    lambda r: r.has_blanking_panel, self.room.objects.racks.values()
-                )
+                f"rack_panel_{key} {type_define}"
+                for key in rack_with_panel
             ]
         )
         return f"""
         room_wall_1 {type_define}
         {ceiling}
         {floor}
-        {containments_boundary}
-        {pillar_boundary}
-        {partition_wall_boundary}
+        {boxes_boundary}
         {rack_boundary}
         {rack_panel_boundary}
         """
+
 
     @property
     def T(self):
@@ -103,15 +94,16 @@ class RoomBoundary(Boundary):
 
 
 class ACUBoundary(Boundary):
-    def __init__(self, acu: ACU) -> None:
+    def __init__(self, id: str, acu: ACU) -> None:
+        self.id = id
         self.object = acu
-        self.supply_kelvin = round(acu.supply_temperature + 273.15, 2)
-        self.flow_rate = round(acu.flow_rate, 6)
+        self.supply_kelvin = round(acu.geometry.supply_temperature + 273.15, 2)
+        self.flow_rate = round(acu.geometry.flow_rate, 6)
 
     @property
     def p_rgh(self):
         return f"""
-        acu_return_{self.object.id}
+        acu_return_{self.id}
         {{
             type        fixedValue;
             value 		$internalField;
@@ -121,13 +113,13 @@ class ACUBoundary(Boundary):
     @property
     def T(self):
         return f"""
-        acu_supply_{self.object.id}
+        acu_supply_{self.id}
         {{
             type    fixedValue;
             value   uniform {self.supply_kelvin};
         }}
-        acu_return_{self.object.id} {self.zero_gradient}
-        acu_wall_{self.object.id} {self.zero_gradient}
+        acu_return_{self.id} {self.zero_gradient}
+        acu_wall_{self.id} {self.zero_gradient}
         """
 
     @property
@@ -150,9 +142,9 @@ class ACUBoundary(Boundary):
             supply = self.no_slip
             _return = self.no_slip
         return f"""
-        acu_supply_{self.object.id} {supply}
-        acu_return_{self.object.id} {_return}
-        acu_wall_{self.object.id} {self.no_slip}
+        acu_supply_{self.id} {supply}
+        acu_return_{self.id} {_return}
+        acu_wall_{self.id} {self.no_slip}
         """
 
 
@@ -160,34 +152,35 @@ class ServerBoundary(Boundary):
     specificheat = 1006
     density = 1.19
 
-    def __init__(self, server: Server) -> None:
+    def __init__(self, id: str, server: Server) -> None:
+        self.id = id
         self.object: Server = server
-        self.heat_load = server.heat_load
-        self.flow_rate = round(server.flow_rate, 6)
+        self.heat_load = server.geometry.heat_load
+        self.flow_rate = round(server.geometry.flow_rate, 6)
         self.mass_flow_rate = self.density * self.flow_rate
         self.flow_value = self.mass_flow_rate * self.specificheat
 
-        self.area = server.inlet_area
-        if server.dynamic_temperature_low:
-            self.t_low = server.dynamic_temperature_low + 273.15
-            self.t_high = server.dynamic_temperature_high + 273.15
-            self.flow_rate_high = server.dynamic_flow_rate_high
-            self.slope = (self.flow_rate_high - server.flow_rate) / (
-                self.t_high - self.t_low
-            )
+        self.area = server.geometry.inlet_area
+        # if server.geometry.dynamic_temperature_low:
+        #     self.t_low = server.dynamic_temperature_low + 273.15
+        #     self.t_high = server.dynamic_temperature_high + 273.15
+        #     self.flow_rate_high = server.dynamic_flow_rate_high
+        #     self.slope = (self.flow_rate_high - server.flow_rate) / (
+        #         self.t_high - self.t_low
+        #     )
 
     @property
     def T(self):
-        t_sink = f"tSink_{self.object.id}"
+        t_sink = f"tSink_{self.id}"
         value = f"({t_sink}+({self.heat_load}/{self.flow_value}))"
         if self.flow_rate == 0:
             outlet = self.zero_gradient
-        elif (
-            self.object.dynamic_flow_rate_high is not None
-            and self.object.dynamic_temperature_high is not None
-            and self.object.dynamic_temperature_low is not None
-        ):
-            outlet = self.dynamic_t
+        # elif (
+        #     self.object.dynamic_flow_rate_high is not None
+        #     and self.object.dynamic_temperature_high is not None
+        #     and self.object.dynamic_temperature_low is not None
+        # ):
+        #     outlet = self.dynamic_t
         else:
             outlet = f"""
             {{
@@ -196,27 +189,27 @@ class ServerBoundary(Boundary):
                 valueExpr       "{value}";
                 variables
                 (
-                    "{t_sink}{{server_inlet_{self.object.id}}} = weightAverage(T)"
+                    "{t_sink}{{server_inlet_{self.id}}} = weightAverage(T)"
                 );
             }}"""
         return f"""
-        server_outlet_{self.object.id} {outlet}
-        server_wall_{self.object.id} {self.zero_gradient}
-        server_inlet_{self.object.id} {self.zero_gradient}
+        server_outlet_{self.id} {outlet}
+        server_wall_{self.id} {self.zero_gradient}
+        server_inlet_{self.id} {self.zero_gradient}
         """
 
     @property
     def dynamic_t(self) -> str:
-        t_sink = f"tSink_{self.object.id}"
+        t_sink = f"tSink_{self.id}"
         value = f"({t_sink}+({self.heat_load}/{self.flow_value}))"
-        u_sink = f"uSink_{self.object.id}"
-        changing_value = f"{self.heat_load}/({u_sink}*{self.object.outlet_area}*{self.density}*{self.specificheat})"
+        u_sink = f"uSink_{self.id}"
+        changing_value = f"{self.heat_load}/({u_sink}*{self.object.geometry.outlet_area}*{self.density}*{self.specificheat})"
         weight_u = "weightAverage(U.y())"
-        if self.object.orientation == 90:
+        if self.object.geometry.orientation == 90:
             weight_u = "-weightAverage(U.x())"
-        if self.object.orientation == 180:
+        if self.object.geometry.orientation == 180:
             weight_u = "-weightAverage(U.y())"
-        if self.object.orientation == 270:
+        if self.object.geometry.orientation == 270:
             weight_u = "weightAverage(U.x())"
         return f"""
         {{
@@ -233,35 +226,35 @@ class ServerBoundary(Boundary):
 
     @property
     def U(self):
-        if (
-            self.object.dynamic_flow_rate_high is not None
-            and self.object.dynamic_temperature_high is not None
-            and self.object.dynamic_temperature_low is not None
-        ):
-            inlet = self.dynamic_inlet
-            outlet = self.dynamic_outlet
-        else:
-            inlet = f"""
-            {{
-                type                flowRateOutletVelocity;
-                volumetricFlowRate  {self.flow_rate};
-                value               uniform (0 0 0);
-            }}
-            """
-            outlet = f"""
-            {{
-                type                flowRateInletVelocity;
-                volumetricFlowRate  {self.flow_rate};
-                value               uniform (0 0 0);
-            }}
-            """
+        # if (
+        #     self.object.dynamic_flow_rate_high is not None
+        #     and self.object.dynamic_temperature_high is not None
+        #     and self.object.dynamic_temperature_low is not None
+        # ):
+        #     inlet = self.dynamic_inlet
+        #     outlet = self.dynamic_outlet
+        # else:
+        inlet = f"""
+        {{
+            type                flowRateOutletVelocity;
+            volumetricFlowRate  {self.flow_rate};
+            value               uniform (0 0 0);
+        }}
+        """
+        outlet = f"""
+        {{
+            type                flowRateInletVelocity;
+            volumetricFlowRate  {self.flow_rate};
+            value               uniform (0 0 0);
+        }}
+        """
         if self.flow_rate == 0:
             inlet = self.no_slip
             outlet = self.no_slip
         return f"""
-        server_inlet_{self.object.id} {inlet}
-        server_outlet_{self.object.id} {outlet}
-        server_wall_{self.object.id} {self.no_slip}
+        server_inlet_{self.id} {inlet}
+        server_outlet_{self.id} {outlet}
+        server_wall_{self.id} {self.no_slip}
         """
 
     @property

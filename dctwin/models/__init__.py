@@ -1,6 +1,4 @@
 from dctwin.models.basics import Size, Vertex
-from dctwin.models.constructions import PartitionWall, Room
-from dctwin.models.objects import ACU, Rack
-from dctwin.models.server import Server
+from dctwin.models.room import PartitionWall, Room, ACU, Server, Rack
 
 __all__ = ['Vertex', 'Size', 'Server', 'ACU', 'Rack', 'PartitionWall', 'Room']

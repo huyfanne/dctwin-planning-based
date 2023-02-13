@@ -8,11 +8,11 @@ from pydantic import BaseModel, validator
 
 # noinspection PyMethodParameters
 class Size(BaseModel):
-    dx: float
-    dy: float
-    dz: float
+    x: float
+    y: float
+    z: float
 
-    @validator("dx", "dy", "dz")
+    @validator("x", "y", "z")
     def float_check(cls, v):
         return round(v, 3)
 
@@ -39,7 +39,6 @@ class Face(str, Enum):
 
 class ACUConfig(BaseModel):
     supply_temperature: float
-    fan_speed_ratio: float
     flow_rate: float
 
 

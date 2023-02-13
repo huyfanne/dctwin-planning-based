@@ -14,6 +14,8 @@ class RoomParser:
     :param room_path: the path of the room model
     :param room: the room model
     """
+
+    # todo, update model structure in roomparser
     def __init__(
         self,
         room_path: Path = Path(""),
@@ -45,13 +47,14 @@ class RoomParser:
             raise ValueError("Either room_path or room must be provided.")
 
     def _load_server_type(self) -> None:
-        for key, prop in self.model.objects.servers.items():
-            if prop.model is not None:
-                self._server_type_dict[prop.id] = prop.model
-                if prop.model not in self._server_type_list:
-                    self._server_type_list.append(prop.model)
-            else:
-                logger.warning(f"server {prop.id} type is not defined")
+        for rack_key, rack in self.model.constructions.racks.items():
+            for server_key, server in rack.constructions.servers.items():
+                if server.geometry.model is not None:
+                    self._server_type_dict[server_key] = server.geometry.model
+                    if server.geometry.model not in self._server_type_list:
+                        self._server_type_list.append(server.geometry.model)
+                else:
+                    logger.warning(f"server {server_key} type is not defined")
 
     @property
     def num_crac(self) -> int:

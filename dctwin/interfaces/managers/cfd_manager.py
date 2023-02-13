@@ -76,7 +76,6 @@ class CFDManager:
 
         self.last_state_case = None
         self.object_mesh_index = read_object_mesh_index(room=room)
-
         self.parser = RoomParser(room=room)
         self._setup_default_backend()
 
@@ -182,8 +181,8 @@ class CFDManager:
         self,
         case_idx: int = 1,
         episode_idx: int = None,
-        save_mesh_index: bool = True,
-        save_boundary_conditions: bool = True,
+        save_mesh_index: bool = False,
+        save_boundary_conditions: bool = False,
         **boundary_conditions
     ) -> np.ndarray:
         """Run the whole simulation: geometry -> mesh -> solve

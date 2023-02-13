@@ -9,7 +9,7 @@ from dctwin.backends.foam.utils import (
     generate_snappy_dict,
 )
 from dctwin.utils import config
-from dctwin.models.constructions import Room
+from dctwin.models.room import Room
 
 
 class SnappyHexBackend(Backend):
@@ -56,5 +56,5 @@ class SnappyHexBackend(Backend):
         )
         if config.cfd.dry_run:
             return
-        self.run_container(user=os.getuid(), case_dir=config.cfd.case_dir)
+        self.run_container(user=0, case_dir=config.cfd.case_dir)
         logger.info("***** Mesh finished *****\n\n")
