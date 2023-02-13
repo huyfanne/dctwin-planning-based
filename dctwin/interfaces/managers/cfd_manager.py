@@ -214,10 +214,10 @@ class CFDManager:
                 episode_idx=episode_idx,
                 case_idx=case_idx,
             )
-            # if run_geometry:
-            #     self.build_geometry()
+            if run_geometry:
+                self.build_geometry()
             if run_mesh:
-                # self.mesh()
+                self.mesh()
                 if save_mesh_index and self.object_mesh_index is None:
                     self.object_mesh_index = calc_object_mesh_index(
                         room=self.room, mesh_points=read_mesh_coordinates(),
