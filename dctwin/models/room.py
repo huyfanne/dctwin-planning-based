@@ -1,5 +1,4 @@
 import json
-from decimal import Decimal
 from pathlib import Path
 from typing import List, Optional, OrderedDict, Union, Tuple, Dict
 
@@ -7,8 +6,8 @@ from dctwin.models.basics import Face, Size, Vertex
 from dctwin.models.geometry_utils import rotate
 from dctwin.models.geometry_model import RoomGeometryModel, ACUModel, ACUFace, RackModel, ServerModel, BoxModel, \
     BoxFaces
-from pydantic import BaseModel, Field, validator, root_validator
-from dctwin.models.convert_to_snake_case import convert_json_file
+from pydantic import BaseModel, Field, root_validator
+from dctwin.models.geometry_utils import convert_json_file
 
 
 class Opening(BaseModel):
