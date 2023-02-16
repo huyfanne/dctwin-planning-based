@@ -81,8 +81,9 @@ class ACUGeometry(ACUModel):
     supply_face: Optional[ACUFace] = None
     return_face: Optional[ACUFace] = None
 
-    supply_temperature: Optional[float] = None
+    min_temperature: Optional[float] = None
     flow_rate: Optional[float] = None
+    cooling_capacity: Optional[float] = None
 
     def calculate_face_area(self, face: Face) -> float:
         if face in (Face.front, Face.rear):
@@ -246,7 +247,7 @@ class RoomGeometry(BaseModel):
 
 class ACUInputs(BaseModel):
     flow_rate: float
-    supply_temperature: float
+    min_temperature: float
 
 
 class ServerInputs(BaseModel):
@@ -295,7 +296,8 @@ class Room(BaseModel):
                 raise ValueError(f"missing input for acu {_id}")
             acu_input = {
                 "flow_rate": acu_inputs[_id]["flow_rate"],
-                "supply_temperature": acu_inputs[_id]["supply_temperature"]
+                "min_temperature": acu_inputs[_id]["min_temperature"],
+                "cooling_capacity": acu_inputs[_id]["cooling_capacity"]
             }
 
             if models.get(model_name) is not None:

@@ -38,8 +38,9 @@ class Face(str, Enum):
 
 
 class ACUConfig(BaseModel):
-    supply_temperature: float
+    min_temperature: float
     flow_rate: float
+    cooling_capacity: float
 
 
 class ServerConfig(BaseModel):

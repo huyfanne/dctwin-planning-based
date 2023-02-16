@@ -159,7 +159,7 @@ class RoomParser:
         for uid, prop in self.model.constructions.acus.items():
             if crac_setpoints is not None:
                 try:
-                    prop.supply_temperature = crac_setpoints[uid]
+                    prop.min_temperature = crac_setpoints[uid]
                     self._crac_setpoints_dict[uid] = crac_setpoints[uid]
                 except KeyError:
                     logger.critical(
@@ -215,7 +215,7 @@ class RoomParser:
                 boundary_conditions["server_powers"][uid] = prop.heat_load
                 boundary_conditions["server_volume_flow_rates"][uid] = prop.flow_rate
         for uid, prop in self.model.constructions.acus.items():
-            boundary_conditions["crac_setpoints"][uid] = prop.geometry.supply_temperature
+            boundary_conditions["crac_setpoints"][uid] = prop.geometry.min_temperature
             boundary_conditions["crac_volume_flow_rates"][uid] = prop.geometry.flow_rate
 
         return boundary_conditions

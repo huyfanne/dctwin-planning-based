@@ -157,6 +157,12 @@
                             "x": 2.172,
                             "y": 0.867,
                             "z": 0.0
+                        },
+                        "openingPercentage": 0.5,
+                        "openingDirection": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 1.8
                         }
                     },
                     "opening_2": {
@@ -2033,11 +2039,13 @@
         "acus": {
             "PCU_4": {
                 "flowRate": 3.1799999999999997,
-                "supplyTemperature": 42.1
+                "coolingCapacity": 900,
+                "minTemperature": 42.1
             },
             "PCU_5": {
                 "flowRate": 0.732,
-                "supplyTemperature": 42.0
+                "coolingCapacity": 900,
+                "minTemperature": 42.1
             }
         },
         "servers": {

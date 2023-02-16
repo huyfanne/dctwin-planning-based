@@ -97,8 +97,9 @@ class ACUBoundary(Boundary):
     def __init__(self, id: str, acu: ACU) -> None:
         self.id = id
         self.object = acu
-        self.supply_kelvin = round(acu.geometry.supply_temperature + 273.15, 2)
+        self.supply_kelvin = round(acu.geometry.min_temperature + 273.15, 2)
         self.flow_rate = round(acu.geometry.flow_rate, 6)
+        self.cooling_capacity = round(acu.geometry.cooling_capacity, 6)
 
     @property
     def p_rgh(self):
@@ -112,15 +113,31 @@ class ACUBoundary(Boundary):
 
     @property
     def T(self):
+        t_sink = f"tSink_{self.id}"
         return f"""
         acu_supply_{self.id}
         {{
-            type    fixedValue;
-            value   uniform {self.supply_kelvin};
+            type            exprFixedValue;
+            value           $internalField;
+            valueExpr      "max(t1,t2)";
+            variables
+            (
+                "{t_sink}{{acu_return_{self.id}}} = weightAverage(T)"
+                "coolingCapacity = {self.cooling_capacity}"
+                "rho = 1.2"
+                "flowrate = {self.flow_rate}"
+                "mfr = flowrate*rho"		
+                "Cp = 1006"
+                "t1={t_sink}-(coolingCapacity*1000/(mfr*Cp))"
+                "del_t=0.5"
+                "min_temperature = {self.supply_kelvin}"
+                "t2= min_temperature + del_t"
+            );
         }}
         acu_return_{self.id} {self.zero_gradient}
         acu_wall_{self.id} {self.zero_gradient}
         """
+
 
     @property
     def U(self):
@@ -185,7 +202,7 @@ class ServerBoundary(Boundary):
             outlet = f"""
             {{
                 type            exprFixedValue;
-                // value           $internalField;
+                value           $internalField;
                 valueExpr       "{value}";
                 variables
                 (
