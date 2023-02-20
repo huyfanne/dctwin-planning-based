@@ -1,11 +1,10 @@
 import json
 from pathlib import Path
-from typing import List, Optional, OrderedDict, Union, Tuple, Dict
+from typing import List, Optional, OrderedDict, Union, Tuple
 
 from dctwin.models.basics import Face, Size, Vertex
 from dctwin.models.geometry_utils import rotate
-from dctwin.models.geometry_model import RoomGeometryModel, ACUModel, ACUFace, RackModel, ServerModel, BoxModel, \
-    BoxFaces
+from dctwin.models.geometry_model import RoomGeometryModel, ACUModel, ACUFace, RackModel, ServerModel, BoxModel, BoxFaces
 from pydantic import BaseModel, Field, root_validator
 from dctwin.models.geometry_utils import convert_json_file
 
@@ -138,25 +137,12 @@ class ServerGeometry(ServerModel):
     model: str
     slot_position: int
 
-    # Temperature -> Flow rate, example: 27 -> 0.05
-    # dynamic_flow_rate_high: Optional[float] = None
-    # dynamic_temperature_high: Optional[float] = None
-    # dynamic_temperature_low: Optional[float] = None
-
     orientation: Optional[int] = None
     depth: Optional[float] = None
     slot_occupation: Optional[int] = None
     width: Optional[float] = None
     heat_load: Optional[float] = None
     flow_rate: Optional[float] = None
-
-    @property
-    def t_sink(self) -> str:
-        return f"tSink_{self.id}"
-
-    @property
-    def u_sink(self) -> str:
-        return f"uSink_{self.id}"
 
     @property
     def height(self) -> float:
@@ -188,14 +174,6 @@ class ServerGeometry(ServerModel):
         nu = 1.5e-05
         eddy_viscosity_ratio = 10
         return 0.09 * (self.k ** 2) / (nu * eddy_viscosity_ratio)
-
-    @property
-    def inlet_name(self) -> str:
-        return f"server_inlet_{self.id}"
-
-    @property
-    def outlet_name(self) -> str:
-        return f"server_outlet_{self.id}"
 
 
 class Server(BaseModel):
@@ -268,9 +246,6 @@ class Room(BaseModel):
     constructions: RoomConstructions
     inputs: Inputs
 
-    # def rack_model(self, rack_id):
-    #     return self.rack_models[self.racks[rack_id].model]
-    #
     @classmethod
     def _validate_id(cls, v: dict):
         for _id, obj in v.items():
@@ -389,8 +364,6 @@ class Room(BaseModel):
                                                      inputs["servers"])
         cls._validate_id(sensors)
 
-        # print(values["constructions"]["boxes"])
-
         return values
 
     def server_patch_positions(self, server_id: str) -> Tuple[Vertex, Vertex]:
@@ -477,7 +450,6 @@ class Room(BaseModel):
     @property
     def probes(self):
         return list(self.constructions.sensors.values())
-
 
     def dump(self, file_path: Union[str, Path]) -> None:
         with open(file_path, "w") as f:

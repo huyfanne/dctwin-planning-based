@@ -324,34 +324,6 @@ class RackModel:
 
 
 class Builder:
-    # def __init__(self) -> None:
-        # self.partition_wall_list: list = list(
-        #     room["constructions"]["partition_walls"].values()
-        # )
-        # self.contaiments: list = list(room["constructions"]["containments"].values())
-        # self.pillars: list = list(room["constructions"]["pillars"].values())
-        # self.ceiling: dict = room["constructions"].get("false_ceiling", None)
-        # self.raised_floor: dict = room["constructions"].get("raised_floor", None)
-        # self.acus: dict = room["constructions"]["acus"]
-        # self.racks: dict = room["constructions"]["racks"]
-        # self.server_list: list = list(room["objects"]["servers"].values())
-
-        # self.acu_models: dict = room["objects"]["acu_models"]
-        # self.rack_models: dict = room["objects"]["rack_models"]
-        # self.server_models: dict = room["objects"]["server_models"]
-
-        # self.computed_rack_models: dict = dict()
-
-        # self.room_height = room["geometry"]["height"]
-
-        # self.floor_height = (
-        #     0 if self.raised_floor is None else self.raised_floor["geometry"]["height"]
-        # )
-
-        # self.slot_height = 0.045
-
-        # self.ceiling_face = None
-        # self.floor_face = None
 
     def make_acus(self):
         acu_models = {}
@@ -404,12 +376,7 @@ class Builder:
                     rack["geometry"]["orientation"],
                     slots=blanking_panels,
                 )
-
-
-
-
-
-    # todo: add back the vent opening for boxes according to this logic
+    # todo: add back the vent opening for boxes once we have the requirement
     # def make_partition_walls(self):
     #     for i, wall in enumerate(self.partition_wall_list):
     #         placement, size = wall["placement"], wall["size"]
@@ -461,14 +428,12 @@ class Builder:
         room_box = util.move_placement(prism, {"x": 0, "y": 0, "z": 0})
         box_faces = util.group_by_faces(room_box)
         util.export_stl(util.mesh(box_faces, 2, 6), "room_wall_1")
-
         # Make ceiling
         false_ceiling = room["constructions"].get("false_ceiling", None)
         if false_ceiling is not None:
             ceiling_face = util.move_placement(
                 face, {"x": 0, "y": 0, "z": false_ceiling["geometry"]["height"]}
             )
-
             opening_faces = []
             opening_list = false_ceiling["geometry"]["openings"].values()
             for opening in opening_list:
@@ -477,17 +442,14 @@ class Builder:
                 opening["location"]["z"] = false_ceiling["geometry"]["height"]
                 box = util.make_box(opening["size"], opening["location"])
                 opening_faces.append(util.sub_face(box, "bottom"))
-
             ceiling_face = util.geom.MakeCutList(ceiling_face, opening_faces)
             util.export_stl(util.mesh(ceiling_face, 0.5, 5), "ceiling_1")
-
         # Make floor
         raised_floor = room["constructions"].get("raised_floor", None)
         if raised_floor is not None:
             floor_face = util.move_placement(
                 face, {"x": 0, "y": 0, "z": raised_floor["geometry"]["height"]}
             )
-
             opening_faces = []
             opening_list = raised_floor["geometry"]["openings"].values()
             for opening in opening_list:
@@ -496,7 +458,6 @@ class Builder:
                 opening["location"]["z"] = raised_floor["geometry"]["height"]
                 box = util.make_box(opening["size"], opening["location"])
                 opening_faces.append(util.sub_face(box, "bottom"))
-
             floor_face = util.geom.MakeCutList(floor_face, opening_faces)
             util.export_stl(util.mesh(floor_face, 0.5, 5), "floor_1")
 
@@ -515,40 +476,7 @@ class Builder:
             geometry_box = util.group_by_faces(geometry_box, exclude=exclude_faces)
             util.export_stl(util.mesh(geometry_box, 0.5, 2), f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}")
 
-    # def make_ceiling(self):
-    #     if self.ceiling is None:
-    #         return
-    #     duct_faces = []
-    #
-    #     # duct out
-    #     duct_list = self.ceiling["duct_list"]
-    #     for index, duct in enumerate(duct_list):
-    #         box = util.make_box(duct["size"], duct["placement"])
-    #         duct_box = util.group_by_faces(box, exclude=["top", "bottom"])
-    #         util.export_stl(util.mesh(duct_box, 0.5, 2), f"ceiling_duct_{index}")
-    #         duct_faces.append(util.sub_face(box, "top"))
-    #
-    #     self.ceiling_face = util.geom.MakeCutList(self.ceiling_face, duct_faces)
-    #     util.export_stl(util.mesh(self.ceiling_face, 0.5, 5), "ceiling_1")
-
-    # def make_floor(self):
-    #     if self.raised_floor is None:
-    #         return
-    #     opening_faces = []
-    #     opening_list = self.raised_floor["opening_list"]
-    #     for opening in opening_list:
-    #         # Just for cutting face
-    #         opening["size"]["dz"] = 0.1
-    #         opening["placement"]["z"] = self.floor_height
-    #         box = util.make_box(opening["size"], opening["placement"])
-    #         opening_faces.append(util.sub_face(box, "bottom"))
-    #
-    #     self.floor_face = util.geom.MakeCutList(self.floor_face, opening_faces)
-    #     util.export_stl(util.mesh(self.floor_face, 0.5, 5), "floor_1")
-
     def run(self):
-        print('runn start')
-        # print(room)
         self.make_room()
         self.make_boxes()
         self.make_acus()

@@ -4,11 +4,10 @@ form.epsilon.value = 0.09 * Math.pow(form.k.value,1.5) / form.Tu_L.value
 form.omega.value = form.epsilon.value / (0.09 * form.k.value)
 """
 import abc
-import os
 import shutil
 import time
 from pathlib import Path
-from typing import List, Union, Tuple
+from typing import Tuple
 
 from dctwin.backends.core import Backend
 from dctwin.backends.foam.boundary import (
@@ -18,7 +17,6 @@ from dctwin.backends.foam.boundary import (
 )
 
 from dctwin.backends.foam.utils import generate_control_dict, read_internal_field
-from dctwin.models import ACU, Server
 from dctwin.models.room import Room
 from dctwin.utils import template_env, config
 

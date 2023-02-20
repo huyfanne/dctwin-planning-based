@@ -181,8 +181,8 @@ class CFDManager:
         self,
         case_idx: int = 1,
         episode_idx: int = None,
-        save_mesh_index: bool = True,
-        save_boundary_conditions: bool = True,
+        save_mesh_index: bool = False,
+        save_boundary_conditions: bool = False,
         **boundary_conditions
     ) -> np.ndarray:
         """Run the whole simulation: geometry -> mesh -> solve

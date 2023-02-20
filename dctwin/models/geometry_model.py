@@ -1,11 +1,7 @@
-import json
-from decimal import Decimal
-from pathlib import Path
-from typing import List, Optional, OrderedDict, Union, Tuple
+from typing import OrderedDict
 
 from dctwin.models.basics import Face, Size, Vertex
-from dctwin.models.geometry_utils import rotate
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel
 
 
 class ACUFace(BaseModel):
