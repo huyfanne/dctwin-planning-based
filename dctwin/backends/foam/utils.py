@@ -163,9 +163,9 @@ def generate_snappy_dict(
         "acu_wall": {"type": "wall", "level": 2, "refine_level": "(0 2)"},
         "acu_return": {"type": "patch", "level": 2, "refine_level": "(0 2)"},
         "acu_supply": {"type": "patch", "level": 2, "refine_level": "(0 2)"},
-        "server_inlet": {"type": "patch", "level": 3, "refine_level": "(0 3)"},
-        "server_outlet": {"type": "patch", "level": 3, "refine_level": "(0 3)"},
-        "server_wall": {"type": "wall", "level": 3, "refine_level": "(0 3)"},
+        "server_inlet": {"type": "patch", "level": 2, "refine_level": "(0 3)"},
+        "server_outlet": {"type": "patch", "level": 2, "refine_level": "(0 3)"},
+        "server_wall": {"type": "wall", "level": 2, "refine_level": "(0 3)"},
         "rack_wall": {
             "type": "wall",
             "level": 1,
