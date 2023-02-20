@@ -56,7 +56,7 @@ class Backend(abc.ABC):
         self,
         case_dir: Union[Path, str],
         environment: dict = None,
-        auto_remove: bool = False,
+        auto_remove: bool = True,
         user: int = None,
         working_dir: str = None,
         stream: bool = False,
