@@ -188,6 +188,7 @@ class SteadySolverBackend(SolverBackend):
         delta_t=1,
     ) -> None:
         generate_control_dict(
+            probes=list([x.geometry.location for x in room.constructions.sensors.values()]),
             steady=True,
             delta_t=delta_t,
             write_interval=self.write_interval,
