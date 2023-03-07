@@ -110,7 +110,7 @@ class Room(BaseModel):
 
         z = (
             rack_model.first_slot_offset
-            + (server.occupation / 2 + server.slot - 1) * 0.05
+            + (server.occupation / 2 + server.slot - 1) * 0.045
         )
         if self.constructions.raised_floor is not None:
             z += self.constructions.raised_floor.height

@@ -43,7 +43,7 @@ class Server(BaseModel):
 
     @property
     def height(self) -> float:
-        return self.occupation * 0.05
+        return self.occupation * 0.045
 
     @property
     def inlet_area(self) -> float:
