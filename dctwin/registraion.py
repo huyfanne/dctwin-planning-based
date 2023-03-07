@@ -9,6 +9,7 @@ def make_env(
     env_proto_config: str,
     reward_fn: Callable[[BaseEnv], float],
     schedule_fn: Callable = None,
+    map_boundary_condition_fn: Callable = None
 ) -> Union[gym.Env, BaseEnv]:
     """The factory function to create the environment.
     :param env_proto_config: the path to the protobuf config file
@@ -24,6 +25,8 @@ def make_env(
         getattr(engine_config, env_config_name).env_params,
         preserving_proto_field_name=True,
     )
+    if env_config_name == "cosim_env_config":
+        env_params.update({"map_boundary_condition_fn": map_boundary_condition_fn})
     env = gym.make(
         get_env_id(env_config_name),
         config=getattr(engine_config, env_config_name),

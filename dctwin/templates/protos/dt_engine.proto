@@ -48,13 +48,14 @@ message IDFXIActuatorConfig {
       System_Node_Setpoint = 1;
       PUMP = 2;
       Schedule_Constant = 3;
+      Supply_Side_Branch = 4;
   }
   enum ControlType {
       Fan_Air_Mass_Flow_Rate = 0;
       Temperature_Setpoint = 1;
-      Mass_Flow_Rate_Setpoint = 2;
-      Pump_Mass_Flow_Rate = 3;
-      Schedule_Value = 4;
+      Pump_Mass_Flow_Rate = 2;
+      Schedule_Value = 3;
+      On_Off_Supervisory = 4;
   }
   required string actuated_component_unique_name = 1;
   required ComponentType actuated_component_type = 2;
@@ -195,12 +196,12 @@ message CFDEnvConfig {
   optional int64 end_time = 8 [default = 500]; // path of object mesh index
   optional string mesh_dir = 9 [default = ""]; // path of mesh directory
   repeated CFDMeshConfig field_config  = 10; // object mesh config
-  optional string pod_method = 11 [default = "GP-Flux"]; // POD coefficients calculation method
+  optional string pod_method = 11 [default = "GP"]; // POD coefficients calculation method
   repeated CFDObservationConfig observations = 12;
   optional bool use_unnormed_obs = 13 [default = false];
   optional bool dry_run = 14 [default = false];
+  optional bool run_cfd = 15 [default = false];
 }
-
 
 // co-simulation env config
 message CoSimEnvConfig {

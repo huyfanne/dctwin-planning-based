@@ -38,7 +38,7 @@ class PODBuilder:
         num_modes: int = 0,
         max_iter: int = 1000,
         tol: float = 1e-9,
-        lr: float = 0.05,
+        lr: float = 0.001,
     ) -> None:
         self.num_modes = num_modes
         self.room = room

@@ -131,7 +131,7 @@ class Config:
         self.LOG_DIR = Path(log_dir)
 
 
-config = Config()
+config: Config = Config()
 
 
 def read_engine_config(

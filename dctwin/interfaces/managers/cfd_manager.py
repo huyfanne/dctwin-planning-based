@@ -50,6 +50,7 @@ class CFDManager:
         mesh_process: int = 8,
         solve_process: int = 8,
         steady: bool = True,
+        run_cfd: bool = True,
         write_interval: int = 50,
         end_time: int = 100,
         field_config: Dict = None,
@@ -66,6 +67,7 @@ class CFDManager:
 
         self.room = room
         self.steady = steady
+        self.run_cfd = run_cfd
         self.mesh_process = mesh_process
         self.solve_process = solve_process
         self.write_interval = write_interval
@@ -185,7 +187,7 @@ class CFDManager:
         save_mesh_index: bool = True,
         save_boundary_conditions: bool = True,
         **boundary_conditions
-    ) -> np.ndarray:
+    ) -> Union[np.ndarray, torch.Tensor]:
         """Run the whole simulation: geometry -> mesh -> solve
         :param case_idx: case index for different simulation (default: 1)
         :param episode_idx: episode index for different simulation (default: None)
@@ -199,8 +201,8 @@ class CFDManager:
             }
         :return: temperature fields
         """
-        if self.pod_backend is not None:
-            # use reduced-order CFD simulation if POD backend is provided
+        if self.pod_backend is not None and not self.run_cfd:
+            # use reduced-order CFD simulation if POD backend is provided and run_cfd flag is set
             assert self.object_mesh_index is not None, \
                 "object mesh index is not provided， " \
                 "please specify the index file path or read from the mesh directory"

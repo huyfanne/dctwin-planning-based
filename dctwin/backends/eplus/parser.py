@@ -65,6 +65,7 @@ class IDFParser:
 
         self.epm = op.Epm.load(idf_path)
         self.node_names = self._get_node_names()
+        self.branch_name = self._get_branch_names()
         self.component_names = self._get_component_names()
         self.zone_names = self._get_zone_names()
         self.thermostats_name = self._get_thermostat_setpoints_name()
@@ -156,7 +157,16 @@ class IDFParser:
             for idx in range(num_components):
                 node_names.add(branch[f"component_{idx + 1}_inlet_node_name"])
                 node_names.add(branch[f"component_{idx + 1}_outlet_node_name"])
+        for atu in self.epm.ZoneHVAC_AirDistributionUnit:
+            node_names.add(atu.air_distribution_unit_outlet_node_name)
         return node_names
+
+    def _get_branch_names(self):
+        branch_names = set()
+        branches = self.epm.Branch
+        for branch in branches:
+            branch_names.add(branch.name)
+        return branch_names
 
     def _get_component_names(self):
         """
@@ -458,12 +468,12 @@ class IDFParser:
         # check whether the actuated component name is valid
 
         if actuator_config.actuated_component_unique_name.lower() \
-                not in set.union(self.component_names, self.node_names):
+                not in set.union(self.component_names, self.node_names, self.branch_name):
             raise ValueError(
                 f"Actuated Component Unique Name : {actuator_config.actuated_component_unique_name} is not defined in "
                 f"IDF file.")
 
-            # check if the external schedule is already exist in the idf file
+        # check if the external schedule is already exist in the idf file
         if self.epm.ExternalInterface_Actuator.select(lambda x: x.name == name.lower()) is not None:
             act = self.epm.ExternalInterface_Actuator.select(lambda x: x.name == name.lower())
             act.delete()
@@ -477,6 +487,11 @@ class IDFParser:
         control_type = actuator_config.DESCRIPTOR.EnumValueName("ControlType",
                                                                 actuator_config.actuated_component_control_type)
         control_type = " ".join(control_type.split("_"))
+
+        # here we must use "on/off" instead of "on off" as stated by EnergyPlus :)
+        if control_type.lower() == "on off supervisory":
+            control_type = "on/off supervisory"
+
         initial_value = actuator_config.initial_value if actuator_config.initial_value else None
         self.epm.ExternalInterface_Actuator.add(
             name=name,

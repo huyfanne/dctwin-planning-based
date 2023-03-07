@@ -34,6 +34,7 @@ class CoSimEnv(EPlusEnv):
     def __init__(
         self,
         config: CoSimEnvConfig,
+        map_boundary_condition_fn: Callable,
         reward_fn: Optional[Callable] = None,
         schedule_fn: Optional[Callable] = None,
         docker_client: docker.DockerClient = None,
@@ -57,11 +58,12 @@ class CoSimEnv(EPlusEnv):
             mesh_process=config.cfd.process_num,
             solve_process=config.cfd.process_num,
             steady=config.cfd.steady,
+            run_cfd=config.cfd.run_cfd,
             pod_method=config.cfd.pod_method,
             docker_client=docker_client,
             eplus_backend=self.eplus_backend,
+            map_boundary_condition_fn=map_boundary_condition_fn
         )
-        # append cfd observations to co-sim observations,
         # more additional observation can be added if more simulators are introduced in the future
         self._set_cfd_observations()
 

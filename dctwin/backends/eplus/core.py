@@ -179,12 +179,13 @@ class EplusBackend(Backend):
             network=self._network,
             case_dir=config.eplus.case_dir,
         )
-        try:
-            self._conn, addr = self._socket.accept()
-            logger.info(f"Got connection from {addr}")
-        except Exception as e:
-            logger.error(f"Failed to get message from EnergyPlus process: {str(e)}")
-            exit(-1)  # die, not need to handle it as there is no workarounds
+        while True:
+            try:
+                self._conn, addr = self._socket.accept()
+                logger.info(f"Got connection from {addr}")
+                break
+            except socket.timeout:
+                logger.info("Waiting for connection...")
         return self.receive_status()  # as it cannot be done on the very first step
 
     def _serialize(self, actions: list) -> str:

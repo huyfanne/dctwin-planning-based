@@ -2,8 +2,9 @@ import shutil
 import csv
 import json
 import docker
+import loguru
 import numpy as np
-from typing import Dict, Tuple, Any, Union, List
+from typing import Dict, Tuple, Any, Union, List, Callable
 from pathlib import Path
 from sympy import symbols, solve
 import torch
@@ -18,7 +19,6 @@ from dctwin.models import Room
 class EplusCFDAdapter:
     """
     A class to manage the co-simulation between CFD and E+.
-
     :param room: the room object model for data hall
     :param eplus_backend: the E+ backend to be used
     :param mesh_process: the number of processes to be used for meshing
@@ -29,7 +29,6 @@ class EplusCFDAdapter:
     :param field_config: the configuration of the field variables
     :param pod_method: the method to be used for POD
     :param docker_client: the docker client to be used for running the docker container
-
     """
 
     rho_air = 1.19  # air density kg/m^3
@@ -38,9 +37,11 @@ class EplusCFDAdapter:
         self,
         room: Room,
         eplus_backend: EplusBackend,
+        map_boundary_condition_fn: Callable,
         mesh_process: int = 8,
         solve_process: int = 8,
         steady: bool = True,
+        run_cfd: bool = False,
         write_interval: int = None,
         end_time: int = None,
         field_config: Dict = None,
@@ -48,11 +49,14 @@ class EplusCFDAdapter:
         docker_client: docker.DockerClient = None,
     ) -> None:
 
+        assert map_boundary_condition_fn is not None, loguru.logger.critical("No map function provided !")
+
         self.cfd_manager = CFDManager(
             room=room,
             mesh_process=mesh_process,
             solve_process=solve_process,
             steady=steady,
+            run_cfd=run_cfd,
             write_interval=write_interval,
             end_time=end_time,
             field_config=field_config,
@@ -64,9 +68,10 @@ class EplusCFDAdapter:
         self.cfd_sensor_obs = None
         self.episode_idx, self.step_idx = 1, 1
         self.server_inlet_temps = {}
-
         with open(config.co_sim.idf2room_map, "r") as f:
             self.idf2room_mapper = json.load(f)
+        # callback functions
+        self._map_boundary_conditions_fn = map_boundary_condition_fn
 
     def _pre_process(self, episode_idx: int = 0) -> None:
         """ create case directory and backup model files"""
@@ -225,51 +230,6 @@ class EplusCFDAdapter:
             server_inlet_temps.append(server_inlet_temp)
         return server_inlet_temps
 
-    def map_boundary_conditions(self, parsed_actions: Dict) -> Dict:
-        """
-        Map the action dict into boundary condition dict with a given format.
-        Boundary conditions should include supply temperature, supply
-        volumetric flow rate, server powers and server flow rates.
-        Server power and server flow rate are computed in a model-based manner
-        with the model from Eplus. The curve parameters for the server power model
-        and flow rate model are from parsing the idf file automatically.
-        """
-        boundary_conditions = {
-            "crac_setpoints": {}, "crac_volume_flow_rates": {},
-            "server_powers": {}, "server_volume_flow_rates": {}
-        }
-        # loguru.logger.debug("map boundary condition: {}".format(parsed_actions["cpu_loading_schedule"]))
-        # set crac supply temperature and supply volumetric flow rate
-        for crac in self.eplus_manager.idf_parser.epm.AirLoopHVAC:
-            uid = self.idf2room_mapper[crac.name]
-            boundary_conditions["crac_setpoints"][uid] = parsed_actions[f"{uid}_setpoint"]
-            boundary_conditions["crac_volume_flow_rates"][uid] = parsed_actions[f"{uid}_flow_rate"] / self.rho_air
-
-        # compute server power and volumetric flow rate
-        for idx, it_equipment in enumerate(self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled):
-            # assert len(self.idf2room_mapper[it_equipment.name]["servers"]) == self.eplus_manager.idf_parser.number_of_units[it_equipment.name], \
-            #     "The number of servers in the room should be equal to the number of units in the idf file."
-            for server_id in self.idf2room_mapper[it_equipment.name]["servers"]:
-                # The calculation assumes that the servers are homogeneous and use the same curve
-                # parameters for power and flow rate models.
-                # TODO: can be extended to heterogeneous servers with different curve parameters
-                heat_load = self.eplus_manager.idf_parser.compute_server_power(
-                    utilization=parsed_actions[f"cpu_loading_schedule{idx + 1}"],
-                    inlet_temperature=self.server_inlet_temps[server_id],
-                    name=it_equipment.name
-                )
-                volume_flow_rate = self.eplus_manager.idf_parser.compute_server_flow_rate(
-                    utilization=parsed_actions[f"cpu_loading_schedule{idx + 1}"],
-                    inlet_temperature=self.server_inlet_temps[server_id],
-                    name=it_equipment.name
-                )
-                boundary_conditions["server_powers"][server_id] = heat_load
-                boundary_conditions["server_volume_flow_rates"][server_id] = volume_flow_rate
-
-        # scale server flow rate so that the summation of server flow rate will not exceed supply flow rate
-        boundary_conditions = self._scale_server_flow_rate(boundary_conditions=boundary_conditions)
-        return boundary_conditions
-
     def send_action(self, parsed_actions) -> None:
         """
         Run simulation with hybrid environment. The data hall simulation is
@@ -279,7 +239,10 @@ class EplusCFDAdapter:
         compute the corresponding power consumption.
         """
         self.step_idx += 1
-        boundary_conditions = self.map_boundary_conditions(parsed_actions)
+        # boundary_conditions = self.map_boundary_conditions(parsed_actions)
+        boundary_conditions = self._map_boundary_conditions_fn(self, parsed_actions)
+        # scale server flow rate so that the summation of server flow rate will not exceed supply flow rate
+        boundary_conditions = self._scale_server_flow_rate(boundary_conditions=boundary_conditions)
         # run CFD/POD simulation
         temperature = self.cfd_manager.run(
             case_idx=self.step_idx,
