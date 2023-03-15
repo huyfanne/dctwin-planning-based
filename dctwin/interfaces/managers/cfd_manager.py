@@ -47,8 +47,8 @@ class CFDManager:
     def __init__(
         self,
         room: Room,
-        mesh_process: int = 8,
-        solve_process: int = 8,
+        mesh_process: int = 32,
+        solve_process: int = 32,
         steady: bool = True,
         write_interval: int = 50,
         end_time: int = 100,
