@@ -2,7 +2,10 @@ import shutil
 import time
 import socket
 import datetime
-import opyplus as op
+try:
+    import opyplus as op
+except ImportError:
+    pass
 
 from pathlib import Path
 from typing import List, Tuple, Union, Optional
