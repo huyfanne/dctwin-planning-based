@@ -32,13 +32,13 @@ class EplusBackend(Backend):
     _encoding = "ISO-8859-1"
 
     def __init__(
-        self,
-        proto_config: EPlusEnvConfig,
-        host: Optional[str] = "localhost",
-        network: Optional[str] = "host",
-        docker_client: DockerClient = None,
-        *args,
-        **kwargs
+            self,
+            proto_config: EPlusEnvConfig,
+            host: Optional[str] = "localhost",
+            network: Optional[str] = "host",
+            docker_client: DockerClient = None,
+            *args,
+            **kwargs
     ) -> None:
         super().__init__(client=docker_client, *args, **kwargs)
         self._network = network
@@ -66,7 +66,7 @@ class EplusBackend(Backend):
         """ Create a socket for communication with the BCVTB
         """
         self._socket = socket.socket()
-        self._socket.settimeout(10)
+        self._socket.settimeout(30)
         self._socket.bind(("0.0.0.0", 0))
         self._socket.listen()
         if self._host is None:
@@ -103,10 +103,10 @@ class EplusBackend(Backend):
             f"-w {config.eplus.weather_file.name} "
             f"-r {config.eplus.idf_file.name}"
         ]
-    
+
     def _parse_idf_and_gen_bcvtb_config(
-        self,
-        idf_path: Union[str, Path],
+            self,
+            idf_path: Union[str, Path],
     ) -> None:
         logger.info("Parsing IDF file...")
         self.idf_parser = IDFParser(idf_path=str(idf_path))
@@ -186,6 +186,7 @@ class EplusBackend(Backend):
                 break
             except socket.timeout:
                 logger.info("Waiting for connection...")
+
         return self.receive_status()  # as it cannot be done on the very first step
 
     def _serialize(self, actions: list) -> str:
@@ -219,7 +220,11 @@ class EplusBackend(Backend):
             exit(-1)
         observations = []
         for i in range(6, len(msg)):
-            observations.append(float(msg[i]))
+            try:
+                observations.append(float(msg[i]))
+            except ValueError:
+                logger.critical(msg)
+                exit(-1)
         return observations, False
 
     def send_action(self, action) -> None:
