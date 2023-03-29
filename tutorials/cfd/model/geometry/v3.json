@@ -1,19 +1,19 @@
 {
-    "name": "TDC_input43",
+    "name": "TDC23v2(final)",
     "geometryModel": {
         "acus": {
             "PCU": {
                 "size": {
                     "x": 2.172,
                     "y": 0.867,
-                    "z": 2.0
+                    "z": 2
                 },
                 "supplyFace": {
                     "length": 0.867,
                     "offset": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
                     },
                     "side": "bottom",
                     "width": 2.172
@@ -21,9 +21,9 @@
                 "returnFace": {
                     "length": 0.867,
                     "offset": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
                     },
                     "side": "top",
                     "width": 2.172
@@ -32,7 +32,7 @@
         },
         "racks": {
             "RACK1": {
-                "firstSlotOffset": 0.1,
+                "firstSlotOffset": 0.5,
                 "size": {
                     "x": 0.6,
                     "y": 1.2,
@@ -44,46 +44,36 @@
         "servers": {
             "1U_server": {
                 "depth": 1.2,
-                "width": 0.6,
-                "slotOccupation": 1
+                "slotOccupation": 1,
+                "width": 0.6
             },
             "network_device": {
                 "depth": 1.2,
-                "width": 0.6,
-                "slotOccupation": 1
+                "slotOccupation": 1,
+                "width": 0.6
             },
             "blade_server": {
                 "depth": 1.2,
-                "width": 0.6,
-                "slotOccupation": 3
+                "slotOccupation": 3,
+                "width": 0.6
             },
             "2U_server": {
                 "depth": 1.2,
-                "width": 0.6,
-                "slotOccupation": 2
+                "slotOccupation": 2,
+                "width": 0.6
             },
             "2U_storage_server": {
                 "depth": 1.2,
-                "width": 0.6,
-                "slotOccupation": 2
+                "slotOccupation": 2,
+                "width": 0.6
             },
             "4U_network_device": {
                 "depth": 1.2,
-                "width": 0.6,
-                "slotOccupation": 2
+                "slotOccupation": 2,
+                "width": 0.6
             }
         },
         "boxes": {
-            "containment": {
-                "faces": {
-                    "top": true,
-                    "bottom": false,
-                    "rear": true,
-                    "front": true,
-                    "left": false,
-                    "right": false
-                }
-            },
             "partition": {
                 "faces": {
                     "top": true,
@@ -120,24 +110,24 @@
         "height": 3.4,
         "plane": [
             {
-                "x": 0.0,
+                "x": 0,
+                "y": 8.23,
+                "z": 0
+            },
+            {
+                "x": 0,
                 "y": 0.0,
-                "z": 0.0
+                "z": 0
             },
             {
-                "x": 8.23,
+                "x": 9.68,
                 "y": 0.0,
-                "z": 0.0
+                "z": 0
             },
             {
-                "x": 8.23,
-                "y": 9.68,
-                "z": 0.0
-            },
-            {
-                "x": 0.0,
-                "y": 9.68,
-                "z": 0.0
+                "x": 9.68,
+                "y": 8.23,
+                "z": 0
             }
         ]
     },
@@ -149,104 +139,73 @@
                 "openings": {
                     "opening_1": {
                         "location": {
-                            "x": 0.6,
-                            "y": 8.658,
-                            "z": 0.0
+                            "x": 8.658,
+                            "y": 5.46,
+                            "z": 0
                         },
                         "size": {
-                            "x": 2.172,
-                            "y": 0.867,
-                            "z": 0.0
+                            "x": 0.867,
+                            "y": 2.172,
+                            "z": 0
                         },
-                        "openingPercentage": 0.5,
-                        "openingDirection": {
+                        "velocity": {
                             "x": 0,
                             "y": 0,
-                            "z": 1.8
+                            "z": 1
                         }
                     },
                     "opening_2": {
                         "location": {
-                            "x": 3.0,
-                            "y": 8.658,
-                            "z": 0.0
+                            "x": 8.658,
+                            "y": 3.06,
+                            "z": 0
                         },
                         "size": {
-                            "x": 2.172,
-                            "y": 0.867,
-                            "z": 0.0
+                            "x": 0.867,
+                            "y": 2.172,
+                            "z": 0
                         }
                     },
                     "opening_3": {
                         "location": {
-                            "x": 0.6,
-                            "y": 4.3,
-                            "z": 0.0
+                            "x": 4.3,
+                            "y": 7.03,
+                            "z": 0
                         },
                         "size": {
-                            "x": 0.6,
-                            "y": 3.0,
-                            "z": 0.0
+                            "x": 3,
+                            "y": 0.6,
+                            "z": 0
                         }
                     },
                     "opening_4": {
                         "location": {
-                            "x": 4.8,
-                            "y": 4.3,
-                            "z": 0.0
+                            "x": 4.3,
+                            "y": 2.83,
+                            "z": 0
                         },
                         "size": {
-                            "x": 0.6,
-                            "y": 3.0,
-                            "z": 0.0
+                            "x": 3,
+                            "y": 0.6,
+                            "z": 0
                         }
                     }
                 }
             }
         },
         "boxes": {
-            "Containment_1": {
-                "geometry": {
-                    "model": "containment",
-                    "size": {
-                        "x": 1,
-                        "y": 1,
-                        "z": 1
-                    },
-                    "location": {
-                        "x": 2.2,
-                        "y": 2.912,
-                        "z": 0.45
-                    }
-                }
-            },
-            "PartitionWall_L1": {
-                "geometry": {
-                    "model": "partition",
-                    "size": {
-                        "x": 1.3,
-                        "y": 1.15,
-                        "z": 1
-                    },
-                    "location": {
-                        "x": 1,
-                        "y": 1.5,
-                        "z": 0.4
-                    }
-                }
-            },
             "Pillar_1": {
                 "geometry": {
                     "model": "pillar",
                     "size": {
-                        "x": 0.46,
-                        "y": 0.79,
+                        "x": 0.79,
+                        "y": 0.46,
                         "z": 3.4
                     },
                     "location": {
-                        "x": 0.0,
-                        "y": 8.89,
-                        "z": 0.0
+                        "x": 8.89,
+                        "y": 7.77,
+                        "z": 0
                     }
                 }
             },
@@ -254,14 +213,14 @@
                 "geometry": {
                     "model": "pillar",
                     "size": {
-                        "x": 0.31,
-                        "y": 0.79,
+                        "x": 0.79,
+                        "y": 0.31,
                         "z": 3.4
                     },
                     "location": {
-                        "x": 7.92,
-                        "y": 8.89,
-                        "z": 0.0
+                        "x": 8.89,
+                        "y": 0.0,
+                        "z": 0
                     }
                 }
             },
@@ -269,14 +228,14 @@
                 "geometry": {
                     "model": "pillar",
                     "size": {
-                        "x": 0.46,
-                        "y": 0.96,
+                        "x": 0.96,
+                        "y": 0.46,
                         "z": 3.4
                     },
                     "location": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
+                        "x": 0,
+                        "y": 7.77,
+                        "z": 0
                     }
                 }
             },
@@ -284,14 +243,14 @@
                 "geometry": {
                     "model": "pillar",
                     "size": {
-                        "x": 0.31,
-                        "y": 0.96,
+                        "x": 0.96,
+                        "y": 0.31,
                         "z": 3.4
                     },
                     "location": {
-                        "x": 7.92,
+                        "x": 0,
                         "y": 0.0,
-                        "z": 0.0
+                        "z": 0
                     }
                 }
             }
@@ -300,10 +259,10 @@
             "PCU_4": {
                 "geometry": {
                     "model": "PCU",
-                    "orientation": 0,
+                    "orientation": -90,
                     "location": {
-                        "x": 0.6,
-                        "y": 8.658,
+                        "x": 8.658,
+                        "y": 7.63,
                         "z": 0.4
                     }
                 }
@@ -311,10 +270,10 @@
             "PCU_5": {
                 "geometry": {
                     "model": "PCU",
-                    "orientation": 0,
+                    "orientation": -90,
                     "location": {
-                        "x": 3.0,
-                        "y": 8.658,
+                        "x": 8.658,
+                        "y": 5.23,
                         "z": 0.4
                     }
                 }
@@ -325,11 +284,11 @@
                 "geometry": {
                     "model": "RACK1",
                     "location": {
-                        "x": 1.2,
-                        "y": 7.9,
+                        "x": 7.9,
+                        "y": 7.03,
                         "z": 0.4
                     },
-                    "orientation": 270,
+                    "orientation": 180,
                     "hasBlankingPanel": false
                 },
                 "constructions": {
@@ -347,12 +306,12 @@
                 "geometry": {
                     "model": "RACK1",
                     "location": {
-                        "x": 1.2,
-                        "y": 7.3,
+                        "x": 7.3,
+                        "y": 7.03,
                         "z": 0.4
                     },
-                    "orientation": 270,
-                    "hasBlankingPanel": true
+                    "orientation": 180,
+                    "hasBlankingPanel": false
                 },
                 "constructions": {
                     "servers": {
@@ -501,11 +460,11 @@
                 "geometry": {
                     "model": "RACK1",
                     "location": {
-                        "x": 1.2,
-                        "y": 6.7,
+                        "x": 6.7,
+                        "y": 7.03,
                         "z": 0.4
                     },
-                    "orientation": 270,
+                    "orientation": 180,
                     "hasBlankingPanel": false
                 },
                 "constructions": {
@@ -571,11 +530,11 @@
                 "geometry": {
                     "model": "RACK1",
                     "location": {
-                        "x": 1.2,
-                        "y": 6.1,
+                        "x": 6.1,
+                        "y": 7.03,
                         "z": 0.4
                     },
-                    "orientation": 270,
+                    "orientation": 180,
                     "hasBlankingPanel": false
                 },
                 "constructions": {
@@ -647,11 +606,11 @@
                 "geometry": {
                     "model": "RACK1",
                     "location": {
-                        "x": 1.2,
-                        "y": 5.5,
+                        "x": 5.5,
+                        "y": 7.03,
                         "z": 0.4
                     },
-                    "orientation": 270,
+                    "orientation": 180,
                     "hasBlankingPanel": false
                 },
                 "constructions": {
@@ -747,11 +706,11 @@
                 "geometry": {
                     "model": "RACK1",
                     "location": {
-                        "x": 1.2,
-                        "y": 4.9,
+                        "x": 4.9,
+                        "y": 7.03,
                         "z": 0.4
                     },
-                    "orientation": 270,
+                    "orientation": 180,
                     "hasBlankingPanel": false
                 },
                 "constructions": {
@@ -847,11 +806,11 @@
                 "geometry": {
                     "model": "RACK1",
                     "location": {
-                        "x": 4.8,
-                        "y": 7.3,
+                        "x": 7.3,
+                        "y": 3.43,
                         "z": 0.4
                     },
-                    "orientation": 90,
+                    "orientation": 0,
                     "hasBlankingPanel": false
                 },
                 "constructions": {
@@ -875,11 +834,11 @@
                 "geometry": {
                     "model": "RACK1",
                     "location": {
-                        "x": 4.8,
-                        "y": 6.7,
+                        "x": 6.7,
+                        "y": 3.43,
                         "z": 0.4
                     },
-                    "orientation": 90,
+                    "orientation": 0,
                     "hasBlankingPanel": false
                 },
                 "constructions": {
@@ -975,11 +934,11 @@
                 "geometry": {
                     "model": "RACK1",
                     "location": {
-                        "x": 4.8,
-                        "y": 6.1,
+                        "x": 6.1,
+                        "y": 3.43,
                         "z": 0.4
                     },
-                    "orientation": 90,
+                    "orientation": 0,
                     "hasBlankingPanel": false
                 },
                 "constructions": {
@@ -1069,11 +1028,11 @@
                 "geometry": {
                     "model": "RACK1",
                     "location": {
-                        "x": 4.8,
-                        "y": 5.5,
+                        "x": 5.5,
+                        "y": 3.43,
                         "z": 0.4
                     },
-                    "orientation": 90,
+                    "orientation": 0,
                     "hasBlankingPanel": false
                 },
                 "constructions": {
@@ -1247,11 +1206,11 @@
                 "geometry": {
                     "model": "RACK1",
                     "location": {
-                        "x": 4.8,
-                        "y": 4.9,
+                        "x": 4.9,
+                        "y": 3.43,
                         "z": 0.4
                     },
-                    "orientation": 90,
+                    "orientation": 0,
                     "hasBlankingPanel": false
                 },
                 "constructions": {
@@ -1335,11 +1294,11 @@
                 "geometry": {
                     "model": "RACK1",
                     "location": {
-                        "x": 4.8,
-                        "y": 4.3,
+                        "x": 4.3,
+                        "y": 3.43,
                         "z": 0.4
                     },
-                    "orientation": 90,
+                    "orientation": 0,
                     "hasBlankingPanel": false
                 },
                 "constructions": {
@@ -1388,8 +1347,8 @@
             "R0501_THFB": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 7.6,
+                        "x": 7.6,
+                        "y": 7.03,
                         "z": 0.55
                     }
                 }
@@ -1397,8 +1356,8 @@
             "R0501_THFM": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 7.6,
+                        "x": 7.6,
+                        "y": 7.03,
                         "z": 1.55
                     }
                 }
@@ -1406,8 +1365,8 @@
             "R0501_THFT": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 7.6,
+                        "x": 7.6,
+                        "y": 7.03,
                         "z": 2.5
                     }
                 }
@@ -1415,8 +1374,8 @@
             "R0501_THBB": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 7.6,
+                        "x": 7.6,
+                        "y": 5.83,
                         "z": 0.55
                     }
                 }
@@ -1424,8 +1383,8 @@
             "R0501_THBM": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 7.6,
+                        "x": 7.6,
+                        "y": 5.83,
                         "z": 1.55
                     }
                 }
@@ -1433,8 +1392,8 @@
             "R0501_THBT": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 7.6,
+                        "x": 7.6,
+                        "y": 5.83,
                         "z": 2.5
                     }
                 }
@@ -1442,8 +1401,8 @@
             "R0502_THFB": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 7.0,
+                        "x": 7,
+                        "y": 7.03,
                         "z": 0.55
                     }
                 }
@@ -1451,8 +1410,8 @@
             "R0502_THFM": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 7.0,
+                        "x": 7,
+                        "y": 7.03,
                         "z": 1.55
                     }
                 }
@@ -1460,8 +1419,8 @@
             "R0502_THFT": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 7.0,
+                        "x": 7,
+                        "y": 7.03,
                         "z": 2.5
                     }
                 }
@@ -1469,8 +1428,8 @@
             "R0502_THBB": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 7.0,
+                        "x": 7,
+                        "y": 5.83,
                         "z": 0.55
                     }
                 }
@@ -1478,8 +1437,8 @@
             "R0502_THBM": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 7.0,
+                        "x": 7,
+                        "y": 5.83,
                         "z": 1.55
                     }
                 }
@@ -1487,8 +1446,8 @@
             "R0502_THBT": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 7.0,
+                        "x": 7,
+                        "y": 5.83,
                         "z": 2.5
                     }
                 }
@@ -1496,8 +1455,8 @@
             "R0503_THFB": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 6.4,
+                        "x": 6.4,
+                        "y": 7.03,
                         "z": 0.55
                     }
                 }
@@ -1505,8 +1464,8 @@
             "R0503_THFM": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 6.4,
+                        "x": 6.4,
+                        "y": 7.03,
                         "z": 1.55
                     }
                 }
@@ -1514,8 +1473,8 @@
             "R0503_THFT": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 6.4,
+                        "x": 6.4,
+                        "y": 7.03,
                         "z": 2.5
                     }
                 }
@@ -1523,8 +1482,8 @@
             "R0503_THBB": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 6.4,
+                        "x": 6.4,
+                        "y": 5.83,
                         "z": 0.55
                     }
                 }
@@ -1532,8 +1491,8 @@
             "R0503_THBM": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 6.4,
+                        "x": 6.4,
+                        "y": 5.83,
                         "z": 1.55
                     }
                 }
@@ -1541,8 +1500,8 @@
             "R0503_THBT": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 6.4,
+                        "x": 6.4,
+                        "y": 5.83,
                         "z": 2.5
                     }
                 }
@@ -1550,8 +1509,8 @@
             "R0504_THFB": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 5.8,
+                        "x": 5.8,
+                        "y": 7.03,
                         "z": 0.55
                     }
                 }
@@ -1559,8 +1518,8 @@
             "R0504_THFM": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 5.8,
+                        "x": 5.8,
+                        "y": 7.03,
                         "z": 1.55
                     }
                 }
@@ -1568,8 +1527,8 @@
             "R0504_THFT": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 5.8,
+                        "x": 5.8,
+                        "y": 7.03,
                         "z": 2.5
                     }
                 }
@@ -1577,8 +1536,8 @@
             "R0504_THBB": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 5.8,
+                        "x": 5.8,
+                        "y": 5.83,
                         "z": 0.55
                     }
                 }
@@ -1586,8 +1545,8 @@
             "R0504_THBM": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 5.8,
+                        "x": 5.8,
+                        "y": 5.83,
                         "z": 1.55
                     }
                 }
@@ -1595,8 +1554,8 @@
             "R0504_THBT": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 5.8,
+                        "x": 5.8,
+                        "y": 5.83,
                         "z": 2.5
                     }
                 }
@@ -1604,8 +1563,8 @@
             "R0505_THFB": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 5.2,
+                        "x": 5.2,
+                        "y": 7.03,
                         "z": 0.55
                     }
                 }
@@ -1613,8 +1572,8 @@
             "R0505_THFM": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 5.2,
+                        "x": 5.2,
+                        "y": 7.03,
                         "z": 1.55
                     }
                 }
@@ -1622,8 +1581,8 @@
             "R0505_THFT": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 5.2,
+                        "x": 5.2,
+                        "y": 7.03,
                         "z": 2.5
                     }
                 }
@@ -1631,8 +1590,8 @@
             "R0505_THBB": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 5.2,
+                        "x": 5.2,
+                        "y": 5.83,
                         "z": 0.55
                     }
                 }
@@ -1640,8 +1599,8 @@
             "R0505_THBM": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 5.2,
+                        "x": 5.2,
+                        "y": 5.83,
                         "z": 1.55
                     }
                 }
@@ -1649,8 +1608,8 @@
             "R0505_THBT": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 5.2,
+                        "x": 5.2,
+                        "y": 5.83,
                         "z": 2.5
                     }
                 }
@@ -1658,8 +1617,8 @@
             "R0506_THFB": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 4.6,
+                        "x": 4.6,
+                        "y": 7.03,
                         "z": 0.55
                     }
                 }
@@ -1667,8 +1626,8 @@
             "R0506_THFM": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 4.6,
+                        "x": 4.6,
+                        "y": 7.03,
                         "z": 1.55
                     }
                 }
@@ -1676,8 +1635,8 @@
             "R0506_THFT": {
                 "geometry": {
                     "location": {
-                        "x": 1.2,
-                        "y": 4.6,
+                        "x": 4.6,
+                        "y": 7.03,
                         "z": 2.5
                     }
                 }
@@ -1685,8 +1644,8 @@
             "R0506_THBB": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 4.6,
+                        "x": 4.6,
+                        "y": 5.83,
                         "z": 0.55
                     }
                 }
@@ -1694,8 +1653,8 @@
             "R0506_THBM": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 4.6,
+                        "x": 4.6,
+                        "y": 5.83,
                         "z": 1.55
                     }
                 }
@@ -1703,8 +1662,8 @@
             "R0506_THBT": {
                 "geometry": {
                     "location": {
-                        "x": 2.4,
-                        "y": 4.6,
+                        "x": 4.6,
+                        "y": 5.83,
                         "z": 2.5
                     }
                 }
@@ -1712,8 +1671,8 @@
             "R0601_THFB": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 7.6,
+                        "x": 7.6,
+                        "y": 3.43,
                         "z": 0.55
                     }
                 }
@@ -1721,8 +1680,8 @@
             "R0601_THFM": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 7.6,
+                        "x": 7.6,
+                        "y": 3.43,
                         "z": 1.55
                     }
                 }
@@ -1730,8 +1689,8 @@
             "R0601_THFT": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 7.6,
+                        "x": 7.6,
+                        "y": 3.43,
                         "z": 2.5
                     }
                 }
@@ -1739,8 +1698,8 @@
             "R0601_THBB": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 7.6,
+                        "x": 7.6,
+                        "y": 4.63,
                         "z": 0.55
                     }
                 }
@@ -1748,8 +1707,8 @@
             "R0601_THBM": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 7.6,
+                        "x": 7.6,
+                        "y": 4.63,
                         "z": 1.55
                     }
                 }
@@ -1757,8 +1716,8 @@
             "R0601_THBT": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 7.6,
+                        "x": 7.6,
+                        "y": 4.63,
                         "z": 2.5
                     }
                 }
@@ -1766,8 +1725,8 @@
             "R0602_THFB": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 7.0,
+                        "x": 7,
+                        "y": 3.43,
                         "z": 0.55
                     }
                 }
@@ -1775,8 +1734,8 @@
             "R0602_THFM": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 7.0,
+                        "x": 7,
+                        "y": 3.43,
                         "z": 1.55
                     }
                 }
@@ -1784,8 +1743,8 @@
             "R0602_THFT": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 7.0,
+                        "x": 7,
+                        "y": 3.43,
                         "z": 2.5
                     }
                 }
@@ -1793,8 +1752,8 @@
             "R0602_THBB": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 7.0,
+                        "x": 7,
+                        "y": 4.63,
                         "z": 0.55
                     }
                 }
@@ -1802,8 +1761,8 @@
             "R0602_THBM": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 7.0,
+                        "x": 7,
+                        "y": 4.63,
                         "z": 1.55
                     }
                 }
@@ -1811,8 +1770,8 @@
             "R0602_THBT": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 7.0,
+                        "x": 7,
+                        "y": 4.63,
                         "z": 2.5
                     }
                 }
@@ -1820,8 +1779,8 @@
             "R0603_THFB": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 6.4,
+                        "x": 6.4,
+                        "y": 3.43,
                         "z": 0.55
                     }
                 }
@@ -1829,8 +1788,8 @@
             "R0603_THFM": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 6.4,
+                        "x": 6.4,
+                        "y": 3.43,
                         "z": 1.55
                     }
                 }
@@ -1838,8 +1797,8 @@
             "R0603_THFT": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 6.4,
+                        "x": 6.4,
+                        "y": 3.43,
                         "z": 2.5
                     }
                 }
@@ -1847,8 +1806,8 @@
             "R0603_THBB": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 6.4,
+                        "x": 6.4,
+                        "y": 4.63,
                         "z": 0.55
                     }
                 }
@@ -1856,8 +1815,8 @@
             "R0603_THBM": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 6.4,
+                        "x": 6.4,
+                        "y": 4.63,
                         "z": 1.55
                     }
                 }
@@ -1865,8 +1824,8 @@
             "R0603_THBT": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 6.4,
+                        "x": 6.4,
+                        "y": 4.63,
                         "z": 2.5
                     }
                 }
@@ -1874,8 +1833,8 @@
             "R0604_THFB": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 5.8,
+                        "x": 5.8,
+                        "y": 3.43,
                         "z": 0.55
                     }
                 }
@@ -1883,8 +1842,8 @@
             "R0604_THFM": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 5.8,
+                        "x": 5.8,
+                        "y": 3.43,
                         "z": 1.55
                     }
                 }
@@ -1892,8 +1851,8 @@
             "R0604_THFT": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 5.8,
+                        "x": 5.8,
+                        "y": 3.43,
                         "z": 2.5
                     }
                 }
@@ -1901,8 +1860,8 @@
             "R0604_THBB": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 5.8,
+                        "x": 5.8,
+                        "y": 4.63,
                         "z": 0.55
                     }
                 }
@@ -1910,8 +1869,8 @@
             "R0604_THBM": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 5.8,
+                        "x": 5.8,
+                        "y": 4.63,
                         "z": 1.55
                     }
                 }
@@ -1919,8 +1878,8 @@
             "R0604_THBT": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 5.8,
+                        "x": 5.8,
+                        "y": 4.63,
                         "z": 2.5
                     }
                 }
@@ -1928,8 +1887,8 @@
             "R0605_THFB": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 5.2,
+                        "x": 5.2,
+                        "y": 3.43,
                         "z": 0.55
                     }
                 }
@@ -1937,8 +1896,8 @@
             "R0605_THFM": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 5.2,
+                        "x": 5.2,
+                        "y": 3.43,
                         "z": 1.55
                     }
                 }
@@ -1946,8 +1905,8 @@
             "R0605_THFT": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 5.2,
+                        "x": 5.2,
+                        "y": 3.43,
                         "z": 2.5
                     }
                 }
@@ -1955,8 +1914,8 @@
             "R0605_THBB": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 5.2,
+                        "x": 5.2,
+                        "y": 4.63,
                         "z": 0.55
                     }
                 }
@@ -1964,8 +1923,8 @@
             "R0605_THBM": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 5.2,
+                        "x": 5.2,
+                        "y": 4.63,
                         "z": 1.55
                     }
                 }
@@ -1973,8 +1932,8 @@
             "R0605_THBT": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 5.2,
+                        "x": 5.2,
+                        "y": 4.63,
                         "z": 2.5
                     }
                 }
@@ -1982,8 +1941,8 @@
             "R0606_THFB": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 4.6,
+                        "x": 4.6,
+                        "y": 3.43,
                         "z": 0.55
                     }
                 }
@@ -1991,8 +1950,8 @@
             "R0606_THFM": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 4.6,
+                        "x": 4.6,
+                        "y": 3.43,
                         "z": 1.55
                     }
                 }
@@ -2000,8 +1959,8 @@
             "R0606_THFT": {
                 "geometry": {
                     "location": {
-                        "x": 4.8,
-                        "y": 4.6,
+                        "x": 4.6,
+                        "y": 3.43,
                         "z": 2.5
                     }
                 }
@@ -2009,8 +1968,8 @@
             "R0606_THBB": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 4.6,
+                        "x": 4.6,
+                        "y": 4.63,
                         "z": 0.55
                     }
                 }
@@ -2018,8 +1977,8 @@
             "R0606_THBM": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 4.6,
+                        "x": 4.6,
+                        "y": 4.63,
                         "z": 1.55
                     }
                 }
@@ -2027,8 +1986,8 @@
             "R0606_THBT": {
                 "geometry": {
                     "location": {
-                        "x": 3.6,
-                        "y": 4.6,
+                        "x": 4.6,
+                        "y": 4.63,
                         "z": 2.5
                     }
                 }
@@ -2039,19 +1998,19 @@
         "acus": {
             "PCU_4": {
                 "flowRate": 3.1799999999999997,
-                "coolingCapacity": 900,
-                "minTemperature": 42.1
+                "minTemperature": 42.1,
+                "coolingCapacity": 900
             },
             "PCU_5": {
                 "flowRate": 0.732,
-                "coolingCapacity": 900,
-                "minTemperature": 42.1
+                "minTemperature": 42,
+                "coolingCapacity": 900
             }
         },
         "servers": {
             "R0501_45": {
                 "flowRate": 0.0009145080877954277,
-                "heatLoad": 7.0
+                "heatLoad": 7
             },
             "R0502_29": {
                 "flowRate": 0.0054984827490596935,
@@ -2335,11 +2294,11 @@
             },
             "R0601_43": {
                 "flowRate": 0.0005225760501688158,
-                "heatLoad": 4.0
+                "heatLoad": 4
             },
             "R0601_44": {
                 "flowRate": 0.0005225760501688158,
-                "heatLoad": 4.0
+                "heatLoad": 4
             },
             "R0602_39": {
                 "flowRate": 0.01379113954710624,

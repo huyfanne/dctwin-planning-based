@@ -27,12 +27,12 @@ class Mesh:
 
 
 def generate_control_dict(
-    probes: Optional[List[Vertex]] = None,
-    steady=True,
-    delta_t: Union[int, float] = 1,
-    write_interval: int = 100,
-    end_time: int = 500,
-    process_num: int = 1,
+        probes: Optional[List[Vertex]] = None,
+        steady=True,
+        delta_t: Union[int, float] = 1,
+        write_interval: int = 100,
+        end_time: int = 500,
+        process_num: int = 1,
 ) -> None:
     if steady is False:
         delta_t = float("1e-5")
@@ -102,6 +102,7 @@ def init_foam():
         Path(template_dir, "system/steady/fvSolution"),
         Path(config.cfd.case_dir, "system/fvSolution"),
     )
+
     generate_control_dict()
 
 
@@ -254,6 +255,28 @@ def generate_snappy_dict(
             f.write(
                 template_env.get_template("system/decomposeParDict.j2").render(
                     process_num=process_num
+                )
+            )
+
+    perforated_openings = {}
+    if room.constructions.raised_floor and room.constructions.raised_floor.geometry.openings:
+        for key, opening in room.constructions.raised_floor.geometry.openings.items():
+            if opening.velocity:
+                perforated_openings[key] = opening
+
+    if len(perforated_openings) > 0:
+        with open(Path(config.cfd.case_dir, "system/fvOptions"), "w") as f:
+            f.write(
+                template_env.get_template(f"system/steady/fvOptions.j2").render(
+                    perforated_openings=perforated_openings,
+                )
+            )
+        with open(Path(config.cfd.case_dir, "system/topoSetDict"), "w") as f:
+            f.write(
+                template_env.get_template(f"system/steady/topoSetDict.j2").render(
+                    perforated_openings=perforated_openings,
+                    min_floor_height=room.constructions.raised_floor.geometry.height - 0.05,
+                    max_floor_height=room.constructions.raised_floor.geometry.height,
                 )
             )
 

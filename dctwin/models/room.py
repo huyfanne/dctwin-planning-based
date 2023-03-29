@@ -12,6 +12,7 @@ from dctwin.models.geometry_utils import convert_json_file
 class Opening(BaseModel):
     location: Vertex
     size: Size
+    velocity: Optional[Size] = None
 
 
 # 1111
