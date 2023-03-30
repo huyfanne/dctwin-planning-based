@@ -14,12 +14,8 @@ import xml.etree.ElementTree as ET
 from typing import List, Union, Optional
 
 import numpy as np
-try:
-    import opyplus as op
-    from opyplus.exceptions import RecordDoesNotExistError
-except ImportError:
-    pass
-
+import opyplus as op
+from opyplus.exceptions import RecordDoesNotExistError
 
 
 class IDFParser:
