@@ -117,8 +117,9 @@ class RoomParser:
         """
         acu2sen_dis = np.zeros([self.num_crac, self.num_sen])
         for acu_idx, acu in enumerate(self.model.constructions.acus.values()):
-            for sen_idx, sen_loc in enumerate(self.model.probes):
-                acu_loc = acu.geometry.placement
+            for sen_idx, sen in enumerate(self.model.probes):
+                acu_loc = acu.geometry.location
+                sen_loc = sen.geometry.location
                 acu2sen_dis[acu_idx][sen_idx] = self.euclidean_distance(acu_loc, sen_loc)
         return acu2sen_dis
 
@@ -128,9 +129,10 @@ class RoomParser:
         """
         ser2sen_dis = np.zeros([self.num_ser, self.num_sen])
         for rack in self.model.constructions.racks.values():
-            for ser_idx, ser in enumerate(rack.constructions.servers.values()):
-                for sen_idx, sen_loc in enumerate(self.model.probes):
-                    ser_loc_i, ser_loc_o = self.model.server_patch_positions(ser.id)
+            for ser_idx, (ser_key, ser) in enumerate(rack.constructions.servers.items()):
+                for sen_idx, sen in enumerate(self.model.probes):
+                    ser_loc_i, ser_loc_o = self.model.server_patch_positions(ser_key)
+                    sen_loc = sen.geometry.location
                     ser2sen_dis[ser_idx][sen_idx] = self.euclidean_distance(ser_loc_o, sen_loc)
         return ser2sen_dis
 
@@ -141,9 +143,9 @@ class RoomParser:
         acu2ser_dis = np.zeros([self.num_crac, self.num_ser])
         for acu_idx, acu in enumerate(self.model.constructions.acus.values()):
             for rack in self.model.constructions.racks.values():
-                for ser_idx, ser in enumerate(rack.constructions.servers.values()):
-                    acu_loc = acu.geometry.placement
-                    ser_loc, _ = self.model.server_patch_positions(ser.id)
+                for ser_idx, (ser_key, ser) in enumerate(rack.constructions.servers.items()):
+                    acu_loc = acu.geometry.location
+                    ser_loc, _ = self.model.server_patch_positions(ser_key)
                     acu2ser_dis[acu_idx][ser_idx] = self.euclidean_distance(acu_loc, ser_loc)
         return acu2ser_dis
 
