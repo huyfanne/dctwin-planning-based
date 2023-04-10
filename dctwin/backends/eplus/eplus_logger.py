@@ -13,13 +13,14 @@ class EPlusOutputFormatter:
         file_csv = episode_dir + '/eplusout.csv'
         # file_err = episode_dir + '/eplusout.err'
         # files_to_preserve ['eplusout.csv', 'eplusout.err', 'eplustbl.htm']
-        files_to_clean = ['eplusmtr.csv', 'eplusout.audit', 'eplusout.bnd',
-                          'eplusout.dxf', 'eplusout.eio', 'eplusout.edd',
-                          'eplusout.end', 'eplusout.eso', 'eplusout.mdd',
-                          'eplusout.mtd', 'eplusout.mtr', 'eplusout.rdd',
-                          'eplusout.rvaudit', 'eplusout.shd', 'eplusssz.csv',
-                          'epluszsz.csv', 'sqlite.err', 'eplusout.dbg', 'eplustbl.htm'
-                          ]
+        files_to_clean = [
+            'eplusmtr.csv', 'eplusout.audit', 'eplusout.bnd',
+            'eplusout.dxf', 'eplusout.eio', 'eplusout.edd',
+            'eplusout.end', 'eplusout.eso', 'eplusout.mdd',
+            'eplusout.mtd', 'eplusout.mtr', 'eplusout.rdd',
+            'eplusout.rvaudit', 'eplusout.shd', 'eplusssz.csv',
+            'epluszsz.csv', 'sqlite.err', 'eplusout.dbg', 'eplustbl.htm',
+        ]
 
         # Check for any severe error
         # num_errors = cls._count_severe_errors(file_err)
@@ -28,7 +29,7 @@ class EPlusOutputFormatter:
         #     logger.warning('EnergyPlusEnv: Check contents of {}'.format(file_err))
             # sys.exit(1)
 
-        # Compress csv file and remove unnecessary files
+        # Remove unnecessary files
         # If csv file is not present in some reason, preserve all other files for inspection
         for file in files_to_clean:
             file_path = episode_dir + '/' + file

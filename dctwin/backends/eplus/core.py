@@ -32,13 +32,13 @@ class EplusBackend(Backend):
     _encoding = "ISO-8859-1"
 
     def __init__(
-            self,
-            proto_config: EPlusEnvConfig,
-            host: Optional[str] = "localhost",
-            network: Optional[str] = "host",
-            docker_client: DockerClient = None,
-            *args,
-            **kwargs
+        self,
+        proto_config: EPlusEnvConfig,
+        host: Optional[str] = "localhost",
+        network: Optional[str] = "host",
+        docker_client: DockerClient = None,
+        *args,
+        **kwargs
     ) -> None:
         super().__init__(client=docker_client, *args, **kwargs)
         self._network = network
@@ -105,8 +105,8 @@ class EplusBackend(Backend):
         ]
 
     def _parse_idf_and_gen_bcvtb_config(
-            self,
-            idf_path: Union[str, Path],
+        self,
+        idf_path: Union[str, Path],
     ) -> None:
         logger.info("Parsing IDF file...")
         self.idf_parser = IDFParser(idf_path=str(idf_path))
