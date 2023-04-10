@@ -4,11 +4,10 @@ form.epsilon.value = 0.09 * Math.pow(form.k.value,1.5) / form.Tu_L.value
 form.omega.value = form.epsilon.value / (0.09 * form.k.value)
 """
 import abc
-import os
 import shutil
 import time
 from pathlib import Path
-from typing import List, Union, Tuple
+from typing import Tuple
 
 from dctwin.backends.core import Backend
 from dctwin.backends.foam.boundary import (
@@ -18,8 +17,7 @@ from dctwin.backends.foam.boundary import (
 )
 
 from dctwin.backends.foam.utils import generate_control_dict, read_internal_field
-from dctwin.models import ACU, Server
-from dctwin.models.constructions import Room
+from dctwin.models.room import Room
 from dctwin.utils import template_env, config
 
 
@@ -33,9 +31,13 @@ class Builder:
     """
     def __init__(self, room: Room, last_state_case=None) -> None:
         self.room = room
-        self.room_dz = room.height
-        self.acu_list = list(room.objects.acus.values())
-        self.server_list = list(room.objects.servers.values())
+        self.room_dz = room.geometry.height
+        self.acu_dict = room.constructions.acus
+        server_dict = {}
+        for rack in room.constructions.racks.values():
+            for server_key, server in rack.constructions.servers.items():
+                server_dict[server_key] = server
+        self.server_dict = server_dict
         self.last_state_case = last_state_case
 
     def run(self) -> None:
@@ -57,25 +59,26 @@ class Builder:
             self.render("U")
 
     @classmethod
-    def get_k_and_epsilon(cls, obj_list: List[Union[ACU, Server]]) -> Tuple[float, float]:
+    def get_k_and_epsilon(cls, obj_list: dict) -> Tuple[float, float]:
         """Get the minimum value greater than 0"""
-        _obj_list = [acu for acu in obj_list if acu.k != 0]
+        _obj_list = [acu for acu in obj_list.values() if acu.geometry.k != 0]
         if len(_obj_list) == 0:
             raise ValueError("Please check the ACU flow rate value")
-        obj = min(_obj_list, key=lambda x: x.k)
-        return obj.k, obj.epsilon
+        obj = min(_obj_list, key=lambda x: x.geometry.k)
+        return obj.geometry.k, obj.geometry.epsilon
 
     def render(self, filename, internal_field=None) -> None:
-        acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_list)
-        server_k, server_epsilon = self.get_k_and_epsilon(self.server_list)
+
+        acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_dict)
+        server_k, server_epsilon = self.get_k_and_epsilon(self.server_dict)
         with open(Path(config.cfd.case_dir, f"0/{filename}"), "w") as f:
             f.write(
                 template_env.get_template(f"0/{filename}.j2").render(
                     init_temperature=24 + 273.15,
                     p_rgh=round(self.room_dz * 9.81, 10),
-                    acu_boundaries=[ACUBoundary(acu) for acu in self.acu_list],
+                    acu_boundaries=[ACUBoundary(key, acu) for key, acu in self.acu_dict.items()],
                     server_boundaries=[
-                        ServerBoundary(server) for server in self.server_list
+                        ServerBoundary(key, server) for key, server in self.server_dict.items()
                     ],
                     room_boundary=RoomBoundary(self.room),
                     acu_k=acu_k,
@@ -171,7 +174,7 @@ class SolverBackend(Backend):
 
         if config.cfd.dry_run:
             return
-        return self.run_container(user=os.getuid(), stream=stream, case_dir=config.cfd.case_dir)
+        return self.run_container(user=0, stream=stream, case_dir=config.cfd.case_dir)
 
 
 class SteadySolverBackend(SolverBackend):
@@ -185,7 +188,7 @@ class SteadySolverBackend(SolverBackend):
         delta_t=1,
     ) -> None:
         generate_control_dict(
-            room.probes,
+            probes=list([x.geometry.location for x in room.constructions.sensors.values()]),
             steady=True,
             delta_t=delta_t,
             write_interval=self.write_interval,
@@ -205,7 +208,7 @@ class TransientSolverBackend(SolverBackend):
         delta_t=1e-5,
     ) -> None:
         generate_control_dict(
-            room.probes,
+            probes=list([x.geometry.location for x in room.constructions.sensors.values()]),
             steady=False,
             delta_t=delta_t,
             write_interval=self.write_interval,

@@ -1,4 +1,3 @@
-import os
 from loguru import logger
 from typing import Optional
 
@@ -9,7 +8,7 @@ from dctwin.backends.foam.utils import (
     generate_snappy_dict,
 )
 from dctwin.utils import config
-from dctwin.models.constructions import Room
+from dctwin.models.room import Room
 
 
 class SnappyHexBackend(Backend):
@@ -21,6 +20,10 @@ class SnappyHexBackend(Backend):
     @property
     def command(self) -> str:
         if self.process_num > 1:
+            topo_set_command = ""
+            if len(self.perforated_openings) > 0:
+                topo_set_command = "topoSet &&"
+
             command = (
                 "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
                 "blockMesh && surfaceFeatureExtract && "
@@ -28,6 +31,7 @@ class SnappyHexBackend(Backend):
                 "mpirun --allow-run-as-root -np "
                 f"{self.process_num} snappyHexMesh -parallel -overwrite && "
                 "reconstructParMesh -constant -mergeTol 6 && "
+                f"{topo_set_command}"
                 "createPatch -overwrite && "
                 "rm -rf /data/constant/triSurface/*.eMesh' && "
                 "rm -rf /data/processor*"
@@ -49,6 +53,12 @@ class SnappyHexBackend(Backend):
         if process_num is not None:
             self.process_num = process_num
 
+        self.perforated_openings = {}
+        if room.constructions.raised_floor and room.constructions.raised_floor.geometry.openings:
+            for key, opening in room.constructions.raised_floor.geometry.openings.items():
+                if opening.velocity:
+                    self.perforated_openings[key] = opening
+
         init_foam()
         generate_block_dict(room)
         generate_snappy_dict(
@@ -56,5 +66,5 @@ class SnappyHexBackend(Backend):
         )
         if config.cfd.dry_run:
             return
-        self.run_container(user=os.getuid(), case_dir=config.cfd.case_dir)
+        self.run_container(user=0, case_dir=config.cfd.case_dir)
         logger.info("***** Mesh finished *****\n\n")

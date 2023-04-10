@@ -47,8 +47,8 @@ class CFDManager:
     def __init__(
         self,
         room: Room,
-        mesh_process: int = 8,
-        solve_process: int = 8,
+        mesh_process: int = 32,
+        solve_process: int = 32,
         steady: bool = True,
         run_cfd: bool = True,
         write_interval: int = 50,
@@ -78,7 +78,6 @@ class CFDManager:
 
         self.last_state_case = None
         self.object_mesh_index = read_object_mesh_index(room=room)
-
         self.parser = RoomParser(room=room)
         self._setup_default_backend()
 
@@ -184,8 +183,8 @@ class CFDManager:
         self,
         case_idx: int = 1,
         episode_idx: int = None,
-        save_mesh_index: bool = True,
-        save_boundary_conditions: bool = True,
+        save_mesh_index: bool = False,
+        save_boundary_conditions: bool = False,
         **boundary_conditions
     ) -> Union[np.ndarray, torch.Tensor]:
         """Run the whole simulation: geometry -> mesh -> solve
