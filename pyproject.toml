@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dctwin"
-version = "0.4.3"
+version = "0.5.0"
 description = "Building Co-Simulation Digital Twin for Data Centers."
 authors = ["Neng <xiad0001@ntu.edu.sg>", "Zhiwei Cao <zhiwei003@ntu.edu.sg>", "Ruihang Wang <ruihang001@ntu.edu.sg>"]
 packages = [
