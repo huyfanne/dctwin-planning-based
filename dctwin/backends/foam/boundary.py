@@ -1,7 +1,6 @@
 import abc
 
-from dctwin.models.room import Room
-from dctwin.models.room import ACU, Server
+from dctwin.models import Room, ACU, Server
 
 
 class Boundary(abc.ABC):
@@ -45,7 +44,7 @@ class RoomBoundary(Boundary):
         boxes_types_index = {}
         boxes_name_list = []
         for box in self.room.constructions.boxes.values():
-            if (box.geometry.model not in boxes_types_index):
+            if box.geometry.model not in boxes_types_index:
                 boxes_types_index[box.geometry.model] = 1
             else:
                 boxes_types_index[box.geometry.model] += 1
@@ -82,7 +81,6 @@ class RoomBoundary(Boundary):
         {rack_boundary}
         {rack_panel_boundary}
         """
-
 
     @property
     def T(self):
@@ -138,7 +136,6 @@ class ACUBoundary(Boundary):
         acu_wall_{self.id} {self.zero_gradient}
         """
 
-
     @property
     def U(self):
         supply = f"""
@@ -178,7 +175,6 @@ class ServerBoundary(Boundary):
         self.flow_value = self.mass_flow_rate * self.specificheat
         self.area = server.geometry.inlet_area
 
-
     @property
     def T(self):
         t_sink = f"tSink_{self.id}"
@@ -201,7 +197,6 @@ class ServerBoundary(Boundary):
         server_wall_{self.id} {self.zero_gradient}
         server_inlet_{self.id} {self.zero_gradient}
         """
-
 
     @property
     def U(self):

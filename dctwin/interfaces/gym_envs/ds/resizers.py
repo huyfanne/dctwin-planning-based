@@ -1,5 +1,4 @@
 from typing import Union
-from loguru import logger
 import numpy as np
 
 
@@ -28,18 +27,13 @@ class LinearResizer(Resizer):
         self.resized_ub = float(resized_ub)
 
     def norm(self, value: Union[int, float]) -> float:
-        return self._map(value, self.lb, self.ub, self.resized_lb, self.resized_ub, "norm")
+        return self._map(value, self.lb, self.ub, self.resized_lb, self.resized_ub)
 
     def denorm(self, value: Union[int, float]) -> float:
-        return self._map(value, self.resized_lb, self.resized_ub, self.lb, self.ub, "denorm")
+        return self._map(value, self.resized_lb, self.resized_ub, self.lb, self.ub)
 
     @staticmethod
-    def _map(value, original_lb, original_ub, new_lb, new_ub, debug_process_name: str):
+    def _map(value, original_lb, original_ub, new_lb, new_ub):
         if np.max(value) > original_ub or np.min(value) < original_lb:
-            # logger.warning(
-            #     f"overflow detected during {debug_process_name}! "
-            #     f"expected range: [{original_lb}, {original_ub}]; got: {value}"
-            # )
             value = np.clip(value, original_lb, original_ub)
-            # pass
         return new_lb + (value - original_lb) / (original_ub - original_lb) * (new_ub - new_lb)

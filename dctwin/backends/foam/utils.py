@@ -1,17 +1,15 @@
 import os
 import math
 import shutil
-from typing import List
+from typing import List, Dict
 from dataclasses import dataclass
 
-from dctwin.models.room import Rack
+from dctwin.models import Rack, Room, Vertex
 from dctwin.utils import (
     template_env,
     template_dir,
     config,
 )
-from dctwin.models.basics import Vertex
-from dctwin.models.room import Room
 
 from pathlib import Path
 from typing import Optional, Union
@@ -152,7 +150,10 @@ def generate_block_dict(room: Room) -> None:
 
 
 def generate_snappy_dict(
-    room: Room, field_config: Optional[dict] = None, process_num: int = 1
+    room: Room,
+    perforated_openings: Dict,
+    process_num: int = 1,
+    field_config: Optional[dict] = None,
 ) -> None:
     """Generate the snappyHexMeshDict file"""
     files = os.listdir(Path(config.cfd.geometry_dir))
@@ -257,12 +258,6 @@ def generate_snappy_dict(
                     process_num=process_num
                 )
             )
-
-    perforated_openings = {}
-    if room.constructions.raised_floor and room.constructions.raised_floor.geometry.openings:
-        for key, opening in room.constructions.raised_floor.geometry.openings.items():
-            if opening.velocity:
-                perforated_openings[key] = opening
 
     if len(perforated_openings) > 0:
         with open(Path(config.cfd.case_dir, "system/fvOptions"), "w") as f:

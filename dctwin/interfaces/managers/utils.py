@@ -6,7 +6,7 @@ from loguru import logger
 from dctwin.utils import config
 
 from dctwin.models.basics import Vertex
-from dctwin.models.room import Room
+from dctwin.models import Room
 
 from pathlib import Path
 from typing import Union, Dict

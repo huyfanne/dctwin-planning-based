@@ -1,2 +1,0 @@
-- Rotation Direction: `Counterclockwise`
-- Unit: `meter`

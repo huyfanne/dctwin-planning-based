@@ -63,7 +63,7 @@ class RoomParser:
     def num_ser(self) -> int:
         count = 0
         for rack in self.model.constructions.racks.values():
-            for server in rack.constructions.servers.values():
+            for _ in rack.constructions.servers.values():
                 count += 1
         return count
 
@@ -164,17 +164,13 @@ class RoomParser:
                     prop.min_temperature = crac_setpoints[uid]
                     self._crac_setpoints_dict[uid] = crac_setpoints[uid]
                 except KeyError:
-                    logger.critical(
-                        f"CRAC {uid} setpoint is missing"
-                    )
+                    logger.critical(f"CRAC {uid} setpoint is missing")
             if crac_volume_flow_rates is not None:
                 try:
                     prop.flow_rate = crac_volume_flow_rates[uid]
                     self._crac_volume_flow_rates_dict[uid] = crac_volume_flow_rates[uid]
                 except KeyError:
-                    logger.critical(
-                        f"CRAC {uid} volume flow rate is missing"
-                    )
+                    logger.critical(f"CRAC {uid} volume flow rate is missing")
 
     def _update_server_boundary(
         self,

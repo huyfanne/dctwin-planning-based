@@ -17,7 +17,7 @@ from dctwin.backends.foam.boundary import (
 )
 
 from dctwin.backends.foam.utils import generate_control_dict, read_internal_field
-from dctwin.models.room import Room
+from dctwin.models import Room
 from dctwin.utils import template_env, config
 
 
