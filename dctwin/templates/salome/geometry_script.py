@@ -325,7 +325,8 @@ class RackModel:
 
 class Builder:
 
-    def make_acus(self):
+    @staticmethod
+    def make_acus():
         acu_models = {}
         for acu_model_key, acu_model in room["geometry_model"]["acus"].items():
             acu_models[acu_model_key] = ACUModel.from_dict(acu_model)
@@ -333,7 +334,8 @@ class Builder:
             model = acu_models[acu["geometry"]["model"]]
             model.make_acu(acu_key, acu["geometry"]["location"], acu["geometry"]["orientation"])
 
-    def make_racks(self):
+    @staticmethod
+    def make_racks():
         slot_height = 0.045
         rack_models = {}
         server_models = {}
@@ -376,44 +378,25 @@ class Builder:
                     rack["geometry"]["orientation"],
                     slots=blanking_panels,
                 )
-    # todo: add back the vent opening for boxes once we have the requirement
-    # def make_partition_walls(self):
-    #     for i, wall in enumerate(self.partition_wall_list):
-    #         placement, size = wall["placement"], wall["size"]
-    #         basic_face = util.geom.MakeFaceHW(size["dz"], size["dx"], 3)
-    #         for vent_opening in wall["vent_opening_list"]:
-    #             vent_face = util.geom.MakeFaceHW(
-    #                 vent_opening["length"], vent_opening["width"], 3
-    #             )
-    #             vent_face = util.geom.MakeTranslation(
-    #                 vent_face,
-    #                 (
-    #                     vent_opening["offset_h"]
-    #                     - (size["dx"] - vent_opening["length"]) / 2
-    #                 ),
-    #                 0,
-    #                 (
-    #                     vent_opening["offset_v"]
-    #                     - (size["dz"] - vent_opening["width"]) / 2
-    #                 ),
-    #             )
-    #             basic_face = util.geom.MakeCut(basic_face, vent_face)
-    #         vector = util.geom.MakeVectorDXDYDZ(0, 1, 0)
-    #         _box = util.geom.MakePrismVecH(basic_face, vector, size["dy"])
-    #         box = util.move_placement(
-    #             _box,
-    #             {
-    #                 "x": placement["x"] + size["dx"] / 2,
-    #                 "y": placement["y"],
-    #                 "z": (size["dz"] / 2) + placement["z"],
-    #             },
-    #         )
-    #
-    #         group = util.group_by_faces(box)
-    #         mesh_obj = util.mesh(group, 1, 4)
-    #         util.export_stl(mesh_obj, f"partition_wall_{i}")
 
-    def make_room(self):
+    @staticmethod
+    def make_room():
+
+        def make_planes(face_, plane_):
+            floor_face = util.move_placement(
+                face_, {"x": 0, "y": 0, "z": plane_["geometry"]["height"]}
+            )
+            opening_faces = []
+            opening_list = plane_["geometry"]["openings"].values()
+            for opening in opening_list:
+                # Just for cutting face
+                opening["size"]["z"] = 0.1
+                opening["location"]["z"] = plane_["geometry"]["height"]
+                box = util.make_box(opening["size"], opening["location"])
+                opening_faces.append(util.sub_face(box, "bottom"))
+            floor_face = util.geom.MakeCutList(floor_face, opening_faces)
+            util.export_stl(util.mesh(floor_face, 0.5, 5), "floor_1")
+
         oz = geompy.MakeVectorDXDYDZ(0, 0, 1)
         vertices = []
         for vertex in room["geometry"]["plane"]:
@@ -428,43 +411,17 @@ class Builder:
         room_box = util.move_placement(prism, {"x": 0, "y": 0, "z": 0})
         box_faces = util.group_by_faces(room_box)
         util.export_stl(util.mesh(box_faces, 2, 6), "room_wall_1")
-        # Make ceiling
-        false_ceiling = room["constructions"].get("false_ceiling", None)
-        if false_ceiling is not None:
-            ceiling_face = util.move_placement(
-                face, {"x": 0, "y": 0, "z": false_ceiling["geometry"]["height"]}
-            )
-            opening_faces = []
-            opening_list = false_ceiling["geometry"]["openings"].values()
-            for opening in opening_list:
-                # Just for cutting face
-                opening["size"]["z"] = 0.1
-                opening["location"]["z"] = false_ceiling["geometry"]["height"]
-                box = util.make_box(opening["size"], opening["location"])
-                opening_faces.append(util.sub_face(box, "bottom"))
-            ceiling_face = util.geom.MakeCutList(ceiling_face, opening_faces)
-            util.export_stl(util.mesh(ceiling_face, 0.5, 5), "ceiling_1")
-        # Make floor
+        # Make planes (e.g., ceiling, raised floor)
         raised_floor = room["constructions"].get("raised_floor", None)
-        if raised_floor is not None:
-            floor_face = util.move_placement(
-                face, {"x": 0, "y": 0, "z": raised_floor["geometry"]["height"]}
-            )
-            opening_faces = []
-            opening_list = raised_floor["geometry"]["openings"].values()
-            for opening in opening_list:
-                # Just for cutting face
-                opening["size"]["z"] = 0.1
-                opening["location"]["z"] = raised_floor["geometry"]["height"]
-                box = util.make_box(opening["size"], opening["location"])
-                opening_faces.append(util.sub_face(box, "bottom"))
-            floor_face = util.geom.MakeCutList(floor_face, opening_faces)
-            util.export_stl(util.mesh(floor_face, 0.5, 5), "floor_1")
+        false_ceiling = room["constructions"].get("false_ceiling", None)
+        make_planes(face_=face, plane_=raised_floor) if raised_floor is not None else None
+        make_planes(face_=face, plane_=false_ceiling) if false_ceiling is not None else None
 
-    def make_boxes(self):
+    @staticmethod
+    def make_boxes():
         boxes_types_index = {}
         for box in room["constructions"]["boxes"].values():
-            if(box['geometry']['model'] not in boxes_types_index):
+            if box['geometry']['model'] not in boxes_types_index:
                 boxes_types_index[box['geometry']['model']]=1
             else:
                 boxes_types_index[box['geometry']['model']] += 1

@@ -1,14 +1,7 @@
 from typing import OrderedDict
 
-from dctwin.models.basics import Face, Size, Vertex
+from ..basics import Size, ACUFace, BoxFaces
 from pydantic import BaseModel
-
-
-class ACUFace(BaseModel):
-    side: Face
-    width: float
-    length: float
-    offset: Vertex
 
 
 class ACUModel(BaseModel):
@@ -29,15 +22,6 @@ class ServerModel(BaseModel):
     width: float
 
 
-class BoxFaces(BaseModel):
-    top: bool
-    bottom: bool
-    front: bool
-    rear: bool
-    left: bool
-    right: bool
-
-
 class BoxModel(BaseModel):
     faces: BoxFaces
 
@@ -47,3 +31,5 @@ class RoomGeometryModel(BaseModel):
     racks: OrderedDict[str, RackModel]
     servers: OrderedDict[str, ServerModel]
     boxes: OrderedDict[str, BoxModel]
+
+

@@ -2,12 +2,13 @@
 Unit: m
 """
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel, validator
 
 
 # noinspection PyMethodParameters
-class Size(BaseModel):
+class Vertex(BaseModel):
     x: float
     y: float
     z: float
@@ -18,7 +19,7 @@ class Size(BaseModel):
 
 
 # noinspection PyMethodParameters
-class Vertex(BaseModel):
+class Size(BaseModel):
     x: float
     y: float
     z: float
@@ -37,12 +38,22 @@ class Face(str, Enum):
     bottom = "bottom"
 
 
-class ACUConfig(BaseModel):
-    min_temperature: float
-    flow_rate: float
-    cooling_capacity: float
+class BoxFaces(BaseModel):
+    top: bool
+    bottom: bool
+    front: bool
+    rear: bool
+    left: bool
+    right: bool
+
+class ACUFace(BaseModel):
+    side: Face
+    width: float
+    length: float
+    offset: Vertex
 
 
-class ServerConfig(BaseModel):
-    flow_rate: float
-    heat_load: float
+class Opening(BaseModel):
+    location: Vertex
+    size: Size
+    velocity: Optional[Size] = None
