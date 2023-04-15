@@ -162,5 +162,6 @@ reports/dependency-check-report.html
 /patches/
 /tutorials/co-sim/model/POD/
 /tutorials/cfd/log/
+/tutorials/cfd/staging/
 /tutorials/eplus/log/
 /tutorials/co-sim/log/

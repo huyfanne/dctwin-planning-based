@@ -484,6 +484,12 @@ class IDFParser:
                                                                   actuator_config.actuated_component_type)
         component_type = " ".join(component_type.split("_")) if not component_type.startswith("Schedule")\
             else ":".join(component_type.split("_"))
+        # here we must use "on/off" instead of "on off" as stated by EnergyPlus :)
+        if component_type.lower() == "plant component pump variablespeed":
+            component_type = "Plant Component Pump:VariableSpeed"
+        if component_type.lower() == "plant component chiller electric eir":
+            component_type = "Plant Component Chiller:Electric:EIR"
+
         control_type = actuator_config.DESCRIPTOR.EnumValueName("ControlType",
                                                                 actuator_config.actuated_component_control_type)
         control_type = " ".join(control_type.split("_"))

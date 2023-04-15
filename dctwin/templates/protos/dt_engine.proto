@@ -50,6 +50,8 @@ message IDFXIActuatorConfig {
       Schedule_Constant = 3;
       Supply_Side_Branch = 4;
       Demand_Side_Branch = 5;
+      Plant_Component_Pump_VariableSpeed = 6;
+      Plant_Component_Chiller_Electric_EIR = 7;
   }
   enum ControlType {
       Fan_Air_Mass_Flow_Rate = 0;
@@ -57,6 +59,7 @@ message IDFXIActuatorConfig {
       Pump_Mass_Flow_Rate = 2;
       Schedule_Value = 3;
       On_Off_Supervisory = 4;
+      Availability_Status = 5;
   }
   required string actuated_component_unique_name = 1;
   required ComponentType actuated_component_type = 2;

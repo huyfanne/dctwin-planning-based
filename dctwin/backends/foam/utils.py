@@ -1,17 +1,15 @@
 import os
 import math
 import shutil
-from typing import List
+from typing import List, Dict
 from dataclasses import dataclass
 
-from dctwin.models.objects import Rack
+from dctwin.models import Rack, Room, Vertex
 from dctwin.utils import (
     template_env,
     template_dir,
     config,
 )
-from dctwin.models.basics import Vertex
-from dctwin.models.constructions import Room
 
 from pathlib import Path
 from typing import Optional, Union
@@ -27,12 +25,12 @@ class Mesh:
 
 
 def generate_control_dict(
-    probes: Optional[List[Vertex]] = None,
-    steady=True,
-    delta_t: Union[int, float] = 1,
-    write_interval: int = 100,
-    end_time: int = 500,
-    process_num: int = 1,
+        probes: Optional[List[Vertex]] = None,
+        steady=True,
+        delta_t: Union[int, float] = 1,
+        write_interval: int = 100,
+        end_time: int = 500,
+        process_num: int = 1,
 ) -> None:
     if steady is False:
         delta_t = float("1e-5")
@@ -102,14 +100,15 @@ def init_foam():
         Path(template_dir, "system/steady/fvSolution"),
         Path(config.cfd.case_dir, "system/fvSolution"),
     )
+
     generate_control_dict()
 
 
 def generate_block_dict(room: Room) -> None:
     """Generate the blockMeshDict file"""
     min_z = 0
-    v_min, v_max = Vertex(x=0, y=0, z=min_z), Vertex(x=0, y=0, z=room.height)
-    for vertex in room.plane_outline:
+    v_min, v_max = Vertex(x=0, y=0, z=min_z), Vertex(x=0, y=0, z=room.geometry.height)
+    for vertex in room.geometry.plane:
         if vertex.x < v_min.x:
             v_min.x = vertex.x
         if vertex.y < v_min.y:
@@ -151,7 +150,10 @@ def generate_block_dict(room: Room) -> None:
 
 
 def generate_snappy_dict(
-    room: Room, field_config: Optional[dict] = None, process_num: int = 1
+    room: Room,
+    perforated_openings: Dict,
+    process_num: int = 1,
+    field_config: Optional[dict] = None,
 ) -> None:
     """Generate the snappyHexMeshDict file"""
     files = os.listdir(Path(config.cfd.geometry_dir))
@@ -159,7 +161,6 @@ def generate_snappy_dict(
     files = list(filter(lambda x: ".stl" in x, files))
     new_field_config = {
         "room_wall": {"type": "wall", "level": 1, "refine_level": "(0 1)"},
-        "partition_wall": {"type": "wall", "level": 1, "refine_level": "(0 1)"},
         "pillar": {"type": "wall", "level": 1, "refine_level": "(0 1)"},
         "acu_wall": {"type": "wall", "level": 2, "refine_level": "(0 2)"},
         "acu_return": {"type": "patch", "level": 2, "refine_level": "(0 2)"},
@@ -169,8 +170,8 @@ def generate_snappy_dict(
         "server_wall": {"type": "wall", "level": 2, "refine_level": "(0 3)"},
         "rack_wall": {
             "type": "wall",
-            "level": 2,
-            "refine_level": "(0 2)",
+            "level": 1,
+            "refine_level": "(0 1)",
             "faceType": "baffle",
         },
         "rack_panel": {
@@ -181,26 +182,20 @@ def generate_snappy_dict(
         },
         "ceiling": {
             "type": "wall",
-            "level": 2,
-            "refine_level": "(0 2)",
-            "faceType": "baffle",
-        },
-        "duct": {
-            "type": "wall",
-            "level": 2,
-            "refine_level": "(0 2)",
-            "faceType": "baffle",
-        },
-        "containment": {
-            "type": "wall",
-            "level": 2,
-            "refine_level": "(0 2)",
+            "level": 1,
+            "refine_level": "(0 1)",
             "faceType": "baffle",
         },
         "floor": {
             "type": "wall",
-            "level": 2,
-            "refine_level": "(0 2)",
+            "level": 1,
+            "refine_level": "(0 1)",
+            "faceType": "baffle",
+        },
+        "box": {
+            "type": "wall",
+            "level": 1,
+            "refine_level": "(0 1)",
             "faceType": "baffle",
         },
     }
@@ -216,6 +211,7 @@ def generate_snappy_dict(
                 mesh_category = v
                 break
         if mesh_category is None:
+            print(mesh_name)
             raise ValueError("No field config for snappyHex")
         mesh = Mesh(
             name=str(mesh_name),
@@ -236,11 +232,11 @@ def generate_snappy_dict(
             )
         )
 
-    first_rack: Rack = list(room.objects.racks.values())[0]
+    first_rack: Rack = list(room.constructions.racks.values())[0]
     location = Vertex(
-        x=first_rack.placement.x,
-        y=first_rack.placement.y,
-        z=(room.height + first_rack.size.dz) / 2,
+        x=first_rack.geometry.location.x,
+        y=first_rack.geometry.location.y,
+        z=(room.geometry.height + first_rack.geometry.size.z) / 2,
     )
     with open(Path(config.cfd.case_dir, "system/snappyHexMeshDict"), "w") as f:
         f.write(
@@ -260,6 +256,22 @@ def generate_snappy_dict(
             f.write(
                 template_env.get_template("system/decomposeParDict.j2").render(
                     process_num=process_num
+                )
+            )
+
+    if len(perforated_openings) > 0:
+        with open(Path(config.cfd.case_dir, "system/fvOptions"), "w") as f:
+            f.write(
+                template_env.get_template(f"system/steady/fvOptions.j2").render(
+                    perforated_openings=perforated_openings,
+                )
+            )
+        with open(Path(config.cfd.case_dir, "system/topoSetDict"), "w") as f:
+            f.write(
+                template_env.get_template(f"system/steady/topoSetDict.j2").render(
+                    perforated_openings=perforated_openings,
+                    min_floor_height=room.constructions.raised_floor.geometry.height - 0.05,
+                    max_floor_height=room.constructions.raised_floor.geometry.height,
                 )
             )
 
