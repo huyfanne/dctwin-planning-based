@@ -49,6 +49,7 @@ message IDFXIActuatorConfig {
       PUMP = 2;
       Schedule_Constant = 3;
       Supply_Side_Branch = 4;
+      Demand_Side_Branch = 5;
   }
   enum ControlType {
       Fan_Air_Mass_Flow_Rate = 0;
