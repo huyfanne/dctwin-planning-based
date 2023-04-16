@@ -210,10 +210,10 @@ class RoomParser:
         }
         for rack in self.model.constructions.racks.values():
             for uid, prop in rack.constructions.servers.items():
-                boundary_conditions["server_powers"][uid] = prop.heat_load
-                boundary_conditions["server_volume_flow_rates"][uid] = prop.flow_rate
+                boundary_conditions["server_powers"][uid] = self.model.inputs.servers[uid].heat_load
+                boundary_conditions["server_volume_flow_rates"][uid] = self.model.inputs.servers[uid].flow_rate
         for uid, prop in self.model.constructions.acus.items():
-            boundary_conditions["crac_setpoints"][uid] = prop.geometry.min_temperature
+            boundary_conditions["crac_setpoints"][uid] = self.model.inputs.acus[uid].min_temperature
             boundary_conditions["crac_volume_flow_rates"][uid] = prop.geometry.flow_rate
 
         return boundary_conditions
