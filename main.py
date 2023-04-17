@@ -173,18 +173,18 @@ config.PRESERVE_FOAM_LOG = True
 config.LOG_DIR = host_workspace / "run/result"
 config.cfd.mesh_dir = ""
 
+with open(host_workspace / "config/preferences.json", "r") as f:
+    preference = json.load(f)
 room = Room.load(host_workspace / "model/model.dt")
-cfd_manager = CFDManager(room=room, mesh_process=32, solve_process=32, end_time=100)
+cfd_manager = CFDManager(room=room, mesh_process=32, solve_process=32, end_time=int(preference["iteration"]))
 cfd_manager.run()
 
 case_dir = host_workspace / "run/result/base"
 parse_and_upload_result(room, case_dir, host_data_path)
-with open(host_workspace / "config/preferences.json", "r") as f:
-    data = json.load(f)
 metrics_data = calculate_metrics(
                 case_dir=case_dir,
                 room=room,
-                threshold=data["threshold"],
+                threshold=preference["threshold"],
             )
 
 os.mkdir(host_workspace / "run/cache_result")
