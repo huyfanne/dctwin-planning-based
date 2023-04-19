@@ -37,20 +37,19 @@ def convert_key_to_snake(data):
 def convert_json_file(data):
     """Convert specific JSON attribute from camel case to snake case"""
     snake_data = convert_key_to_snake(data)
-    for key, value in snake_data["geometry_model"]["acus"].items():
-        snake_data["geometry_model"]["acus"][key] = convert_key_to_snake(value)
-    for key, value in snake_data["geometry_model"]["racks"].items():
-        snake_data["geometry_model"]["racks"][key] = convert_key_to_snake(value)
-    for key, value in snake_data["geometry_model"]["servers"].items():
-        snake_data["geometry_model"]["servers"][key] = convert_key_to_snake(value)
-    snake_data["constructions"] = convert_key_to_snake(snake_data["constructions"])
-    for key, value in snake_data["constructions"]["racks"].items():
-        snake_data["constructions"]["racks"][key]["geometry"] = convert_key_to_snake(value["geometry"])
-        for server_key, server in value["constructions"]["servers"].items():
-            snake_data["constructions"]["racks"][key]["constructions"]["servers"][server_key][
-                "geometry"] = convert_key_to_snake(server["geometry"])
-    for key, value in snake_data["inputs"]["acus"].items():
-        snake_data["inputs"]["acus"][key] = convert_key_to_snake(value)
-    for key, value in snake_data["inputs"]["servers"].items():
-        snake_data["inputs"]["servers"][key] = convert_key_to_snake(value)
+    snake_data["models"] = convert_key_to_snake(snake_data["models"])
+    for key, value in snake_data["models"]["geometry_models"]["acus"].items():
+        snake_data["models"]["geometry_models"]["acus"][key] = convert_key_to_snake(value)
+    for key, value in snake_data["models"]["geometry_models"]["racks"].items():
+        snake_data["models"]["geometry_models"]["racks"][key] = convert_key_to_snake(value)
+    for key, value in snake_data["models"]["geometry_models"]["servers"].items():
+        snake_data["models"]["geometry_models"]["servers"][key] = convert_key_to_snake(value)
+    for room_key, room_value in snake_data["constructions"]["rooms"].items():
+        snake_data["constructions"]["rooms"][room_key]["geometry"] = convert_key_to_snake(room_value["geometry"])
+        snake_data["constructions"]["rooms"][room_key]["constructions"] = convert_key_to_snake(room_value["constructions"])
+        for rack_key, rack_value in room_value["constructions"]["racks"].items():
+            snake_data["constructions"]["rooms"][room_key]["constructions"]["racks"][rack_key]["geometry"] = convert_key_to_snake(rack_value["geometry"])
+            for server_key, server in rack_value["constructions"]["servers"].items():
+                snake_data["constructions"]["rooms"][room_key]["constructions"]["racks"][rack_key]["constructions"]["servers"][server_key][
+                    "geometry"] = convert_key_to_snake(server["geometry"])
     return snake_data

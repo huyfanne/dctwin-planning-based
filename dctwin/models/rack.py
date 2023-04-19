@@ -7,7 +7,13 @@ from .basics import Size, Vertex
 from .server import Server
 
 
-class RackGeometry(BaseModel):
+class RackGeometryModel(BaseModel):
+    slot: int
+    size: Size
+    first_slot_offset: float
+
+
+class RackGeometry(RackGeometryModel):
     model: str
     location: Vertex
     orientation: int

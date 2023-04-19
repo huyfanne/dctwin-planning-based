@@ -11,11 +11,11 @@ from .sensor import Sensor
 __all__ = [
     'Vertex',
     'Size',
+    'Sensor',
     'Server',
     'ACU',
     'Box',
     'Rack',
     'Room',
     'Building',
-    'Sensor'
 ]

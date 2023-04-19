@@ -2,7 +2,7 @@
 """
 
 from typing import Optional, OrderedDict, List, Tuple
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 from .basics import Vertex, Face
 from .panel import Panel
@@ -14,7 +14,7 @@ from .utils import rotate
 
 
 class RoomGeometry(BaseModel):
-    model: str
+    model: str = ""
     height: float
     plane: List[Vertex]
 
@@ -28,13 +28,6 @@ class RoomConstruction(BaseModel):
     acus: OrderedDict[str, ACU]
     racks: OrderedDict[str, Rack]
     sensors: OrderedDict[str, Sensor]
-
-    @validator("racks")
-    def _validate_racks(cls, v, values):
-        for rack in v.values():
-            rack_model = values["rack_models"][rack.model]
-            rack.size = rack_model.size
-        return
 
 
 class Room(BaseModel):

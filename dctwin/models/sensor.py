@@ -2,7 +2,7 @@
 """
 from typing import Optional, OrderedDict
 from pydantic import BaseModel, Field
-from ..basics import Vertex
+from .basics import Vertex
 
 
 class SensorGeometry(BaseModel):
@@ -15,5 +15,4 @@ class Sensor(BaseModel):
     """ Sensor object in a data center
     """
     geometry: SensorGeometry
-    constructions: None
     meta: Optional[OrderedDict] = Field(default_factory=dict)

@@ -5,7 +5,13 @@ from typing import Optional, OrderedDict
 from pydantic import BaseModel, Field
 
 
-class ServerGeometry(BaseModel):
+class ServerGeometryrModel(BaseModel):
+    slot_occupation: int
+    depth: float
+    width: float
+
+
+class ServerGeometry(ServerGeometryrModel):
     """
     depth: server depth
     occupation: How many slots the server will occupy
@@ -14,7 +20,7 @@ class ServerGeometry(BaseModel):
 
     model: str
     slot_position: int
-    orientation: int
+    orientation: Optional[float]
 
     slot_occupation: Optional[int] = None
     depth: Optional[float] = None
@@ -64,7 +70,6 @@ class ServerPower(BaseModel):
 
 class Server(BaseModel):
     geometry: ServerGeometry
-    constructions: None
     meta: Optional[OrderedDict] = Field(default_factory=dict)
     cooling: Optional[ServerCooling] = Field(default_factory=dict)
     power: Optional[ServerPower] = Field(default_factory=dict)

@@ -20,11 +20,11 @@ class Vertex(BaseModel):
 
 # noinspection PyMethodParameters
 class Size(BaseModel):
-    dx: float
-    dy: float
-    dz: float
+    x: float
+    y: float
+    z: float
 
-    @validator("dx", "dy", "dz")
+    @validator("x", "y", "z")
     def float_check(cls, v):
         return round(v, 5)
 
