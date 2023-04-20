@@ -13,7 +13,7 @@ from loguru import logger
 from dctwin.utils import EPlusEnvConfig
 from dctwin.backends.eplus.eplus_logger import EPlusOutputFormatter
 from dctwin.backends.core import Backend
-from dctwin.backends.eplus.parser import IDFParser
+from dctwin.models import IDFParser
 from dctwin.utils import config
 
 

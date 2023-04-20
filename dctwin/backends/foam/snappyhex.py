@@ -54,8 +54,8 @@ class SnappyHexBackend(Backend):
             self.process_num = process_num
 
         # check perforated tile opening angle
-        if room.constructions.raised_floor and room.constructions.raised_floor.geometry.openings:
-            for key, opening in room.constructions.raised_floor.geometry.openings.items():
+        if room.constructions.raised_floor and room.constructions.raised_floor.constructions.openings:
+            for key, opening in room.constructions.raised_floor.constructions.openings.items():
                 if opening.velocity:
                     self.perforated_openings[key] = opening
 
