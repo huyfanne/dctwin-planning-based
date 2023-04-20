@@ -25,11 +25,6 @@ class ACUGeometry(ACUGeometryModel):
     orientation: int
     location: Vertex
 
-    size: Optional[Size] = None
-    supply_face: Optional[ACUFace] = None
-    return_face: Optional[ACUFace] = None
-
-
     def calculate_face_area(self, face: Face) -> float:
         if face in (Face.front, Face.rear):
             return self.size.x / 2 * self.size.z / 2

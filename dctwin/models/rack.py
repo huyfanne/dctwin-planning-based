@@ -8,9 +8,9 @@ from .server import Server
 
 
 class RackGeometryModel(BaseModel):
-    slot: int
-    size: Size
-    first_slot_offset: float
+    size: Optional[Size]
+    slot: Optional[int]
+    first_slot_offset: Optional[float]
 
 
 class RackGeometry(RackGeometryModel):
@@ -18,10 +18,6 @@ class RackGeometry(RackGeometryModel):
     location: Vertex
     orientation: int
     has_blanking_panel: bool
-
-    size: Optional[Size] = None
-    slot: Optional[int] = None
-    first_slot_offset: Optional[float] = None
 
 
 class RackConstruction(BaseModel):

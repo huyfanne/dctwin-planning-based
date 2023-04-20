@@ -4,8 +4,9 @@ It contains all the data halls (rooms) and the built-in facilities.
 """
 import json
 from pathlib import Path
-from typing import Union, Optional, Dict, OrderedDict
+from typing import Union, Optional, Dict, OrderedDict, List
 from pydantic import BaseModel, validator
+from .basics import Vertex
 from .room import Room, RoomConstruction
 from .acu import ACU
 from .box import Box
@@ -17,7 +18,8 @@ from .models import Model
 
 class BuildingGeometry(BaseModel):
     """ Building geometry is used to define the geometry of the building """
-    pass
+    height: Optional[float]
+    plane: Optional[List[Vertex]]
 
 
 class BuildingConstruction(BaseModel):
@@ -30,7 +32,7 @@ class Building(BaseModel):
     """
     meta: Optional[OrderedDict]
     geometry: Optional[BuildingGeometry]
-    models: Model
+    models: Optional[Model]
     constructions: BuildingConstruction
 
     @classmethod
@@ -60,6 +62,7 @@ class Building(BaseModel):
                 f"Invalid object type: {type(obj)}: "
                 f"The object geometry model is not defined."
             )
+
     @validator("constructions")
     def _validate_building_constructions(cls, building_constructions: BuildingConstruction, values: Dict):
         cls._validate_rooms(building_constructions.rooms, values["models"])

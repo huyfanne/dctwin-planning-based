@@ -16,15 +16,12 @@ class BoxFaces(BaseModel):
 
 
 class BoxGeometryModel(BaseModel):
-    faces: BoxFaces
-
+    faces: Optional[BoxFaces]
 
 class BoxGeometry(BoxGeometryModel):
     model: str
     location: Vertex
-
-    size: Optional[Size] = None
-    faces: Optional[BoxFaces] = None
+    size: Size
 
 
 class BoxConstruction(BaseModel):

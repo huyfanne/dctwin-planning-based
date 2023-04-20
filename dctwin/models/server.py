@@ -6,9 +6,9 @@ from pydantic import BaseModel, Field
 
 
 class ServerGeometryrModel(BaseModel):
-    slot_occupation: int
-    depth: float
-    width: float
+    slot_occupation: Optional[int]
+    depth: Optional[float]
+    width: Optional[float]
 
 
 class ServerGeometry(ServerGeometryrModel):
@@ -17,14 +17,9 @@ class ServerGeometry(ServerGeometryrModel):
     occupation: How many slots the server will occupy
     extend_to_rack_width: extend the server width to equal the rack width or not
     """
-
     model: str
     slot_position: int
     orientation: Optional[float]
-
-    slot_occupation: Optional[int] = None
-    depth: Optional[float] = None
-    width: Optional[float] = None
 
     @property
     def height(self) -> float:
