@@ -28,14 +28,13 @@ from dctwin.utils.errors import (
     MeshBuildError,
     FoamSolveError,
 )
-from dctwin.models import Room
-from dctwin.backends.foam.parser import RoomParser
+from dctwin.models import Room, Building
 
 
 class CFDManager:
     """
     A manager for the whole CFD simulation for data hall thermal analysis
-    :param room: room model
+    :param building: a building object that contains all rooms
     :param mesh_process: number of cores for meshing
     :param solve_process: number of cores for solving
     :param steady: steady or transient simulation
@@ -46,7 +45,8 @@ class CFDManager:
     """
     def __init__(
         self,
-        room: Room,
+        building: Building,
+        room_id: str,
         mesh_process: int = 32,
         solve_process: int = 32,
         steady: bool = True,
@@ -65,7 +65,7 @@ class CFDManager:
         ] = None
         self.pod_backend: Optional[PODBackend] = None
 
-        self.room = room
+        self.room: Room = building.constructions.rooms[room_id]
         self.steady = steady
         self.run_cfd = run_cfd
         self.mesh_process = mesh_process
@@ -77,8 +77,7 @@ class CFDManager:
         self.pod_method = pod_method
 
         self.last_state_case = None
-        self.object_mesh_index = read_object_mesh_index(room=room)
-        self.parser = RoomParser(room=room)
+        self.object_mesh_index = read_object_mesh_index(room=self.room)
         self._setup_default_backend()
 
     def _setup_default_backend(self) -> None:
@@ -195,7 +194,7 @@ class CFDManager:
         :param save_boundary_conditions: whether to save the boundary conditions
         :param boundary_conditions: boundary conditions for simulation
            i.e., boundary_conditions = {
-            "crac_setpoints": {}, "crac_volume_flow_rates": {},
+            "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
             "server_powers": {}, "server_volume_flow_rates": {}
             }
         :return: temperature fields
@@ -229,7 +228,7 @@ class CFDManager:
                         saved_dict=self.object_mesh_index,
                     )
             if boundary_conditions:
-                self.parser.update_boundary_conditions(**boundary_conditions)
+                self.room.update_boundary_conditions(**boundary_conditions)
             self.solve(stream=False)
             if save_boundary_conditions:
                 save_json_file(

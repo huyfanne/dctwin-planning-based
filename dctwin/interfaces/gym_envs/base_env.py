@@ -213,7 +213,6 @@ class BaseEnv(gym.Env):
         complete_raw_action = []
         ra_ptr = 0
         for a in self._actions:
-            value = None
             if a.control_type == ActionControlType.FIXED:
                 value = a.default_value
             elif a.control_type == ActionControlType.AGENT_CONTROLLED:

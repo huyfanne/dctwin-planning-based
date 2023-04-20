@@ -13,13 +13,13 @@ from dctwin.utils import config
 
 from dctwin.interfaces.managers import CFDManager
 from dctwin.backends import EplusBackend
-from dctwin.models import Room
+from dctwin.models import Building
 
 
 class EplusCFDAdapter:
     """
     A class to manage the co-simulation between CFD and E+.
-    :param room: the room object model for data hall
+    :param building: a building object that contains all rooms
     :param eplus_backend: the E+ backend to be used
     :param mesh_process: the number of processes to be used for meshing
     :param solve_process: the number of processes to be used for solving
@@ -35,7 +35,8 @@ class EplusCFDAdapter:
 
     def __init__(
         self,
-        room: Room,
+        building: Building,
+        room_id: str,
         eplus_backend: EplusBackend,
         map_boundary_condition_fn: Callable,
         mesh_process: int = 8,
@@ -52,7 +53,8 @@ class EplusCFDAdapter:
         assert map_boundary_condition_fn is not None, loguru.logger.critical("No map function provided !")
 
         self.cfd_manager = CFDManager(
-            room=room,
+            building=building,
+            room_id=room_id,
             mesh_process=mesh_process,
             solve_process=solve_process,
             steady=steady,
@@ -90,11 +92,11 @@ class EplusCFDAdapter:
             config.cfd.file_handler,
             fieldnames=(
                     ['timestamp'] +
-                    [f"{crac_id} (C)" for crac_id in self.cfd_manager.parser.model.objects.acus] +
-                    [f"{crac_id} (m3/s)" for crac_id in self.cfd_manager.parser.model.objects.acus] +
+                    [f"{crac_id} (C)" for crac_id in self.cfd_manager.room.acu_keys] +
+                    [f"{crac_id} (m3/s)" for crac_id in self.cfd_manager.room.acu_keys] +
                     ["Total IT Power (w)"] +
                     ["Total IT Volume Flow Rate (m3/s)"] +
-                    [f"{sensor_id} (C)" for sensor_id in self.cfd_manager.parser.model.objects.sensors]
+                    [f"{sensor_id} (C)" for sensor_id in self.cfd_manager.room.sensor_keys]
             )
         )
         config.cfd.log_handler.writeheader()
@@ -192,7 +194,7 @@ class EplusCFDAdapter:
     def run(self, episode_idx) -> Tuple[np.ndarray, Any]:
         self.episode_idx = episode_idx
         eplus_obs, done = self.eplus_manager.run(episode_idx)
-        init_boundary_condition = self.cfd_manager.parser.format_boundary_conditions
+        init_boundary_condition = self.cfd_manager.room.format_boundary_conditions
         init_boundary_condition = self._scale_server_flow_rate(
             boundary_conditions=init_boundary_condition
         )

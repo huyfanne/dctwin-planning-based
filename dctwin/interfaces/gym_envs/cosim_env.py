@@ -14,7 +14,7 @@ from pathlib import Path
 from dctwin.adapters import EplusCFDAdapter
 from dctwin.utils import CoSimEnvConfig
 from dctwin.utils import config as cosim_env
-from dctwin.models import Room
+from dctwin.models import Room, Building
 
 from .eplus_env import EPlusEnv
 from .ds import Observation
@@ -51,7 +51,8 @@ class CoSimEnv(EPlusEnv):
         self.cfd_config = config.cfd
         self._set_cosim_environ()
         self.co_sim_manager = EplusCFDAdapter(
-            room=Room.load(cosim_env.cfd.geometry_file),
+            building=Building.load(cosim_env.cfd.geometry_file),
+            room_id=cosim_env.cfd.room_id,
             write_interval=config.cfd.write_interval,
             end_time=config.cfd.end_time,
             field_config=config.cfd.field_config,
