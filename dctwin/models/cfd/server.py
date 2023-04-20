@@ -39,32 +39,33 @@ class ServerGeometry(ServerGeometryrModel):
         else:
             return self.height * float(self.width)
 
-    # @property
-    # def k(self) -> float:
-    #     tu = 0.1
-    #     u = float(self.flow_rate) / self.outlet_area
-    #     k = 1.5 * ((tu / 100) ** 2) * (u ** 2)
-    #     return k
-    #
-    # @property
-    # def epsilon(self) -> float:
-    #     nu = 1.5e-05
-    #     eddy_viscosity_ratio = 10
-    #     return 0.09 * (self.k ** 2) / (nu * eddy_viscosity_ratio)
-
 
 class ServerCooling(BaseModel):
-    volume_flow_rate: float # unit(m3/s)
-    volume_flow_rate_ratio: float = 0.02 # unit(m3/s/W)
+    fan_type: Optional[str] = "Fixed"
+    volume_flow_rate: float = 0.02 if fan_type == "Fixed" else None # unit(m3/s)
+    volume_flow_rate_ratio: float = 0.00002 # unit(m3/s/W)
 
 
 class ServerPower(BaseModel):
-    rated_power: Optional[float] # unit(W)
-    input_power: float # unit(W)
+    rated_power: Optional[float] = 1000 # unit(W)
+    input_power: float = 500 # unit(W)
 
 
 class Server(BaseModel):
     geometry: ServerGeometry
-    meta: Optional[OrderedDict] = Field(default_factory=dict)
-    cooling: Optional[ServerCooling] = Field(default_factory=dict)
-    power: Optional[ServerPower] = Field(default_factory=dict)
+    meta: Optional[OrderedDict]
+    cooling: ServerCooling = Field(default_factory=ServerCooling)
+    power: ServerPower = Field(default_factory=ServerPower)
+
+    @property
+    def k(self) -> float:
+        tu = 0.1
+        u = float(self.cooling.volume_flow_rate) / self.geometry.outlet_area
+        k = 1.5 * ((tu / 100) ** 2) * (u ** 2)
+        return k
+
+    @property
+    def epsilon(self) -> float:
+        nu = 1.5e-05
+        eddy_viscosity_ratio = 10
+        return 0.09 * (self.k ** 2) / (nu * eddy_viscosity_ratio)

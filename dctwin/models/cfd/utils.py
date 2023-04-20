@@ -1,5 +1,10 @@
 import math
 from typing import Tuple
+from .basics import Vertex
+
+
+def euclidean_distance(loc_1: Vertex, loc_2: Vertex) -> float:
+    return math.sqrt((loc_1.x - loc_2.x) ** 2 + (loc_1.y - loc_2.y) ** 2 + (loc_1.z - loc_2.z) ** 2)
 
 
 def rotate(origin: Tuple[float, float], point: Tuple[float, float], angle: int) -> Tuple[float, float]:

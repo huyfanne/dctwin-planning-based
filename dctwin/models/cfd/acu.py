@@ -46,10 +46,10 @@ class ACUGeometry(ACUGeometryModel):
 class ACUCooling(BaseModel):
     """ ACU cooling properties
     """
-    type: Optional[str] = "DX"
-    capacity: Optional[float]
-    supply_air_temperature: float
-    supply_air_volume: float
+    cooling_type: Optional[str] = "DX"
+    cooling_capacity: Optional[float] = 1000 # unit(W)
+    supply_air_temperature: float = 23 # unit(C)
+    supply_air_volume_flow_rate: float = 5 # unit(m3/s)
 
 
 class ACUPower(BaseModel):
@@ -63,5 +63,25 @@ class ACU(BaseModel):
     """
     geometry: ACUGeometry
     meta: Optional[OrderedDict] = Field(default_factory=dict)
-    cooling: Optional[ACUCooling] = None
-    power: Optional[ACUPower] = None
+    cooling: ACUCooling = Field(default_factory=ACUCooling)
+    power: ACUPower = Field(default_factory=ACUPower)
+
+    @property
+    def k(self) -> float:
+        """turbulent kinetic energy
+        Others:
+        omega = epsilon / (0.09 * k)
+        """
+        tu = 0.1
+        u = float(self.cooling.supply_air_volume_flow_rate / self.geometry.supply_area)
+        k = 1.5 * ((tu / 100) ** 2) * (u ** 2)
+        return k
+
+    @property
+    def epsilon(self) -> float:
+        """
+        turbulent dissipation rate
+        """
+        nu = 1.5e-05
+        eddy_viscosity_ratio = 10
+        return 0.09 * (self.k ** 2) / (nu * eddy_viscosity_ratio)
