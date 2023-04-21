@@ -28,7 +28,7 @@ class Building(BaseModel):
     """
     meta: Optional[OrderedDict] = Field(default_factory=dict)
     models: Optional[Model]
-    inputs: Optional[Inputs] = Field(default_factory=Inputs)
+    inputs: Optional[Inputs] = None
     constructions: BuildingConstruction
 
     @classmethod
