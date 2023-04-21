@@ -121,20 +121,20 @@ class Room(BaseModel):
         return inlet, outlet
 
     def _parse_server_model(self, type_: str) -> Union[List[str], Dict[str, str]]:
-        self._server_type_dict = {}
-        self._server_type_list = []
+        server_type_dict = {}
+        server_type_list = []
         for rack_key, rack in self.constructions.racks.items():
             for server_key, server in rack.constructions.servers.items():
                 if server.geometry.model is not None:
-                    self._server_type_dict[server_key] = server.geometry.model
-                    if server.geometry.model not in self._server_type_list:
-                        self._server_type_list.append(server.geometry.model)
+                    server_type_dict[server_key] = server.geometry.model
+                    if server.geometry.model not in server_type_list:
+                        server_type_list.append(server.geometry.model)
                 else:
                     logger.warning(f"server {server_key} model is not defined")
         if type_ == "list":
-            return self._server_type_list
+            return server_type_list
         elif type_ == "dict":
-            return self._server_type_dict
+            return server_type_dict
 
     @property
     def num_crac(self) -> int:
