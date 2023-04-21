@@ -46,8 +46,8 @@ class ACUGeometry(ACUGeometryModel):
 class ACUCooling(BaseModel):
     """ ACU cooling properties
     """
-    cooling_type: Optional[str] = "DX"
-    cooling_capacity: float # unit(W)
+    cooling_type: Optional[str]
+    cooling_capacity: float # unit(kW)
     supply_air_temperature: float # unit(C)
     supply_air_volume_flow_rate: float # unit(m3/s)
 
@@ -55,7 +55,7 @@ class ACUCooling(BaseModel):
 class ACUPower(BaseModel):
     """ ACU power properties
     """
-    fan_power: Optional[float]
+    fan_power: Optional[float] # unit(W)
 
 
 class ACU(BaseModel):

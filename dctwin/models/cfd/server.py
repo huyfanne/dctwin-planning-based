@@ -43,7 +43,7 @@ class ServerGeometry(ServerGeometryrModel):
 class ServerCooling(BaseModel):
     fan_type: Optional[str] = "Fixed"
     volume_flow_rate: float = 0.05 if fan_type == "Fixed" else None # unit(m3/s)
-    volume_flow_rate_ratio: float = 0.00002 # unit(m3/s/W)
+    volume_flow_rate_ratio: float # unit(m3/s/W)
 
 
 class ServerPower(BaseModel):
