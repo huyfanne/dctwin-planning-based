@@ -1,3 +1,3 @@
-from .parser import IDFParser
+from .eplus import Eplus
 
-__all__ = ['IDFParser']
+__all__ = ['Eplus']

@@ -13,7 +13,7 @@ from loguru import logger
 from dctwin.utils import EPlusEnvConfig
 from dctwin.backends.eplus.eplus_logger import EPlusOutputFormatter
 from dctwin.backends.core import Backend
-from dctwin.models import IDFParser
+from dctwin.models import Eplus
 from dctwin.utils import config
 
 
@@ -109,7 +109,7 @@ class EplusBackend(Backend):
         idf_path: Union[str, Path],
     ) -> None:
         logger.info("Parsing IDF file...")
-        self.idf_parser = IDFParser(idf_path=str(idf_path))
+        self.idf_parser = Eplus.load(idf_path=str(idf_path))
         action_configs = self._proto_config.actions
         observation_configs = self._proto_config.observations
         self.idf_parser.batch_set_actions(action_configs)

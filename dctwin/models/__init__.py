@@ -1,5 +1,5 @@
 from .cfd import Vertex, Size, Sensor, Server, ACU, Box, Rack, Room, Building
-from .eplus import IDFParser
+from .eplus import Eplus
 
 __all__ = [
     'Vertex',
@@ -11,5 +11,5 @@ __all__ = [
     'Rack',
     'Room',
     'Building',
-    'IDFParser',
+    'Eplus',
 ]
