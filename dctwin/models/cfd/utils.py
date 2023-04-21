@@ -42,17 +42,23 @@ def convert_key_to_snake(data):
 def convert_json_file(data):
     """Convert specific JSON attribute from camel case to snake case"""
     snake_data = convert_key_to_snake(data)
-    snake_data["models"] = convert_key_to_snake(snake_data["models"])
-    for key, value in snake_data["models"]["geometry_models"]["acus"].items():
-        snake_data["models"]["geometry_models"]["acus"][key] = convert_key_to_snake(value)
-    for key, value in snake_data["models"]["geometry_models"]["racks"].items():
-        snake_data["models"]["geometry_models"]["racks"][key] = convert_key_to_snake(value)
-    for key, value in snake_data["models"]["geometry_models"]["servers"].items():
-        snake_data["models"]["geometry_models"]["servers"][key] = convert_key_to_snake(value)
-    for key, value in snake_data["inputs"]["acus"].items():
-        snake_data["inputs"]["acus"][key] = convert_key_to_snake(value)
-    for key, value in snake_data["inputs"]["servers"].items():
-        snake_data["inputs"]["servers"][key] = convert_key_to_snake(value)
+    try:
+        snake_data["models"] = convert_key_to_snake(snake_data["models"])
+        for key, value in snake_data["models"]["geometry_models"]["acus"].items():
+            snake_data["models"]["geometry_models"]["acus"][key] = convert_key_to_snake(value)
+        for key, value in snake_data["models"]["geometry_models"]["racks"].items():
+            snake_data["models"]["geometry_models"]["racks"][key] = convert_key_to_snake(value)
+        for key, value in snake_data["models"]["geometry_models"]["servers"].items():
+            snake_data["models"]["geometry_models"]["servers"][key] = convert_key_to_snake(value)
+    except KeyError:
+        pass
+    try:
+        for key, value in snake_data["inputs"]["acus"].items():
+            snake_data["inputs"]["acus"][key] = convert_key_to_snake(value)
+        for key, value in snake_data["inputs"]["servers"].items():
+            snake_data["inputs"]["servers"][key] = convert_key_to_snake(value)
+    except KeyError:
+        pass
     for room_key, room_value in snake_data["constructions"]["rooms"].items():
         snake_data["constructions"]["rooms"][room_key]["geometry"] = convert_key_to_snake(room_value["geometry"])
         snake_data["constructions"]["rooms"][room_key]["constructions"] = convert_key_to_snake(room_value["constructions"])
