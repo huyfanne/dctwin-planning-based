@@ -47,9 +47,9 @@ class ACUCooling(BaseModel):
     """ ACU cooling properties
     """
     cooling_type: Optional[str]
-    cooling_capacity: float # unit(kW)
-    supply_air_temperature: float # unit(C)
-    supply_air_volume_flow_rate: float # unit(m3/s)
+    cooling_capacity: Optional[float] # unit(kW)
+    supply_air_temperature: Optional[float] # unit(C)
+    supply_air_volume_flow_rate: Optional[float] # unit(m3/s)
 
 
 class ACUPower(BaseModel):
