@@ -126,7 +126,7 @@ class ACUBoundary(Boundary):
                 "airVolumeFlowRate = {self.supply_air_volume_flow_rate}"
                 "mfr = airVolumeFlowRate * rho"		
                 "Cp = 1006"
-                "t1={t_sink}-(coolingCapacity/(mfr * Cp))"
+                "t1={t_sink}-(coolingCapacity * 1000/(mfr * Cp))"
                 "del_t = 0.5"
                 "min_temperature = {self.supply_kelvin}"
                 "t2= min_temperature + del_t"
