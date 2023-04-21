@@ -96,7 +96,7 @@ class ACUBoundary(Boundary):
         self.acu_id = acu_id
         self.object = acu
         self.supply_kelvin = round(acu.cooling.supply_air_temperature + 273.15, 2)
-        self.air_volume_flow_rate = round(acu.cooling.supply_air_volume_flow_rate, 6)
+        self.supply_air_volume_flow_rate = round(acu.cooling.supply_air_volume_flow_rate, 6)
         self.cooling_capacity = round(acu.cooling.cooling_capacity, 6)
 
     @property
@@ -123,10 +123,10 @@ class ACUBoundary(Boundary):
                 "{t_sink}{{acu_return_{self.acu_id}}} = weightAverage(T)"
                 "coolingCapacity = {self.cooling_capacity}"
                 "rho = 1.2"
-                "flowrate = {self.air_volume_flow_rate}"
-                "mfr = flowrate*rho"		
+                "airVolumeFlowRate = {self.supply_air_volume_flow_rate}"
+                "mfr = airVolumeFlowRate * rho"		
                 "Cp = 1006"
-                "t1={t_sink}-(coolingCapacity*1000/(mfr*Cp))"
+                "t1={t_sink}-(coolingCapacity/(mfr * Cp))"
                 "del_t = 0.5"
                 "min_temperature = {self.supply_kelvin}"
                 "t2= min_temperature + del_t"
@@ -141,18 +141,18 @@ class ACUBoundary(Boundary):
         supply = f"""
         {{
             type                flowRateInletVelocity;
-            volumetricFlowRate  {self.air_volume_flow_rate};
+            volumetricFlowRate  {self.supply_air_volume_flow_rate};
             value               uniform (0 0 0);
         }}
         """
         _return = f"""
         {{
             type                flowRateOutletVelocity;
-            volumetricFlowRate  {self.air_volume_flow_rate};
+            volumetricFlowRate  {self.supply_air_volume_flow_rate};
             value               uniform (0 0 0);
         }}
         """
-        if self.air_volume_flow_rate == 0:
+        if self.supply_air_volume_flow_rate == 0:
             supply = self.no_slip
             _return = self.no_slip
         return f"""
