@@ -142,9 +142,9 @@ class Room(BaseModel):
                         f"occupation={server_obj['geometry']['slot_occupation']})"
                     )
 
-                for i in range(server_obj["geometry"]["slot_position"],
-                               server_obj["geometry"]["slot_position"] + server_obj["geometry"][
-                                   "slot_occupation"]):
+                for i in range(int(server_obj["geometry"]["slot_position"]),
+                               int(server_obj["geometry"]["slot_position"] + server_obj["geometry"][
+                                   "slot_occupation"])):
                     if i not in occupied_rack_slot:
                         occupied_rack_slot[i] = _server_id
                     else:
