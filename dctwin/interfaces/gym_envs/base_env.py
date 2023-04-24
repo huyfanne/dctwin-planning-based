@@ -262,7 +262,7 @@ class BaseEnv(gym.Env):
             return 0.0
         self._reward.set_unnormed_value(
             self._reward_fn(
-                self, # the observation can be inspected by calling the class inspect methods
+                self,  # the observation can be inspected by calling the class inspect methods
             )
         )
         return self._reward.get_unnormed_value()
