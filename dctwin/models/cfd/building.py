@@ -143,7 +143,7 @@ class Building(BaseModel):
         slot_position = int(server.geometry.slot_position)
         slot_occupation = int(server.geometry.slot_occupation)
         num_slots = int(rack.geometry.slot)
-        if slot_position < 1 or slot_occupation + slot_occupation > num_slots + 1:
+        if slot_position < 1 or slot_occupation + slot_position > num_slots + 1:
             raise ValueError(
                 f"invalid server slot/occupation:"
                 f"Server({server_id}, slot={slot_position},"
