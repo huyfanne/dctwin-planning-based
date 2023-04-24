@@ -43,6 +43,7 @@ class Server(BaseModel):
 
 class Sensor(BaseModel):
     geometry: SensorGeometry
+    meta: dict
 
 
 class Rack(BaseModel):
