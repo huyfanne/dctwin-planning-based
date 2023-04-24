@@ -161,13 +161,13 @@ class RoomParser:
         for uid, prop in self.model.constructions.acus.items():
             if crac_setpoints is not None:
                 try:
-                    prop.min_temperature = crac_setpoints[uid]
+                    prop.geometry.min_temperature = crac_setpoints[uid]
                     self._crac_setpoints_dict[uid] = crac_setpoints[uid]
                 except KeyError:
                     logger.critical(f"CRAC {uid} setpoint is missing")
             if crac_volume_flow_rates is not None:
                 try:
-                    prop.flow_rate = crac_volume_flow_rates[uid]
+                    prop.geometry.flow_rate = crac_volume_flow_rates[uid]
                     self._crac_volume_flow_rates_dict[uid] = crac_volume_flow_rates[uid]
                 except KeyError:
                     logger.critical(f"CRAC {uid} volume flow rate is missing")
@@ -181,13 +181,13 @@ class RoomParser:
             for uid, prop in rack.constructions.servers.items():
                 if server_powers is not None:
                     try:
-                        prop.heat_load = server_powers[uid]
+                        prop.geometry.heat_load = server_powers[uid]
                         self._server_load_dict[uid] = server_powers[uid]
                     except KeyError:
                         logger.critical(f"server {uid} power is missing")
                 if server_volume_flow_rates is not None:
                     try:
-                        prop.flow_rate = server_volume_flow_rates[uid]
+                        prop.geometry.flow_rate = server_volume_flow_rates[uid]
                         self._server_flow_rate_dict[uid] = server_volume_flow_rates[uid]
                     except KeyError:
                         logger.critical(f"server {uid} volume flow rate is missing")
