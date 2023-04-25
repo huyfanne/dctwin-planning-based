@@ -175,9 +175,9 @@ class EplusBackend(Backend):
     def _run_backend(self) -> Tuple[Union[float, None], Union[float, None]]:
         host_path = os.environ.get('HOST_PATH', None)
         if host_path is not None:
-            # concatenate the last 4 parts of the path in Docker container with external host path
-            case_dir = '/'.join(config.eplus.case_dir.parts[-4:])
-            case_dir = os.path.join(host_path, case_dir)
+            # concatenate the log path in Docker container with external host path
+            log_index = config.cfd.case_dir.parts.index("log")
+            case_dir = '/'.join(config.cfd.case_dir.parts[log_index:])
             logger.info(f"Concatenated Case Directory: {case_dir}")
             network = None
             network_mode = f"container:{socket.gethostname()}"

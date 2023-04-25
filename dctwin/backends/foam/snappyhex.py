@@ -75,12 +75,14 @@ class SnappyHexBackend(Backend):
         host_path = os.environ.get('HOST_PATH', None)
 
         if host_path is not None:
-            # concatenate the last 4 parts of the path in Docker container with external host path
-            case_dir = '/'.join(config.cfd.case_dir.parts[-4:])
+            # concatenate the log path in Docker container with external host path
+            log_index = config.cfd.case_dir.parts.index("log")
+            case_dir = '/'.join(config.cfd.case_dir.parts[log_index:])
             case_dir = Path(host_path).joinpath(case_dir)
             logger.info(f"Concatenated Case Directory: {case_dir}")
         else:
             case_dir = config.cfd.case_dir
+
         self.run_container(user=0, case_dir=case_dir)
 
         logger.info("***** Mesh finished *****\n\n")
