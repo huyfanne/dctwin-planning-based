@@ -1,3 +1,4 @@
+import os
 import shutil
 import time
 import socket
@@ -5,7 +6,7 @@ import datetime
 import opyplus as op
 
 from pathlib import Path
-from typing import List, Tuple, Union, Optional
+from typing import List, Tuple, Union
 import xml.etree.ElementTree as ET
 
 from docker import DockerClient
@@ -21,8 +22,8 @@ class EplusBackend(Backend):
     """
     A class to handle the communication with the EnergyPlus with BCVTB
     :param proto_config: the configuration of the eplus model
-    :param host: The host to connect to (default: localhost)
-    :param network: The network to connect to (default: host)
+    :param host: The host to connect to (default: "")
+    :param network: The network to connect to (default: "")
     :param docker_client: The docker client to use (default: None)
     """
     docker_image = "ghcr.io/cap-dcwiz/energyplus-9-5-0:latest"
@@ -34,16 +35,17 @@ class EplusBackend(Backend):
     def __init__(
         self,
         proto_config: EPlusEnvConfig,
-        host: Optional[str] = "localhost",
-        network: Optional[str] = "host",
         docker_client: DockerClient = None,
+        host: str = "",
+        network: str = "",
         *args,
         **kwargs
     ) -> None:
         super().__init__(client=docker_client, *args, **kwargs)
-        self._network = network
         self._host = host
+        self._port = None
         self._socket = None
+        self._network = network
         self._proto_config = proto_config
         self._set_up_socket()
 
@@ -66,13 +68,13 @@ class EplusBackend(Backend):
         """ Create a socket for communication with the BCVTB
         """
         self._socket = socket.socket()
-        self._socket.settimeout(30)
+        self._socket.settimeout(10)
         self._socket.bind(("0.0.0.0", 0))
         self._socket.listen()
-        if self._host is None:
+        if self._host == "":
             self._host = socket.gethostbyname(socket.gethostname())
         self._port = self._socket.getsockname()[1]
-        logger.info(f"socket listening on 0.0.0.0:{self._port}")
+        logger.info(f"socket listening on {self._host}:{self._port}")
 
     @staticmethod
     def _create_socket_cfg(host: str, port: int) -> None:
@@ -171,13 +173,26 @@ class EplusBackend(Backend):
             logger.info(f"Failed to clean output dir {config.eplus.case_dir}")
 
     def _run_backend(self) -> Tuple[Union[float, None], Union[float, None]]:
+        host_path = os.environ.get('HOST_PATH', None)
+        if host_path is not None:
+            # concatenate the last 4 parts of the path in Docker container with external host path
+            case_dir = '/'.join(config.eplus.case_dir.parts[-4:])
+            case_dir = os.path.join(host_path, case_dir)
+            logger.info(f"Concatenated Case Directory: {case_dir}")
+            network = None
+            network_mode = f"container:{socket.gethostname()}"
+        else:
+            case_dir = config.eplus.case_dir
+            network = self._network
+            network_mode = None
         self.run_container(
             environment={
                 "BCVTB_HOME": "/usr/local/bcvtb",
             },
             background=True,
-            network=self._network,
-            case_dir=config.eplus.case_dir,
+            case_dir=case_dir,
+            network=network,
+            network_mode=network_mode,
         )
         while True:
             try:
@@ -186,7 +201,6 @@ class EplusBackend(Backend):
                 break
             except socket.timeout:
                 logger.info("Waiting for connection...")
-
         return self.receive_status()  # as it cannot be done on the very first step
 
     def _serialize(self, actions: list) -> str:
@@ -220,11 +234,7 @@ class EplusBackend(Backend):
             exit(-1)
         observations = []
         for i in range(6, len(msg)):
-            try:
-                observations.append(float(msg[i]))
-            except ValueError:
-                logger.critical(msg)
-                exit(-1)
+            observations.append(float(msg[i]))
         return observations, False
 
     def send_action(self, action) -> None:

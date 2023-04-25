@@ -94,7 +94,7 @@ class Backend(abc.ABC):
             if background:
                 return None
             output_stream = self.container.logs(stream=True, follow=True)
-            logger.info(f"new_container_id: {self.container.id}")
+            logger.info(f"container_id: {self.container.id}")
             if stream:
                 return output_stream
             else:

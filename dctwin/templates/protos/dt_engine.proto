@@ -158,8 +158,8 @@ message EPlusEnvConfig {
   required float inlet_temp_ub = 15;
   required float inlet_temp_init = 16;
 
-  optional string host = 17 [default = "localhost"];
-  optional string network = 18 [default = "host"];
+  optional string host = 17 [default = ""];
+  optional string network = 18 [default = ""];
   optional EnvParams env_params = 19;
 }
 
