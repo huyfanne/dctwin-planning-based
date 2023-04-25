@@ -4,10 +4,13 @@ form.epsilon.value = 0.09 * Math.pow(form.k.value,1.5) / form.Tu_L.value
 form.omega.value = form.epsilon.value / (0.09 * form.k.value)
 """
 import abc
+import os
 import shutil
 import time
 from pathlib import Path
 from typing import Tuple
+
+from loguru import logger
 
 from dctwin.backends.core import Backend
 from dctwin.backends.foam.boundary import (
@@ -174,7 +177,17 @@ class SolverBackend(Backend):
 
         if config.cfd.dry_run:
             return
-        return self.run_container(user=0, stream=stream, case_dir=config.cfd.case_dir)
+        host_path = os.environ.get('HOST_PATH', None)
+
+        if host_path is not None:
+            # concatenate the last 4 parts of the path in Docker container with external host path
+            case_dir = '/'.join(config.cfd.case_dir.parts[-4:])
+            case_dir = Path(host_path).joinpath(case_dir)
+            logger.info(f"Concatenated Case Directory: {case_dir}")
+        else:
+            case_dir = config.cfd.case_dir
+
+        return self.run_container(user=0, stream=stream, case_dir=case_dir)
 
 
 class SteadySolverBackend(SolverBackend):
