@@ -127,9 +127,8 @@ class ACUBoundary(Boundary):
                 "mfr = flowrate*rho"		
                 "Cp = 1006"
                 "t1={t_sink}-(coolingCapacity*1000/(mfr*Cp))"
-                "del_t=0.5"
                 "min_temperature = {self.supply_kelvin}"
-                "t2= min_temperature + del_t"
+                "t2= min_temperature"
             );
         }}
         acu_return_{self.id} {self.zero_gradient}
