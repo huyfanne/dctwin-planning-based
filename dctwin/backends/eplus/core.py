@@ -178,6 +178,7 @@ class EplusBackend(Backend):
             # concatenate the log path in Docker container with external host path
             log_index = config.eplus.case_dir.parts.index("log")
             case_dir = '/'.join(config.eplus.case_dir.parts[log_index:])
+            case_dir = Path(host_path).joinpath(case_dir)
             logger.info(f"Concatenated Case Directory: {case_dir}")
             network = None
             network_mode = f"container:{socket.gethostname()}"
