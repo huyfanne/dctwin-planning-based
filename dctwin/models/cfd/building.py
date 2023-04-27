@@ -130,16 +130,16 @@ class Building(BaseModel):
 
     @classmethod
     def _validate_servers(cls, rack: Rack, servers: Dict, models: Model, inputs: Dict) -> None:
+        occupied_rack_slot = {}
         for server_id, server in servers.items():
             cls._validate_id(server_id)
             cls._validate_geometry_models(server, models.geometry_models.servers)
-            cls._validate_server_occupation(rack, server, server_id)
+            cls._validate_server_occupation(rack, server, server_id, occupied_rack_slot)
             cls._validate_server_inputs(server, inputs.get(server_id)) if inputs is not None else None
 
     @classmethod
-    def _validate_server_occupation(cls, rack: Rack, server: Server, server_id: str) -> None:
+    def _validate_server_occupation(cls, rack: Rack, server: Server, server_id: str, occupied_rack_slot: Dict) -> None:
         server.geometry.orientation = rack.geometry.orientation
-        occupied_rack_slot = {}
         slot_position = int(server.geometry.slot_position)
         slot_occupation = int(server.geometry.slot_occupation)
         num_slots = int(rack.geometry.slot)
