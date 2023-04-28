@@ -50,6 +50,14 @@ def convert_json_file(data):
             snake_data["models"]["geometry_models"]["racks"][key] = convert_key_to_snake(value)
         for key, value in snake_data["models"]["geometry_models"]["servers"].items():
             snake_data["models"]["geometry_models"]["servers"][key] = convert_key_to_snake(value)
+        for key, value in snake_data["models"]["cooling_models"]["acus"].items():
+            snake_data["models"]["cooling_models"]["acus"][key] = convert_key_to_snake(value)
+        for key, value in snake_data["models"]["power_models"]["acus"].items():
+            snake_data["models"]["power_models"]["acus"][key] = convert_key_to_snake(value)
+        for key, value in snake_data["models"]["cooling_models"]["servers"].items():
+            snake_data["models"]["cooling_models"]["servers"][key] = convert_key_to_snake(value)
+        for key, value in snake_data["models"]["power_models"]["servers"].items():
+            snake_data["models"]["power_models"]["servers"][key] = convert_key_to_snake(value)
     except (KeyError, AttributeError):
         pass
     try:
