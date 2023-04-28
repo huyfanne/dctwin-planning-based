@@ -18,7 +18,7 @@ import opyplus as op
 from opyplus.exceptions import RecordDoesNotExistError
 
 
-class IDFParser:
+class Eplus:
     """
     Class for reading template Eplus .idf input file, getting meta info and equipment info of the input file, setting
     user specified external schedule, actuator and output variables, and modifying the run period parameters for the
@@ -59,11 +59,10 @@ class IDFParser:
 
     def __init__(
         self,
-        idf_path: str = None,
+        epm: op.Epm,
         chw_loop_prefix: str = "CHW"
     ) -> None:
-
-        self.epm = op.Epm.load(idf_path)
+        self.epm = epm
         self.node_names = self._get_node_names()
         self.branch_name = self._get_branch_names()
         self.component_names = self._get_component_names()
@@ -82,6 +81,14 @@ class IDFParser:
 
         self.air_density = 1.19
         self.air_cp = 1006
+
+    @classmethod
+    def load(cls, idf_path: str) -> "Eplus":
+        """
+        Load the EnergyPlus model from the idf file
+        """
+        epm = op.Epm.load(idf_path)
+        return cls(epm)
 
     "-------------------------------------Internal IDF Parsing Function API--------------------------------------------"
 

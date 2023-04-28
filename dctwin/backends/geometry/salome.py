@@ -3,7 +3,7 @@ from pathlib import Path
 
 from loguru import logger
 from dctwin.backends.core import Backend
-from dctwin.models import Room
+from dctwin.models import Building
 from dctwin.utils import template_env, config
 
 
@@ -13,8 +13,8 @@ class SalomeBackend(Backend):
     """
     docker_image = "ghcr.io/cap-dcwiz/salome-9-debian10:latest"
 
-    def run(self, room: Room):
-        self._pre_process(room)
+    def run(self, building: Building, room_id: str = None):
+        self._pre_process(building, room_id=room_id)
         if not config.cfd.dry_run:
             self._run_backend()
         self._post_process()
@@ -28,7 +28,7 @@ class SalomeBackend(Backend):
             f"&& chown -R {os.getuid()}:{os.getgid()} {self.volume_data_dir}",
         ]
 
-    def _pre_process(self, room: Room):
+    def _pre_process(self, building: Building, room_id: str):
         """Prepare files needed"""
         config.cfd.case_dir.mkdir(parents=True, exist_ok=True)
         config.cfd.geometry_dir.mkdir(parents=True, exist_ok=True)
@@ -36,10 +36,11 @@ class SalomeBackend(Backend):
         geometry_script = Path(config.cfd.geometry_dir, "geometry_script.py")
         geometry_description = Path(config.cfd.geometry_dir, "geometry.json")
         with open(geometry_description, "w") as f:
-            f.write(room.json())
+            f.write(building.json())
         template = template_env.get_template("salome/geometry_script.py")
         with open(geometry_script, "w") as f:
             f.write(template.render())
+        self._room_id = room_id
         self._clean_files = [geometry_script, geometry_description]
 
     def _post_process(self):
@@ -64,6 +65,7 @@ class SalomeBackend(Backend):
             environment={
                 "SRC_PATH": geometry_file,
                 "OUTPUT_PATH": working_path,
+                "ROOM_ID": self._room_id,
             },
             working_dir=working_path,
         )

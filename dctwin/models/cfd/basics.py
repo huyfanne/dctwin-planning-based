@@ -1,5 +1,5 @@
 """Basic geometry
-Unit: m
+Unit: m (meter)
 """
 from enum import Enum
 from typing import Optional
@@ -26,7 +26,7 @@ class Size(BaseModel):
 
     @validator("x", "y", "z")
     def float_check(cls, v):
-        return round(v, 3)
+        return round(v, 5)
 
 
 class Face(str, Enum):
@@ -36,21 +36,6 @@ class Face(str, Enum):
     right = "right"
     top = "top"
     bottom = "bottom"
-
-
-class BoxFaces(BaseModel):
-    top: bool
-    bottom: bool
-    front: bool
-    rear: bool
-    left: bool
-    right: bool
-
-class ACUFace(BaseModel):
-    side: Face
-    width: float
-    length: float
-    offset: Vertex
 
 
 class Opening(BaseModel):

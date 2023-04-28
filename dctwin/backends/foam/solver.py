@@ -8,7 +8,7 @@ import os
 import shutil
 import time
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Dict
 
 from loguru import logger
 
@@ -62,16 +62,15 @@ class Builder:
             self.render("U")
 
     @classmethod
-    def get_k_and_epsilon(cls, obj_list: dict) -> Tuple[float, float]:
+    def get_k_and_epsilon(cls, obj_dict: Dict) -> Tuple[float, float]:
         """Get the minimum value greater than 0"""
-        _obj_list = [acu for acu in obj_list.values() if acu.geometry.k != 0]
+        _obj_list = [acu for acu in obj_dict.values() if acu.k != 0]
         if len(_obj_list) == 0:
             raise ValueError("Please check the ACU flow rate value")
-        obj = min(_obj_list, key=lambda x: x.geometry.k)
-        return obj.geometry.k, obj.geometry.epsilon
+        obj = min(_obj_list, key=lambda x: x.k)
+        return obj.k, obj.epsilon
 
     def render(self, filename, internal_field=None) -> None:
-
         acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_dict)
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_dict)
         with open(Path(config.cfd.case_dir, f"0/{filename}"), "w") as f:

@@ -5,7 +5,7 @@ from loguru import logger
 
 from dctwin.utils import config
 
-from dctwin.models.basics import Vertex
+from dctwin.models import Vertex
 from dctwin.models import Room
 
 from pathlib import Path
