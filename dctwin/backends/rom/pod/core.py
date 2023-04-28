@@ -67,8 +67,8 @@ class PODBackend(Backend):
 
     def _local_search(
         self,
-        crac_volume_flow_rate: torch.Tensor,
-        crac_setpoints: torch.Tensor,
+        supply_air_volume_flow_rates: torch.Tensor,
+        supply_air_temperatures: torch.Tensor,
         server_powers: torch.Tensor,
         server_volume_flow_rates: torch.Tensor,
         coef_hat: torch.Tensor,
@@ -132,9 +132,9 @@ class PODBackend(Backend):
         d = torch.linalg.norm(A @ coef_hat.T + b)  # use the GP coarse estimation as initialization
 
         # equality constraint: exact room energy balance
-        F = phi_return * crac_setpoints.view((1, -1))
+        F = phi_return * supply_air_temperatures.view((1, -1))
         g = server_powers.sum() / (self.c_p * self.rho_air) - \
-            torch.sum((mean_temp_return - crac_setpoints) * crac_volume_flow_rate)
+            torch.sum((mean_temp_return - supply_air_temperatures) * supply_air_volume_flow_rates)
 
         if coef_std is None:
             # solve the rectification without trust region constraints
@@ -168,8 +168,8 @@ class PODBackend(Backend):
         self,
         server_powers: torch.Tensor,
         server_volume_flow_rates: torch.Tensor,
-        crac_setpoints: torch.Tensor,
-        crac_volume_flow_rates: torch.Tensor,
+        supply_air_temperatures: torch.Tensor,
+        supply_air_volume_flow_rates: torch.Tensor,
         mean_temp_inlet: torch.Tensor,
         mean_temp_outlet: torch.Tensor,
         mean_temp_return: torch.Tensor,
@@ -183,8 +183,8 @@ class PODBackend(Backend):
 
         :param server_powers: the power of the servers
         :param server_volume_flow_rates: the flow rate of the servers
-        :param crac_setpoints: the setpoint of the CRACs
-        :param crac_volume_flow_rates: the flow rate of the CRACs
+        :param supply_air_temperatures: the setpoint of the CRACs
+        :param supply_air_volume_flow_rates: the flow rate of the CRACs
         :param mean_temp_inlet: the inlet temperature of the servers
         :param mean_temp_outlet: the outlet temperature of the servers
         :param mean_temp_return: the return temperature of the CRACs
@@ -197,9 +197,9 @@ class PODBackend(Backend):
         server_array = server_powers / (self.c_p * self.rho_air * server_volume_flow_rates)
         server_array -= (mean_temp_outlet - mean_temp_inlet)
 
-        phi_crac_matrix = torch.sum(phi_return * crac_volume_flow_rates.view(-1, 1)).view(1, -1)
+        phi_crac_matrix = torch.sum(phi_return * supply_air_volume_flow_rates.view(-1, 1)).view(1, -1)
         crac_array = torch.sum(server_powers.sum()) / (self.c_p * self.rho_air)
-        crac_array -= np.sum((mean_temp_return - crac_setpoints) * crac_volume_flow_rates, axis=0)
+        crac_array -= np.sum((mean_temp_return - supply_air_temperatures) * supply_air_volume_flow_rates, axis=0)
 
         # assemble all matrices and arrays into a big linear system
         a = torch.cat([phi_server_matrix, phi_crac_matrix], dim=0)
@@ -212,8 +212,8 @@ class PODBackend(Backend):
         self,
         server_powers: torch.Tensor,
         server_volume_flow_rates: torch.Tensor,
-        crac_setpoints: torch.Tensor,
-        crac_volume_flow_rate: torch.Tensor,
+        supply_air_temperatures: torch.Tensor,
+        supply_air_volume_flow_rates: torch.Tensor,
         mean_temp_inlet: torch.Tensor,
         mean_temp_outlet: torch.Tensor,
         mean_temp_return: torch.Tensor,
@@ -226,8 +226,8 @@ class PODBackend(Backend):
         Implement POD coefficient estimation based on Gaussian Process Regression.
         :param server_powers: the power of the servers
         :param server_volume_flow_rates: the flow rate of the servers
-        :param crac_setpoints: the setpoint of the CRACs
-        :param crac_volume_flow_rate: the flow rate of the CRACs
+        :param supply_air_temperatures: the setpoint of the CRACs
+        :param supply_air_volume_flow_rates: the flow rate of the CRACs
         :param mean_temp_inlet: the inlet temperature of the servers
         :param mean_temp_outlet: the outlet temperature of the servers
         :param mean_temp_return: the return temperature of the CRACs
@@ -241,8 +241,8 @@ class PODBackend(Backend):
             [
                 server_powers.sum().view(1, -1),
                 server_volume_flow_rates.sum().view(1, -1),
-                crac_setpoints.view(1, -1),
-                crac_volume_flow_rate.view(1, -1)
+                supply_air_temperatures.view(1, -1),
+                supply_air_volume_flow_rates.view(1, -1)
             ],
             dim=1
         )
@@ -258,8 +258,8 @@ class PODBackend(Backend):
             self.coefs = self._local_search(
                 server_powers=server_powers,
                 server_volume_flow_rates=server_volume_flow_rates,
-                crac_volume_flow_rate=crac_volume_flow_rate,
-                crac_setpoints=crac_setpoints,
+                supply_air_volume_flow_rates=supply_air_volume_flow_rates,
+                supply_air_temperatures=supply_air_temperatures,
                 coef_hat=coef,
                 coef_std=coef_std,
                 mean_temp_inlet=mean_temp_inlet,
@@ -324,8 +324,8 @@ class PODBackend(Backend):
         object_mesh_index: Dict,
         server_powers: torch.Tensor,
         server_volume_flow_rates: torch.Tensor,
-        crac_setpoints: torch.Tensor,
-        crac_volume_flow_rates: torch.Tensor,
+        supply_air_temperatures: torch.Tensor,
+        supply_air_volume_flow_rates: torch.Tensor,
         pod_method: str = "GP-Flux",
     ) -> np.ndarray:
         """
@@ -333,8 +333,8 @@ class PODBackend(Backend):
         :param object_mesh_index: the mesh indices of the CRACs and servers
         :param server_powers: the power of the servers
         :param server_volume_flow_rates: the flow rate of the servers
-        :param crac_setpoints: the setpoint of the CRACs
-        :param crac_volume_flow_rates: the flow rate of the CRACs
+        :param supply_air_temperatures: the setpoint of the CRACs
+        :param supply_air_volume_flow_rates: the flow rate of the CRACs
         :param pod_method: the POD coefficient estimation algorithm
         """
         assert self.modes is not None, "POD modes are not computed or loaded"
@@ -344,16 +344,16 @@ class PODBackend(Backend):
             self._flux_matching(
                 server_powers=server_powers,
                 server_volume_flow_rates=server_volume_flow_rates,
-                crac_setpoints=crac_setpoints,
-                crac_volume_flow_rates=crac_volume_flow_rates,
+                supply_air_temperatures=supply_air_temperatures,
+                supply_air_volume_flow_rates=supply_air_volume_flow_rates,
                 **mode_data
             )
         elif pod_method == "GP":
             self._gp(
                 server_powers=server_powers,
                 server_volume_flow_rates=server_volume_flow_rates,
-                crac_setpoints=crac_setpoints,
-                crac_volume_flow_rate=crac_volume_flow_rates,
+                supply_air_temperatures=supply_air_temperatures,
+                supply_air_volume_flow_rates=supply_air_volume_flow_rates,
                 local_search=False,
                 **mode_data
             )
@@ -361,8 +361,8 @@ class PODBackend(Backend):
             self._gp(
                 server_powers=server_powers,
                 server_volume_flow_rates=server_volume_flow_rates,
-                crac_setpoints=crac_setpoints,
-                crac_volume_flow_rate=crac_volume_flow_rates,
+                supply_air_temperatures=supply_air_temperatures,
+                supply_air_volume_flow_rates=supply_air_volume_flow_rates,
                 local_search=True,
                 **mode_data
             )

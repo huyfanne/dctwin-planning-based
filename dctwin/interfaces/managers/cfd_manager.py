@@ -105,15 +105,15 @@ class CFDManager:
 
     def _map_boundary_conditions_to_tensor(
         self,
-        crac_setpoints: Dict,
-        crac_volume_flow_rates: Dict,
+        supply_air_temperatures: Dict,
+        supply_air_volume_flow_rates: Dict,
         server_powers: Dict,
         server_volume_flow_rates: Dict,
     ) -> Dict:
         """
         Map boundary conditions to tensor
-        :param crac_setpoints: CRAC supply temperature dict
-        :param crac_volume_flow_rates: CRAC volume flow rate dict
+        :param supply_air_temperatures: CRAC supply temperature dict
+        :param supply_air_volume_flow_rates: CRAC volume flow rate dict
         :param server_powers: server heat loads dict
         :param server_volume_flow_rates: server volume flow rates dict
         """
@@ -124,8 +124,8 @@ class CFDManager:
             v_server.append(server_volume_flow_rates[server_name])
 
         for crac_name, crac_mesh_indices in self.object_mesh_index["cracs"].items():
-            sp_crac.append(crac_setpoints[crac_name])
-            v_crac.append(crac_volume_flow_rates[crac_name])
+            sp_crac.append(supply_air_temperatures[crac_name])
+            v_crac.append(supply_air_volume_flow_rates[crac_name])
 
         q_server = torch.tensor(q_server, dtype=torch.float32, requires_grad=False)
         v_server = torch.tensor(v_server, dtype=torch.float32, requires_grad=False)
@@ -135,8 +135,8 @@ class CFDManager:
         return {
             "server_powers": q_server,
             "server_volume_flow_rates": v_server,
-            "crac_setpoints": sp_crac,
-            "crac_volume_flow_rates": v_crac,
+            "supply_air_temperatures": sp_crac,
+            "supply_air_volume_flow_rates": v_crac,
         }
 
     def build_geometry(self) -> None:
