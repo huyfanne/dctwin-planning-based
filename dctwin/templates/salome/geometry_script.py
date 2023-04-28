@@ -1,5 +1,7 @@
 # pylava:skip=1
 import json
+import logging
+
 import math
 import os
 from pathlib import Path
@@ -21,7 +23,7 @@ except Exception:
     raise ImportError("salome not found")
 
 # Init
-SRC_PATH = Path(os.getcwd(), "scripts/room.json")
+SRC_PATH = Path(os.getcwd(), "scripts/building.json")
 if os.getenv("SRC_PATH"):
     SRC_PATH = os.getenv("SRC_PATH")
 print(SRC_PATH)
@@ -32,10 +34,10 @@ print(OUTPUT_PATH)
 IGNORE_SERVER = os.getenv("IGNORE_SERVER", False)
 SKIP_PRE_MESH = False
 SAVE_HDF = os.getenv("SAVE_HDF", False)
-
+ROOM_ID = os.getenv("ROOM_ID", None)
 
 with open(SRC_PATH) as f:
-    room = json.load(f)
+    building = json.load(f)
 
 
 class SalomeUtil:
@@ -337,9 +339,16 @@ class Builder:
     slot_height = 0.045 # 1U = 0.045 mm
 
     @staticmethod
-    def make_acus(acus: Dict) -> None:
+    def make_acus(acus: Dict, acu_geometry_models: Dict) -> None:
+        acu_models = dict()
+        for acu_model_key, acu_model_value in acu_geometry_models.items():
+            acu_models[acu_model_key] = ACUModel.from_dict(acu_model_value)
         for acu_key, acu in acus.items():
-            acu_model = ACUModel.from_dict(acu["geometry"])
+            try:
+                acu_model = acu_models[acu["geometry"]["model"]]
+            except KeyError:
+                logging.warning(f"ACU model {acu['geometry']['model']} not found")
+                acu_model = ACUModel.from_dict(acu["geometry"])
             acu_model.make_acu(acu_key, acu["geometry"]["location"], acu["geometry"]["orientation"])
 
     @staticmethod
@@ -358,19 +367,32 @@ class Builder:
             geometry_box = util.group_by_faces(geometry_box, exclude=exclude_faces)
             util.export_stl(util.mesh(geometry_box, 0.5, 2), f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}")
 
-    def make_racks(self, racks: Dict) -> None:
+    def make_racks(self, racks: Dict, rack_geometry_models: Dict, server_geometry_models: Dict) -> None:
+        rack_models, server_models = dict(), dict()
+        for rack_model_key, rack_model_value in rack_geometry_models.items():
+            rack_models[rack_model_key] = RackModel.from_dict(rack_model_value)
+        for server_model_key, server_model_value in server_geometry_models.items():
+            server_models[server_model_key] = ServerModel.from_dict(server_model_value)
         for rack_key, rack in racks.items():
-            rack_model = RackModel.from_dict(rack["geometry"])
+            try:
+                rack_model = rack_models[rack["geometry"]["model"]]
+            except KeyError:
+                logging.warning(f"Rack model {rack['geometry']['model']} not found")
+                rack_model = ACUModel.from_dict(rack["geometry"])
             rack_model.make(rack_key, rack["geometry"]["location"], rack["geometry"]["orientation"])
-            self.make_servers(rack_key, rack, rack_model)
+            self.make_servers(rack_key, rack, rack_model, server_models)
 
-    def make_servers(self, rack_key: str, rack: Dict, rack_model: RackModel) -> None:
+    def make_servers(self, rack_key: str, rack: Dict, rack_model: RackModel, server_models: Dict) -> None:
         available_slots = {}
         for slot in range(1, rack["geometry"]["slot"] + 1):
             available_slots[slot] = True
 
         for server_key, server in rack["constructions"]["servers"].items():
-            server_model = ServerModel.from_dict(server["geometry"])
+            try:
+                server_model = server_models[server["geometry"]["model"]]
+            except KeyError:
+                logging.warning(f"Server model {rack['geometry']['model']} not found")
+                server_model = ServerModel.from_dict(server["geometry"])
             server_starting_slot = server["geometry"]["slot_position"]
             server_ending_slot = server["geometry"]["slot_position"] + server["geometry"]["slot_occupation"]
             for server_slot in range(server_starting_slot, server_ending_slot):
@@ -411,7 +433,7 @@ class Builder:
         floor_face = util.geom.MakeCutList(floor_face, opening_faces)
         util.export_stl(util.mesh(floor_face, 0.5, 5), "floor_1")
 
-    def make_room(self) -> None:
+    def make_room(self, room: Dict, geometry_models: Dict) -> None:
         oz = geompy.MakeVectorDXDYDZ(0, 0, 1)
         vertices = []
         for vertex in room["geometry"]["plane"]:
@@ -435,11 +457,27 @@ class Builder:
         self.make_panels(base_face=face, plane=raised_floor) if raised_floor else None
         self.make_panels(base_face=face, plane=false_ceiling) if false_ceiling else None
         self.make_boxes(boxes=boxes) if boxes else None
-        self.make_acus(acus=acus) if acus else None
-        self.make_racks(racks=racks) if racks else None
+        self.make_acus(
+            acus=acus,
+            acu_geometry_models=geometry_models["acus"],
+        ) if acus else None
+        self.make_racks(
+            racks=racks,
+            rack_geometry_models=geometry_models["racks"],
+            server_geometry_models=geometry_models["servers"]
+        ) if racks else None
 
     def run(self) -> None:
-        self.make_room()
+        geometry_models = building["models"]["geometry_models"]
+
+        if ROOM_ID is not None:
+            logging.info(f"Constructing room {ROOM_ID}")
+            room = building["constructions"]["rooms"][f"{ROOM_ID}"]
+            self.make_room(room, geometry_models)
+        else:
+            logging.info("Constructing all rooms")
+            for room in building["constructions"]["rooms"].values():
+                self.make_room(room, geometry_models)
 
 
 def main():
