@@ -65,6 +65,8 @@ class CFDManager:
         ] = None
         self.pod_backend: Optional[PODBackend] = None
 
+        self.building: Building = building
+        self.room_id: str = room_id
         self.room: Room = building.constructions.rooms[room_id]
         self.steady = steady
         self.run_cfd = run_cfd
@@ -141,7 +143,7 @@ class CFDManager:
         """Build geometry from room model"""
         try:
             logger.info("start building geometry ...")
-            self.geometry_backend.run(room=self.room)
+            self.geometry_backend.run(building=self.building, room_id=self.room_id)
         except Exception:
             raise GeometryBuildError("Failed to build geometry")
 

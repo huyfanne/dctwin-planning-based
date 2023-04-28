@@ -21,7 +21,7 @@ class ACUGeometryModel(BaseModel):
 
 
 class ACUGeometry(ACUGeometryModel):
-    model: str
+    model: str = ""
     orientation: int
     location: Vertex
 
@@ -43,28 +43,41 @@ class ACUGeometry(ACUGeometryModel):
         return self.calculate_face_area(self.return_face.side)
 
 
-class ACUCooling(BaseModel):
+class ACUCoolingModel(BaseModel):
+    """ Model of ACU cooling properties
+    """
+    cooling_type: Optional[str] # DX, CW, etc.
+    cooling_capacity: Optional[float] # unit(kW)
+
+
+class ACUCooling(ACUCoolingModel):
     """ ACU cooling properties
     """
-    cooling_type: Optional[str]
-    cooling_capacity: Optional[float] # unit(kW)
+    model: str = ""
     supply_air_temperature: Optional[float] # unit(C)
     supply_air_volume_flow_rate: Optional[float] # unit(m3/s)
 
 
-class ACUPower(BaseModel):
+class ACUPowerModel(BaseModel):
+    """ Model of ACU power properties
+    """
+    rated_fan_power: Optional[float]  # unit(W)
+
+
+class ACUPower(ACUPowerModel):
     """ ACU power properties
     """
+    model: str = ""
     fan_power: Optional[float] # unit(W)
 
 
 class ACU(BaseModel):
     """ ACU object in a data center
     """
-    geometry: ACUGeometry
-    meta: Optional[OrderedDict] = Field(default_factory=dict)
+    geometry: ACUGeometry = Field(default_factory=ACUGeometry)
     cooling: ACUCooling = Field(default_factory=ACUCooling)
     power: ACUPower = Field(default_factory=ACUPower)
+    meta: Optional[OrderedDict] = Field(default_factory=dict)
 
     @property
     def k(self) -> float:

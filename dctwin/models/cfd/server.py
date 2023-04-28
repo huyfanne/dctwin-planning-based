@@ -17,7 +17,7 @@ class ServerGeometry(ServerGeometryrModel):
     occupation: How many slots the server will occupy
     extend_to_rack_width: extend the server width to equal the rack width or not
     """
-    model: str
+    model: str = ""
     slot_position: int
     orientation: Optional[float]
 
@@ -39,23 +39,37 @@ class ServerGeometry(ServerGeometryrModel):
         else:
             return self.height * float(self.width)
 
-
-class ServerCooling(BaseModel):
+class ServerCoolingModel(BaseModel):
+    """ Model of server cooling properties
+    """
     fan_type: Optional[str] = "Fixed"
-    volume_flow_rate: Optional[float] = 0.05 if fan_type == "Fixed" else None # unit(m3/s)
-    volume_flow_rate_ratio: Optional[float] # unit(m3/s/W)
+    volume_flow_rate_ratio: Optional[float] = None # unit(m3/s/W)
 
 
-class ServerPower(BaseModel):
+class ServerCooling(ServerCoolingModel):
+    """ Server cooling properties """
+    model: str = ""
+    volume_flow_rate: Optional[float] # unit(m3/s)
+
+
+class ServerPowerModel(BaseModel):
+    """ Model of server power properties
+    """
     rated_power: Optional[float]  # unit(W)
+
+
+class ServerPower(ServerPowerModel):
+    """ Server power properties
+    """
+    model: str = ""
     input_power: Optional[float]  # unit(W)
 
 
 class Server(BaseModel):
-    geometry: ServerGeometry
-    meta: Optional[OrderedDict]
+    geometry: ServerGeometry = Field(default_factory=ServerGeometry)
     cooling: ServerCooling = Field(default_factory=ServerCooling)
     power: ServerPower = Field(default_factory=ServerPower)
+    meta: Optional[OrderedDict]
 
     @property
     def k(self) -> float:
