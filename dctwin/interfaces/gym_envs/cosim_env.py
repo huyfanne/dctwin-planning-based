@@ -14,7 +14,7 @@ from pathlib import Path
 from dctwin.adapters import EplusCFDAdapter
 from dctwin.utils import CoSimEnvConfig
 from dctwin.utils import config as cosim_env
-from dctwin.models import Room, Building
+from dctwin.models import Building
 
 from .eplus_env import EPlusEnv
 from .ds import Observation

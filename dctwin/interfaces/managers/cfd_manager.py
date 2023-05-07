@@ -112,31 +112,31 @@ class CFDManager:
     ) -> Dict:
         """
         Map boundary conditions to tensor
-        :param supply_air_temperatures: CRAC supply temperature dict
-        :param supply_air_volume_flow_rates: CRAC volume flow rate dict
+        :param supply_air_temperatures: acu supply temperature dict
+        :param supply_air_volume_flow_rates: acu volume flow rate dict
         :param server_powers: server heat loads dict
         :param server_volume_flow_rates: server volume flow rates dict
         """
-        q_server, v_server, sp_crac, v_crac = [], [], [], []
+        q_server, v_server, sp_acu, v_acu = [], [], [], []
         # parse the boundary conditions into torch.Tensor format
         for server_name, server_mesh_indices in self.object_mesh_index["servers"].items():
             q_server.append(server_powers[server_name])
             v_server.append(server_volume_flow_rates[server_name])
 
-        for crac_name, crac_mesh_indices in self.object_mesh_index["cracs"].items():
-            sp_crac.append(supply_air_temperatures[crac_name])
-            v_crac.append(supply_air_volume_flow_rates[crac_name])
+        for acu_name, acu_mesh_indices in self.object_mesh_index["acus"].items():
+            sp_acu.append(supply_air_temperatures[acu_name])
+            v_acu.append(supply_air_volume_flow_rates[acu_name])
 
         q_server = torch.tensor(q_server, dtype=torch.float32, requires_grad=False)
         v_server = torch.tensor(v_server, dtype=torch.float32, requires_grad=False)
-        sp_crac = torch.tensor(sp_crac, dtype=torch.float32, requires_grad=False)
-        v_crac = torch.tensor(v_crac, dtype=torch.float32, requires_grad=False)
+        sp_acu = torch.tensor(sp_acu, dtype=torch.float32, requires_grad=False)
+        v_acu = torch.tensor(v_acu, dtype=torch.float32, requires_grad=False)
 
         return {
             "server_powers": q_server,
             "server_volume_flow_rates": v_server,
-            "supply_air_temperatures": sp_crac,
-            "supply_air_volume_flow_rates": v_crac,
+            "supply_air_temperatures": sp_acu,
+            "supply_air_volume_flow_rates": v_acu,
         }
 
     def build_geometry(self) -> None:
