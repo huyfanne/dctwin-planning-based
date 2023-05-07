@@ -27,17 +27,11 @@ class ServerGeometry(ServerGeometryrModel):
 
     @property
     def inlet_area(self) -> float:
-        if self.orientation == 90:
-            return -self.height * float(self.width)
-        else:
-            return self.height * float(self.width)
+        return self.height * float(self.width)
 
     @property
     def outlet_area(self) -> float:
-        if self.orientation == 90:
-            return -self.height * float(self.width)
-        else:
-            return self.height * float(self.width)
+        return self.height * float(self.width)
 
 class ServerCoolingModel(BaseModel):
     """ Model of server cooling properties

@@ -171,7 +171,6 @@ class ServerBoundary(Boundary):
         self.input_power = server.power.input_power
         self.server_volume_flow_rate = round(server.cooling.volume_flow_rate, 6)
         self.server_mass_flow_rate = self.rho_air * self.server_volume_flow_rate
-        self.area = server.geometry.inlet_area
 
     @property
     def T(self) -> str:
