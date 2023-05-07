@@ -45,9 +45,9 @@ class PODBackend(Backend):
             phi_inlet.append(used_modes[server_mesh_indices["inlet"], :])
             phi_outlet.append(used_modes[server_mesh_indices["outlet"], :])
 
-        for crac_name, crac_mesh_indices in object_mesh_index["cracs"].items():
-            mean_temp_return.append(self.mean_obs[crac_mesh_indices["return"]])
-            phi_return.append(used_modes[crac_mesh_indices["return"], :])
+        for acu_name, acu_mesh_indices in object_mesh_index["acus"].items():
+            mean_temp_return.append(self.mean_obs[acu_mesh_indices["return"]])
+            phi_return.append(used_modes[acu_mesh_indices["return"], :])
 
         mean_temp_inlet = torch.tensor(mean_temp_inlet, dtype=torch.float32, requires_grad=False)
         mean_temp_outlet = torch.tensor(mean_temp_outlet, dtype=torch.float32, requires_grad=False)
@@ -128,11 +128,14 @@ class PODBackend(Backend):
         # server energy balance violation as a second order cone constraint
         A = phi_outlet - phi_inlet
         b = (mean_temp_outlet - mean_temp_inlet) - server_powers / (self.c_p * self.rho_air * server_volume_flow_rates)
+        if torch.isnan(b).any():
+            logger.warning("NaNs in server_array (b), replacing with 0.0")
+            b = torch.nan_to_num(b.view(-1, 1), nan=0.0)
         c = torch.zeros(num_modes)
         d = torch.linalg.norm(A @ coef_hat.T + b)  # use the GP coarse estimation as initialization
 
         # equality constraint: exact room energy balance
-        F = phi_return * supply_air_temperatures.view((1, -1))
+        F = phi_return * supply_air_temperatures.view(-1, 1)
         g = server_powers.sum() / (self.c_p * self.rho_air) - \
             torch.sum((mean_temp_return - supply_air_temperatures) * supply_air_volume_flow_rates)
 
@@ -178,35 +181,52 @@ class PODBackend(Backend):
         phi_return: torch.Tensor,
     ) -> None:
         """
-        Implement flux matching based on the paper
+        Implement flux matching based on the paper:
         "Proper Orthogonal Decomposition for Reduced Order Thermal Modeling of Air Cooled Data Centers"
 
+        The flux-matching problem is to solve the following linear equation system for the POD coefficients:
+        
+            & \sum_{i=1}^{H}\beta_i(\mathbf{x})(\Phi_\text{out}^{i1}-\Phi_\text{in}^{i1}) = \frac{P_1}{c_\text{p} \rho \alpha_1}, \\
+	        & \sum_{i=1}^{H}\beta_i(\mathbf{x})(\Phi_\text{out}^{i2}-\Phi_\text{in}^{i2}) = \frac{P_2}{c_\text{p} \rho \alpha_2}, \\
+	        & \dots \\
+	        & \sum_{i=1}^{H}\beta_i(\mathbf{x})(\Phi}_\text{out}^{im}-\Phi_\text{in}^{im}) = \frac{P_m}{c_\text{p} \rho \alpha_m},\\
+	        & \sum_{k=1}^{l} \sum_{i=1}^{H} V_k \beta_i(\mathbf{x})(\Phi_\text{return}^{ik}-\Phi_\text{supply}^{ik}) = \frac{\sum_{j=1}^{m}{P_j}}{c_\text{p} \rho}
+
+        where $H$ is the number of used modes, $m$ is the number of servers, $l$ is the number of acus, \beta is the coefficients,
+
         :param server_powers: the power of the servers
-        :param server_volume_flow_rates: the flow rate of the servers
-        :param supply_air_temperatures: the setpoint of the CRACs
-        :param supply_air_volume_flow_rates: the flow rate of the CRACs
-        :param mean_temp_inlet: the inlet temperature of the servers
-        :param mean_temp_outlet: the outlet temperature of the servers
-        :param mean_temp_return: the return temperature of the CRACs
+        :param server_volume_flow_rates: the volume flow rates of the servers
+        :param supply_air_temperatures: the supply temperature of the acus
+        :param supply_air_volume_flow_rates: the supply air flow rates of the acus
+        :param mean_temp_inlet: the inlet temperatures of the servers
+        :param mean_temp_outlet: the outlet temperatures of the servers
+        :param mean_temp_return: the return temperature of the acus
         :param phi_inlet: the inlet flux of the servers
         :param phi_outlet: the outlet flux of the servers
-        :param phi_return: the return flux of the CRACs
+        :param phi_return: the return flux of the acus
         """
         # select boundary conditions within the air loop
-        phi_server_matrix = phi_outlet - phi_inlet
-        server_array = server_powers / (self.c_p * self.rho_air * server_volume_flow_rates)
-        server_array -= (mean_temp_outlet - mean_temp_inlet)
 
-        phi_crac_matrix = torch.sum(phi_return * supply_air_volume_flow_rates.view(-1, 1)).view(1, -1)
-        crac_array = torch.sum(server_powers.sum()) / (self.c_p * self.rho_air)
-        crac_array -= np.sum((mean_temp_return - supply_air_temperatures) * supply_air_volume_flow_rates, axis=0)
+        phi_server_matrix: torch.Tensor = phi_outlet - phi_inlet
+        server_array: torch.Tensor = server_powers / (torch.tensor((self.c_p * self.rho_air)) * server_volume_flow_rates)
+        server_array -= (mean_temp_outlet - mean_temp_inlet)
+        server_array = server_array.view(-1, 1)
+        if torch.isnan(server_array).any():
+            logger.warning("NaNs in server_array, replacing with 0.0")
+            server_array = torch.nan_to_num(server_array.view(-1, 1), nan=0.0)
+
+        phi_acu_matrix: torch.Tensor = torch.sum(phi_return * supply_air_volume_flow_rates.view(-1, 1), dim=0, keepdim=True)
+        acu_array: torch.Tensor = torch.sum(server_powers) / torch.tensor((self.c_p * self.rho_air))
+        acu_array -= torch.sum((mean_temp_return - supply_air_temperatures) * supply_air_volume_flow_rates)
+        acu_array = acu_array.view(-1, 1)
 
         # assemble all matrices and arrays into a big linear system
-        a = torch.cat([phi_server_matrix, phi_crac_matrix], dim=0)
-        b = torch.cat([server_array, crac_array], dim=0)
+        a = torch.cat([phi_server_matrix, phi_acu_matrix], dim=0)
+        b = torch.cat([server_array, acu_array], dim=0)
         assert a.shape[0] > self.num_modes, "equations are fewer than number of coefficients"
         # solve the least square for optimal coefficients
         self.coefs, _ = torch.linalg.lstsq(a, b)[:2]
+        self.coefs = self.coefs.view(1, -1)
 
     def _gp(
         self,
@@ -226,14 +246,14 @@ class PODBackend(Backend):
         Implement POD coefficient estimation based on Gaussian Process Regression.
         :param server_powers: the power of the servers
         :param server_volume_flow_rates: the flow rate of the servers
-        :param supply_air_temperatures: the setpoint of the CRACs
-        :param supply_air_volume_flow_rates: the flow rate of the CRACs
+        :param supply_air_temperatures: the setpoint of the acus
+        :param supply_air_volume_flow_rates: the flow rate of the acus
         :param mean_temp_inlet: the inlet temperature of the servers
         :param mean_temp_outlet: the outlet temperature of the servers
-        :param mean_temp_return: the return temperature of the CRACs
+        :param mean_temp_return: the return temperature of the acus
         :param phi_inlet: the inlet flux of the servers
         :param phi_outlet: the outlet flux of the servers
-        :param phi_return: the return flux of the CRACs
+        :param phi_return: the return flux of the acus
         :param local_search: whether to use local search to improve the estimation
         """
         # build the input tensor to the GP model
@@ -330,11 +350,11 @@ class PODBackend(Backend):
     ) -> np.ndarray:
         """
         Run certain POD coefficient estimation algorithm to predict the temperature field.
-        :param object_mesh_index: the mesh indices of the CRACs and servers
+        :param object_mesh_index: the mesh indices of the acus and servers
         :param server_powers: the power of the servers
         :param server_volume_flow_rates: the flow rate of the servers
-        :param supply_air_temperatures: the setpoint of the CRACs
-        :param supply_air_volume_flow_rates: the flow rate of the CRACs
+        :param supply_air_temperatures: the setpoint of the acus
+        :param supply_air_volume_flow_rates: the flow rate of the acus
         :param pod_method: the POD coefficient estimation algorithm
         """
         assert self.modes is not None, "POD modes are not computed or loaded"
