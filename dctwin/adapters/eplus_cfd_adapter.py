@@ -21,6 +21,7 @@ class EplusCFDAdapter:
     A class to manage the co-simulation between CFD and E+.
     :param building: a building object that contains all rooms
     :param eplus_backend: the E+ backend to be used
+    :param map_boundary_condition_fn: the function to map the parsed action to CFD boundary conditions
     :param mesh_process: the number of processes to be used for meshing
     :param solve_process: the number of processes to be used for solving
     :param steady: whether to run steady state simulation
@@ -92,8 +93,8 @@ class EplusCFDAdapter:
             config.cfd.file_handler,
             fieldnames=(
                     ['timestamp'] +
-                    [f"{crac_id} (C)" for crac_id in self.cfd_manager.room.acu_keys] +
-                    [f"{crac_id} (m3/s)" for crac_id in self.cfd_manager.room.acu_keys] +
+                    [f"{acu_id} (C)" for acu_id in self.cfd_manager.room.acu_keys] +
+                    [f"{acu_id} (m3/s)" for acu_id in self.cfd_manager.room.acu_keys] +
                     ["Total IT Power (w)"] +
                     ["Total IT Volume Flow Rate (m3/s)"] +
                     [f"{sensor_id} (C)" for sensor_id in self.cfd_manager.room.sensor_keys]
@@ -107,12 +108,12 @@ class EplusCFDAdapter:
         temperature: Union[torch.Tensor, np.ndarray],
         server_powers: Dict,
         server_volume_flow_rates: Dict,
-        crac_setpoints: Dict,
-        crac_volume_flow_rates: Dict,
+        supply_air_temperatures: Dict,
+        supply_air_volume_flow_rates: Dict,
         log_to_csv: bool = True
     ) -> Tuple[list[Any], list[Any], List]:
         """Post-processing to collect sensor observation, server inlet temperature
-        and CRAC return temperature
+        and acu return temperature
         """
         # transform temperature to numpy array
         if type(temperature) == torch.Tensor:
@@ -120,9 +121,9 @@ class EplusCFDAdapter:
         # get return temperature for each air loop
         return_temps = {}
         for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
-            _crac = self.cfd_manager.object_mesh_index["cracs"]
-            _air_loop_id = self.idf2room_mapper[it_equipment.name]["crac"]
-            return_temp = temperature[_crac[_air_loop_id]["return"]]
+            _acu = self.cfd_manager.object_mesh_index["acus"]
+            _air_loop_id = self.idf2room_mapper[it_equipment.name]["acu"]
+            return_temp = temperature[_acu[_air_loop_id]["return"]]
             return_temps[_air_loop_id] = return_temp
         return_temps = [val for val in return_temps.values()]
 
@@ -131,9 +132,9 @@ class EplusCFDAdapter:
         total_server_powers, total_server_flow_rates = 0, 0
         cfd_log_dict.update({"timestamp": config.co_sim.timestamp})
 
-        for crac_id, _ in self.cfd_manager.object_mesh_index["cracs"].items():
-            cfd_log_dict.update({f"{crac_id} (C)": round(crac_setpoints[crac_id], 3)})
-            cfd_log_dict.update({f"{crac_id} (m3/s)": round(crac_volume_flow_rates[crac_id], 3)})
+        for acu_id, _ in self.cfd_manager.object_mesh_index["acus"].items():
+            cfd_log_dict.update({f"{acu_id} (C)": round(supply_air_temperatures[acu_id], 3)})
+            cfd_log_dict.update({f"{acu_id} (m3/s)": round(supply_air_volume_flow_rates[acu_id], 3)})
 
         for server_id, _ in self.cfd_manager.object_mesh_index["servers"].items():
             total_server_powers += server_powers[server_id]
@@ -169,23 +170,23 @@ class EplusCFDAdapter:
     def _scale_server_flow_rate(
         self,
         boundary_conditions: Dict,
-        crac2server_flow_ratio: float = 0.8
+        acu2server_flow_ratio: float = 0.8
     ) -> Dict:
         """
         scale total server flow rate as a ratio of total supply air flow rate
         """
-        sum_crac_volume_flow_rate = 0
+        sum_acu_volume_flow_rate = 0
         sum_server_volume_flow_rate = 0
         for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
-            uid = self.idf2room_mapper[it_equipment.name]["crac"]
-            sum_crac_volume_flow_rate += boundary_conditions["crac_volume_flow_rates"][uid]
-            # skip the CRACs that are not open (they do not take charge of certain servers)
+            uid = self.idf2room_mapper[it_equipment.name]["acu"]
+            sum_acu_volume_flow_rate += boundary_conditions["acu_volume_flow_rates"][uid]
+            # skip the acus that are not open (they do not take charge of certain servers)
             if len(self.idf2room_mapper[it_equipment.name]["servers"]) == 0:
                 continue
             for server_id in self.idf2room_mapper[it_equipment.name]["servers"]:
                 sum_server_volume_flow_rate += boundary_conditions["server_volume_flow_rates"][server_id]
         # scale server flow rate
-        scale_factor = sum_crac_volume_flow_rate * crac2server_flow_ratio / sum_server_volume_flow_rate
+        scale_factor = sum_acu_volume_flow_rate * acu2server_flow_ratio / sum_server_volume_flow_rate
         for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
             for server_id in self.idf2room_mapper[it_equipment.name]["servers"]:
                 boundary_conditions["server_volume_flow_rates"][server_id] *= scale_factor
@@ -224,7 +225,7 @@ class EplusCFDAdapter:
                 name=it_equipment.name,
             ) * len(self.idf2room_mapper[it_equipment.name]["servers"]) - zone_server_powers[idx]
             inlet_temp_list = solve(equation)
-            uid = self.idf2room_mapper[it_equipment.name]["crac"]
+            uid = self.idf2room_mapper[it_equipment.name]["acu"]
             server_inlet_temp = parsed_actions[f"{uid}_setpoint"]
             for value in inlet_temp_list:
                 if value > parsed_actions[f"{uid}_setpoint"]:
