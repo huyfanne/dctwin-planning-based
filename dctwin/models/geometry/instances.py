@@ -14,7 +14,8 @@ from .models import (
     RackModel,
     ServerModel,
 )
-from pydantic import BaseModel, Field
+from pydantic import Field
+from dctwin.models.utils import BaseModel
 
 
 class PlaneGeometry(BaseModel):

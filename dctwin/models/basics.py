@@ -4,7 +4,8 @@ Unit: m
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, validator
+from pydantic import validator
+from dctwin.models.utils import BaseModel
 
 
 # noinspection PyMethodParameters

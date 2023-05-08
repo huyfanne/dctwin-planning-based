@@ -1,7 +1,7 @@
 """Basic Constructions
 """
 from typing import Optional, OrderedDict
-from pydantic import BaseModel
+from dctwin.models.utils import BaseModel
 
 from .objects import (
     Plane,

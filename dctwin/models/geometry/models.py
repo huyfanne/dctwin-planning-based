@@ -1,7 +1,7 @@
 from typing import OrderedDict
 
 from ..basics import Size, ACUFace, BoxFaces
-from pydantic import BaseModel
+from dctwin.models.utils import BaseModel
 
 
 class ACUModel(BaseModel):

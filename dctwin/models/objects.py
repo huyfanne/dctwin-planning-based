@@ -2,9 +2,10 @@
 """
 import json
 from pathlib import Path
-from typing import Union, Tuple, ForwardRef
-from pydantic import root_validator, BaseModel
+from typing import Union, Tuple, ForwardRef, Optional
+from pydantic import root_validator
 from loguru import logger
+from dctwin.models.utils import BaseModel
 
 from .basics import Face, Vertex
 from .geometry import (
@@ -18,7 +19,7 @@ from .geometry import (
     RoomGeometryModel,
 )
 from .inputs import Inputs
-from .utils import convert_json_file, rotate
+from .utils import rotate
 
 
 class Plane(BaseModel):
@@ -43,7 +44,7 @@ class Server(BaseModel):
 
 class Sensor(BaseModel):
     geometry: SensorGeometry
-    meta: dict
+    meta: Optional[dict]
 
 
 class Rack(BaseModel):
@@ -66,11 +67,11 @@ class Room(BaseModel):
         return v
 
     @classmethod
-    def _concat_model_attributes(cls, v: dict, models):
+    def _concat_box_model_attributes(cls, v: dict, models):
         for _id, obj in v.items():
-            model_name = obj["geometry"]["model"]
+            model_name = obj.geometry.model
             if models.get(model_name) is not None:
-                obj["geometry"] = {**obj["geometry"], **models.get(model_name)}
+                obj.geometry.faces = models.get(model_name).faces
             else:
                 raise ValueError(f"model name does not exists: {_id}")
         return v
@@ -78,21 +79,17 @@ class Room(BaseModel):
     @classmethod
     def _concat_acu_model_attributes(cls, acus: dict, models, acu_inputs: dict):
         for _id, obj in acus.items():
-            model_name = obj["geometry"]["model"]
+            model_name = obj.geometry.model
             if _id not in acu_inputs:
                 raise ValueError(f"missing input for acu {_id}")
-            acu_input = {
-                "flow_rate": acu_inputs[_id]["flow_rate"],
-                "min_temperature": acu_inputs[_id]["min_temperature"],
-                "cooling_capacity": acu_inputs[_id]["cooling_capacity"]
-            }
 
             if models.get(model_name) is not None:
-                obj["geometry"] = {
-                    **obj["geometry"],
-                    **models.get(model_name),
-                    **acu_input
-                }
+                obj.geometry.size = models.get(model_name).size
+                obj.geometry.supply_face = models.get(model_name).supply_face
+                obj.geometry.return_face = models.get(model_name).return_face
+                obj.geometry.min_temperature = acu_inputs[_id].min_temperature
+                obj.geometry.flow_rate = acu_inputs[_id].flow_rate
+                obj.geometry.cooling_capacity = acu_inputs[_id].cooling_capacity
             else:
                 raise ValueError(f"model name does not exists: {_id}")
         return acus
@@ -102,7 +99,7 @@ class Room(BaseModel):
         for _id, obj in v.items():
             if not _id.isidentifier():
                 raise ValueError(f"must be valid identifier: {_id}")
-            servers = obj["constructions"]["servers"]
+            servers = obj.constructions.servers
             for _server_id, server_obj in servers.items():
                 if not _server_id.isidentifier():
                     raise ValueError(f"must be valid identifier: {_id}")
@@ -111,41 +108,38 @@ class Room(BaseModel):
     @classmethod
     def _concat_rack_and_server_model_attributes(cls, v: dict, rack_models, server_models, server_inputs):
         for _rack_id, rack_obj in v.items():
-            model_name = rack_obj["geometry"]["model"]
+            model_name = rack_obj.geometry.model
             if rack_models.get(model_name) is not None:
-                rack_obj["geometry"] = {**rack_obj["geometry"], **rack_models.get(model_name)}
+                rack_obj.geometry.first_slot_offset = rack_models.get(model_name).first_slot_offset
+                rack_obj.geometry.slot = rack_models.get(model_name).slot
+                rack_obj.geometry.size = rack_models.get(model_name).size
             else:
                 raise ValueError(f"model name does not exists: {_rack_id}")
-            servers = rack_obj["constructions"]["servers"]
+            servers = rack_obj.constructions.servers
             occupied_rack_slot = {}
             for _server_id, server_obj in servers.items():
-                model_name = server_obj["geometry"]["model"]
+                model_name = server_obj.geometry.model
                 if _server_id not in server_inputs:
                     raise ValueError(f"missing input for server {_server_id}")
-                server_input = {
-                    "flow_rate": server_inputs[_server_id]["flow_rate"],
-                    "heat_load": server_inputs[_server_id]["heat_load"]
-                }
                 if server_models.get(model_name) is not None:
-                    server_obj["geometry"] = {
-                        **server_obj["geometry"],
-                        **server_models.get(model_name),
-                        **server_input
-                    }
+                    server_obj.geometry.orientation = rack_obj.geometry.orientation
+                    server_obj.geometry.depth = server_models.get(model_name).depth
+                    server_obj.geometry.slot_occupation = server_models.get(model_name).slot_occupation
+                    server_obj.geometry.width = server_models.get(model_name).width
+                    server_obj.geometry.heat_load = server_inputs[_server_id].heat_load
+                    server_obj.geometry.flow_rate = server_inputs[_server_id].flow_rate
                 else:
                     raise ValueError(f"model name does not exists: {_rack_id}")
-                if server_obj["geometry"]["slot_position"] < 1 or server_obj["geometry"]["slot_position"] + \
-                        server_obj["geometry"][
-                            "slot_occupation"] > rack_obj["geometry"]["slot"] + 1:
+                if server_obj.geometry.slot_position < 1 or server_obj.geometry.slot_position + \
+                        server_obj.geometry.slot_occupation > rack_obj.geometry.slot + 1:
                     raise ValueError(
                         f"invalid server slot/occupation: "
-                        f"Server({_server_id}, slot={server_obj['geometry']['slot_position']}, "
-                        f"occupation={server_obj['geometry']['slot_occupation']})"
+                        f"Server({_server_id}, slot={server_obj.geometry.slot_position}, "
+                        f"occupation={server_obj.geometry.slot_occupation})"
                     )
 
-                for i in range(int(server_obj["geometry"]["slot_position"]),
-                               int(server_obj["geometry"]["slot_position"] + server_obj["geometry"][
-                                   "slot_occupation"])):
+                for i in range(int(server_obj.geometry.slot_position),
+                               int(server_obj.geometry.slot_position + server_obj.geometry.slot_occupation)):
                     if i not in occupied_rack_slot:
                         occupied_rack_slot[i] = _server_id
                     else:
@@ -157,23 +151,24 @@ class Room(BaseModel):
 
         return v
 
-    @root_validator(pre=True)
+    @root_validator(pre=False)
     def validate(cls, values):
-        constructions = values["constructions"]
-        geometry_model = values["geometry_model"]
-        boxes = constructions["boxes"]
-        acus = constructions["acus"]
-        racks = constructions["racks"]
-        sensors = constructions["sensors"]
-        inputs = values["inputs"]
+        print(values.keys())
+        constructions: ForwardRef("RoomConstructions") = values["constructions"]
+        geometry_model: RoomGeometryModel = values["geometry_model"]
+        boxes = constructions.boxes
+        acus = constructions.acus
+        racks = constructions.racks
+        sensors = constructions.sensors
+        inputs: Inputs = values["inputs"]
 
         cls._validate_id(boxes)
-        cls._concat_model_attributes(boxes, geometry_model["boxes"])
+        cls._concat_box_model_attributes(boxes, geometry_model.boxes)
         cls._validate_id(acus)
-        cls._concat_acu_model_attributes(acus, geometry_model["acus"], inputs["acus"])
+        cls._concat_acu_model_attributes(acus, geometry_model.acus, inputs.acus)
         cls._validate_rack_and_server_id(racks)
-        cls._concat_rack_and_server_model_attributes(racks, geometry_model["racks"], geometry_model["servers"],
-                                                     inputs["servers"])
+        cls._concat_rack_and_server_model_attributes(racks, geometry_model.racks, geometry_model.servers,
+                                                     inputs.servers)
         cls._validate_id(sensors)
 
         return values
@@ -204,7 +199,8 @@ class Room(BaseModel):
                 outlet_x = rack.geometry.location.x + rack.geometry.size.x / 2
                 outlet_y = rack.geometry.location.y + server.geometry.depth
                 outlet_x, outlet_y = rotate(
-                    (rack.geometry.location.x, rack.geometry.location.y), (outlet_x, outlet_y), rack.geometry.orientation
+                    (rack.geometry.location.x, rack.geometry.location.y), (outlet_x, outlet_y),
+                    rack.geometry.orientation
                 )
                 outlet = Vertex(x=round(outlet_x, 3), y=round(outlet_y, 3), z=z)
                 return inlet, outlet
@@ -270,9 +266,10 @@ class Room(BaseModel):
     @classmethod
     def load(cls, file_path: Union[str, Path]) -> "Room":
         with open(file_path) as f:
-            return cls(**convert_json_file(json.load(f)))
+            return cls(**json.load(f))
 
 
 from .constructions import RackConstruction, RoomConstructions
+
 Rack.update_forward_refs()
 Room.update_forward_refs()
