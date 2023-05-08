@@ -65,13 +65,6 @@ class Server(BaseModel):
     power: ServerPower = Field(default_factory=ServerPower)
     meta: Optional[OrderedDict]
 
-    if cooling.fan_type == "Fixed":
-        cooling.volume_flow_rate = cooling.volume_flow_rate
-    elif cooling.fan_type == "Variable":
-        assert cooling.volume_flow_rate_ratio is not None, \
-            "Please specify the volume flow rate ratio in terms of input power."
-        cooling.volume_flow_rate = cooling.volume_flow_rate_ratio * power.input_power
-
     @property
     def k(self) -> float:
         tu = 0.1
@@ -84,3 +77,18 @@ class Server(BaseModel):
         nu = 1.5e-05
         eddy_viscosity_ratio = 10
         return 0.09 * (self.k ** 2) / (nu * eddy_viscosity_ratio)
+
+    @property
+    def volume_flow_rate(self) -> float:
+        if self.cooling.fan_type == "Fixed":
+            assert self.cooling.volume_flow_rate is not None, \
+                "Please specify the constant server volume flow rate."
+            server_volume_flow_rate = self.cooling.volume_flow_rate
+        elif self.cooling.fan_type == "Variable":
+            assert self.cooling.volume_flow_rate_ratio is not None, \
+                "Please specify the volume flow rate ratio in terms of input power."
+            server_volume_flow_rate = self.cooling.volume_flow_rate_ratio * self.power.input_power
+        else:
+            raise ValueError("Invalid fan type.")
+
+        return server_volume_flow_rate
