@@ -6,7 +6,7 @@
       "title": "Name",
       "type": "string"
     },
-    "geometry_model": {
+    "geometryModel": {
       "$ref": "#/definitions/RoomGeometryModel"
     },
     "geometry": {
@@ -21,7 +21,7 @@
   },
   "required": [
     "name",
-    "geometry_model",
+    "geometryModel",
     "geometry",
     "constructions",
     "inputs"
@@ -119,25 +119,25 @@
         "size": {
           "$ref": "#/definitions/Size"
         },
-        "supply_face": {
+        "supplyFace": {
           "$ref": "#/definitions/ACUFace"
         },
-        "return_face": {
+        "returnFace": {
           "$ref": "#/definitions/ACUFace"
         }
       },
       "required": [
         "size",
-        "supply_face",
-        "return_face"
+        "supplyFace",
+        "returnFace"
       ]
     },
     "RackModel": {
       "title": "RackModel",
       "type": "object",
       "properties": {
-        "first_slot_offset": {
-          "title": "First Slot Offset",
+        "firstSlotOffset": {
+          "title": "Firstslotoffset",
           "type": "number"
         },
         "slot": {
@@ -149,7 +149,7 @@
         }
       },
       "required": [
-        "first_slot_offset",
+        "firstSlotOffset",
         "slot",
         "size"
       ]
@@ -158,8 +158,8 @@
       "title": "ServerModel",
       "type": "object",
       "properties": {
-        "slot_occupation": {
-          "title": "Slot Occupation",
+        "slotOccupation": {
+          "title": "Slotoccupation",
           "type": "integer"
         },
         "depth": {
@@ -172,7 +172,7 @@
         }
       },
       "required": [
-        "slot_occupation",
+        "slotOccupation",
         "depth",
         "width"
       ]
@@ -382,10 +382,10 @@
         "size": {
           "$ref": "#/definitions/Size"
         },
-        "supply_face": {
+        "supplyFace": {
           "$ref": "#/definitions/ACUFace"
         },
-        "return_face": {
+        "returnFace": {
           "$ref": "#/definitions/ACUFace"
         },
         "model": {
@@ -400,16 +400,16 @@
         "location": {
           "$ref": "#/definitions/Vertex"
         },
-        "min_temperature": {
-          "title": "Min Temperature",
+        "minTemperature": {
+          "title": "Mintemperature",
           "type": "number"
         },
-        "flow_rate": {
-          "title": "Flow Rate",
+        "flowRate": {
+          "title": "Flowrate",
           "type": "number"
         },
-        "cooling_capacity": {
-          "title": "Cooling Capacity",
+        "coolingCapacity": {
+          "title": "Coolingcapacity",
           "type": "number"
         }
       },
@@ -434,8 +434,8 @@
       "title": "RackGeometry",
       "type": "object",
       "properties": {
-        "first_slot_offset": {
-          "title": "First Slot Offset",
+        "firstSlotOffset": {
+          "title": "Firstslotoffset",
           "type": "number"
         },
         "slot": {
@@ -456,8 +456,8 @@
           "title": "Orientation",
           "type": "integer"
         },
-        "has_blanking_panel": {
-          "title": "Has Blanking Panel",
+        "hasBlankingPanel": {
+          "title": "Hasblankingpanel",
           "type": "boolean"
         }
       },
@@ -465,7 +465,7 @@
         "model",
         "location",
         "orientation",
-        "has_blanking_panel"
+        "hasBlankingPanel"
       ]
     },
     "ServerGeometry": {
@@ -473,8 +473,8 @@
       "description": "depth: server depth\noccupation: How many slots the server will occupy\nrated_power: unit(W)\nextend_to_rack_width: extend the server width to equal the rack width or not",
       "type": "object",
       "properties": {
-        "slot_occupation": {
-          "title": "Slot Occupation",
+        "slotOccupation": {
+          "title": "Slotoccupation",
           "type": "integer"
         },
         "depth": {
@@ -489,26 +489,26 @@
           "title": "Model",
           "type": "string"
         },
-        "slot_position": {
-          "title": "Slot Position",
+        "slotPosition": {
+          "title": "Slotposition",
           "type": "integer"
         },
         "orientation": {
           "title": "Orientation",
           "type": "integer"
         },
-        "heat_load": {
-          "title": "Heat Load",
+        "heatLoad": {
+          "title": "Heatload",
           "type": "number"
         },
-        "flow_rate": {
-          "title": "Flow Rate",
+        "flowRate": {
+          "title": "Flowrate",
           "type": "number"
         }
       },
       "required": [
         "model",
-        "slot_position"
+        "slotPosition"
       ]
     },
     "Server": {
@@ -580,18 +580,17 @@
         }
       },
       "required": [
-        "geometry",
-        "meta"
+        "geometry"
       ]
     },
     "RoomConstructions": {
       "title": "RoomConstructions",
       "type": "object",
       "properties": {
-        "raised_floor": {
+        "raisedFloor": {
           "$ref": "#/definitions/Plane"
         },
-        "false_ceiling": {
+        "falseCeiling": {
           "$ref": "#/definitions/Plane"
         },
         "boxes": {
@@ -633,36 +632,41 @@
       "title": "ACUInputs",
       "type": "object",
       "properties": {
-        "flow_rate": {
-          "title": "Flow Rate",
+        "flowRate": {
+          "title": "Flowrate",
           "type": "number"
         },
-        "min_temperature": {
-          "title": "Min Temperature",
+        "minTemperature": {
+          "title": "Mintemperature",
+          "type": "number"
+        },
+        "coolingCapacity": {
+          "title": "Coolingcapacity",
           "type": "number"
         }
       },
       "required": [
-        "flow_rate",
-        "min_temperature"
+        "flowRate",
+        "minTemperature",
+        "coolingCapacity"
       ]
     },
     "ServerInputs": {
       "title": "ServerInputs",
       "type": "object",
       "properties": {
-        "flow_rate": {
-          "title": "Flow Rate",
+        "flowRate": {
+          "title": "Flowrate",
           "type": "number"
         },
-        "heat_load": {
-          "title": "Heat Load",
+        "heatLoad": {
+          "title": "Heatload",
           "type": "number"
         }
       },
       "required": [
-        "flow_rate",
-        "heat_load"
+        "flowRate",
+        "heatLoad"
       ]
     },
     "Inputs": {
