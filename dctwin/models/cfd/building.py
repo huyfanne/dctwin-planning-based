@@ -207,9 +207,7 @@ class Building(BaseModel):
             obj.cooling.supply_air_volume_flow_rate = inputs.supply_air_volume_flow_rate
             obj.cooling.cooling_capacity = inputs.cooling_capacity
         elif isinstance(obj, Server) and isinstance(inputs, ServerInputs):
-            obj.cooling.volume_flow_rate = inputs.volume_flow_rate
             obj.power.input_power = inputs.input_power
-            obj.power.rated_power = inputs.rated_power
         else:
             raise ValueError(
                 f"Invalid object type: {type(obj)}: "
