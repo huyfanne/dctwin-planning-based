@@ -33,6 +33,7 @@ class ServerGeometry(ServerGeometryrModel):
     def outlet_area(self) -> float:
         return self.height * float(self.width)
 
+
 class ServerCoolingModel(BaseModel):
     """ Model of server cooling properties
     """
