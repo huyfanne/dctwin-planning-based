@@ -70,10 +70,11 @@ class SnappyHexBackend(Backend):
             field_config=field_config,
             perforated_openings=self.perforated_openings,
         )
+
         if config.cfd.dry_run:
             return
-        host_path = os.environ.get('HOST_PATH', None)
 
+        host_path = os.environ.get('HOST_PATH', None)
         if host_path is not None:
             # concatenate the log path in Docker container with external host path
             log_index = config.cfd.case_dir.parts.index("log")
