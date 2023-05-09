@@ -118,21 +118,26 @@ class ACUBoundary(Boundary):
     @property
     def T(self) -> str:
         t_sink = f"tSink_{self.acu_id}"
+        if self.supply_air_mass_flow_rate == 0:
+            outlet = self.zero_gradient
+        else:
+            outlet = f"""
+            {{
+                type            exprFixedValue;
+                value           $internalField;
+                valueExpr       "max(t1,t2)";
+                variables
+                (
+                    "{t_sink}{{acu_return_{self.acu_id}}} = weightAverage(T)"
+                    "coolingCapacity = {self.cooling_capacity}"		
+                    "supplyAirMassFlowRate = {self.supply_air_mass_flow_rate}"
+                    "t1 = {t_sink} - (coolingCapacity * 1000 / (supplyAirMassFlowRate * {self.air_specific_heat}))"
+                    "t2 = {self.supply_kelvin}"
+                );
+            }}
+            """
         return f"""
-        acu_supply_{self.acu_id}
-        {{
-            type            exprFixedValue;
-            value           $internalField;
-            valueExpr       "max(t1,t2)";
-            variables
-            (
-                "{t_sink}{{acu_return_{self.acu_id}}} = weightAverage(T)"
-                "coolingCapacity = {self.cooling_capacity}"		
-                "supplyAirMassFlowRate = {self.supply_air_mass_flow_rate}"
-                "t1 = {t_sink} - (coolingCapacity * 1000 / (supplyAirMassFlowRate * {self.air_specific_heat}))"
-                "t2 = {self.supply_kelvin}"
-            );
-        }}
+        acu_supply_{self.acu_id} {outlet}
         acu_return_{self.acu_id} {self.zero_gradient}
         acu_wall_{self.acu_id} {self.zero_gradient}
         """
