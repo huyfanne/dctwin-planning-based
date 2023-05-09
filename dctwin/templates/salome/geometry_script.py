@@ -26,11 +26,11 @@ except Exception:
 SRC_PATH = Path(os.getcwd(), "scripts/building.json")
 if os.getenv("SRC_PATH"):
     SRC_PATH = os.getenv("SRC_PATH")
-print(SRC_PATH)
+logging.info(f"source path {SRC_PATH}")
 OUTPUT_PATH = Path(os.getcwd(), "output")
 if os.getenv("OUTPUT_PATH"):
     OUTPUT_PATH = os.getenv("OUTPUT_PATH")
-print(OUTPUT_PATH)
+logging.info(f"output path {OUTPUT_PATH}")
 IGNORE_SERVER = os.getenv("IGNORE_SERVER", False)
 SKIP_PRE_MESH = False
 SAVE_HDF = os.getenv("SAVE_HDF", False)
@@ -469,15 +469,10 @@ class Builder:
 
     def run(self) -> None:
         geometry_models = building["models"]["geometry_models"]
-
-        if ROOM_ID is not None:
-            logging.info(f"Constructing room {ROOM_ID}")
-            room = building["constructions"]["rooms"][f"{ROOM_ID}"]
-            self.make_room(room, geometry_models)
-        else:
-            logging.info("Constructing all rooms")
-            for room in building["constructions"]["rooms"].values():
-                self.make_room(room, geometry_models)
+        assert ROOM_ID in building["constructions"]["rooms"], f"Room {ROOM_ID} not found"
+        logging.info(f"Constructing room {ROOM_ID}")
+        room = building["constructions"]["rooms"][f"{ROOM_ID}"]
+        self.make_room(room, geometry_models)
 
 
 def main():
