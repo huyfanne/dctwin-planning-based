@@ -217,6 +217,10 @@ class EplusCFDAdapter:
         parsed_actions: Dict,
         zone_server_powers: List[float],
     ) -> List[float]:
+        """
+        Compute equivalent inlet temperature for in terms of total server power.
+        This is used to set the server inlet node temperature in EnergyPlus simulation.
+        """
         server_inlet_temps = []
         for idx, it_equipment in enumerate(self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled):
             equation = self.eplus_manager.idf_parser.compute_server_power(
