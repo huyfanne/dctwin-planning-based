@@ -97,7 +97,7 @@ class CFDManager:
                 self.docker_client, process_num=self.solve_process
             )
             # use reduced-order simulation if POD mode is provided
-            self.pod_backend = PODBackend.load()
+            self.pod_backend = PODBackend.load(self.object_mesh_index)
         else:
             self.solver_backend = TransientSolverBackend(
                 self.docker_client, process_num=self.solve_process

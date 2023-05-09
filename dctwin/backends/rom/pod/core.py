@@ -1,5 +1,5 @@
 import pickle
-from typing import Dict, Union
+from typing import Dict, Union, Tuple
 from loguru import logger
 import numpy as np
 import cvxpy as cp
@@ -24,7 +24,7 @@ class PODBackend(Backend):
     rho_air = 1.19  # air density kg/m^3
     c_p = 1006  # air heat capacity J/(kg*C)
 
-    def __init__(self) -> None:
+    def __init__(self, object_mesh_index: Dict) -> None:
         super().__init__()
         self.train_bc = None
         self.train_coef = None
@@ -33,30 +33,45 @@ class PODBackend(Backend):
         self.mean_obs = None
         self.modes = None
         self.num_modes = config.cfd.num_modes
+        self.object_mesh_index = object_mesh_index
+        self.server_inlet, self.server_outlet = [], []
+        self.acu_supply, self.acu_return = [], []
+        self._get_object_index()
 
-    def _prepare_mode_data(self, object_mesh_index: Dict) -> Dict:
+    def _get_object_index(self) -> None:
+
+        for server_name, server_mesh_indices in self.object_mesh_index["servers"].items():
+            self.server_inlet.append(server_mesh_indices["inlet"])
+            self.server_outlet.append(server_mesh_indices["outlet"])
+
+        for acu_name, acu_mesh_indices in self.object_mesh_index["acus"].items():
+            self.acu_supply.append(acu_mesh_indices["supply"])
+            self.acu_return.append(acu_mesh_indices["return"])
+
+    def _pre_process_inputs(
+        self,
+        server_powers: torch.Tensor,
+        server_volume_flow_rates: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor, Dict]:
+        """
+        Pre-process the inputs for the POD model
+         - obtain the POD mode data for server inlet/outlet and acu return
+         - remove servers with zero volume flow rate to avoid zero division error
+        """
         used_modes = self.modes[:, :self.num_modes]
-        phi_return, phi_inlet, phi_outlet = [], [], []
-        mean_temp_inlet, mean_temp_outlet, mean_temp_return = [], [], []
+        mask = server_volume_flow_rates.ne(0.)
 
-        for server_name, server_mesh_indices in object_mesh_index["servers"].items():
-            mean_temp_inlet.append(self.mean_obs[server_mesh_indices["inlet"]])
-            mean_temp_outlet.append(self.mean_obs[server_mesh_indices["outlet"]])
-            phi_inlet.append(used_modes[server_mesh_indices["inlet"], :])
-            phi_outlet.append(used_modes[server_mesh_indices["outlet"], :])
+        mean_temp_inlet = torch.masked_select(self.mean_obs[self.server_inlet], mask)
+        mean_temp_outlet = torch.masked_select(self.mean_obs[self.server_outlet], mask)
+        mean_temp_return = self.mean_obs[self.acu_return]
+        phi_inlet = torch.masked_select(used_modes[self.server_inlet], mask.view(-1,1)).view(-1, self.num_modes)
+        phi_outlet = torch.masked_select(used_modes[self.server_outlet], mask.view(-1,1)).view(-1, self.num_modes)
+        phi_return = used_modes[self.acu_return]
 
-        for acu_name, acu_mesh_indices in object_mesh_index["acus"].items():
-            mean_temp_return.append(self.mean_obs[acu_mesh_indices["return"]])
-            phi_return.append(used_modes[acu_mesh_indices["return"], :])
+        server_powers = torch.masked_select(server_powers, mask)
+        server_volume_flow_rates = torch.masked_select(server_volume_flow_rates, mask)
 
-        mean_temp_inlet = torch.tensor(mean_temp_inlet, dtype=torch.float32, requires_grad=False)
-        mean_temp_outlet = torch.tensor(mean_temp_outlet, dtype=torch.float32, requires_grad=False)
-        mean_temp_return = torch.tensor(mean_temp_return, dtype=torch.float32, requires_grad=False)
-        phi_inlet = torch.vstack(phi_inlet)
-        phi_outlet = torch.vstack(phi_outlet)
-        phi_return = torch.vstack(phi_return)
-
-        return {
+        mode_data = {
             "mean_temp_inlet": mean_temp_inlet,
             "mean_temp_outlet": mean_temp_outlet,
             "mean_temp_return": mean_temp_return,
@@ -64,6 +79,8 @@ class PODBackend(Backend):
             "phi_outlet": phi_outlet,
             "phi_return": phi_return,
         }
+
+        return server_powers, server_volume_flow_rates, mode_data
 
     def _local_search(
         self,
@@ -128,9 +145,6 @@ class PODBackend(Backend):
         # server energy balance violation as a second order cone constraint
         A = phi_outlet - phi_inlet
         b = (mean_temp_outlet - mean_temp_inlet) - server_powers / (self.c_p * self.rho_air * server_volume_flow_rates)
-        if torch.isnan(b).any():
-            logger.warning("NaNs in server_array (b), replacing with 0.0")
-            b = torch.nan_to_num(b.view(-1, 1), nan=0.0)
         c = torch.zeros(num_modes)
         d = torch.linalg.norm(A @ coef_hat.T + b)  # use the GP coarse estimation as initialization
 
@@ -206,14 +220,10 @@ class PODBackend(Backend):
         :param phi_return: the return flux of the acus
         """
         # select boundary conditions within the air loop
-
         phi_server_matrix: torch.Tensor = phi_outlet - phi_inlet
         server_array: torch.Tensor = server_powers / (torch.tensor((self.c_p * self.rho_air)) * server_volume_flow_rates)
         server_array -= (mean_temp_outlet - mean_temp_inlet)
         server_array = server_array.view(-1, 1)
-        if torch.isnan(server_array).any():
-            logger.warning("NaNs in server_array, replacing with 0.0")
-            server_array = torch.nan_to_num(server_array.view(-1, 1), nan=0.0)
 
         phi_acu_matrix: torch.Tensor = torch.sum(phi_return * supply_air_volume_flow_rates.view(-1, 1), dim=0, keepdim=True)
         acu_array: torch.Tensor = torch.sum(server_powers) / torch.tensor((self.c_p * self.rho_air))
@@ -299,12 +309,12 @@ class PODBackend(Backend):
         raise NotImplementedError("Command is not available for this model.")
 
     @classmethod
-    def load(cls):
+    def load(cls, object_mesh_index: Dict) -> "PODBackend":
         """
         Load the POD modes, mean temperature filed, offline trained GP models from the saved file.
         """
         try:
-            pod = cls()
+            pod = cls(object_mesh_index=object_mesh_index)
             # load pod modes, mean temperature field,
             # training boundary conditions and training labels (POD coefficients)
             with open(Path(config.cfd.pod_dir).joinpath("pod_data.pkl"), "rb") as f:
@@ -358,7 +368,10 @@ class PODBackend(Backend):
         :param pod_method: the POD coefficient estimation algorithm
         """
         assert self.modes is not None, "POD modes are not computed or loaded"
-        mode_data = self._prepare_mode_data(object_mesh_index)
+        server_powers, server_volume_flow_rates, mode_data = self._pre_process_inputs(
+            server_powers=server_powers,
+            server_volume_flow_rates=server_volume_flow_rates,
+        )
         # POD coefficients calculation for a new test case
         if pod_method == "Flux":
             self._flux_matching(
