@@ -63,8 +63,8 @@ class Building(BaseModel):
         for acu_id, acu in acus.items():
             cls._validate_id(acu_id)
             cls._validate_geometry_models(acu, models.geometry_models.acus) if models.geometry_models else None
-            cls._validate_cooling_models(acu, models.cooling_models.acus) if models.cooling_models  else None
-            cls._validate_power_models(acu, models.power_models.acus) if models.power_models else None
+            cls._validate_cooling_models(acu, models.cooling_models.acus) if models.cooling_models.acus  else None
+            cls._validate_power_models(acu, models.power_models.acus) if models.power_models.acus else None
             cls._validate_inputs(acu, inputs.get(acu_id)) if inputs else None
 
     @classmethod
@@ -96,8 +96,8 @@ class Building(BaseModel):
         for server_id, server in servers.items():
             cls._validate_id(server_id)
             cls._validate_geometry_models(server, models.geometry_models.servers) if models.geometry_models else None
-            cls._validate_cooling_models(server, models.cooling_models.acus) if models.cooling_models else None
-            cls._validate_power_models(server, models.power_models.acus) if models.power_models else None
+            cls._validate_cooling_models(server, models.cooling_models.servers) if models.cooling_models.servers else None
+            cls._validate_power_models(server, models.power_models.servers) if models.power_models.servers else None
             cls._validate_inputs(server, inputs.get(server_id)) if inputs else None
             cls._validate_server_occupation(rack, server, server_id, occupied_rack_slot)
 

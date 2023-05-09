@@ -32,6 +32,6 @@ class PowerModel(BaseModel):
 
 class Model(BaseModel):
     """ Models is used to define the object models of the building """
-    geometry_models: Optional[GeometryModel] = None
-    cooling_models: Optional[CoolingModel] = None
-    power_models: Optional[PowerModel] = None
+    geometry_models: Optional[GeometryModel] = Field(default_factory=GeometryModel)
+    cooling_models: Optional[CoolingModel] = Field(default_factory=CoolingModel)
+    power_models: Optional[PowerModel] = Field(default_factory=PowerModel)
