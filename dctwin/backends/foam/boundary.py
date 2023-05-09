@@ -175,10 +175,10 @@ class ServerBoundary(Boundary):
     @property
     def T(self) -> str:
         t_sink = f"tSink_{self.server_id}"
-        value = f"{t_sink}+{self.input_power / (self.server_mass_flow_rate * self.air_specific_heat)}"
-        if self.server_volume_flow_rate == 0:
+        if self.server_mass_flow_rate == 0:
             outlet = self.zero_gradient
         else:
+            value = f"{t_sink}+{self.input_power / (self.server_mass_flow_rate * self.air_specific_heat)}"
             outlet = f"""
             {{
                 type            exprFixedValue;
