@@ -1,5 +1,5 @@
 import pickle
-from typing import Dict, Union, Tuple
+from typing import Dict, Union
 from loguru import logger
 import numpy as np
 import cvxpy as cp
@@ -48,19 +48,56 @@ class PODBackend(Backend):
             self.acu_supply.append(acu_mesh_indices["supply"])
             self.acu_return.append(acu_mesh_indices["return"])
 
+    def _as_tensors(
+        self,
+        supply_air_temperatures: Dict,
+        supply_air_volume_flow_rates: Dict,
+        server_powers: Dict,
+        server_volume_flow_rates: Dict,
+    ) -> Dict[str, torch.Tensor]:
+        """
+        convert the boundary conditions into torch.Tensor format
+        :param supply_air_temperatures: acu supply temperature dict
+        :param supply_air_volume_flow_rates: acu volume flow rate dict
+        :param server_powers: server heat loads dict
+        :param server_volume_flow_rates: server volume flow rates dict
+        """
+        server_power_list, server_volume_flow_rate_list = [], []
+        supply_air_temperature_list, supply_air_volume_flow_rate_list = [], []
+
+        for server_name, server_mesh_indices in self.object_mesh_index["servers"].items():
+            server_power_list.append(server_powers[server_name])
+            server_volume_flow_rate_list.append(server_volume_flow_rates[server_name])
+
+        for acu_name, acu_mesh_indices in self.object_mesh_index["acus"].items():
+            supply_air_temperature_list.append(supply_air_temperatures[acu_name])
+            supply_air_volume_flow_rate_list.append(supply_air_volume_flow_rates[acu_name])
+
+        server_powers = torch.tensor(server_power_list, dtype=torch.float32, requires_grad=False)
+        server_volume_flow_rates = torch.tensor(server_volume_flow_rate_list, dtype=torch.float32, requires_grad=False)
+        supply_air_temperatures = torch.tensor(supply_air_temperature_list, dtype=torch.float32, requires_grad=False)
+        supply_air_volume_flow_rates = torch.tensor(supply_air_volume_flow_rate_list, dtype=torch.float32, requires_grad=False)
+
+        return {
+            "server_powers": server_powers,
+            "server_volume_flow_rates": server_volume_flow_rates,
+            "supply_air_temperatures": supply_air_temperatures,
+            "supply_air_volume_flow_rates": supply_air_volume_flow_rates,
+        }
+
     def _pre_process_inputs(
         self,
-        server_powers: torch.Tensor,
-        server_volume_flow_rates: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor, Dict]:
+        **boundary_conditions,
+    ) -> Dict[str, torch.Tensor]:
         """
         Pre-process the inputs for the POD model
          - obtain the POD mode data for server inlet/outlet and acu return
          - remove servers with zero volume flow rate to avoid zero division error
         """
         used_modes = self.modes[:, :self.num_modes]
-        mask = server_volume_flow_rates.ne(0.)
+        results = self._as_tensors(**boundary_conditions)
 
+        mask = results["server_volume_flow_rates"].ne(0.)
         mean_temp_inlet = torch.masked_select(self.mean_obs[self.server_inlet], mask)
         mean_temp_outlet = torch.masked_select(self.mean_obs[self.server_outlet], mask)
         mean_temp_return = self.mean_obs[self.acu_return]
@@ -68,10 +105,14 @@ class PODBackend(Backend):
         phi_outlet = torch.masked_select(used_modes[self.server_outlet], mask.view(-1,1)).view(-1, self.num_modes)
         phi_return = used_modes[self.acu_return]
 
-        server_powers = torch.masked_select(server_powers, mask)
-        server_volume_flow_rates = torch.masked_select(server_volume_flow_rates, mask)
+        server_powers = torch.masked_select(results["server_powers"], mask)
+        server_volume_flow_rates = torch.masked_select(results["server_volume_flow_rates"], mask)
 
-        mode_data = {
+        input_data = {
+            "supply_air_temperatures": results["supply_air_temperatures"],
+            "supply_air_volume_flow_rates": results["supply_air_volume_flow_rates"],
+            "server_powers": server_powers,
+            "server_volume_flow_rates": server_volume_flow_rates,
             "mean_temp_inlet": mean_temp_inlet,
             "mean_temp_outlet": mean_temp_outlet,
             "mean_temp_return": mean_temp_return,
@@ -80,7 +121,7 @@ class PODBackend(Backend):
             "phi_return": phi_return,
         }
 
-        return server_powers, server_volume_flow_rates, mode_data
+        return input_data
 
     def _local_search(
         self,
@@ -351,53 +392,32 @@ class PODBackend(Backend):
 
     def run(
         self,
-        object_mesh_index: Dict,
-        server_powers: torch.Tensor,
-        server_volume_flow_rates: torch.Tensor,
-        supply_air_temperatures: torch.Tensor,
-        supply_air_volume_flow_rates: torch.Tensor,
         pod_method: str = "GP-Flux",
+        **boundary_conditions: Dict,
     ) -> np.ndarray:
         """
         Run certain POD coefficient estimation algorithm to predict the temperature field.
-        :param object_mesh_index: the mesh indices of the acus and servers
-        :param server_powers: the power of the servers
-        :param server_volume_flow_rates: the flow rate of the servers
-        :param supply_air_temperatures: the setpoint of the acus
-        :param supply_air_volume_flow_rates: the flow rate of the acus
         :param pod_method: the POD coefficient estimation algorithm
+        :param boundary_conditions: boundary conditions for simulation
+           i.e., boundary_conditions = {
+            "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
+            "server_powers": {}, "server_volume_flow_rates": {}
+            }
         """
         assert self.modes is not None, "POD modes are not computed or loaded"
-        server_powers, server_volume_flow_rates, mode_data = self._pre_process_inputs(
-            server_powers=server_powers,
-            server_volume_flow_rates=server_volume_flow_rates,
-        )
+        input_data = self._pre_process_inputs(**boundary_conditions)
         # POD coefficients calculation for a new test case
         if pod_method == "Flux":
-            self._flux_matching(
-                server_powers=server_powers,
-                server_volume_flow_rates=server_volume_flow_rates,
-                supply_air_temperatures=supply_air_temperatures,
-                supply_air_volume_flow_rates=supply_air_volume_flow_rates,
-                **mode_data
-            )
+            self._flux_matching(**input_data)
         elif pod_method == "GP":
             self._gp(
-                server_powers=server_powers,
-                server_volume_flow_rates=server_volume_flow_rates,
-                supply_air_temperatures=supply_air_temperatures,
-                supply_air_volume_flow_rates=supply_air_volume_flow_rates,
                 local_search=False,
-                **mode_data
+                **input_data
             )
         elif pod_method == "GP-Flux":
             self._gp(
-                server_powers=server_powers,
-                server_volume_flow_rates=server_volume_flow_rates,
-                supply_air_temperatures=supply_air_temperatures,
-                supply_air_volume_flow_rates=supply_air_volume_flow_rates,
                 local_search=True,
-                **mode_data
+                **input_data
             )
         else:
             raise NotImplementedError(f"{pod_method} not implemented")

@@ -87,6 +87,7 @@ class CFDManager:
         geometry: Salome
         meshing: SnappyHexMesh
         solver: buoyantBoussinesqSimpleFoam/buoyantBoussinesqPimpleFoam/POD
+        reduced-order solver: POD
         """
         self.geometry_backend = SalomeBackend(self.docker_client)
         self.mesh_backend = SnappyHexBackend(
@@ -97,47 +98,14 @@ class CFDManager:
                 self.docker_client, process_num=self.solve_process
             )
             # use reduced-order simulation if POD mode is provided
-            self.pod_backend = PODBackend.load(self.object_mesh_index)
+            if not self.run_cfd and self.pod_method is not None:
+                assert self.object_mesh_index is not None, \
+                    "object mesh index is required for POD simulation"
+                self.pod_backend = PODBackend.load(self.object_mesh_index)
         else:
             self.solver_backend = TransientSolverBackend(
                 self.docker_client, process_num=self.solve_process
             )
-
-    def _map_boundary_conditions_to_tensor(
-        self,
-        supply_air_temperatures: Dict,
-        supply_air_volume_flow_rates: Dict,
-        server_powers: Dict,
-        server_volume_flow_rates: Dict,
-    ) -> Dict:
-        """
-        Map boundary conditions to tensor
-        :param supply_air_temperatures: acu supply temperature dict
-        :param supply_air_volume_flow_rates: acu volume flow rate dict
-        :param server_powers: server heat loads dict
-        :param server_volume_flow_rates: server volume flow rates dict
-        """
-        q_server, v_server, sp_acu, v_acu = [], [], [], []
-        # parse the boundary conditions into torch.Tensor format
-        for server_name, server_mesh_indices in self.object_mesh_index["servers"].items():
-            q_server.append(server_powers[server_name])
-            v_server.append(server_volume_flow_rates[server_name])
-
-        for acu_name, acu_mesh_indices in self.object_mesh_index["acus"].items():
-            sp_acu.append(supply_air_temperatures[acu_name])
-            v_acu.append(supply_air_volume_flow_rates[acu_name])
-
-        q_server = torch.tensor(q_server, dtype=torch.float32, requires_grad=False)
-        v_server = torch.tensor(v_server, dtype=torch.float32, requires_grad=False)
-        sp_acu = torch.tensor(sp_acu, dtype=torch.float32, requires_grad=False)
-        v_acu = torch.tensor(v_acu, dtype=torch.float32, requires_grad=False)
-
-        return {
-            "server_powers": q_server,
-            "server_volume_flow_rates": v_server,
-            "supply_air_temperatures": sp_acu,
-            "supply_air_volume_flow_rates": v_acu,
-        }
 
     def build_geometry(self) -> None:
         """Build geometry from room model"""
@@ -207,9 +175,8 @@ class CFDManager:
                 "object mesh index is not provided， " \
                 "please specify the index file path or read from the mesh directory"
             results = self.pod_backend.run(
-                object_mesh_index=self.object_mesh_index,
                 pod_method=self.pod_method,
-                **self._map_boundary_conditions_to_tensor(**boundary_conditions)
+                **boundary_conditions,
             )
         else:
             # use full-fledged CFD simulation
