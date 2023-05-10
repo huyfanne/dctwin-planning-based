@@ -23,7 +23,7 @@ except Exception:
     raise ImportError("salome not found")
 
 # Init
-SRC_PATH = Path(os.getcwd(), "scripts/building.json")
+SRC_PATH = Path(os.getcwd(), "scripts/room.json")
 if os.getenv("SRC_PATH"):
     SRC_PATH = os.getenv("SRC_PATH")
 logging.info(f"source path {SRC_PATH}")
@@ -34,10 +34,10 @@ logging.info(f"output path {OUTPUT_PATH}")
 IGNORE_SERVER = os.getenv("IGNORE_SERVER", False)
 SKIP_PRE_MESH = False
 SAVE_HDF = os.getenv("SAVE_HDF", False)
-ROOM_ID = os.getenv("ROOM_ID", None)
+
 
 with open(SRC_PATH) as f:
-    building = json.load(f)
+    room = json.load(f)
 
 
 class SalomeUtil:
@@ -423,7 +423,7 @@ class Builder:
             base_face, {"x": 0, "y": 0, "z": plane["geometry"]["height"]}
         )
         opening_faces = []
-        opening_list = plane["constructions"]["openings"].values()
+        opening_list = plane["geometry"]["openings"].values()
         for opening in opening_list:
             # Just for cutting face
             opening["size"]["z"] = 0.1
@@ -468,10 +468,7 @@ class Builder:
         ) if racks else None
 
     def run(self) -> None:
-        geometry_models = building["models"]["geometry_models"]
-        assert ROOM_ID in building["constructions"]["rooms"], f"Room {ROOM_ID} not found"
-        logging.info(f"Constructing room {ROOM_ID}")
-        room = building["constructions"]["rooms"][f"{ROOM_ID}"]
+        geometry_models = room["models"]["geometry_models"]
         self.make_room(room, geometry_models)
 
 

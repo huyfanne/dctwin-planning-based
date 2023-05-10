@@ -13,13 +13,13 @@ from dctwin.utils import config
 
 from dctwin.interfaces.managers import CFDManager
 from dctwin.backends import EplusBackend
-from dctwin.models import Building
+from dctwin.models import Room
 
 
 class EplusCFDAdapter:
     """
     A class to manage the co-simulation between CFD and E+.
-    :param building: a building object that contains all rooms
+    :param room: a Room object that contains all rooms
     :param eplus_backend: the E+ backend to be used
     :param map_boundary_condition_fn: the function to map the parsed action to CFD boundary conditions
     :param mesh_process: the number of processes to be used for meshing
@@ -36,8 +36,7 @@ class EplusCFDAdapter:
 
     def __init__(
         self,
-        building: Building,
-        room_id: str,
+        room: Room,
         eplus_backend: EplusBackend,
         map_boundary_condition_fn: Callable,
         mesh_process: int = 8,
@@ -54,8 +53,7 @@ class EplusCFDAdapter:
         assert map_boundary_condition_fn is not None, loguru.logger.critical("No map function provided !")
 
         self.cfd_manager = CFDManager(
-            building=building,
-            room_id=room_id,
+            room=room,
             mesh_process=mesh_process,
             solve_process=solve_process,
             steady=steady,

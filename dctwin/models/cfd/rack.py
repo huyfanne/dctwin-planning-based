@@ -1,10 +1,11 @@
 """Rack object in a data center
 """
 from typing import Optional, OrderedDict
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from .basics import Size, Vertex
 from .server import Server
+from .utils import BaseModel
 
 
 class RackGeometryModel(BaseModel):

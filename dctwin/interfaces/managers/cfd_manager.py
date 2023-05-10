@@ -28,13 +28,13 @@ from dctwin.utils.errors import (
     MeshBuildError,
     FoamSolveError,
 )
-from dctwin.models import Room, Building
+from dctwin.models import Room
 
 
 class CFDManager:
     """
     A manager for the whole CFD simulation for data hall thermal analysis
-    :param building: a building object that contains all rooms
+    :param room: a room object that contains all rooms
     :param mesh_process: number of cores for meshing
     :param solve_process: number of cores for solving
     :param steady: steady or transient simulation
@@ -45,8 +45,7 @@ class CFDManager:
     """
     def __init__(
         self,
-        building: Building,
-        room_id: str,
+        room: Room,
         mesh_process: int = 32,
         solve_process: int = 32,
         steady: bool = True,
@@ -65,9 +64,7 @@ class CFDManager:
         ] = None
         self.pod_backend: Optional[PODBackend] = None
 
-        self.building: Building = building
-        self.room_id: str = room_id
-        self.room: Room = building.constructions.rooms[room_id]
+        self.room: Room = room
         self.steady = steady
         self.run_cfd = run_cfd
         self.mesh_process = mesh_process
@@ -111,7 +108,7 @@ class CFDManager:
         """Build geometry from room model"""
         try:
             logger.info("start building geometry ...")
-            self.geometry_backend.run(building=self.building, room_id=self.room_id)
+            self.geometry_backend.run(room=self.room)
         except Exception:
             raise GeometryBuildError("Failed to build geometry")
 

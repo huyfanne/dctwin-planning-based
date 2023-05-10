@@ -3,7 +3,8 @@ Inputs values for the CFD model
 """
 
 from typing import OrderedDict, Optional
-from pydantic import BaseModel
+
+from .utils import BaseModel
 
 
 class ACUInputs(BaseModel):

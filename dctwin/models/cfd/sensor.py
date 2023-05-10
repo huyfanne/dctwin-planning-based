@@ -1,8 +1,10 @@
 """Temperature sensor object
 """
 from typing import Optional, OrderedDict
-from pydantic import BaseModel, Field
+from pydantic import Field
+
 from .basics import Vertex
+from .utils import BaseModel
 
 
 class SensorGeometry(BaseModel):
