@@ -359,13 +359,50 @@ class Builder:
                 boxes_types_index[box['geometry']['model']] = 1
             else:
                 boxes_types_index[box['geometry']['model']] += 1
-            geometry_box = util.make_box(box["geometry"]["size"], box["geometry"]["location"])
-            exclude_faces = []
-            for face in list(SalomeUtil.SUB_FACE_SIZE_INDICES):
-                if not box["geometry"]["faces"][face]:
-                    exclude_faces.append(face)
-            geometry_box = util.group_by_faces(geometry_box, exclude=exclude_faces)
-            util.export_stl(util.mesh(geometry_box, 0.5, 2), f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}")
+            if box["geometry"]["openings"] is not None:
+                size = box["geometry"]["size"]
+                location = box["geometry"]["location"]
+                basic_face = util.geom.MakeFaceHW(size["z"], size["x"], 3)
+                for opening in box["geometry"]["openings"]:
+                    vent_face = util.geom.MakeFaceHW(
+                        opening["size"]["x"], opening["size"]["y"], 3
+                    )
+                    vent_face = util.geom.MakeTranslation(
+                        vent_face,
+                        (
+                                opening["location"]["x"]
+                                - (size["x"] - opening["size"]["x"]) / 2
+                        ),
+                        0,
+                        (
+                                opening["location"]["y"]
+                                - (size["z"] - opening["size"]["y"]) / 2
+                        ),
+                    )
+                    basic_face = util.geom.MakeCut(basic_face, vent_face)
+                vector = util.geom.MakeVectorDXDYDZ(0, 1, 0)
+                _box = util.geom.MakePrismVecH(basic_face, vector, size["y"])
+                box = util.move_placement(
+                    _box,
+                    {
+                        "x": location["x"] + size["dx"] / 2,
+                        "y": location["y"],
+                        "z": (size["dz"] / 2) + location["z"],
+                    },
+                )
+
+                group = util.group_by_faces(box)
+                mesh_obj = util.mesh(group, 1, 4)
+                util.export_stl(util.mesh(mesh_obj, 0.5, 2),
+                                f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}")
+            else:
+                geometry_box = util.make_box(box["geometry"]["size"], box["geometry"]["location"])
+                exclude_faces = []
+                for face in list(SalomeUtil.SUB_FACE_SIZE_INDICES):
+                    if not box["geometry"]["faces"][face]:
+                        exclude_faces.append(face)
+                geometry_box = util.group_by_faces(geometry_box, exclude=exclude_faces)
+                util.export_stl(util.mesh(geometry_box, 0.5, 2), f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}")
 
     def make_racks(self, racks: Dict, rack_geometry_models: Dict, server_geometry_models: Dict) -> None:
         rack_models, server_models = dict(), dict()

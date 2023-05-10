@@ -138,7 +138,7 @@
                         }
                     ]
                 },
-                "constructions":{
+                "constructions": {
                     "falseCeiling": null,
                     "raisedFloor": {
                         "geometry": {
@@ -207,15 +207,29 @@
                             "geometry": {
                                 "model": "pillar",
                                 "size": {
-                                    "x": 0.79,
-                                    "y": 0.46,
+                                    "x": 5,
+                                    "y": 5,
                                     "z": 3.4
                                 },
                                 "location": {
                                     "x": 8.89,
                                     "y": 7.77,
                                     "z": 0
-                                }
+                                },
+                                "openings": [
+                                    {
+                                        "location": {
+                                            "x": 2.1,
+                                            "y": 1,
+                                            "z": 0
+                                        },
+                                        "size": {
+                                            "x": 2.6,
+                                            "y": 2.6,
+                                            "z": 0
+                                        }
+                                    }
+                                ]
                             }
                         },
                         "Pillar_2": {
