@@ -1,4 +1,4 @@
-from .cfd import Vertex, Size, Sensor, Server, ACU, Box, Rack, Room, Building
+from .cfd import Vertex, Size, Sensor, Server, ACU, Box, Rack, Room
 from .eplus import Eplus
 
 __all__ = [
@@ -10,6 +10,5 @@ __all__ = [
     'Box',
     'Rack',
     'Room',
-    'Building',
     'Eplus',
 ]

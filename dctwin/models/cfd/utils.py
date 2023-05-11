@@ -1,10 +1,12 @@
 import math
 from typing import Tuple
-from .basics import Vertex
+from pydantic import BaseModel as PydanticBaseModel
 
 
-def euclidean_distance(loc_1: Vertex, loc_2: Vertex) -> float:
-    return math.sqrt((loc_1.x - loc_2.x) ** 2 + (loc_1.y - loc_2.y) ** 2 + (loc_1.z - loc_2.z) ** 2)
+def euclidean_distance(loc_1: Tuple[float, float, float], loc_2: Tuple[float, float, float]) -> float:
+    x_1, y_1, z_1 = loc_1
+    x_2, y_2, z_2 = loc_2
+    return math.sqrt((x_1 - x_2) ** 2 + (y_1 - y_2) ** 2 + (z_1 - z_2) ** 2)
 
 
 def rotate(origin: Tuple[float, float], point: Tuple[float, float], angle: int) -> Tuple[float, float]:
@@ -16,63 +18,11 @@ def rotate(origin: Tuple[float, float], point: Tuple[float, float], angle: int) 
     return qx, qy
 
 
-def camel_to_snake(name):
-    """Convert a camel case string to snake case"""
-    snake = ""
-    for char in name:
-        if char.isupper():
-            snake += "_" + char.lower()
-        else:
-            snake += char
-    return snake
+def to_camel(string: str) -> str:
+    words = string.split('_')
+    return words[0] + ''.join(word.capitalize() for word in words[1:])
 
 
-def convert_key_to_snake(data):
-    """Convert a dictionary's outermost layer keys from camel case to snake case"""
-    if isinstance(data, dict):
-        snake_dict = {}
-        for key, value in data.items():
-            snake_key = camel_to_snake(key)
-            snake_dict[snake_key] = value
-        return snake_dict
-    else:
-        return data
-
-
-def convert_json_file(data):
-    """Convert specific JSON attribute from camel case to snake case"""
-    snake_data = convert_key_to_snake(data)
-    try:
-        snake_data["models"] = convert_key_to_snake(snake_data["models"])
-        for key, value in snake_data["models"]["geometry_models"]["acus"].items():
-            snake_data["models"]["geometry_models"]["acus"][key] = convert_key_to_snake(value)
-        for key, value in snake_data["models"]["geometry_models"]["racks"].items():
-            snake_data["models"]["geometry_models"]["racks"][key] = convert_key_to_snake(value)
-        for key, value in snake_data["models"]["geometry_models"]["servers"].items():
-            snake_data["models"]["geometry_models"]["servers"][key] = convert_key_to_snake(value)
-        for key, value in snake_data["models"]["cooling_models"]["acus"].items():
-            snake_data["models"]["cooling_models"]["acus"][key] = convert_key_to_snake(value)
-        for key, value in snake_data["models"]["power_models"]["acus"].items():
-            snake_data["models"]["power_models"]["acus"][key] = convert_key_to_snake(value)
-        for key, value in snake_data["models"]["cooling_models"]["servers"].items():
-            snake_data["models"]["cooling_models"]["servers"][key] = convert_key_to_snake(value)
-        for key, value in snake_data["models"]["power_models"]["servers"].items():
-            snake_data["models"]["power_models"]["servers"][key] = convert_key_to_snake(value)
-    except (KeyError, AttributeError):
-        pass
-    try:
-        for key, value in snake_data["inputs"]["acus"].items():
-            snake_data["inputs"]["acus"][key] = convert_key_to_snake(value)
-        for key, value in snake_data["inputs"]["servers"].items():
-            snake_data["inputs"]["servers"][key] = convert_key_to_snake(value)
-    except (KeyError, AttributeError):
-        pass
-    for room_key, room_value in snake_data["constructions"]["rooms"].items():
-        snake_data["constructions"]["rooms"][room_key]["geometry"] = convert_key_to_snake(room_value["geometry"])
-        snake_data["constructions"]["rooms"][room_key]["constructions"] = convert_key_to_snake(room_value["constructions"])
-        for rack_key, rack_value in room_value["constructions"]["racks"].items():
-            snake_data["constructions"]["rooms"][room_key]["constructions"]["racks"][rack_key]["geometry"] = convert_key_to_snake(rack_value["geometry"])
-            for server_key, server in rack_value["constructions"]["servers"].items():
-                snake_data["constructions"]["rooms"][room_key]["constructions"]["racks"][rack_key]["constructions"]["servers"][server_key][
-                    "geometry"] = convert_key_to_snake(server["geometry"])
-    return snake_data
+class BaseModel(PydanticBaseModel):
+    class Config:
+        alias_generator = to_camel

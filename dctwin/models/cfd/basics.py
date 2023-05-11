@@ -4,7 +4,8 @@ Unit: m (meter)
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, validator
+from pydantic import validator
+from .utils import BaseModel
 
 
 # noinspection PyMethodParameters

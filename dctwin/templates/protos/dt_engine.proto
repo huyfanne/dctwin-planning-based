@@ -192,7 +192,6 @@ message CFDMeshConfig {
 
 message CFDEnvConfig {
   required string geometry_file = 1; // path of building.json file
-  required string room_id = 2; // room id for simulation
   optional string pod_dir = 3; // path of pod mode file
   optional string object_mesh_index = 4 [default = "object_mesh_index.json"];// path of object mesh index
   optional int64 process_num = 5 [default = 8]; // path of pod mode file

@@ -2,7 +2,9 @@
 """
 
 from typing import Optional, OrderedDict
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from .utils import BaseModel
 
 
 class ServerGeometryrModel(BaseModel):

@@ -2,12 +2,13 @@
 Object models can be re-used to construct the same object in the building.
 """
 from typing import Optional, OrderedDict
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from .server import ServerGeometryrModel, ServerCoolingModel, ServerPowerModel
 from .rack import RackGeometryModel
 from .acu import ACUGeometryModel, ACUCoolingModel, ACUPowerModel
 from .box import BoxGeometryModel
+from .utils import BaseModel
 
 
 class GeometryModel(BaseModel):

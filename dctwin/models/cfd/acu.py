@@ -2,9 +2,10 @@
 """
 
 from typing import Optional, OrderedDict
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from .basics import Size, Vertex, Face
+from .utils import BaseModel
 
 
 class ACUFace(BaseModel):
