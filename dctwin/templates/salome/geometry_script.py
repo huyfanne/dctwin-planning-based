@@ -359,42 +359,89 @@ class Builder:
                 boxes_types_index[box['geometry']['model']] = 1
             else:
                 boxes_types_index[box['geometry']['model']] += 1
-            if box["geometry"]["openings"] is not None:
+            if box["geometry"].get("openings", None) is not None:
                 size = box["geometry"]["size"]
                 location = box["geometry"]["location"]
-                basic_face = util.geom.MakeFaceHW(size["z"], size["x"], 3)
-                for opening in box["geometry"]["openings"]:
-                    vent_face = util.geom.MakeFaceHW(
-                        opening["size"]["x"], opening["size"]["y"], 3
-                    )
-                    vent_face = util.geom.MakeTranslation(
-                        vent_face,
-                        (
-                                opening["location"]["x"]
-                                - (size["x"] - opening["size"]["x"]) / 2
-                        ),
-                        0,
-                        (
-                                opening["location"]["y"]
-                                - (size["z"] - opening["size"]["y"]) / 2
-                        ),
-                    )
+                if box["geometry"]["openings_side"] == "front" or box["geometry"]["openings_side"] ==  "rear":
+                    basic_face_input = [size["z"], size["x"], 3]
+                elif box["geometry"]["openings_side"] == "left" or box["geometry"]["openings_side"] ==  "right":
+                    basic_face_input = [size["z"], size["y"], 2]
+                else:
+                    basic_face_input = [size["x"], size["y"], 1]
+                basic_face = util.geom.MakeFaceHW(*basic_face_input)
+                for key, opening in box["geometry"]["openings"].items():
+                    if box["geometry"]["openings_side"] == "front" or box["geometry"]["openings_side"] ==  "rear":
+                        vent_face_input = [opening["size"]["x"], opening["size"]["y"], 3] 
+                        vent_face_translation_input = [(
+                                    opening["location"]["x"]
+                                    - (size["x"] - opening["size"]["x"]) / 2
+                            ),
+                            0,
+                            (
+                                    opening["location"]["y"]
+                                    - (size["z"] - opening["size"]["y"]) / 2
+                            )]
+                        vector_input = [0, 1, 0]
+                        vector = util.geom.MakeVectorDXDYDZ(*vector_input)
+                        box_vector_and_distance_input = [vector, size["y"]]
+                        move_box_input = {
+                            "x": location["x"] + size["x"] / 2,
+                            "y": location["y"],
+                            "z": (size["z"] / 2) + location["z"],
+                        }
+                    elif box["geometry"]["openings_side"] == "left" or box["geometry"]["openings_side"] ==  "right":
+                        vent_face_input = [opening["size"]["x"], opening["size"]["y"], 2] 
+                        vent_face_translation_input = [
+                            0,
+                            (
+                                    opening["location"]["x"]
+                                    - (size["y"] - opening["size"]["x"]) / 2
+                            ),
+                            (
+                                    opening["location"]["y"]
+                                    - (size["z"] - opening["size"]["y"]) / 2
+                            )]
+                        vector_input = [1, 0, 0]
+                        vector = util.geom.MakeVectorDXDYDZ(*vector_input)
+                        box_vector_and_distance_input = [vector, size["x"]]
+                        move_box_input = {
+                            "x": location["x"],
+                            "y": location["y"] + size["y"] / 2,
+                            "z": (size["z"] / 2) + location["z"],
+                        }
+                    else:
+                        vent_face_input = [opening["size"]["x"], opening["size"]["y"], 1] 
+                        vent_face_translation_input = [(
+                                    opening["location"]["x"]
+                                    - (size["x"] - opening["size"]["x"]) / 2
+                            ),
+                            (
+                                    opening["location"]["y"]
+                                    - (size["y"] - opening["size"]["y"]) / 2
+                            ),
+                            0,
+                            ]
+                        vector_input = [0, 0, 1]
+                        vector = util.geom.MakeVectorDXDYDZ(*vector_input)
+                        box_vector_and_distance_input = [vector, size["z"]]
+                        move_box_input = {
+                            "x": location["x"] + size["x"] / 2,
+                            "y": location["y"] + (size["y"] / 2),
+                            "z": location["z"],
+                        }
+                    vent_face = util.geom.MakeFaceHW(*vent_face_input)
+                    vent_face = util.geom.MakeTranslation(vent_face,*vent_face_translation_input)                    
                     basic_face = util.geom.MakeCut(basic_face, vent_face)
-                vector = util.geom.MakeVectorDXDYDZ(0, 1, 0)
-                _box = util.geom.MakePrismVecH(basic_face, vector, size["y"])
-                box = util.move_placement(
+                _box = util.geom.MakePrismVecH(basic_face, *box_vector_and_distance_input)
+                geometry_box = util.move_placement(
                     _box,
-                    {
-                        "x": location["x"] + size["dx"] / 2,
-                        "y": location["y"],
-                        "z": (size["dz"] / 2) + location["z"],
-                    },
+                    move_box_input,
                 )
-
-                group = util.group_by_faces(box)
+                group = util.group_by_faces(geometry_box)
                 mesh_obj = util.mesh(group, 1, 4)
-                util.export_stl(util.mesh(mesh_obj, 0.5, 2),
-                                f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}")
+                util.export_stl(mesh_obj,f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}")
+                
+                
             else:
                 geometry_box = util.make_box(box["geometry"]["size"], box["geometry"]["location"])
                 exclude_faces = []

@@ -203,6 +203,96 @@
                         }
                     },
                     "boxes": {
+                        "Pillar_with_hole_1": {
+                            "geometry": {
+                                "model": "pillar",
+                                "size": {
+                                    "x": 4,
+                                    "y": 2,
+                                    "z": 1
+                                },
+                                "location": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0.4
+                                },
+                                "openings_side":"front",
+                                "openings": {
+                                    "opening_1": {
+                                        "location": {
+                                            "x": 0.1,
+                                            "y": 0.1,
+                                            "z": 0
+                                        },
+                                        "size": {
+                                            "x": 0.2,
+                                            "y": 0.2,
+                                            "z": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "Pillar_with_hole_2": {
+                            "geometry": {
+                                "model": "pillar",
+                                "size": {
+                                    "x": 4,
+                                    "y": 2,
+                                    "z": 1
+                                },
+                                "location": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0.4
+                                },
+                                "openings_side":"left",
+                                "openings": {
+                                    "opening_1": {
+                                        "location": {
+                                            "x": 0.1,
+                                            "y": 0.1,
+                                            "z": 0
+                                        },
+                                        "size": {
+                                            "x": 0.2,
+                                            "y": 0.2,
+                                            "z": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "Pillar_with_hole_3": {
+                            "geometry": {
+                                "model": "pillar",
+                                "size": {
+                                    "x": 4,
+                                    "y": 2,
+                                    "z": 1
+                                },
+                                "location": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0.4
+                                },
+                                "openings_side":"top",
+                                "openings": {
+                                    "opening_1": {
+                                        "location": {
+                                            "x": 0.1,
+                                            "y": 0.1,
+                                            "z": 0
+                                        },
+                                        "size": {
+                                            "x": 0.2,
+                                            "y": 0.2,
+                                            "z": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
                         "Pillar_1": {
                             "geometry": {
                                 "model": "pillar",
