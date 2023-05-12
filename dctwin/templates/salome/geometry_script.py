@@ -362,26 +362,28 @@ class Builder:
             if box["geometry"].get("openings", None) is not None:
                 size = box["geometry"]["size"]
                 location = box["geometry"]["location"]
-                if box["geometry"]["openings_side"] == "front" or box["geometry"]["openings_side"] ==  "rear":
+                if box["geometry"]["openings_side"] == "front" or box["geometry"]["openings_side"] == "rear":
                     basic_face_input = [size["z"], size["x"], 3]
-                elif box["geometry"]["openings_side"] == "left" or box["geometry"]["openings_side"] ==  "right":
+                elif box["geometry"]["openings_side"] == "left" or box["geometry"]["openings_side"] == "right":
                     basic_face_input = [size["z"], size["y"], 2]
-                else:
+                elif box["geometry"]["openings_side"] == "top" or box["geometry"]["openings_side"] == "bottom":
                     basic_face_input = [size["x"], size["y"], 1]
+                else:
+                    raise ValueError(f"Unknown openings_side: {box['geometry']['openings_side']}")
                 basic_face = util.geom.MakeFaceHW(*basic_face_input)
                 box_vector_and_distance_input = []
                 move_box_input = {}
                 for key, opening in box["geometry"]["openings"].items():
-                    if box["geometry"]["openings_side"] == "front" or box["geometry"]["openings_side"] ==  "rear":
-                        vent_face_input = [opening["size"]["x"], opening["size"]["y"], 3] 
+                    if box["geometry"]["openings_side"] == "front" or box["geometry"]["openings_side"] == "rear":
+                        vent_face_input = [opening["size"]["x"], opening["size"]["z"], 3]
                         vent_face_translation_input = [(
                                 opening["location"]["x"]
                                 - (size["x"] - opening["size"]["x"]) / 2
                             ),
                             0,
                             (
-                                opening["location"]["y"]
-                                - (size["z"] - opening["size"]["y"]) / 2
+                                opening["location"]["z"]
+                                - (size["z"] - opening["size"]["z"]) / 2
                             )]
                         vector_input = [0, 1, 0]
                         vector = util.geom.MakeVectorDXDYDZ(*vector_input)
@@ -391,17 +393,17 @@ class Builder:
                             "y": location["y"],
                             "z": (size["z"] / 2) + location["z"],
                         }
-                    elif box["geometry"]["openings_side"] == "left" or box["geometry"]["openings_side"] ==  "right":
-                        vent_face_input = [opening["size"]["x"], opening["size"]["y"], 2] 
+                    elif box["geometry"]["openings_side"] == "left" or box["geometry"]["openings_side"] == "right":
+                        vent_face_input = [opening["size"]["y"], opening["size"]["z"], 2]
                         vent_face_translation_input = [
                             0,
                             (
-                                opening["location"]["x"]
-                                - (size["y"] - opening["size"]["x"]) / 2
+                                opening["location"]["y"]
+                                - (size["y"] - opening["size"]["y"]) / 2
                             ),
                             (
-                                opening["location"]["y"]
-                                - (size["z"] - opening["size"]["y"]) / 2
+                                opening["location"]["z"]
+                                - (size["z"] - opening["size"]["z"]) / 2
                             )]
                         vector_input = [1, 0, 0]
                         vector = util.geom.MakeVectorDXDYDZ(*vector_input)
@@ -411,7 +413,7 @@ class Builder:
                             "y": location["y"] + size["y"] / 2,
                             "z": (size["z"] / 2) + location["z"],
                         }
-                    else:
+                    elif box["geometry"]["openings_side"] == "top" or box["geometry"]["openings_side"] == "bottom":
                         vent_face_input = [opening["size"]["x"], opening["size"]["y"], 1] 
                         vent_face_translation_input = [(
                                 opening["location"]["x"]
@@ -431,6 +433,8 @@ class Builder:
                             "y": location["y"] + (size["y"] / 2),
                             "z": location["z"],
                         }
+                    else:
+                        raise ValueError(f"Unknown openings_side: {box['geometry']['openings_side']}")
                     vent_face = util.geom.MakeFaceHW(*vent_face_input)
                     vent_face = util.geom.MakeTranslation(vent_face,*vent_face_translation_input)                    
                     basic_face = util.geom.MakeCut(basic_face, vent_face)
