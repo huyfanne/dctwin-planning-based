@@ -27,7 +27,7 @@ class RoomGeometry(BaseModel):
 
 
 class RoomConstruction(BaseModel):
-    """ Room construction is used to define the objects in a room
+    """ RoomConstruction is used to build the objects in a room
     """
     raised_floor: Optional[Panel]
     false_ceiling: Optional[Panel]
@@ -38,8 +38,7 @@ class RoomConstruction(BaseModel):
 
 
 class Room(BaseModel):
-    """
-    Room object in a data center
+    """ Room object in a data center
     """
     models: Optional[Model]
     inputs: Optional[Inputs] = Field(default_factory=Inputs)
@@ -305,20 +304,37 @@ class Room(BaseModel):
 
         return inlet, outlet
 
-    def _parse_server_model(self, type_: str) -> Union[List[str], Dict[str, str]]:
+    def get_server_models(self, return_type_: str="list", model_type: str="geometry") -> Union[List[str], Dict[str, str]]:
         server_type_dict = {}
         server_type_list = []
         for rack_key, rack in self.constructions.racks.items():
             for server_key, server in rack.constructions.servers.items():
-                if server.geometry.model is not None:
-                    server_type_dict[server_key] = server.geometry.model
-                    if server.geometry.model not in server_type_list:
-                        server_type_list.append(server.geometry.model)
+                if model_type == "geometry":
+                    if server.geometry.model is not None:
+                        server_type_dict[server_key] = server.geometry.model
+                        if server.geometry.model not in server_type_list:
+                            server_type_list.append(server.geometry.model)
+                    else:
+                        logger.warning(f"server {server_key} model is not defined")
+                elif model_type == "cooling":
+                    if server.cooling.model is not None:
+                        server_type_dict[server_key] = server.cooling.model
+                        if server.cooling.model not in server_type_list:
+                            server_type_list.append(server.cooling.model)
+                    else:
+                        logger.warning(f"server {server_key} cooling model is not defined")
+                elif model_type == "power":
+                    if server.power.model is not None:
+                        server_type_dict[server_key] = server.power.model
+                        if server.power.model not in server_type_list:
+                            server_type_list.append(server.power.model)
+                    else:
+                        logger.warning(f"server {server_key} power model is not defined")
                 else:
-                    logger.warning(f"server {server_key} model is not defined")
-        if type_ == "list":
+                    raise ValueError(f"model type {model_type} not supported")
+        if return_type_ == "list":
             return server_type_list
-        elif type_ == "dict":
+        elif return_type_ == "dict":
             return server_type_dict
 
     @property
@@ -376,14 +392,6 @@ class Room(BaseModel):
     @property
     def sensors(self) -> List[Sensor]:
         return list(self.constructions.sensors.values())
-
-    @property
-    def server_model_list(self) -> List[str]:
-        return self._parse_server_model(type_="list")
-
-    @property
-    def server_model_dict(self) -> Dict[str, str]:
-        return self._parse_server_model(type_="dict")
 
     @property
     def acu2sen(self) -> np.ndarray:

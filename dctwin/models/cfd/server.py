@@ -19,7 +19,7 @@ class ServerGeometry(ServerGeometryrModel):
     occupation: How many slots the server will occupy
     extend_to_rack_width: extend the server width to equal the rack width or not
     """
-    model: str = ""
+    model: Optional[str]
     slot_position: int
     orientation: Optional[float]
 
@@ -45,7 +45,7 @@ class ServerCoolingModel(BaseModel):
 
 class ServerCooling(ServerCoolingModel):
     """ Server cooling properties """
-    model: str = ""
+    model: Optional[str]
     volume_flow_rate: Optional[float] # unit(m3/s)
 
 
@@ -58,7 +58,7 @@ class ServerPowerModel(BaseModel):
 class ServerPower(ServerPowerModel):
     """ Server power properties
     """
-    model: str = ""
+    model: Optional[str]
     input_power: Optional[float]  # unit(W)
 
 

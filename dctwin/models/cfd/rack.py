@@ -15,7 +15,7 @@ class RackGeometryModel(BaseModel):
 
 
 class RackGeometry(RackGeometryModel):
-    model: str
+    model: Optional[str]
     location: Vertex
     orientation: int
     has_blanking_panel: bool
