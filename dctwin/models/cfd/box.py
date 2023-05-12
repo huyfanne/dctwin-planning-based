@@ -3,7 +3,7 @@
 from typing import Optional, OrderedDict
 from pydantic import Field
 
-from .basics import Size, Vertex, Opening
+from .basics import Size, Vertex, Opening, Face
 from .utils import BaseModel
 
 
@@ -23,6 +23,8 @@ class BoxGeometry(BoxGeometryModel):
     model: str
     location: Vertex
     size: Size
+    openings_side: Optional[Face]
+    openings: Optional[OrderedDict[str, Opening]]
 
 
 class BoxConstruction(BaseModel):
