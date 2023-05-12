@@ -369,17 +369,19 @@ class Builder:
                 else:
                     basic_face_input = [size["x"], size["y"], 1]
                 basic_face = util.geom.MakeFaceHW(*basic_face_input)
+                box_vector_and_distance_input = []
+                move_box_input = {}
                 for key, opening in box["geometry"]["openings"].items():
                     if box["geometry"]["openings_side"] == "front" or box["geometry"]["openings_side"] ==  "rear":
                         vent_face_input = [opening["size"]["x"], opening["size"]["y"], 3] 
                         vent_face_translation_input = [(
-                                    opening["location"]["x"]
-                                    - (size["x"] - opening["size"]["x"]) / 2
+                                opening["location"]["x"]
+                                - (size["x"] - opening["size"]["x"]) / 2
                             ),
                             0,
                             (
-                                    opening["location"]["y"]
-                                    - (size["z"] - opening["size"]["y"]) / 2
+                                opening["location"]["y"]
+                                - (size["z"] - opening["size"]["y"]) / 2
                             )]
                         vector_input = [0, 1, 0]
                         vector = util.geom.MakeVectorDXDYDZ(*vector_input)
@@ -394,12 +396,12 @@ class Builder:
                         vent_face_translation_input = [
                             0,
                             (
-                                    opening["location"]["x"]
-                                    - (size["y"] - opening["size"]["x"]) / 2
+                                opening["location"]["x"]
+                                - (size["y"] - opening["size"]["x"]) / 2
                             ),
                             (
-                                    opening["location"]["y"]
-                                    - (size["z"] - opening["size"]["y"]) / 2
+                                opening["location"]["y"]
+                                - (size["z"] - opening["size"]["y"]) / 2
                             )]
                         vector_input = [1, 0, 0]
                         vector = util.geom.MakeVectorDXDYDZ(*vector_input)
@@ -412,12 +414,12 @@ class Builder:
                     else:
                         vent_face_input = [opening["size"]["x"], opening["size"]["y"], 1] 
                         vent_face_translation_input = [(
-                                    opening["location"]["x"]
-                                    - (size["x"] - opening["size"]["x"]) / 2
+                                opening["location"]["x"]
+                                - (size["x"] - opening["size"]["x"]) / 2
                             ),
                             (
-                                    opening["location"]["y"]
-                                    - (size["y"] - opening["size"]["y"]) / 2
+                                opening["location"]["y"]
+                                - (size["y"] - opening["size"]["y"]) / 2
                             ),
                             0,
                             ]
@@ -432,15 +434,20 @@ class Builder:
                     vent_face = util.geom.MakeFaceHW(*vent_face_input)
                     vent_face = util.geom.MakeTranslation(vent_face,*vent_face_translation_input)                    
                     basic_face = util.geom.MakeCut(basic_face, vent_face)
-                _box = util.geom.MakePrismVecH(basic_face, *box_vector_and_distance_input)
+                _box = util.geom.MakePrismVecH(
+                    basic_face,
+                    *box_vector_and_distance_input
+                )
                 geometry_box = util.move_placement(
                     _box,
                     move_box_input,
                 )
                 group = util.group_by_faces(geometry_box)
                 mesh_obj = util.mesh(group, 1, 4)
-                util.export_stl(mesh_obj,f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}")
-                
+                util.export_stl(
+                    mesh_obj,
+                    f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}"
+                )
                 
             else:
                 geometry_box = util.make_box(box["geometry"]["size"], box["geometry"]["location"])
@@ -448,8 +455,11 @@ class Builder:
                 for face in list(SalomeUtil.SUB_FACE_SIZE_INDICES):
                     if not box["geometry"]["faces"][face]:
                         exclude_faces.append(face)
-                geometry_box = util.group_by_faces(geometry_box, exclude=exclude_faces)
-                util.export_stl(util.mesh(geometry_box, 0.5, 2), f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}")
+                group = util.group_by_faces(geometry_box, exclude=exclude_faces)
+                util.export_stl(
+                    util.mesh(group, 0.5, 2),
+                    f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}"
+                )
 
     def make_racks(self, racks: Dict, rack_geometry_models: Dict, server_geometry_models: Dict) -> None:
         rack_models, server_models = dict(), dict()
@@ -517,7 +527,7 @@ class Builder:
         floor_face = util.geom.MakeCutList(floor_face, opening_faces)
         util.export_stl(util.mesh(floor_face, 0.5, 5), "floor_1")
 
-    def make_room(self, room: Dict, geometry_models: Dict) -> None:
+    def make_room(self, geometry_models: Dict) -> None:
         oz = geompy.MakeVectorDXDYDZ(0, 0, 1)
         vertices = []
         for vertex in room["geometry"]["plane"]:
@@ -553,7 +563,7 @@ class Builder:
 
     def run(self) -> None:
         geometry_models = room["models"]["geometry_models"]
-        self.make_room(room, geometry_models)
+        self.make_room(geometry_models)
 
 
 def main():
