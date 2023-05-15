@@ -326,7 +326,7 @@ class BaseEnv(gym.Env):
         if self._use_simulation_time:
             self._timestamp = self._starting_timestamp
         return self._get_observations_to_return(
-            use_unnormed_obs=self._use_unnormed_act
+            use_unnormed_obs=self._use_unnormed_obs
         ), self._get_additional_info_to_return()
 
     def render(self, mode="human"):

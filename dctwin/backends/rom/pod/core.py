@@ -197,9 +197,9 @@ class PODBackend(Backend):
         server_array = server_powers / (self.c_p * self.rho_air * server_volume_flow_rates)
         server_array -= (mean_temp_outlet - mean_temp_inlet)
 
-        phi_crac_matrix = torch.sum(phi_return * supply_air_volume_flow_rates.view(-1, 1)).view(1, -1)
+        phi_crac_matrix = torch.sum(phi_return * supply_air_volume_flow_rates.view(-1, 1), dim=0).view(1, -1)
         crac_array = torch.sum(server_powers.sum()) / (self.c_p * self.rho_air)
-        crac_array -= np.sum((mean_temp_return - supply_air_temperatures) * supply_air_volume_flow_rates, axis=0)
+        crac_array -= torch.sum((mean_temp_return - supply_air_temperatures) * supply_air_volume_flow_rates, dim=1)
 
         # assemble all matrices and arrays into a big linear system
         a = torch.cat([phi_server_matrix, phi_crac_matrix], dim=0)
@@ -370,4 +370,5 @@ class PODBackend(Backend):
             raise NotImplementedError(f"{pod_method} not implemented")
         # reconstruct temperature field
         reconstruct = self.mean_obs + torch.matmul(self.coefs, self.modes[:, :self.num_modes].T)
+        print(self.coefs)
         return reconstruct
