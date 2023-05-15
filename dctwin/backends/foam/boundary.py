@@ -17,6 +17,9 @@ class Boundary(abc.ABC):
     }
     """
 
+    air_specific_heat = 1006
+    rho_air = 1.19
+
     @property
     @abc.abstractmethod
     def T(self) -> str:
@@ -29,6 +32,7 @@ class Boundary(abc.ABC):
 
 
 class RoomBoundary(Boundary):
+
     def __init__(self, room: Room) -> None:
         self.room = room
 
@@ -92,12 +96,14 @@ class RoomBoundary(Boundary):
 
 
 class ACUBoundary(Boundary):
+
     def __init__(self, acu_id: str, acu: ACU) -> None:
         self.acu_id = acu_id
         self.object = acu
         self.supply_kelvin = round(acu.cooling.supply_air_temperature + 273.15, 2)
         self.supply_air_volume_flow_rate = round(acu.cooling.supply_air_volume_flow_rate, 6)
-        self.cooling_capacity = round(acu.cooling.cooling_capacity, 6)
+        self.supply_air_mass_flow_rate = self.rho_air * self.supply_air_volume_flow_rate
+        self.cooling_capacity = round(acu.cooling.cooling_capacity, 6) # unit: kW
 
     @property
     def p_rgh(self) -> str:
@@ -112,25 +118,26 @@ class ACUBoundary(Boundary):
     @property
     def T(self) -> str:
         t_sink = f"tSink_{self.acu_id}"
+        if self.supply_air_mass_flow_rate == 0:
+            outlet = self.zero_gradient
+        else:
+            outlet = f"""
+            {{
+                type            exprFixedValue;
+                value           $internalField;
+                valueExpr       "max(t1,t2)";
+                variables
+                (
+                    "{t_sink}{{acu_return_{self.acu_id}}} = weightAverage(T)"
+                    "coolingCapacity = {self.cooling_capacity}"		
+                    "supplyAirMassFlowRate = {self.supply_air_mass_flow_rate}"
+                    "t1 = {t_sink} - (coolingCapacity * 1000 / (supplyAirMassFlowRate * {self.air_specific_heat}))"
+                    "t2 = {self.supply_kelvin}"
+                );
+            }}
+            """
         return f"""
-        acu_supply_{self.acu_id}
-        {{
-            type            exprFixedValue;
-            value           $internalField;
-            valueExpr      "max(t1,t2)";
-            variables
-            (
-                "{t_sink}{{acu_return_{self.acu_id}}} = weightAverage(T)"
-                "coolingCapacity = {self.cooling_capacity}"
-                "rho = 1.2"
-                "airVolumeFlowRate = {self.supply_air_volume_flow_rate}"
-                "mfr = airVolumeFlowRate * rho"		
-                "Cp = 1006"
-                "t1={t_sink}-(coolingCapacity*1000/(mfr*Cp))"
-                "min_temperature = {self.supply_kelvin}"
-                "t2= min_temperature"
-            );
-        }}
+        acu_supply_{self.acu_id} {outlet}
         acu_return_{self.acu_id} {self.zero_gradient}
         acu_wall_{self.acu_id} {self.zero_gradient}
         """
@@ -162,24 +169,21 @@ class ACUBoundary(Boundary):
 
 
 class ServerBoundary(Boundary):
-    specific_heat = 1006
-    density = 1.19
 
     def __init__(self, server_id: str, server: Server) -> None:
         self.server_id = server_id
         self.object: Server = server
         self.input_power = server.power.input_power
-        self.volume_flow_rate = round(server.cooling.volume_flow_rate, 6)
-        self.mass_flow_rate = self.density * self.volume_flow_rate
-        self.area = server.geometry.inlet_area
+        self.server_volume_flow_rate = round(server.volume_flow_rate, 6)
+        self.server_mass_flow_rate = self.rho_air * self.server_volume_flow_rate
 
     @property
     def T(self) -> str:
         t_sink = f"tSink_{self.server_id}"
-        value = f"({t_sink}+({self.input_power}/{self.mass_flow_rate * self.specific_heat}))"
-        if self.volume_flow_rate == 0:
+        if self.server_mass_flow_rate == 0:
             outlet = self.zero_gradient
         else:
+            value = f"{t_sink}+{self.input_power / (self.server_mass_flow_rate * self.air_specific_heat)}"
             outlet = f"""
             {{
                 type            exprFixedValue;
@@ -201,18 +205,18 @@ class ServerBoundary(Boundary):
         inlet = f"""
         {{
             type                flowRateOutletVelocity;
-            volumetricFlowRate  {self.volume_flow_rate};
+            volumetricFlowRate  {self.server_volume_flow_rate};
             value               uniform (0 0 0);
         }}
         """
         outlet = f"""
         {{
             type                flowRateInletVelocity;
-            volumetricFlowRate  {self.volume_flow_rate};
+            volumetricFlowRate  {self.server_volume_flow_rate};
             value               uniform (0 0 0);
         }}
         """
-        if self.volume_flow_rate == 0:
+        if self.server_volume_flow_rate == 0:
             inlet = self.no_slip
             outlet = self.no_slip
         return f"""

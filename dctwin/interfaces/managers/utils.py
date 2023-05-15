@@ -19,15 +19,15 @@ def read_boundary_conditions(
     room: Room,
 ) -> np.ndarray:
     subfolders = [f for f in Path(config.cfd.case_dir).iterdir() if f.is_dir() and f.name != "base"]
-    num_cracs = len(room.constructions.acus)
-    boundary_conditions = np.zeros((len(subfolders), 2 * num_cracs + 2))
+    num_acus = len(room.constructions.acus)
+    boundary_conditions = np.zeros((len(subfolders), 2 * num_acus + 2))
     for idx, subfolder in enumerate(sorted(subfolders, key=lambda x: int(x.name.split("-")[-1]))):
         with open(Path(subfolder).joinpath("boundary_conditions.json"), "r") as f:
             boundary_condition_dict = json.load(f)
         boundary_conditions[idx, 0] = np.sum(list(boundary_condition_dict["server_powers"].values()))
         boundary_conditions[idx, 1] = np.sum(list(boundary_condition_dict["server_volume_flow_rates"].values()))
-        boundary_conditions[idx, 2:num_cracs+2] = np.array(list(boundary_condition_dict["crac_setpoints"].values()))
-        boundary_conditions[idx, num_cracs+2:] = np.array(list(boundary_condition_dict["crac_volume_flow_rates"].values()))
+        boundary_conditions[idx, 2:num_acus+2] = np.array(list(boundary_condition_dict["acu_setpoints"].values()))
+        boundary_conditions[idx, num_acus+2:] = np.array(list(boundary_condition_dict["acu_volume_flow_rates"].values()))
     return boundary_conditions
 
 
@@ -98,7 +98,7 @@ def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
             np.sum((coordinates_array - mesh_coordinates) ** 2, axis=1)
         ))
 
-    object_mesh_index = {"servers": {}, "cracs": {}, "sensors": {}}
+    object_mesh_index = {"servers": {}, "acus": {}, "sensors": {}}
 
     for rack in room.constructions.racks.values():
         for ser_idx, ser in rack.constructions.servers.items():
@@ -119,7 +119,7 @@ def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
         return_center, supply_center = room.acu_patch_positions(acu_idx)
         nearest_supply_mesh_index = find_nearest_mesh_index(supply_center, mesh_points)
         nearest_return_mesh_index = find_nearest_mesh_index(return_center, mesh_points)
-        object_mesh_index["cracs"].update(
+        object_mesh_index["acus"].update(
             {
                 f"{acu_idx}":
                     {

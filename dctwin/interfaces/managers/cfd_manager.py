@@ -28,13 +28,13 @@ from dctwin.utils.errors import (
     MeshBuildError,
     FoamSolveError,
 )
-from dctwin.models import Room, Building
+from dctwin.models import Room
 
 
 class CFDManager:
     """
     A manager for the whole CFD simulation for data hall thermal analysis
-    :param building: a building object that contains all rooms
+    :param room: a room object that contains all rooms
     :param mesh_process: number of cores for meshing
     :param solve_process: number of cores for solving
     :param steady: steady or transient simulation
@@ -45,8 +45,7 @@ class CFDManager:
     """
     def __init__(
         self,
-        building: Building,
-        room_id: str,
+        room: Room,
         mesh_process: int = 32,
         solve_process: int = 32,
         steady: bool = True,
@@ -65,9 +64,7 @@ class CFDManager:
         ] = None
         self.pod_backend: Optional[PODBackend] = None
 
-        self.building: Building = building
-        self.room_id: str = room_id
-        self.room: Room = building.constructions.rooms[room_id]
+        self.room: Room = room
         self.steady = steady
         self.run_cfd = run_cfd
         self.mesh_process = mesh_process
@@ -87,6 +84,7 @@ class CFDManager:
         geometry: Salome
         meshing: SnappyHexMesh
         solver: buoyantBoussinesqSimpleFoam/buoyantBoussinesqPimpleFoam/POD
+        reduced-order solver: POD
         """
         self.geometry_backend = SalomeBackend(self.docker_client)
         self.mesh_backend = SnappyHexBackend(
@@ -97,53 +95,20 @@ class CFDManager:
                 self.docker_client, process_num=self.solve_process
             )
             # use reduced-order simulation if POD mode is provided
-            self.pod_backend = PODBackend.load()
+            if not self.run_cfd and self.pod_method is not None:
+                assert self.object_mesh_index is not None, \
+                    "object mesh index is required for POD simulation"
+                self.pod_backend = PODBackend.load(self.object_mesh_index)
         else:
             self.solver_backend = TransientSolverBackend(
                 self.docker_client, process_num=self.solve_process
             )
 
-    def _map_boundary_conditions_to_tensor(
-        self,
-        supply_air_temperatures: Dict,
-        supply_air_volume_flow_rates: Dict,
-        server_powers: Dict,
-        server_volume_flow_rates: Dict,
-    ) -> Dict:
-        """
-        Map boundary conditions to tensor
-        :param supply_air_temperatures: CRAC supply temperature dict
-        :param supply_air_volume_flow_rates: CRAC volume flow rate dict
-        :param server_powers: server heat loads dict
-        :param server_volume_flow_rates: server volume flow rates dict
-        """
-        q_server, v_server, sp_crac, v_crac = [], [], [], []
-        # parse the boundary conditions into torch.Tensor format
-        for server_name, server_mesh_indices in self.object_mesh_index["servers"].items():
-            q_server.append(server_powers[server_name])
-            v_server.append(server_volume_flow_rates[server_name])
-
-        for crac_name, crac_mesh_indices in self.object_mesh_index["cracs"].items():
-            sp_crac.append(supply_air_temperatures[crac_name])
-            v_crac.append(supply_air_volume_flow_rates[crac_name])
-
-        q_server = torch.tensor(q_server, dtype=torch.float32, requires_grad=False)
-        v_server = torch.tensor(v_server, dtype=torch.float32, requires_grad=False)
-        sp_crac = torch.tensor(sp_crac, dtype=torch.float32, requires_grad=False)
-        v_crac = torch.tensor(v_crac, dtype=torch.float32, requires_grad=False)
-
-        return {
-            "server_powers": q_server,
-            "server_volume_flow_rates": v_server,
-            "supply_air_temperatures": sp_crac,
-            "supply_air_volume_flow_rates": v_crac,
-        }
-
     def build_geometry(self) -> None:
         """Build geometry from room model"""
         try:
             logger.info("start building geometry ...")
-            self.geometry_backend.run(building=self.building, room_id=self.room_id)
+            self.geometry_backend.run(room=self.room)
         except Exception:
             raise GeometryBuildError("Failed to build geometry")
 
@@ -207,9 +172,8 @@ class CFDManager:
                 "object mesh index is not provided， " \
                 "please specify the index file path or read from the mesh directory"
             results = self.pod_backend.run(
-                object_mesh_index=self.object_mesh_index,
                 pod_method=self.pod_method,
-                **self._map_boundary_conditions_to_tensor(**boundary_conditions)
+                **boundary_conditions,
             )
         else:
             # use full-fledged CFD simulation

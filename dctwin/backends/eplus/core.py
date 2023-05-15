@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 from docker import DockerClient
 from loguru import logger
 from dctwin.utils import EPlusEnvConfig
-from dctwin.backends.eplus.eplus_logger import EPlusOutputFormatter
+from dctwin.backends.eplus.utils import EPlusOutputFormatter
 from dctwin.backends.core import Backend
 from dctwin.models import Eplus
 from dctwin.utils import config

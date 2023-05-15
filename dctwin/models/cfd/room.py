@@ -1,19 +1,23 @@
 """ Room object
 """
+import json
 import numpy as np
 from typing import Optional, OrderedDict, List, Tuple, Dict, Union
 
 from loguru import logger
-from pydantic import BaseModel, Field
+from pydantic import Field, validator
+from pathlib import Path
 
 from .basics import Vertex, Face
 from .panel import Panel
 from .box import Box
-from .rack import Rack
+from .rack import Rack, RackConstruction
 from .sensor import Sensor
 from .acu import ACU, ACUFace
 from .server import Server
-from .utils import rotate, euclidean_distance
+from .models import Model
+from .inputs import Inputs, ServerInputs, ACUInputs
+from .utils import rotate, euclidean_distance, BaseModel
 
 
 class RoomGeometry(BaseModel):
@@ -23,7 +27,7 @@ class RoomGeometry(BaseModel):
 
 
 class RoomConstruction(BaseModel):
-    """ Room construction is used to define the objects in a room
+    """ RoomConstruction is used to build the objects in a room
     """
     raised_floor: Optional[Panel]
     false_ceiling: Optional[Panel]
@@ -34,10 +38,190 @@ class RoomConstruction(BaseModel):
 
 
 class Room(BaseModel):
-
+    """ Room object in a data center
+    """
+    models: Optional[Model]
+    inputs: Optional[Inputs] = Field(default_factory=Inputs)
     geometry: RoomGeometry
     constructions: Optional[RoomConstruction]
     meta: Optional[OrderedDict] = Field(default_factory=dict)
+
+    @validator("constructions")
+    def _validate_room_constructions(
+        cls,
+        room_construction: RoomConstruction,
+        values: Dict
+    ) -> RoomConstruction:
+        cls._validate_acus(room_construction.acus, values["models"], values["inputs"])
+        cls._validate_boxes(room_construction.boxes, values["models"])
+        cls._validate_racks(room_construction.racks, values["models"], values["inputs"])
+        cls._validate_sensors(room_construction.sensors)
+        return room_construction
+
+    @classmethod
+    def _validate_acus(cls, acus: Dict, models: Model, inputs: Inputs) -> None:
+        for acu_id, acu in acus.items():
+            cls._validate_id(acu_id)
+            cls._validate_geometry_models(acu, models.geometry_models.acus) if models.geometry_models else None
+            cls._validate_cooling_models(acu, models.cooling_models.acus) if models.cooling_models.acus else None
+            cls._validate_power_models(acu, models.power_models.acus) if models.power_models.acus else None
+            cls._validate_inputs(acu, inputs.acus.get(acu_id)) if inputs.acus else None
+
+    @classmethod
+    def _validate_boxes(cls, boxes: Dict, models: Model) -> None:
+        for box_id, box in boxes.items():
+            cls._validate_id(box_id)
+            cls._validate_geometry_models(box, models.geometry_models.boxes) if models.geometry_models else None
+
+    @classmethod
+    def _validate_racks(cls, racks: Dict, models: Model, inputs: Inputs) -> None:
+        for rack_id, rack in racks.items():
+            cls._validate_id(rack_id)
+            cls._validate_geometry_models(rack, models.geometry_models.racks) if models.geometry_models else None
+            cls._validate_rack_constructions(rack, rack.constructions, models, inputs)
+
+    @classmethod
+    def _validate_rack_constructions(
+        cls,
+        rack: Rack,
+        rack_constructions: RackConstruction,
+        models: Model,
+        inputs: Inputs,
+    ) -> None:
+        cls._validate_servers(rack, rack_constructions.servers, models, inputs)
+
+    @classmethod
+    def _validate_servers(cls, rack: Rack, servers: Dict, models: Model, inputs: Inputs) -> None:
+        occupied_rack_slot = {}
+        for server_id, server in servers.items():
+            cls._validate_id(server_id)
+            cls._validate_geometry_models(server, models.geometry_models.servers) if models.geometry_models else None
+            cls._validate_cooling_models(server, models.cooling_models.servers) if models.cooling_models.servers else None
+            cls._validate_power_models(server, models.power_models.servers) if models.power_models.servers else None
+            cls._validate_inputs(server, inputs.servers.get(server_id)) if inputs.servers else None
+            cls._validate_server_occupation(rack, server, server_id, occupied_rack_slot)
+
+    @classmethod
+    def _validate_server_occupation(cls, rack: Rack, server: Server, server_id: str, occupied_rack_slot: Dict) -> None:
+        server.geometry.orientation = rack.geometry.orientation
+        slot_position = int(server.geometry.slot_position)
+        slot_occupation = int(server.geometry.slot_occupation)
+        num_slots = int(rack.geometry.slot)
+        if slot_position < 1 or slot_occupation + slot_position > num_slots + 1:
+            raise ValueError(
+                f"invalid server slot/occupation:"
+                f"Server({server_id}, slot={slot_position},"
+                f"occupation={slot_occupation})"
+            )
+        for i in range(slot_position, slot_position + slot_occupation):
+            if i not in occupied_rack_slot:
+                occupied_rack_slot[i] = server_id
+            else:
+                raise ValueError(
+                    f"invalid server slot/occupation: "
+                    f"Server({server_id}) has collision with "
+                    f"Server({occupied_rack_slot[i]})"
+                )
+
+    @classmethod
+    def _validate_sensors(cls, sensors: Dict) -> None:
+        for sensor_id, sensor in sensors.items():
+            cls._validate_id(sensor_id)
+
+    @classmethod
+    def _validate_id(cls, _id: str) -> None:
+        if not _id.isidentifier():
+            raise ValueError(f"must be valid identifier: {_id}")
+
+    @classmethod
+    def _validate_geometry_models(
+        cls,
+        obj: Union[ACU, Server, Rack, Box],
+        models: Dict
+    ) -> None:
+        model_name = obj.geometry.model
+        if isinstance(obj, ACU) and models is not None:
+            obj.geometry.size = models.get(model_name).size
+            obj.geometry.supply_face = models.get(model_name).supply_face
+            obj.geometry.return_face = models.get(model_name).return_face
+        elif isinstance(obj, Rack) and models is not None:
+            obj.geometry.size = models.get(model_name).size
+            obj.geometry.slot = models.get(model_name).slot
+            obj.geometry.first_slot_offset = models.get(model_name).first_slot_offset
+        elif isinstance(obj, Server) and models is not None:
+            obj.geometry.slot_occupation = models.get(model_name).slot_occupation
+            obj.geometry.width = models.get(model_name).width
+            obj.geometry.depth = models.get(model_name).depth
+        elif isinstance(obj, Box) and models is not None:
+            obj.geometry.faces = models.get(model_name).faces
+        else:
+            raise ValueError(
+                f"Invalid object type: {type(obj)}: "
+                f"The object geometry model is not defined."
+            )
+
+    @classmethod
+    def _validate_power_models(
+        cls,
+        obj: Union[ACU, Server],
+        models: Dict
+    ) -> None:
+        model_name = obj.power.model
+        if isinstance(obj, ACU) and models is not None:
+            obj.rated_fan_power = models.get(model_name).rated_fan_power
+        elif isinstance(obj, Server) and models is not None:
+            obj.rated_power = models.get(model_name).rated_power
+        else:
+            raise ValueError(
+                f"Invalid object type: {type(obj)}: "
+                f"The object power model is not defined."
+            )
+
+    @classmethod
+    def _validate_cooling_models(
+        cls,
+        obj: Union[ACU, Server],
+        models: Dict
+    ) -> None:
+        model_name = obj.cooling.model
+        if isinstance(obj, ACU) and models is not None:
+            obj.cooling.cooling_type = models.get(model_name).cooling_type
+            obj.cooling.cooling_capacity = models.get(model_name).cooling_capacity
+        elif isinstance(obj, Server) and models is not None:
+            obj.cooling.fan_type = models.get(model_name).fan_type
+            obj.cooling.volume_flow_rate_ratio = models.get(model_name).volume_flow_rate_ratio
+        else:
+            raise ValueError(
+                f"Invalid object type: {type(obj)}: "
+                f"The object cooling model is not defined."
+            )
+
+    @classmethod
+    def _validate_inputs(
+        cls,
+        obj: Union[ACU, Server],
+        inputs: Union[ACUInputs, ServerInputs],
+    ) -> None:
+        if isinstance(obj, ACU) and isinstance(inputs, ACUInputs):
+            obj.cooling.supply_air_temperature = inputs.supply_air_temperature
+            obj.cooling.supply_air_volume_flow_rate = inputs.supply_air_volume_flow_rate
+            obj.cooling.cooling_capacity = inputs.cooling_capacity
+        elif isinstance(obj, Server) and isinstance(inputs, ServerInputs):
+            obj.power.input_power = inputs.input_power
+        else:
+            raise ValueError(
+                f"Invalid object type: {type(obj)}: "
+                f"The object inputs is not defined."
+            )
+
+    def dump(self, file_path: Union[str, Path]) -> None:
+        with open(file_path, "w") as f:
+            f.write(self.json(indent=2))
+
+    @classmethod
+    def load(cls, file_path: Union[str, Path]) -> "Room":
+        with open(file_path) as f:
+            return cls(**json.load(f))
 
     def server_patch_positions(self, server_id: str) -> Tuple[Vertex, Vertex]:
         """Get the center point position of server inlet and outlet"""
@@ -120,20 +304,37 @@ class Room(BaseModel):
 
         return inlet, outlet
 
-    def _parse_server_model(self, type_: str) -> Union[List[str], Dict[str, str]]:
+    def get_server_models(self, return_type_: str="list", model_type: str="geometry") -> Union[List[str], Dict[str, str]]:
         server_type_dict = {}
         server_type_list = []
         for rack_key, rack in self.constructions.racks.items():
             for server_key, server in rack.constructions.servers.items():
-                if server.geometry.model is not None:
-                    server_type_dict[server_key] = server.geometry.model
-                    if server.geometry.model not in server_type_list:
-                        server_type_list.append(server.geometry.model)
+                if model_type == "geometry":
+                    if server.geometry.model is not None:
+                        server_type_dict[server_key] = server.geometry.model
+                        if server.geometry.model not in server_type_list:
+                            server_type_list.append(server.geometry.model)
+                    else:
+                        logger.warning(f"server {server_key} model is not defined")
+                elif model_type == "cooling":
+                    if server.cooling.model is not None:
+                        server_type_dict[server_key] = server.cooling.model
+                        if server.cooling.model not in server_type_list:
+                            server_type_list.append(server.cooling.model)
+                    else:
+                        logger.warning(f"server {server_key} cooling model is not defined")
+                elif model_type == "power":
+                    if server.power.model is not None:
+                        server_type_dict[server_key] = server.power.model
+                        if server.power.model not in server_type_list:
+                            server_type_list.append(server.power.model)
+                    else:
+                        logger.warning(f"server {server_key} power model is not defined")
                 else:
-                    logger.warning(f"server {server_key} model is not defined")
-        if type_ == "list":
+                    raise ValueError(f"model type {model_type} not supported")
+        if return_type_ == "list":
             return server_type_list
-        elif type_ == "dict":
+        elif return_type_ == "dict":
             return server_type_dict
 
     @property
@@ -193,28 +394,23 @@ class Room(BaseModel):
         return list(self.constructions.sensors.values())
 
     @property
-    def server_model_list(self) -> List[str]:
-        return self._parse_server_model(type_="list")
-
-    @property
-    def server_model_dict(self) -> Dict[str, str]:
-        return self._parse_server_model(type_="dict")
-
-    @property
     def acu2sen(self) -> np.ndarray:
-        """ Get the distance matrix of the ACU to sensor connections
+        """ Calculate the spatial distance matrix of the ACU to sensor connections
         """
         acu2sen_dis = np.zeros([self.num_crac, self.num_sen])
         for acu_idx, acu in enumerate(self.acus):
             for sen_idx, sen in enumerate(self.sensors):
                 acu_loc = acu.geometry.location
                 sen_loc = sen.geometry.location
-                acu2sen_dis[acu_idx][sen_idx] = euclidean_distance(acu_loc, sen_loc)
+                acu2sen_dis[acu_idx][sen_idx] = euclidean_distance(
+                    loc_1=(acu_loc.x, acu_loc.y, acu_loc.z),
+                    loc_2=(sen_loc.x, sen_loc.y, sen_loc.z),
+                )
         return acu2sen_dis
 
     @property
     def ser2sen(self) -> np.ndarray:
-        """ Get the distance matrix of the server to sensor connections
+        """ Calculate the spatial distance matrix of the server to sensor connections
         """
         ser2sen_dis = np.zeros([self.num_ser, self.num_sen])
         for rack in self.racks:
@@ -222,12 +418,15 @@ class Room(BaseModel):
                 for sen_idx, sen in enumerate(self.sensors):
                     ser_loc_i, ser_loc_o = self.server_patch_positions(ser_key)
                     sen_loc = sen.geometry.location
-                    ser2sen_dis[ser_idx][sen_idx] = euclidean_distance(ser_loc_o, sen_loc)
+                    ser2sen_dis[ser_idx][sen_idx] = euclidean_distance(
+                        loc_1=(ser_loc_o.x, ser_loc_o.y, ser_loc_o.z),
+                        loc_2=(sen_loc.x, sen_loc.y, sen_loc.z),
+                    )
         return ser2sen_dis
 
     @property
     def acu2ser(self) -> np.ndarray:
-        """ Get the distance matrix of the acu to server connections
+        """ Calculate the spatial distance matrix of the acu to server connections
         """
         acu2ser_dis = np.zeros([self.num_crac, self.num_ser])
         for acu_idx, acu in enumerate(self.acus):
@@ -235,7 +434,10 @@ class Room(BaseModel):
                 for ser_idx, (ser_key, ser) in enumerate(rack.constructions.servers.items()):
                     acu_loc = acu.geometry.location
                     ser_loc, _ = self.server_patch_positions(ser_key)
-                    acu2ser_dis[acu_idx][ser_idx] = euclidean_distance(acu_loc, ser_loc)
+                    acu2ser_dis[acu_idx][ser_idx] = euclidean_distance(
+                        loc_1=(acu_loc.x, acu_loc.y, acu_loc.z),
+                        loc_2=(ser_loc.x, ser_loc.y, ser_loc.z),
+                    )
         return acu2ser_dis
 
     def _update_acu_boundaries(

@@ -57,8 +57,8 @@ class SnappyHexBackend(Backend):
             self.process_num = process_num
 
         # check perforated tile opening angle
-        if room.constructions.raised_floor and room.constructions.raised_floor.constructions.openings:
-            for key, opening in room.constructions.raised_floor.constructions.openings.items():
+        if room.constructions.raised_floor and room.constructions.raised_floor.geometry.openings:
+            for key, opening in room.constructions.raised_floor.geometry.openings.items():
                 if opening.velocity:
                     self.perforated_openings[key] = opening
 
@@ -70,10 +70,11 @@ class SnappyHexBackend(Backend):
             field_config=field_config,
             perforated_openings=self.perforated_openings,
         )
+
         if config.cfd.dry_run:
             return
-        host_path = os.environ.get('HOST_PATH', None)
 
+        host_path = os.environ.get('HOST_PATH', None)
         if host_path is not None:
             # concatenate the log path in Docker container with external host path
             log_index = config.cfd.case_dir.parts.index("log")

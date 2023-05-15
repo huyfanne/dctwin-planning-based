@@ -94,7 +94,7 @@ class BaseEnv(gym.Env):
             source=self._actions,
             use_unnormed_value=self._use_unnormed_act,
             count_criteria=lambda a: a.control_type == ActionControlType.AGENT_CONTROLLED,
-            debug_tag='action'
+            debug_tag='action',
         )
         if any(map(lambda a: a.control_type == ActionControlType.CUSTOMIZED, self._actions)):
             if self._schedule_fn is None:
@@ -130,7 +130,8 @@ class BaseEnv(gym.Env):
     def num_constraints(self):
         if self._num_constraints == 0:
             raise NotImplementedError(
-                "environment constraints are not defined"
+                "environment constraints are not defined! "
+                "Please specify the number of constraints in the environment."
             )
         else:
             return self._num_constraints
@@ -326,7 +327,7 @@ class BaseEnv(gym.Env):
         if self._use_simulation_time:
             self._timestamp = self._starting_timestamp
         return self._get_observations_to_return(
-            use_unnormed_obs=self._use_unnormed_obs
+            use_unnormed_obs=self._use_unnormed_obs,
         ), self._get_additional_info_to_return()
 
     def render(self, mode="human"):
@@ -366,7 +367,8 @@ class BaseEnv(gym.Env):
                 return self._get_scalar_values([o], use_unnormed)[0]
 
     def inspect_next_scheduled_action_value(
-        self, action_name: str
+        self,
+        action_name: str,
     ) -> Union[None, float, int]:
         """
         Q: Why don't we have a similar method just like "inspect_current_observation"?

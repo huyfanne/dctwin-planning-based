@@ -2,7 +2,9 @@
 """
 
 from typing import Optional, OrderedDict
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from .utils import BaseModel
 
 
 class ServerGeometryrModel(BaseModel):
@@ -17,7 +19,7 @@ class ServerGeometry(ServerGeometryrModel):
     occupation: How many slots the server will occupy
     extend_to_rack_width: extend the server width to equal the rack width or not
     """
-    model: str = ""
+    model: Optional[str]
     slot_position: int
     orientation: Optional[float]
 
@@ -27,28 +29,23 @@ class ServerGeometry(ServerGeometryrModel):
 
     @property
     def inlet_area(self) -> float:
-        if self.orientation == 90:
-            return -self.height * float(self.width)
-        else:
-            return self.height * float(self.width)
+        return self.height * float(self.width)
 
     @property
     def outlet_area(self) -> float:
-        if self.orientation == 90:
-            return -self.height * float(self.width)
-        else:
-            return self.height * float(self.width)
+        return self.height * float(self.width)
+
 
 class ServerCoolingModel(BaseModel):
     """ Model of server cooling properties
     """
-    fan_type: Optional[str] = "Fixed"
+    fan_type: Optional[str] = "Fixed" # Fixed or Variable
     volume_flow_rate_ratio: Optional[float] = None # unit(m3/s/W)
 
 
 class ServerCooling(ServerCoolingModel):
     """ Server cooling properties """
-    model: str = ""
+    model: Optional[str]
     volume_flow_rate: Optional[float] # unit(m3/s)
 
 
@@ -61,7 +58,7 @@ class ServerPowerModel(BaseModel):
 class ServerPower(ServerPowerModel):
     """ Server power properties
     """
-    model: str = ""
+    model: Optional[str]
     input_power: Optional[float]  # unit(W)
 
 
@@ -83,3 +80,18 @@ class Server(BaseModel):
         nu = 1.5e-05
         eddy_viscosity_ratio = 10
         return 0.09 * (self.k ** 2) / (nu * eddy_viscosity_ratio)
+
+    @property
+    def volume_flow_rate(self) -> float:
+        if self.cooling.fan_type == "Fixed":
+            assert self.cooling.volume_flow_rate is not None, \
+                "Please specify the constant server volume flow rate."
+            server_volume_flow_rate = self.cooling.volume_flow_rate
+        elif self.cooling.fan_type == "Variable":
+            assert self.cooling.volume_flow_rate_ratio is not None, \
+                "Please specify the volume flow rate ratio in terms of input power."
+            server_volume_flow_rate = self.cooling.volume_flow_rate_ratio * self.power.input_power
+        else:
+            raise ValueError("Invalid fan type.")
+
+        return server_volume_flow_rate

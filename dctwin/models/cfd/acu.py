@@ -2,9 +2,10 @@
 """
 
 from typing import Optional, OrderedDict
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from .basics import Size, Vertex, Face
+from .utils import BaseModel
 
 
 class ACUFace(BaseModel):
@@ -21,7 +22,7 @@ class ACUGeometryModel(BaseModel):
 
 
 class ACUGeometry(ACUGeometryModel):
-    model: str = ""
+    model: Optional[str]
     orientation: int
     location: Vertex
 
@@ -53,7 +54,7 @@ class ACUCoolingModel(BaseModel):
 class ACUCooling(ACUCoolingModel):
     """ ACU cooling properties
     """
-    model: str = ""
+    model: Optional[str]
     supply_air_temperature: Optional[float] # unit(C)
     supply_air_volume_flow_rate: Optional[float] # unit(m3/s)
 
@@ -67,7 +68,7 @@ class ACUPowerModel(BaseModel):
 class ACUPower(ACUPowerModel):
     """ ACU power properties
     """
-    model: str = ""
+    model: Optional[str]
     fan_power: Optional[float] # unit(W)
 
 
