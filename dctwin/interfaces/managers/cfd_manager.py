@@ -20,6 +20,7 @@ from .utils import (
     calc_object_mesh_index,
     save_json_file,
     read_temperature,
+    read_sensor_temperature_results,
 )
 
 from dctwin.utils import config
@@ -151,6 +152,7 @@ class CFDManager:
         episode_idx: int = None,
         save_mesh_index: bool = False,
         save_boundary_conditions: bool = False,
+        save_simulation_results: bool = False,
         **boundary_conditions
     ) -> Union[np.ndarray, torch.Tensor]:
         """Run the whole simulation: geometry -> mesh -> solve
@@ -159,6 +161,7 @@ class CFDManager:
             only used for co-simulation
         :param save_mesh_index: whether to save the mesh index
         :param save_boundary_conditions: whether to save the boundary conditions
+        :param save_simulation_results: whether to save the simulation results
         :param boundary_conditions: boundary conditions for simulation
            i.e., boundary_conditions = {
             "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
@@ -195,12 +198,22 @@ class CFDManager:
                     )
             if boundary_conditions:
                 self.room.update_boundary_conditions(**boundary_conditions)
+                boundary_conditions = self.room.format_boundary_conditions
+
             self.solve(stream=False)
+
             if save_boundary_conditions:
                 save_json_file(
                     path=config.cfd.case_dir.joinpath("boundary_conditions.json"),
                     saved_dict=boundary_conditions,
                 )
+
+            if save_simulation_results:
+                save_json_file(
+                    path=config.cfd.case_dir.joinpath("simulation_results.json"),
+                    saved_dict=read_sensor_temperature_results(case=config.cfd.case_dir, room=self.room),
+                )
+
             self.last_state_case = config.cfd.case_dir.joinpath(str(self.end_time)) \
                 if not self.steady else None
             results = read_temperature(config.cfd.case_dir, str(self.end_time))

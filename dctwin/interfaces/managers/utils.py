@@ -1,4 +1,5 @@
 import json
+import time
 
 from typing import Tuple
 from loguru import logger
@@ -38,7 +39,8 @@ def read_object_mesh_index(room: Room = None) -> Union[Dict, None]:
     except FileNotFoundError:
         if room is not None and Path(config.cfd.mesh_dir) != Path(""):
             object_mesh_index = calc_object_mesh_index(
-                room=room, mesh_points=read_mesh_coordinates(),
+                room=room,
+                mesh_points=read_mesh_coordinates(),
             )
         else:
             return None
@@ -83,6 +85,25 @@ def read_temperature_fields(end_time: str = "500") -> np.ndarray:
                 f"{subfloder.name}"
             )
     return np.asarray(temperatures)
+
+
+def read_sensor_temperature_results(case: Union[str, Path], room: Room):
+    results = {}
+    while True:
+        if Path(f"{case}/postProcessing/probes/0/T").exists():
+            break
+        else:
+            time.sleep(60)
+            logger.warning(f"{case}/postProcessing/probes/0/T not found")
+            continue
+    with open(f"{case}/postProcessing/probes/0/T") as f:
+        for i in f:
+            if i.startswith("#"):
+                continue
+            else:
+                for idx, key in enumerate(room.constructions.sensors.keys()):
+                    results[key] = round(float(i.split()[idx + 1]) - 273.15, 2)
+    return results
 
 
 def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:

@@ -21,7 +21,6 @@ from .utils import rotate, euclidean_distance, BaseModel
 
 
 class RoomGeometry(BaseModel):
-    model: str = ""
     height: float
     plane: List[Vertex]
 
@@ -494,7 +493,7 @@ class Room(BaseModel):
         for rack in self.racks:
             for uid, server in rack.constructions.servers.items():
                 boundary_conditions["server_powers"][uid] = server.power.input_power
-                boundary_conditions["server_volume_flow_rates"][uid] = server.cooling.volume_flow_rate
+                boundary_conditions["server_volume_flow_rates"][uid] = server.volume_flow_rate
         for uid, acu in self.constructions.acus.items():
             boundary_conditions["supply_air_temperatures"][uid] = acu.cooling.supply_air_temperature
             boundary_conditions["supply_air_volume_flow_rates"][uid] = acu.cooling.supply_air_volume_flow_rate
