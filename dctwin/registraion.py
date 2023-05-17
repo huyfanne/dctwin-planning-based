@@ -16,7 +16,14 @@ def make_env(
     :param reward_fn: the callback reward function defined by the user
         We need the user to pass in a reward function
     :param schedule_fn: the callback facility schedule function defined by the user
-
+    :param map_boundary_condition_fn: the callback function to map the boundary conditions
+        defined by the user, this is only used for co-simulation
+        e.g., the format of the boundary conditions should be consistent with the CFDManger
+        input -> cpu_utilization, supply_air_temperatures, supply_air_volume_flow_rates
+        output: boundary_conditions = {
+            "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
+            "server_powers": {}, "server_volume_flow_rates": {}
+        }
     return: the gym-like environment instance
     """
     engine_config = read_engine_config(env_proto_config)
