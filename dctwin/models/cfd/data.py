@@ -2,7 +2,7 @@
 Inputs values for the CFD model
 """
 
-from typing import OrderedDict, Optional
+from typing import OrderedDict, Optional, Dict
 
 from .utils import BaseModel
 
@@ -25,7 +25,7 @@ class Inputs(BaseModel):
     servers: Optional[OrderedDict[str, ServerInputs]]
 
     @property
-    def format(self):
+    def format(self) -> Dict:
         data = {
             "supply_air_temperatures": {},
             "supply_air_volume_flow_rates": {},
@@ -45,7 +45,7 @@ class Labels(BaseModel):
     sensor_measurements: OrderedDict[str, SensorMeasurements]
 
     @property
-    def format(self):
+    def format(self) -> Dict:
         data = {
             "temperatures": {}
         }
@@ -59,7 +59,7 @@ class CFDData(BaseModel):
     labels: Labels
 
     @property
-    def format(self):
+    def format(self) -> Dict:
         data = {
             "inputs": self.inputs.format,
             "labels": self.labels.format
