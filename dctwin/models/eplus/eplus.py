@@ -68,7 +68,7 @@ class Eplus:
         self.component_names = self._get_component_names()
         self.zone_names = self._get_zone_names()
         self.thermostats_name = self._get_thermostat_setpoints_name()
-        self.crac_fan_names = self._get_crac_fan_info()
+        self.acu_fan_names = self._get_acu_fan_info()
         self.supply_air_node_names = self._get_supply_air_node_info()
         self.chw_water_supply_nodes = self._get_chw_water_supply_nodes(chw_loop_prefix)
         self.valid_key_values = self._get_valid_key_values()
@@ -190,9 +190,9 @@ class Eplus:
                 component_names.add(equipment.cpu_loading_schedule_name.name)
         return component_names
 
-    def _get_crac_fan_info(self) -> List:
+    def _get_acu_fan_info(self) -> List:
         """
-        Get the CRAC fan info, including fan outlet node name (can be placed a temperature set point) and fan name (can
+        Get the acu fan info, including fan outlet node name (can be placed a temperature set point) and fan name (can
         be actuated the air mass flow rate)
         """
         vsd_fans = self.epm.Fan_VariableVolume
@@ -203,7 +203,7 @@ class Eplus:
 
     def _get_supply_air_node_info(self):
         """
-        Get the CRAC supply air node info
+        Get the acu supply air node info
         """
         supply_air_nodes = self.epm.AirLoopHVAC
         node_list = []

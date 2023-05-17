@@ -342,13 +342,13 @@ class BaseEnv(gym.Env):
         Get current observation / status
 
         if observation_name is not specified, all observation values are returned (including the non-exposed ones)
-        if use_unnormed is not specified, it will follow the the general observation space
+        if the use_unnormed is not specified, it will follow the general observation space
 
         Q: Why use "inspect" not "get"?
         A: To highlight that its checks and returned non-exposed observations as well
 
         Q: Why are non-exposed observations accessible as well?
-        A: It is for the convenience of development, as somethings only using the ones exposed to the agent is not
+        A: It is for the convenience of development, accessing only the exposed ones to the agent is not
         sufficient
 
         Q: What if I only want to get those exposed to the agent?

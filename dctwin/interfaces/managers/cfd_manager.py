@@ -167,7 +167,7 @@ class CFDManager:
                 try:
                     acu.cooling.supply_air_temperature = supply_air_temperatures[acu_uid]
                 except KeyError:
-                    logger.critical(f"ACU {acu_uid} setpoint is missing")
+                    logger.critical(f"ACU {acu_uid} supply air temperature is missing")
             if supply_air_volume_flow_rates is not None:
                 try:
                     acu.cooling.supply_air_volume_flow_rate = supply_air_volume_flow_rates[acu_uid]
