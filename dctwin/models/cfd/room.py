@@ -218,14 +218,14 @@ class Room(BaseModel):
 
     @validator("constructions")
     def _validate_room_constructions(
-        self,
+        cls,
         room_construction: RoomConstruction,
         values: Dict
     ) -> RoomConstruction:
-        self._validate_acus(room_construction.acus, values["models"], values["inputs"])
-        self._validate_boxes(room_construction.boxes, values["models"])
-        self._validate_racks(room_construction.racks, values["models"], values["inputs"])
-        self._validate_sensors(room_construction.sensors)
+        cls._validate_acus(room_construction.acus, values["models"], values["inputs"])
+        cls._validate_boxes(room_construction.boxes, values["models"])
+        cls._validate_racks(room_construction.racks, values["models"], values["inputs"])
+        cls._validate_sensors(room_construction.sensors)
         return room_construction
 
     @classmethod
