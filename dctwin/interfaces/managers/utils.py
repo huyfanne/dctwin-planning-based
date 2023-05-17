@@ -123,7 +123,7 @@ def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
 
     for rack in room.constructions.racks.values():
         for ser_idx, ser in rack.constructions.servers.items():
-            inlet_center, outlet_center = room.server_patch_positions(ser_idx)
+            inlet_center, outlet_center = room.constructions.server_patch_positions(ser_idx)
             nearest_inlet_mesh_index = find_nearest_mesh_index(inlet_center, mesh_points)
             nearest_outlet_mesh_index = find_nearest_mesh_index(outlet_center, mesh_points)
             object_mesh_index["servers"].update(
@@ -137,7 +137,7 @@ def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
             )
 
     for acu_idx, acu in room.constructions.acus.items():
-        return_center, supply_center = room.acu_patch_positions(acu_idx)
+        return_center, supply_center = room.constructions.acu_patch_positions(acu_idx)
         nearest_supply_mesh_index = find_nearest_mesh_index(supply_center, mesh_points)
         nearest_return_mesh_index = find_nearest_mesh_index(return_center, mesh_points)
         object_mesh_index["acus"].update(
