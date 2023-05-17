@@ -16,7 +16,7 @@ from .sensor import Sensor
 from .acu import ACU, ACUFace
 from .server import Server
 from .models import Model
-from .inputs import Inputs, ServerInputs, ACUInputs
+from .data import Inputs, ServerInputs, ACUInputs
 from .utils import rotate, euclidean_distance, BaseModel
 
 
@@ -204,7 +204,6 @@ class Room(BaseModel):
         if isinstance(obj, ACU) and isinstance(inputs, ACUInputs):
             obj.cooling.supply_air_temperature = inputs.supply_air_temperature
             obj.cooling.supply_air_volume_flow_rate = inputs.supply_air_volume_flow_rate
-            obj.cooling.cooling_capacity = inputs.cooling_capacity
         elif isinstance(obj, Server) and isinstance(inputs, ServerInputs):
             obj.power.input_power = inputs.input_power
         else:
