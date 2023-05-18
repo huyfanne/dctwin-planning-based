@@ -26,8 +26,8 @@ def read_boundary_conditions(
             boundary_condition_dict = json.load(f)
         boundary_conditions[idx, 0] = np.sum(list(boundary_condition_dict["server_powers"].values()))
         boundary_conditions[idx, 1] = np.sum(list(boundary_condition_dict["server_volume_flow_rates"].values()))
-        boundary_conditions[idx, 2:num_acus+2] = np.array(list(boundary_condition_dict["acu_setpoints"].values()))
-        boundary_conditions[idx, num_acus+2:] = np.array(list(boundary_condition_dict["acu_volume_flow_rates"].values()))
+        boundary_conditions[idx, 2:num_acus+2] = np.array(list(boundary_condition_dict["supply_air_temperatures"].values()))
+        boundary_conditions[idx, num_acus+2:] = np.array(list(boundary_condition_dict["supply_air_volume_flow_rates"].values()))
     return boundary_conditions
 
 
