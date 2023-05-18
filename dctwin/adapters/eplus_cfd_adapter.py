@@ -75,7 +75,7 @@ class EplusCFDAdapter:
         self._map_boundary_conditions_fn = map_boundary_condition_fn
 
     def _pre_process(self, episode_idx: int = 0) -> None:
-        """ create case directory and backup model files"""
+        """ create case directory and backup model files """
         config.cfd.case_dir = Path(config.LOG_DIR).joinpath(
             "cfd_output", f"episode-{episode_idx}"
         )
@@ -91,11 +91,11 @@ class EplusCFDAdapter:
             config.cfd.file_handler,
             fieldnames=(
                     ['timestamp'] +
-                    [f"{acu_id} (C)" for acu_id in self.cfd_manager.room.acu_keys] +
-                    [f"{acu_id} (m3/s)" for acu_id in self.cfd_manager.room.acu_keys] +
+                    [f"{acu_id} (C)" for acu_id in self.cfd_manager.room.constructions.acu_keys] +
+                    [f"{acu_id} (m3/s)" for acu_id in self.cfd_manager.room.constructions.acu_keys] +
                     ["Total IT Power (w)"] +
                     ["Total IT Volume Flow Rate (m3/s)"] +
-                    [f"{sensor_id} (C)" for sensor_id in self.cfd_manager.room.sensor_keys]
+                    [f"{sensor_id} (C)" for sensor_id in self.cfd_manager.room.constructions.sensor_keys]
             )
         )
         config.cfd.log_handler.writeheader()
@@ -177,7 +177,7 @@ class EplusCFDAdapter:
         sum_server_volume_flow_rate = 0
         for it_equipment in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
             uid = self.idf2room_mapper[it_equipment.name]["acu"]
-            sum_acu_volume_flow_rate += boundary_conditions["acu_volume_flow_rates"][uid]
+            sum_acu_volume_flow_rate += boundary_conditions["supply_air_volume_flow_rates"][uid]
             # skip the acus that are not open (they do not take charge of certain servers)
             if len(self.idf2room_mapper[it_equipment.name]["servers"]) == 0:
                 continue
@@ -193,7 +193,7 @@ class EplusCFDAdapter:
     def run(self, episode_idx) -> Tuple[np.ndarray, Any]:
         self.episode_idx = episode_idx
         eplus_obs, done = self.eplus_manager.run(episode_idx)
-        init_boundary_condition = self.cfd_manager.room.format_boundary_conditions
+        init_boundary_condition = self.cfd_manager.format_boundary_conditions # use the default boundary conditions
         init_boundary_condition = self._scale_server_flow_rate(
             boundary_conditions=init_boundary_condition
         )

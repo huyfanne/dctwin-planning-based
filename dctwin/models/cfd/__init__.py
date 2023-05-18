@@ -5,7 +5,7 @@ from .box import Box
 from .rack import Rack
 from .server import Server
 from .sensor import Sensor
-
+from .data import CFDData
 
 __all__ = [
     'Vertex',
@@ -16,4 +16,5 @@ __all__ = [
     'Box',
     'Rack',
     'Room',
+    'CFDData'
 ]

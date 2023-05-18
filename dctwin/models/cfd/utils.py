@@ -24,5 +24,6 @@ def to_camel(string: str) -> str:
 
 
 class BaseModel(PydanticBaseModel):
+
     class Config:
         alias_generator = to_camel

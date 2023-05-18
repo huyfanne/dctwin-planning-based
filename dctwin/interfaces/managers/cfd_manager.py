@@ -20,6 +20,7 @@ from .utils import (
     calc_object_mesh_index,
     save_json_file,
     read_temperature,
+    read_sensor_temperature_results,
 )
 
 from dctwin.utils import config
@@ -34,13 +35,20 @@ from dctwin.models import Room
 class CFDManager:
     """
     A manager for the whole CFD simulation for data hall thermal analysis
+    the workflow includes:
+    1. build geometry
+    2. mesh geometry
+    3. solve steady or transient simulation
+    4. post process results
+
     :param room: a room object that contains all rooms
-    :param mesh_process: number of cores for meshing
-    :param solve_process: number of cores for solving
-    :param steady: steady or transient simulation
-    :param write_interval: write interval for simulation, can be set as 5, 10, 100, etc.
-    :param end_time: end time for transient simulation, can be set as 50, 100, 500 etc. Normally 100-500 is enough.
+    :param mesh_process: number of CPU cores for meshing
+    :param solve_process: number of CPU cores for solving
+    :param steady: use steady or transient simulation
+    :param write_interval: data write interval for simulation, can be set as 5, 10, 100, etc.
+    :param end_time: end step/time for steady/transient simulation, can be set as 50, 100, 500 etc. Normally 100-500 is enough.
     :param field_config: field configuration for meshing
+    :param pod_method: POD method, can be GP, Flux, or GP-Flux
     :param docker_client: docker client
     """
     def __init__(
@@ -145,12 +153,85 @@ class CFDManager:
         except Exception:
             raise FoamSolveError("Failed to solve the simulation")
 
+    def _update_acu_boundaries(
+        self,
+        supply_air_temperatures: Dict,
+        supply_air_volume_flow_rates: Dict,
+    ) -> None:
+        """Update ACU boundaries
+        supply_air_temperatures: supply air temperature for each ACU
+        supply_air_volume_flow_rates: supply air volume flow rate for each ACU
+        """
+        for acu_uid, acu in self.room.constructions.acus.items():
+            if supply_air_temperatures is not None:
+                try:
+                    acu.cooling.supply_air_temperature = supply_air_temperatures[acu_uid]
+                except KeyError:
+                    logger.critical(f"ACU {acu_uid} supply air temperature is missing")
+            if supply_air_volume_flow_rates is not None:
+                try:
+                    acu.cooling.supply_air_volume_flow_rate = supply_air_volume_flow_rates[acu_uid]
+                except KeyError:
+                    logger.critical(f"ACU {acu_uid} volume flow rate is missing")
+
+    def _update_server_boundaries(
+        self,
+        server_powers: Dict,
+        server_volume_flow_rates: Dict,
+    ) -> None:
+        """Update server boundaries
+        server_powers: server power for each server
+        server_volume_flow_rates: server volume flow rate for each server
+        """
+        for rack_id, rack in self.room.constructions.racks.items():
+            for server_uid, server in rack.constructions.servers.items():
+                if server_powers is not None:
+                    try:
+                        server.power.input_power = server_powers[server_uid]
+                    except KeyError:
+                        logger.critical(f"server {server_uid} power is missing")
+                if server_volume_flow_rates is not None:
+                    try:
+                        server.cooling.volume_flow_rate = server_volume_flow_rates[server_uid]
+                    except KeyError:
+                        logger.critical(f"server {server_uid} volume flow rate is missing")
+
+    def update_boundary_conditions(
+        self,
+        supply_air_temperatures: Dict = None,
+        supply_air_volume_flow_rates: Dict = None,
+        server_powers: Dict = None,
+        server_volume_flow_rates: Dict = None,
+    ) -> None:
+        """Update boundary conditions for ACUs and servers"""
+        self._update_acu_boundaries(supply_air_temperatures, supply_air_volume_flow_rates)
+        self._update_server_boundaries(server_powers, server_volume_flow_rates)
+
+    @property
+    def format_boundary_conditions(self) -> Dict:
+        """Format boundary conditions for ACUs and servers to be used in the API"""
+        boundary_conditions = {
+            "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
+            "server_powers": {}, "server_volume_flow_rates": {}
+        }
+        for acu_id, acu in self.room.constructions.acus.items():
+            boundary_conditions["supply_air_temperatures"][acu_id] = acu.cooling.supply_air_temperature
+            boundary_conditions["supply_air_volume_flow_rates"][acu_id] = acu.cooling.supply_air_volume_flow_rate
+
+        for rack_id, rack in self.room.constructions.racks.items():
+            for server_id, server in rack.constructions.servers.items():
+                boundary_conditions["server_powers"][server_id] = server.power.input_power
+                boundary_conditions["server_volume_flow_rates"][server_id] = server.volume_flow_rate
+
+        return boundary_conditions
+
     def run(
         self,
         case_idx: int = 1,
         episode_idx: int = None,
         save_mesh_index: bool = False,
         save_boundary_conditions: bool = False,
+        save_simulation_results: bool = False,
         **boundary_conditions
     ) -> Union[np.ndarray, torch.Tensor]:
         """Run the whole simulation: geometry -> mesh -> solve
@@ -159,6 +240,7 @@ class CFDManager:
             only used for co-simulation
         :param save_mesh_index: whether to save the mesh index
         :param save_boundary_conditions: whether to save the boundary conditions
+        :param save_simulation_results: whether to save the simulation results
         :param boundary_conditions: boundary conditions for simulation
            i.e., boundary_conditions = {
             "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
@@ -193,14 +275,24 @@ class CFDManager:
                         path=config.cfd.mesh_dir.joinpath("object_mesh_index.json"),
                         saved_dict=self.object_mesh_index,
                     )
-            if boundary_conditions:
-                self.room.update_boundary_conditions(**boundary_conditions)
+            if boundary_conditions is not None:
+                self.update_boundary_conditions(**boundary_conditions)
+                boundary_conditions = self.format_boundary_conditions
+
             self.solve(stream=False)
+
             if save_boundary_conditions:
                 save_json_file(
                     path=config.cfd.case_dir.joinpath("boundary_conditions.json"),
                     saved_dict=boundary_conditions,
                 )
+
+            if save_simulation_results:
+                save_json_file(
+                    path=config.cfd.case_dir.joinpath("simulation_results.json"),
+                    saved_dict=read_sensor_temperature_results(case=config.cfd.case_dir, room=self.room),
+                )
+
             self.last_state_case = config.cfd.case_dir.joinpath(str(self.end_time)) \
                 if not self.steady else None
             results = read_temperature(config.cfd.case_dir, str(self.end_time))
