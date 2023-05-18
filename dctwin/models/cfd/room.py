@@ -71,12 +71,12 @@ class RoomConstruction(BaseModel):
         return list(self.sensors.keys())
 
     @property
-    def servers(self) -> List[Server]:
-        server_list = []
+    def servers(self) -> Dict[str, Server]:
+        server_dict = {}
         for rack in self.racks.values():
-            for server in rack.constructions.servers.values():
-                server_list.append(server)
-        return server_list
+            for server_id, server in rack.constructions.servers.items():
+                server_dict[server_id] = server
+        return server_dict
 
     @property
     def acu2sen(self) -> np.ndarray:
