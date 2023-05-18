@@ -106,7 +106,7 @@ class CFDManager:
             if not self.run_cfd and self.pod_method is not None:
                 assert self.object_mesh_index is not None, \
                     "object mesh index is required for POD simulation"
-                self.pod_backend = PODBackend.load(self.object_mesh_index)
+                self.pod_backend = PODBackend.load(self.room, self.object_mesh_index)
         else:
             self.solver_backend = TransientSolverBackend(
                 self.docker_client, process_num=self.solve_process

@@ -10,6 +10,7 @@ from cvxpylayers.torch import CvxpyLayer
 
 
 from dctwin.backends.core import Backend
+from dctwin.models import Room
 from dctwin.utils import config
 
 from .models import BatchIndependentMultiTaskGPModel
@@ -24,7 +25,7 @@ class PODBackend(Backend):
     rho_air = 1.19  # air density kg/m^3
     c_p = 1006  # air heat capacity J/(kg*C)
 
-    def __init__(self, object_mesh_index: Dict) -> None:
+    def __init__(self, room: Room, object_mesh_index: Dict) -> None:
         super().__init__()
         self.train_bc = None
         self.train_coef = None
@@ -32,6 +33,7 @@ class PODBackend(Backend):
         self.model = None
         self.mean_obs = None
         self.modes = None
+        self.room = room
         self.num_modes = config.cfd.num_modes
         self.object_mesh_index = object_mesh_index
         self.server_inlet, self.server_outlet = [], []
@@ -40,13 +42,14 @@ class PODBackend(Backend):
 
     def _get_object_index(self) -> None:
 
-        for server_name, server_mesh_indices in self.object_mesh_index["servers"].items():
-            self.server_inlet.append(server_mesh_indices["inlet"])
-            self.server_outlet.append(server_mesh_indices["outlet"])
+        for rack_name, rack in self.room.constructions.racks.items():
+            for server_name, server in rack.constructions.servers.items():
+                self.server_inlet.append(self.object_mesh_index["servers"][server_name]["inlet"])
+                self.server_outlet.append(self.object_mesh_index["servers"][server_name]["outlet"])
 
-        for acu_name, acu_mesh_indices in self.object_mesh_index["acus"].items():
-            self.acu_supply.append(acu_mesh_indices["supply"])
-            self.acu_return.append(acu_mesh_indices["return"])
+        for acu_name, acu_mesh_indices in self.room.constructions.acus.items():
+            self.acu_supply.append(self.object_mesh_index["acus"][acu_name]["supply"])
+            self.acu_return.append(self.object_mesh_index["acus"][acu_name]["return"])
 
     def _as_tensors(
         self,
@@ -65,11 +68,12 @@ class PODBackend(Backend):
         server_power_list, server_volume_flow_rate_list = [], []
         supply_air_temperature_list, supply_air_volume_flow_rate_list = [], []
 
-        for server_name, server_mesh_indices in self.object_mesh_index["servers"].items():
-            server_power_list.append(server_powers[server_name])
-            server_volume_flow_rate_list.append(server_volume_flow_rates[server_name])
+        for rack_name, rack in self.room.constructions.racks.items():
+            for server_name, server in rack.constructions.servers.items():
+                server_power_list.append(server_powers[server_name])
+                server_volume_flow_rate_list.append(server_volume_flow_rates[server_name])
 
-        for acu_name, acu_mesh_indices in self.object_mesh_index["acus"].items():
+        for acu_name, acu_mesh_indices in self.room.constructions.acus.items():
             supply_air_temperature_list.append(supply_air_temperatures[acu_name])
             supply_air_volume_flow_rate_list.append(supply_air_volume_flow_rates[acu_name])
 
@@ -350,12 +354,12 @@ class PODBackend(Backend):
         raise NotImplementedError("Command is not available for this model.")
 
     @classmethod
-    def load(cls, object_mesh_index: Dict) -> "PODBackend":
+    def load(cls, room: Room, object_mesh_index: Dict) -> "PODBackend":
         """
         Load the POD modes, mean temperature filed, offline trained GP models from the saved file.
         """
         try:
-            pod = cls(object_mesh_index=object_mesh_index)
+            pod = cls(room=room, object_mesh_index=object_mesh_index)
             # load pod modes, mean temperature field,
             # training boundary conditions and training labels (POD coefficients)
             with open(Path(config.cfd.pod_dir).joinpath("pod_data.pkl"), "rb") as f:
