@@ -83,8 +83,8 @@ class RoomConstruction(BaseModel):
         """ Calculate the spatial distance matrix of the ACU to sensor connections
         """
         acu2sen_dis = np.zeros([self.num_acu, self.num_sen])
-        for acu_idx, (acu_id, acu) in enumerate(self.acus):
-            for sen_idx, (sen_id, sen) in enumerate(self.sensors):
+        for acu_idx, (acu_id, acu) in enumerate(self.acus.items()):
+            for sen_idx, (sen_id, sen) in enumerate(self.sensors.items()):
                 acu_loc = acu.geometry.location
                 sen_loc = sen.geometry.location
                 acu2sen_dis[acu_idx][sen_idx] = euclidean_distance(
@@ -100,7 +100,7 @@ class RoomConstruction(BaseModel):
         ser2sen_dis = np.zeros([self.num_ser, self.num_sen])
         for rack_id, rack in self.racks.items():
             for ser_idx, (server_id, ser) in enumerate(rack.constructions.servers.items()):
-                for sen_idx, (sen_id, sen) in enumerate(self.sensors):
+                for sen_idx, (sen_id, sen) in enumerate(self.sensors.items()):
                     ser_loc_i, ser_loc_o = self.server_patch_positions(server_id)
                     sen_loc = sen.geometry.location
                     ser2sen_dis[ser_idx][sen_idx] = euclidean_distance(
