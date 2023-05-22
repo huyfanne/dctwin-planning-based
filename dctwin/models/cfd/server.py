@@ -71,7 +71,7 @@ class Server(BaseModel):
     @property
     def k(self) -> float:
         tu = 0.1
-        u = float(self.cooling.volume_flow_rate) / self.geometry.outlet_area
+        u = float(self.volume_flow_rate) / self.geometry.outlet_area
         k = 1.5 * ((tu / 100) ** 2) * (u ** 2)
         return k
 
