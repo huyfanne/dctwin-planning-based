@@ -41,7 +41,7 @@ class RoomConstruction(BaseModel):
     @property
     def num_ser(self) -> int:
         count = 0
-        for rack in self.racks.values():
+        for _, rack in self.racks.items():
             for _ in rack.constructions.servers.values():
                 count += 1
         return count
@@ -61,7 +61,7 @@ class RoomConstruction(BaseModel):
     @property
     def server_keys(self) -> List[str]:
         server_key_list = []
-        for rack in self.racks.values():
+        for _, rack in self.racks.items():
             for server_key, _ in rack.constructions.servers.items():
                 server_key_list.append(server_key)
         return server_key_list
@@ -73,107 +73,115 @@ class RoomConstruction(BaseModel):
     @property
     def servers(self) -> Dict[str, Server]:
         server_dict = {}
-        for rack in self.racks.values():
+        for _, rack in self.racks.items():
             for server_id, server in rack.constructions.servers.items():
                 server_dict[server_id] = server
         return server_dict
 
     @property
     def acu2sen(self) -> np.ndarray:
-        """ Calculate the spatial distance matrix of the ACU to sensor connections
+        """ Calculate the spatial distance matrix of the ACU inlet to sensor connections
         """
         acu2sen_dis = np.zeros([self.num_acu, self.num_sen])
         for acu_idx, (acu_id, acu) in enumerate(self.acus.items()):
             for sen_idx, (sen_id, sen) in enumerate(self.sensors.items()):
-                acu_loc = acu.geometry.location
+                acu_return, acu_supply, acu_center = self.acu_patch_positions(acu_id)
                 sen_loc = sen.geometry.location
                 acu2sen_dis[acu_idx][sen_idx] = euclidean_distance(
-                    loc_1=(acu_loc.x, acu_loc.y, acu_loc.z),
+                    loc_1=(acu_center.x, acu_center.y, acu_center.z),
                     loc_2=(sen_loc.x, sen_loc.y, sen_loc.z),
                 )
         return acu2sen_dis
 
     @property
-    def ser2sen(self) -> np.ndarray:
-        """ Calculate the spatial distance matrix of the server to sensor connections
-        """
-        ser2sen_dis = np.zeros([self.num_ser, self.num_sen])
-        for rack_id, rack in self.racks.items():
-            for ser_idx, (server_id, ser) in enumerate(rack.constructions.servers.items()):
-                for sen_idx, (sen_id, sen) in enumerate(self.sensors.items()):
-                    ser_loc_i, ser_loc_o = self.server_patch_positions(server_id)
-                    sen_loc = sen.geometry.location
-                    ser2sen_dis[ser_idx][sen_idx] = euclidean_distance(
-                        loc_1=(ser_loc_o.x, ser_loc_o.y, ser_loc_o.z),
-                        loc_2=(sen_loc.x, sen_loc.y, sen_loc.z),
-                    )
-        return ser2sen_dis
-
-    @property
     def acu2ser(self) -> np.ndarray:
-        """ Calculate the spatial distance matrix of the acu to server connections
+        """ Calculate the spatial distance matrix of the ACU inlet to server connections
         """
         acu2ser_dis = np.zeros([self.num_acu, self.num_ser])
         for acu_idx, (acu_id, acu) in enumerate(self.acus.items()):
+            ser_idx: int = 0
             for rack_id, rack in self.racks.items():
-                for ser_idx, (server_id, ser) in enumerate(rack.constructions.servers.items()):
-                    acu_loc = acu.geometry.location
-                    ser_loc, _ = self.server_patch_positions(server_id)
+                for server_id, ser in rack.constructions.servers.items():
+                    acu_return, acu_supply, acu_center = self.acu_patch_positions(acu_id)
+                    ser_inlet, ser_outlet, ser_center = self.server_patch_positions(server_id)
                     acu2ser_dis[acu_idx][ser_idx] = euclidean_distance(
-                        loc_1=(acu_loc.x, acu_loc.y, acu_loc.z),
-                        loc_2=(ser_loc.x, ser_loc.y, ser_loc.z),
+                        loc_1=(acu_center.x, acu_center.y, acu_center.z),
+                        loc_2=(ser_center.x, ser_center.y, ser_center.z),
                     )
+                    ser_idx += 1
         return acu2ser_dis
 
-    def acu_patch_positions(self, acu_id: str) -> Tuple[Vertex, Vertex]:
-        """Get the center point position of acu return and supply"""
+    @property
+    def ser2sen(self) -> np.ndarray:
+        """ Calculate the spatial distance matrix of the server outlet to sensor connections
+        """
+        ser2sen_dis = np.zeros([self.num_ser, self.num_sen])
+        ser_idx: int = 0
+        for rack_id, rack in self.racks.items():
+            for server_id, ser in rack.constructions.servers.items():
+                for sen_idx, (sen_id, sen) in enumerate(self.sensors.items()):
+                    ser_inlet, ser_outlet, ser_center = self.server_patch_positions(server_id)
+                    sen_loc = sen.geometry.location
+                    ser2sen_dis[ser_idx][sen_idx] = euclidean_distance(
+                        loc_1=(ser_center.x, ser_center.y, ser_center.z),
+                        loc_2=(sen_loc.x, sen_loc.y, sen_loc.z),
+                    )
+                ser_idx += 1
+        return ser2sen_dis
+
+    def acu_patch_positions(self, acu_id: str) -> Tuple[Vertex, Vertex, Vertex]:
+        """Get the coordinate of acu return, supply and center"""
         acu: ACU = self.acus.get(acu_id)
 
-        def get_raw_point(face: ACUFace) -> Tuple[float, float, float]:
+        def get_center_point_by_face(face: ACUFace) -> Tuple[float, float, float]:
             if face.side == Face.front:
                 x = acu.geometry.location.x + acu.geometry.size.x / 2 + face.offset.x
                 y = acu.geometry.location.y
-                z = acu.geometry.location.z + acu.geometry.size.z / 2 + face.offset.y
+                z = acu.geometry.location.z + acu.geometry.size.z / 2 + face.offset.z
             elif face.side == Face.rear:
                 x = acu.geometry.location.x + acu.geometry.size.x / 2 + face.offset.x
                 y = acu.geometry.location.y + acu.geometry.size.y
-                z = acu.geometry.location.z + acu.geometry.size.z / 2 + face.offset.y
+                z = acu.geometry.location.z + acu.geometry.size.z / 2 + face.offset.z
             elif face.side == Face.left:
                 x = acu.geometry.location.x
                 y = acu.geometry.location.y + acu.geometry.size.y / 2 - face.offset.x
-                z = acu.geometry.location.z + acu.geometry.size.z / 2 + face.offset.y
+                z = acu.geometry.location.z + acu.geometry.size.z / 2 + face.offset.z
             elif face.side == Face.right:
                 x = acu.geometry.location.x + acu.geometry.size.x
                 y = acu.geometry.location.y + acu.geometry.size.y / 2 - face.offset.x
-                z = acu.geometry.location.z + acu.geometry.size.z / 2 + face.offset.y
+                z = acu.geometry.location.z + acu.geometry.size.z / 2 + face.offset.z
             elif face.side == Face.top:
                 x = acu.geometry.location.x + acu.geometry.size.x / 2 + face.offset.x
                 y = acu.geometry.location.y + acu.geometry.size.y / 2 + face.offset.y
-                z = acu.geometry.size.z
+                z = acu.geometry.location.z + acu.geometry.size.z
             elif face.side == Face.bottom:
                 x = acu.geometry.location.x + acu.geometry.size.x / 2 + face.offset.x
                 y = acu.geometry.location.y + acu.geometry.size.y / 2 + face.offset.y
-                z = 0
+                z = acu.geometry.location.z
             else:
                 raise ValueError(f"not supported: face.side={face.side}")
-            if self.raised_floor is not None:
-                z += self.raised_floor.geometry.height
             return round(x, 3), round(y, 3), round(z, 3)
 
-        def get_center_coordinate(face: ACUFace) -> Vertex:
-            x, y, z = get_raw_point(face)
+        def get_center_coordinate(face: ACUFace = None) -> Vertex:
+            if face is not None:
+                x, y, z = get_center_point_by_face(face)
+            else:
+                x = acu.geometry.location.x + acu.geometry.size.x / 2
+                y = acu.geometry.location.y + acu.geometry.size.y / 2
+                z = acu.geometry.location.z + acu.geometry.size.z / 2
             x, y = rotate(
                 (acu.geometry.location.x, acu.geometry.location.y), (x, y), acu.geometry.orientation
             )
             return Vertex(x=round(x, 3), y=round(y, 3), z=z)
 
-        inlet = get_center_coordinate(acu.geometry.return_face)
-        outlet = get_center_coordinate(acu.geometry.supply_face)
+        return_center = get_center_coordinate(acu.geometry.return_face)
+        supply_center = get_center_coordinate(acu.geometry.supply_face)
+        center = get_center_coordinate()
 
-        return inlet, outlet
+        return return_center, supply_center, center
 
-    def server_patch_positions(self, server_id: str) -> Tuple[Vertex, Vertex]:
-        """Get the center point position of server inlet and outlet"""
+    def server_patch_positions(self, server_id: str) -> Tuple[Vertex, Vertex, Vertex]:
+        """Get the coordinate of server inlet, outlet and center"""
 
         for rack_id, rack in self.racks.items():
             if server_id in rack.constructions.servers:
@@ -182,13 +190,13 @@ class RoomConstruction(BaseModel):
                 rack: Rack = server_rack
 
                 z = rack.geometry.location.z + rack.geometry.first_slot_offset + 0.045 * (
-                        server.geometry.slot_position - 1)
+                        server.geometry.slot_position + server.geometry.slot_occupation / 2 - 1
+                )
                 z = round(z, 3)
 
                 # inlet
                 inlet_x = rack.geometry.location.x + rack.geometry.size.x / 2
                 inlet_y = rack.geometry.location.y
-
                 inlet_x, inlet_y = rotate(
                     (rack.geometry.location.x, rack.geometry.location.y), (inlet_x, inlet_y), rack.geometry.orientation
                 )
@@ -201,7 +209,15 @@ class RoomConstruction(BaseModel):
                     (rack.geometry.location.x, rack.geometry.location.y), (outlet_x, outlet_y), rack.geometry.orientation
                 )
                 outlet = Vertex(x=round(outlet_x, 3), y=round(outlet_y, 3), z=z)
-                return inlet, outlet
+
+                # center
+                center_x = rack.geometry.location.x + rack.geometry.size.x / 2
+                center_y = rack.geometry.location.y + server.geometry.depth / 2
+                center_x, center_y = rotate(
+                    (rack.geometry.location.x, rack.geometry.location.y), (center_x, center_y), rack.geometry.orientation
+                )
+                center = Vertex(x=round(center_x, 3), y=round(center_y, 3), z=z)
+                return inlet, outlet, center
 
         else:
             raise ValueError(f"Server {server_id} not found")
