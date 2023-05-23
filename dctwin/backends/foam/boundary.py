@@ -144,7 +144,7 @@ class ACUBoundary(Boundary):
 
     @property
     def U(self) -> str:
-        if np.close(self.supply_air_volume_flow_rate, 0):
+        if np.isclose(self.supply_air_volume_flow_rate, 0):
             supply = self.no_slip
             _return = self.no_slip
         else:
