@@ -1,5 +1,5 @@
 import abc
-
+import numpy as np
 from dctwin.models import Room, ACU, Server
 
 
@@ -118,7 +118,7 @@ class ACUBoundary(Boundary):
     @property
     def T(self) -> str:
         t_sink = f"tSink_{self.acu_id}"
-        if self.supply_air_mass_flow_rate == 0:
+        if np.isclose(self.supply_air_volume_flow_rate, 0):
             outlet = self.zero_gradient
         else:
             outlet = f"""
@@ -144,23 +144,24 @@ class ACUBoundary(Boundary):
 
     @property
     def U(self) -> str:
-        supply = f"""
-        {{
-            type                flowRateInletVelocity;
-            volumetricFlowRate  {self.supply_air_volume_flow_rate};
-            value               uniform (0 0 0);
-        }}
-        """
-        _return = f"""
-        {{
-            type                flowRateOutletVelocity;
-            volumetricFlowRate  {self.supply_air_volume_flow_rate};
-            value               uniform (0 0 0);
-        }}
-        """
-        if self.supply_air_volume_flow_rate == 0:
+        if np.close(self.supply_air_volume_flow_rate, 0):
             supply = self.no_slip
             _return = self.no_slip
+        else:
+            supply = f"""
+            {{
+                type                flowRateInletVelocity;
+                volumetricFlowRate  {self.supply_air_volume_flow_rate};
+                value               uniform (0 0 0);
+            }}
+            """
+            _return = f"""
+            {{
+                type                flowRateOutletVelocity;
+                volumetricFlowRate  {self.supply_air_volume_flow_rate};
+                value               uniform (0 0 0);
+            }}
+            """
         return f"""
         acu_supply_{self.acu_id} {supply}
         acu_return_{self.acu_id} {_return}
@@ -180,7 +181,7 @@ class ServerBoundary(Boundary):
     @property
     def T(self) -> str:
         t_sink = f"tSink_{self.server_id}"
-        if self.server_mass_flow_rate == 0:
+        if np.isclose(self.server_mass_flow_rate, 0):
             outlet = self.zero_gradient
         else:
             value = f"{t_sink}+{self.input_power / (self.server_mass_flow_rate * self.air_specific_heat)}"
@@ -202,23 +203,24 @@ class ServerBoundary(Boundary):
 
     @property
     def U(self) -> str:
-        inlet = f"""
-        {{
-            type                flowRateOutletVelocity;
-            volumetricFlowRate  {self.server_volume_flow_rate};
-            value               uniform (0 0 0);
-        }}
-        """
-        outlet = f"""
-        {{
-            type                flowRateInletVelocity;
-            volumetricFlowRate  {self.server_volume_flow_rate};
-            value               uniform (0 0 0);
-        }}
-        """
-        if self.server_volume_flow_rate == 0:
+        if np.isclose(self.server_mass_flow_rate, 0):
             inlet = self.no_slip
             outlet = self.no_slip
+        else:
+            inlet = f"""
+            {{
+                type                flowRateOutletVelocity;
+                volumetricFlowRate  {self.server_volume_flow_rate};
+                value               uniform (0 0 0);
+            }}
+            """
+            outlet = f"""
+            {{
+                type                flowRateInletVelocity;
+                volumetricFlowRate  {self.server_volume_flow_rate};
+                value               uniform (0 0 0);
+            }}
+            """
         return f"""
         server_inlet_{self.server_id} {inlet}
         server_outlet_{self.server_id} {outlet}
