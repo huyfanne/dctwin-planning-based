@@ -66,7 +66,7 @@ class Server(BaseModel):
     geometry: ServerGeometry = Field(default_factory=ServerGeometry)
     cooling: ServerCooling = Field(default_factory=ServerCooling)
     power: ServerPower = Field(default_factory=ServerPower)
-    meta: Optional[OrderedDict]
+    meta: Optional[OrderedDict] = Field(default_factory=dict)
 
     @property
     def k(self) -> float:

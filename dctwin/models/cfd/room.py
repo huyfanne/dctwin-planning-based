@@ -261,31 +261,37 @@ class Room(BaseModel):
 
     @classmethod
     def _validate_racks(cls, racks: Dict, models: Model, inputs: Inputs) -> None:
+        all_servers = {}
         for rack_id, rack in racks.items():
             cls._validate_id(rack_id)
             cls._validate_geometry_models(rack, models.geometry_models.racks) if models.geometry_models else None
-            cls._validate_rack_constructions(rack, rack.constructions, models, inputs)
+            cls._validate_rack_constructions(rack, rack.constructions, all_servers, models, inputs)
 
     @classmethod
     def _validate_rack_constructions(
         cls,
         rack: Rack,
         rack_constructions: RackConstruction,
+        all_servers: Dict,
         models: Model,
         inputs: Inputs,
     ) -> None:
-        cls._validate_servers(rack, rack_constructions.servers, models, inputs)
+        cls._validate_servers(rack, rack_constructions.servers, all_servers, models, inputs)
 
     @classmethod
-    def _validate_servers(cls, rack: Rack, servers: Dict, models: Model, inputs: Inputs) -> None:
+    def _validate_servers(cls, rack: Rack, servers: Dict, all_server: Dict, models: Model, inputs: Inputs) -> None:
         occupied_rack_slot = {}
         for server_id, server in servers.items():
-            cls._validate_id(server_id)
-            cls._validate_geometry_models(server, models.geometry_models.servers) if models.geometry_models else None
-            cls._validate_cooling_models(server, models.cooling_models.servers) if models.cooling_models.servers else None
-            cls._validate_power_models(server, models.power_models.servers) if models.power_models.servers else None
-            cls._validate_inputs(server, inputs.servers.get(server_id)) if inputs.servers else None
-            cls._validate_server_occupation(rack, server, server_id, occupied_rack_slot)
+            if server_id not in all_server:
+                cls._validate_id(server_id)
+                cls._validate_geometry_models(server, models.geometry_models.servers) if models.geometry_models else None
+                cls._validate_cooling_models(server, models.cooling_models.servers) if models.cooling_models.servers else None
+                cls._validate_power_models(server, models.power_models.servers) if models.power_models.servers else None
+                cls._validate_inputs(server, inputs.servers.get(server_id)) if inputs.servers else None
+                cls._validate_server_occupation(rack, server, server_id, occupied_rack_slot)
+                all_server[server_id] = server
+            else:
+                raise ValueError(f"Server {server_id} is duplicated")
 
     @classmethod
     def _validate_server_occupation(cls, rack: Rack, server: Server, server_id: str, occupied_rack_slot: Dict) -> None:
