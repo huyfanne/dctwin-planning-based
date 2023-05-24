@@ -2,7 +2,7 @@ name: version bump and build
 on:
   push:
     branches:
-      - test22
+      - main
 
 jobs:
   build:
