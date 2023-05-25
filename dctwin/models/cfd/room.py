@@ -382,6 +382,7 @@ class Room(BaseModel):
         elif isinstance(obj, Server) and models is not None:
             obj.cooling.fan_type = models.get(model_name).fan_type
             obj.cooling.volume_flow_rate_ratio = models.get(model_name).volume_flow_rate_ratio
+            obj.cooling.volume_flow_rate = models.get(model_name).volume_flow_rate
         else:
             raise ValueError(
                 f"Invalid object type: {type(obj)}: "

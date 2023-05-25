@@ -41,12 +41,12 @@ class ServerCoolingModel(BaseModel):
     """
     fan_type: Optional[str] = "Fixed" # Fixed or Variable
     volume_flow_rate_ratio: Optional[float] = None # unit(m3/s/W)
+    volume_flow_rate: Optional[float] # unit(m3/s)
 
 
 class ServerCooling(ServerCoolingModel):
     """ Server cooling properties """
     model: Optional[str]
-    volume_flow_rate: Optional[float] # unit(m3/s)
 
 
 class ServerPowerModel(BaseModel):
