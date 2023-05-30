@@ -57,7 +57,7 @@ def parse_and_upload_result(room: Room, case_dir, host_data_path):
     )
 
 
-def calculate_metrics(case_dir, room, threshold):
+def calculate_metrics(case_dir, room: Room, threshold):
     file_path = case_dir / "results.json"
     if not file_path.exists():
         return None
@@ -102,8 +102,8 @@ def calculate_metrics(case_dir, room, threshold):
                             list(map(lambda x: kelvin_to_celsius(x, 2), line.split()[1:]))
                         )
             probe_results = results[-1]
-            assert len(room.probes) == len(probe_results)
-            for i, sensor in enumerate(room.probes):
+            assert room.constructions.num_sen == len(probe_results)
+            for i, sensor in enumerate(room.constructions.sensors.values()):
                 data = sensor.dict()
                 data["result"] = probe_results[i]
                 sensor_results.append(data)
@@ -117,7 +117,7 @@ def calculate_metrics(case_dir, room, threshold):
             "hotspots": len(hotspot_list),
             "hotspot_list": hotspot_list,
             "it_load": sum(
-                server.heat_load for server in room.inputs.servers.values()
+                server.input_power for server in room.inputs.servers.values()
             ),
             "sensor_list": sensor_results,
         }
