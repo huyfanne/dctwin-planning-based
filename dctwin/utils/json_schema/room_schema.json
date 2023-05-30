@@ -1,0 +1,697 @@
+{
+  "title": "Room",
+  "type": "object",
+  "properties": {
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "geometryModel": {
+      "$ref": "#/definitions/RoomGeometryModel"
+    },
+    "geometry": {
+      "$ref": "#/definitions/RoomGeometry"
+    },
+    "constructions": {
+      "$ref": "#/definitions/RoomConstructions"
+    },
+    "inputs": {
+      "$ref": "#/definitions/Inputs"
+    }
+  },
+  "required": [
+    "name",
+    "geometryModel",
+    "geometry",
+    "constructions",
+    "inputs"
+  ],
+  "definitions": {
+    "Size": {
+      "title": "Size",
+      "type": "object",
+      "properties": {
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        },
+        "z": {
+          "title": "Z",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ]
+    },
+    "Face": {
+      "title": "Face",
+      "description": "An enumeration.",
+      "enum": [
+        "front",
+        "rear",
+        "left",
+        "right",
+        "top",
+        "bottom"
+      ],
+      "type": "string"
+    },
+    "Vertex": {
+      "title": "Vertex",
+      "type": "object",
+      "properties": {
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        },
+        "z": {
+          "title": "Z",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ]
+    },
+    "ACUFace": {
+      "title": "ACUFace",
+      "type": "object",
+      "properties": {
+        "side": {
+          "$ref": "#/definitions/Face"
+        },
+        "width": {
+          "title": "Width",
+          "type": "number"
+        },
+        "length": {
+          "title": "Length",
+          "type": "number"
+        },
+        "offset": {
+          "$ref": "#/definitions/Vertex"
+        }
+      },
+      "required": [
+        "side",
+        "width",
+        "length",
+        "offset"
+      ]
+    },
+    "ACUModel": {
+      "title": "ACUModel",
+      "type": "object",
+      "properties": {
+        "size": {
+          "$ref": "#/definitions/Size"
+        },
+        "supplyFace": {
+          "$ref": "#/definitions/ACUFace"
+        },
+        "returnFace": {
+          "$ref": "#/definitions/ACUFace"
+        }
+      },
+      "required": [
+        "size",
+        "supplyFace",
+        "returnFace"
+      ]
+    },
+    "RackModel": {
+      "title": "RackModel",
+      "type": "object",
+      "properties": {
+        "firstSlotOffset": {
+          "title": "Firstslotoffset",
+          "type": "number"
+        },
+        "slot": {
+          "title": "Slot",
+          "type": "integer"
+        },
+        "size": {
+          "$ref": "#/definitions/Size"
+        }
+      },
+      "required": [
+        "firstSlotOffset",
+        "slot",
+        "size"
+      ]
+    },
+    "ServerModel": {
+      "title": "ServerModel",
+      "type": "object",
+      "properties": {
+        "slotOccupation": {
+          "title": "Slotoccupation",
+          "type": "integer"
+        },
+        "depth": {
+          "title": "Depth",
+          "type": "number"
+        },
+        "width": {
+          "title": "Width",
+          "type": "number"
+        }
+      },
+      "required": [
+        "slotOccupation",
+        "depth",
+        "width"
+      ]
+    },
+    "BoxFaces": {
+      "title": "BoxFaces",
+      "type": "object",
+      "properties": {
+        "top": {
+          "title": "Top",
+          "type": "boolean"
+        },
+        "bottom": {
+          "title": "Bottom",
+          "type": "boolean"
+        },
+        "front": {
+          "title": "Front",
+          "type": "boolean"
+        },
+        "rear": {
+          "title": "Rear",
+          "type": "boolean"
+        },
+        "left": {
+          "title": "Left",
+          "type": "boolean"
+        },
+        "right": {
+          "title": "Right",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "top",
+        "bottom",
+        "front",
+        "rear",
+        "left",
+        "right"
+      ]
+    },
+    "BoxModel": {
+      "title": "BoxModel",
+      "type": "object",
+      "properties": {
+        "faces": {
+          "$ref": "#/definitions/BoxFaces"
+        }
+      },
+      "required": [
+        "faces"
+      ]
+    },
+    "RoomGeometryModel": {
+      "title": "RoomGeometryModel",
+      "type": "object",
+      "properties": {
+        "acus": {
+          "title": "Acus",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ACUModel"
+          }
+        },
+        "racks": {
+          "title": "Racks",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/RackModel"
+          }
+        },
+        "servers": {
+          "title": "Servers",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ServerModel"
+          }
+        },
+        "boxes": {
+          "title": "Boxes",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/BoxModel"
+          }
+        }
+      },
+      "required": [
+        "acus",
+        "racks",
+        "servers",
+        "boxes"
+      ]
+    },
+    "RoomGeometry": {
+      "title": "RoomGeometry",
+      "type": "object",
+      "properties": {
+        "height": {
+          "title": "Height",
+          "type": "number"
+        },
+        "plane": {
+          "title": "Plane",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Vertex"
+          }
+        }
+      },
+      "required": [
+        "height",
+        "plane"
+      ]
+    },
+    "Opening": {
+      "title": "Opening",
+      "type": "object",
+      "properties": {
+        "location": {
+          "$ref": "#/definitions/Vertex"
+        },
+        "size": {
+          "$ref": "#/definitions/Size"
+        },
+        "velocity": {
+          "$ref": "#/definitions/Size"
+        }
+      },
+      "required": [
+        "location",
+        "size"
+      ]
+    },
+    "PlaneGeometry": {
+      "title": "PlaneGeometry",
+      "type": "object",
+      "properties": {
+        "height": {
+          "title": "Height",
+          "type": "number"
+        },
+        "openings": {
+          "title": "Openings",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Opening"
+          }
+        }
+      },
+      "required": [
+        "height"
+      ]
+    },
+    "Plane": {
+      "title": "Plane",
+      "type": "object",
+      "properties": {
+        "geometry": {
+          "$ref": "#/definitions/PlaneGeometry"
+        }
+      },
+      "required": [
+        "geometry"
+      ]
+    },
+    "BoxGeometry": {
+      "title": "BoxGeometry",
+      "type": "object",
+      "properties": {
+        "faces": {
+          "$ref": "#/definitions/BoxFaces"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "size": {
+          "$ref": "#/definitions/Size"
+        },
+        "location": {
+          "$ref": "#/definitions/Vertex"
+        }
+      },
+      "required": [
+        "model",
+        "size",
+        "location"
+      ]
+    },
+    "Box": {
+      "title": "Box",
+      "type": "object",
+      "properties": {
+        "geometry": {
+          "$ref": "#/definitions/BoxGeometry"
+        }
+      },
+      "required": [
+        "geometry"
+      ]
+    },
+    "ACUGeometry": {
+      "title": "ACUGeometry",
+      "type": "object",
+      "properties": {
+        "size": {
+          "$ref": "#/definitions/Size"
+        },
+        "supplyFace": {
+          "$ref": "#/definitions/ACUFace"
+        },
+        "returnFace": {
+          "$ref": "#/definitions/ACUFace"
+        },
+        "model": {
+          "title": "Model",
+          "default": "",
+          "type": "string"
+        },
+        "orientation": {
+          "title": "Orientation",
+          "type": "integer"
+        },
+        "location": {
+          "$ref": "#/definitions/Vertex"
+        },
+        "minTemperature": {
+          "title": "Mintemperature",
+          "type": "number"
+        },
+        "flowRate": {
+          "title": "Flowrate",
+          "type": "number"
+        },
+        "coolingCapacity": {
+          "title": "Coolingcapacity",
+          "type": "number"
+        }
+      },
+      "required": [
+        "orientation",
+        "location"
+      ]
+    },
+    "ACU": {
+      "title": "ACU",
+      "type": "object",
+      "properties": {
+        "geometry": {
+          "$ref": "#/definitions/ACUGeometry"
+        }
+      },
+      "required": [
+        "geometry"
+      ]
+    },
+    "RackGeometry": {
+      "title": "RackGeometry",
+      "type": "object",
+      "properties": {
+        "firstSlotOffset": {
+          "title": "Firstslotoffset",
+          "type": "number"
+        },
+        "slot": {
+          "title": "Slot",
+          "type": "integer"
+        },
+        "size": {
+          "$ref": "#/definitions/Size"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/definitions/Vertex"
+        },
+        "orientation": {
+          "title": "Orientation",
+          "type": "integer"
+        },
+        "hasBlankingPanel": {
+          "title": "Hasblankingpanel",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "model",
+        "location",
+        "orientation",
+        "hasBlankingPanel"
+      ]
+    },
+    "ServerGeometry": {
+      "title": "ServerGeometry",
+      "description": "depth: server depth\noccupation: How many slots the server will occupy\nrated_power: unit(W)\nextend_to_rack_width: extend the server width to equal the rack width or not",
+      "type": "object",
+      "properties": {
+        "slotOccupation": {
+          "title": "Slotoccupation",
+          "type": "integer"
+        },
+        "depth": {
+          "title": "Depth",
+          "type": "number"
+        },
+        "width": {
+          "title": "Width",
+          "type": "number"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "slotPosition": {
+          "title": "Slotposition",
+          "type": "integer"
+        },
+        "orientation": {
+          "title": "Orientation",
+          "type": "integer"
+        },
+        "heatLoad": {
+          "title": "Heatload",
+          "type": "number"
+        },
+        "flowRate": {
+          "title": "Flowrate",
+          "type": "number"
+        }
+      },
+      "required": [
+        "model",
+        "slotPosition"
+      ]
+    },
+    "Server": {
+      "title": "Server",
+      "type": "object",
+      "properties": {
+        "geometry": {
+          "$ref": "#/definitions/ServerGeometry"
+        }
+      },
+      "required": [
+        "geometry"
+      ]
+    },
+    "RackConstruction": {
+      "title": "RackConstruction",
+      "type": "object",
+      "properties": {
+        "servers": {
+          "title": "Servers",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Server"
+          }
+        }
+      },
+      "required": [
+        "servers"
+      ]
+    },
+    "Rack": {
+      "title": "Rack",
+      "type": "object",
+      "properties": {
+        "geometry": {
+          "$ref": "#/definitions/RackGeometry"
+        },
+        "constructions": {
+          "$ref": "#/definitions/RackConstruction"
+        }
+      },
+      "required": [
+        "geometry",
+        "constructions"
+      ]
+    },
+    "SensorGeometry": {
+      "title": "SensorGeometry",
+      "type": "object",
+      "properties": {
+        "location": {
+          "$ref": "#/definitions/Vertex"
+        }
+      },
+      "required": [
+        "location"
+      ]
+    },
+    "Sensor": {
+      "title": "Sensor",
+      "type": "object",
+      "properties": {
+        "geometry": {
+          "$ref": "#/definitions/SensorGeometry"
+        },
+        "meta": {
+          "title": "Meta",
+          "type": "object"
+        }
+      },
+      "required": [
+        "geometry"
+      ]
+    },
+    "RoomConstructions": {
+      "title": "RoomConstructions",
+      "type": "object",
+      "properties": {
+        "raisedFloor": {
+          "$ref": "#/definitions/Plane"
+        },
+        "falseCeiling": {
+          "$ref": "#/definitions/Plane"
+        },
+        "boxes": {
+          "title": "Boxes",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Box"
+          }
+        },
+        "acus": {
+          "title": "Acus",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ACU"
+          }
+        },
+        "racks": {
+          "title": "Racks",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Rack"
+          }
+        },
+        "sensors": {
+          "title": "Sensors",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Sensor"
+          }
+        }
+      },
+      "required": [
+        "acus",
+        "racks",
+        "sensors"
+      ]
+    },
+    "ACUInputs": {
+      "title": "ACUInputs",
+      "type": "object",
+      "properties": {
+        "flowRate": {
+          "title": "Flowrate",
+          "type": "number"
+        },
+        "minTemperature": {
+          "title": "Mintemperature",
+          "type": "number"
+        },
+        "coolingCapacity": {
+          "title": "Coolingcapacity",
+          "type": "number"
+        }
+      },
+      "required": [
+        "flowRate",
+        "minTemperature",
+        "coolingCapacity"
+      ]
+    },
+    "ServerInputs": {
+      "title": "ServerInputs",
+      "type": "object",
+      "properties": {
+        "flowRate": {
+          "title": "Flowrate",
+          "type": "number"
+        },
+        "heatLoad": {
+          "title": "Heatload",
+          "type": "number"
+        }
+      },
+      "required": [
+        "flowRate",
+        "heatLoad"
+      ]
+    },
+    "Inputs": {
+      "title": "Inputs",
+      "type": "object",
+      "properties": {
+        "acus": {
+          "title": "Acus",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ACUInputs"
+          }
+        },
+        "servers": {
+          "title": "Servers",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ServerInputs"
+          }
+        }
+      },
+      "required": [
+        "acus",
+        "servers"
+      ]
+    }
+  }
+}

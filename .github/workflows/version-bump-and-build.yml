@@ -1,0 +1,57 @@
+name: version bump and build
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+
+    - name: Update version
+      run: |
+        old_version=$(poetry version | awk '{print $2}')
+        poetry version patch
+        new_version=$(poetry version | awk '{print $2}')
+        if [ $old_version != $new_version ]
+        then
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "Auto bump version to $new_version" -a
+          git push
+        fi
+
+    - name: Set vars
+      id: vars
+      env:
+        REF: ${{ github.ref }}
+      run: |
+        version=$(poetry version | awk '{print $2}')
+        echo "::set-output name=version::$version"
+        
+
+    - name: Log in to the Container registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ghcr.io/cap-dcwiz/dctwin:${{ steps.vars.outputs.version }}
