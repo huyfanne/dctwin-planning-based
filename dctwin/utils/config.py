@@ -45,7 +45,7 @@ class CFDConfig:
     """CFD configuration"""
     SOLVER_TURBULENCE: bool
 
-    def __init__(self, base_config, base_size: float = 0.2) -> None:
+    def __init__(self, base_config, base_size: float = 0.18) -> None:
         self.base_config: Config = base_config
         self.geometry_file = Path(os.environ.get("GEOMETRY_FILE", ""))
         self.mesh_dir: Path = Path(os.environ.get("MESH_DIR", ""))
