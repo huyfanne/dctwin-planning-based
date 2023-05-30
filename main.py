@@ -1,5 +1,5 @@
 from dctwin.utils import config
-from dctwin.models import Room
+from dctwin.models.cfd.room import Room
 from dctwin.interfaces import CFDManager
 
 import os
@@ -18,59 +18,17 @@ def kelvin_to_celsius(kelvin, round_to=None):
         return float(kelvin) - 273.15
 
 
-def get_field_config(min_level, max_level, server_level=2):
-    return {
-        "acu_wall": {
-            "type": "wall",
-            "level": max_level,
-            "refine_level": f"({min_level} {max_level})",
-        },
-        "acu_return": {
-            "type": "patch",
-            "level": max_level,
-            "refine_level": f"({min_level} {max_level})",
-        },
-        "acu_supply": {
-            "type": "patch",
-            "level": max_level,
-            "refine_level": f"({min_level} {max_level})",
-        },
-        "server_inlet": {
-            "type": "patch",
-            "level": server_level,
-            "refine_level": f"({server_level} {server_level})",
-        },
-        "server_outlet": {
-            "type": "patch",
-            "level": server_level,
-            "refine_level": f"({server_level} {server_level})",
-        },
-        "server_wall": {
-            "type": "wall",
-            "level": server_level,
-            "refine_level": f"({server_level} {server_level})",
-        },
-        "rack_wall": {
-            "type": "wall",
-            "level": max_level,
-            "refine_level": f"({min_level} {max_level})",
-            "faceType": "baffle",
-        },
-    }
-
-
-def parse_and_upload_result(room, case_dir, host_data_path):
+def parse_and_upload_result(room: Room, case_dir, host_data_path):
     base_files = host_data_path / "cosim/base-files"
     shutil.copy(base_files / "result.py", case_dir)
     servers = []
     acus = []
-    for rack in room.constructions.racks.values():
-        for key, server in rack.constructions.servers.items():
-            inlet_center, outlet_center = room.server_patch_positions(key)
-            result = [inlet_center.__dict__, outlet_center.__dict__, key]
+    for server_id in room.constructions.server_keys:
+            inlet_center, outlet_center = room.constructions.server_patch_positions(server_id)
+            result = [inlet_center.__dict__, outlet_center.__dict__, server_id]
             servers.append(result)
-    for key, acu in room.constructions.acus.items():
-        return_center, supply_center = room.acu_patch_positions(key)
+    for acu_id in room.constructions.acu_keys:
+        return_center, supply_center = room.constructions.acu_patch_positions(acu_id)
         result = [return_center.__dict__, supply_center.__dict__]
         acus.append(result)
 
