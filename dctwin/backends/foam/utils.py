@@ -25,12 +25,12 @@ class Mesh:
 
 
 def generate_control_dict(
-        probes: Optional[List[Vertex]] = None,
-        steady=True,
-        delta_t: Union[int, float] = 1,
-        write_interval: int = 100,
-        end_time: int = 500,
-        process_num: int = 1,
+    probes: Optional[List[Vertex]] = None,
+    steady=True,
+    delta_t: Union[int, float] = 1,
+    write_interval: int = 100,
+    end_time: int = 500,
+    process_num: int = 1,
 ) -> None:
     if steady is False:
         delta_t = float("1e-5")

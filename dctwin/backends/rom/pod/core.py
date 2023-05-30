@@ -10,6 +10,7 @@ from cvxpylayers.torch import CvxpyLayer
 
 
 from dctwin.backends.core import Backend
+from dctwin.models import Room
 from dctwin.utils import config
 
 from .models import BatchIndependentMultiTaskGPModel
@@ -24,7 +25,7 @@ class PODBackend(Backend):
     rho_air = 1.19  # air density kg/m^3
     c_p = 1006  # air heat capacity J/(kg*C)
 
-    def __init__(self) -> None:
+    def __init__(self, room: Room, object_mesh_index: Dict) -> None:
         super().__init__()
         self.train_bc = None
         self.train_coef = None
@@ -32,31 +33,90 @@ class PODBackend(Backend):
         self.model = None
         self.mean_obs = None
         self.modes = None
+        self.room = room
         self.num_modes = config.cfd.num_modes
+        self.object_mesh_index = object_mesh_index
+        self.server_inlet, self.server_outlet = [], []
+        self.acu_supply, self.acu_return = [], []
+        self._get_object_index()
 
-    def _prepare_mode_data(self, object_mesh_index: Dict) -> Dict:
-        used_modes = self.modes[:, :self.num_modes]
-        phi_return, phi_inlet, phi_outlet = [], [], []
-        mean_temp_inlet, mean_temp_outlet, mean_temp_return = [], [], []
+    def _get_object_index(self) -> None:
 
-        for server_name, server_mesh_indices in object_mesh_index["servers"].items():
-            mean_temp_inlet.append(self.mean_obs[server_mesh_indices["inlet"]])
-            mean_temp_outlet.append(self.mean_obs[server_mesh_indices["outlet"]])
-            phi_inlet.append(used_modes[server_mesh_indices["inlet"], :])
-            phi_outlet.append(used_modes[server_mesh_indices["outlet"], :])
+        for rack_name, rack in self.room.constructions.racks.items():
+            for server_name, server in rack.constructions.servers.items():
+                self.server_inlet.append(self.object_mesh_index["servers"][server_name]["inlet"])
+                self.server_outlet.append(self.object_mesh_index["servers"][server_name]["outlet"])
 
-        for crac_name, crac_mesh_indices in object_mesh_index["cracs"].items():
-            mean_temp_return.append(self.mean_obs[crac_mesh_indices["return"]])
-            phi_return.append(used_modes[crac_mesh_indices["return"], :])
+        for acu_name, acu_mesh_indices in self.room.constructions.acus.items():
+            self.acu_supply.append(self.object_mesh_index["acus"][acu_name]["supply"])
+            self.acu_return.append(self.object_mesh_index["acus"][acu_name]["return"])
 
-        mean_temp_inlet = torch.tensor(mean_temp_inlet, dtype=torch.float32, requires_grad=False)
-        mean_temp_outlet = torch.tensor(mean_temp_outlet, dtype=torch.float32, requires_grad=False)
-        mean_temp_return = torch.tensor(mean_temp_return, dtype=torch.float32, requires_grad=False)
-        phi_inlet = torch.vstack(phi_inlet)
-        phi_outlet = torch.vstack(phi_outlet)
-        phi_return = torch.vstack(phi_return)
+    def _as_tensors(
+        self,
+        supply_air_temperatures: Dict,
+        supply_air_volume_flow_rates: Dict,
+        server_powers: Dict,
+        server_volume_flow_rates: Dict,
+    ) -> Dict[str, torch.Tensor]:
+        """
+        convert the boundary conditions into torch.Tensor format
+        :param supply_air_temperatures: acu supply temperature dict
+        :param supply_air_volume_flow_rates: acu volume flow rate dict
+        :param server_powers: server heat loads dict
+        :param server_volume_flow_rates: server volume flow rates dict
+        """
+        server_power_list, server_volume_flow_rate_list = [], []
+        supply_air_temperature_list, supply_air_volume_flow_rate_list = [], []
+
+        for rack_name, rack in self.room.constructions.racks.items():
+            for server_name, server in rack.constructions.servers.items():
+                server_power_list.append(server_powers[server_name])
+                server_volume_flow_rate_list.append(server_volume_flow_rates[server_name])
+
+        for acu_name, acu_mesh_indices in self.room.constructions.acus.items():
+            supply_air_temperature_list.append(supply_air_temperatures[acu_name])
+            supply_air_volume_flow_rate_list.append(supply_air_volume_flow_rates[acu_name])
+
+        server_powers = torch.tensor(server_power_list, dtype=torch.float32, requires_grad=False)
+        server_volume_flow_rates = torch.tensor(server_volume_flow_rate_list, dtype=torch.float32, requires_grad=False)
+        supply_air_temperatures = torch.tensor(supply_air_temperature_list, dtype=torch.float32, requires_grad=False)
+        supply_air_volume_flow_rates = torch.tensor(supply_air_volume_flow_rate_list, dtype=torch.float32, requires_grad=False)
 
         return {
+            "server_powers": server_powers,
+            "server_volume_flow_rates": server_volume_flow_rates,
+            "supply_air_temperatures": supply_air_temperatures,
+            "supply_air_volume_flow_rates": supply_air_volume_flow_rates,
+        }
+
+    def _pre_process_inputs(
+        self,
+        **boundary_conditions,
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Pre-process the inputs for the POD model
+         - obtain the POD mode data for server inlet/outlet and acu return
+         - remove servers with zero volume flow rate to avoid zero division error
+        """
+        used_modes = self.modes[:, :self.num_modes]
+        results = self._as_tensors(**boundary_conditions)
+
+        mask = results["server_volume_flow_rates"].ne(0.)
+        mean_temp_inlet = torch.masked_select(self.mean_obs[self.server_inlet], mask)
+        mean_temp_outlet = torch.masked_select(self.mean_obs[self.server_outlet], mask)
+        mean_temp_return = self.mean_obs[self.acu_return]
+        phi_inlet = torch.masked_select(used_modes[self.server_inlet], mask.view(-1,1)).view(-1, self.num_modes)
+        phi_outlet = torch.masked_select(used_modes[self.server_outlet], mask.view(-1,1)).view(-1, self.num_modes)
+        phi_return = used_modes[self.acu_return]
+
+        server_powers = torch.masked_select(results["server_powers"], mask)
+        server_volume_flow_rates = torch.masked_select(results["server_volume_flow_rates"], mask)
+
+        input_data = {
+            "supply_air_temperatures": results["supply_air_temperatures"],
+            "supply_air_volume_flow_rates": results["supply_air_volume_flow_rates"],
+            "server_powers": server_powers,
+            "server_volume_flow_rates": server_volume_flow_rates,
             "mean_temp_inlet": mean_temp_inlet,
             "mean_temp_outlet": mean_temp_outlet,
             "mean_temp_return": mean_temp_return,
@@ -65,10 +125,12 @@ class PODBackend(Backend):
             "phi_return": phi_return,
         }
 
+        return input_data
+
     def _local_search(
         self,
-        crac_volume_flow_rate: torch.Tensor,
-        crac_setpoints: torch.Tensor,
+        supply_air_volume_flow_rates: torch.Tensor,
+        supply_air_temperatures: torch.Tensor,
         server_powers: torch.Tensor,
         server_volume_flow_rates: torch.Tensor,
         coef_hat: torch.Tensor,
@@ -132,9 +194,9 @@ class PODBackend(Backend):
         d = torch.linalg.norm(A @ coef_hat.T + b)  # use the GP coarse estimation as initialization
 
         # equality constraint: exact room energy balance
-        F = phi_return * crac_setpoints.view((1, -1))
+        F = phi_return * supply_air_temperatures.view(-1, 1)
         g = server_powers.sum() / (self.c_p * self.rho_air) - \
-            torch.sum((mean_temp_return - crac_setpoints) * crac_volume_flow_rate)
+            torch.sum((mean_temp_return - supply_air_temperatures) * supply_air_volume_flow_rates)
 
         if coef_std is None:
             # solve the rectification without trust region constraints
@@ -168,8 +230,8 @@ class PODBackend(Backend):
         self,
         server_powers: torch.Tensor,
         server_volume_flow_rates: torch.Tensor,
-        crac_setpoints: torch.Tensor,
-        crac_volume_flow_rates: torch.Tensor,
+        supply_air_temperatures: torch.Tensor,
+        supply_air_volume_flow_rates: torch.Tensor,
         mean_temp_inlet: torch.Tensor,
         mean_temp_outlet: torch.Tensor,
         mean_temp_return: torch.Tensor,
@@ -178,42 +240,55 @@ class PODBackend(Backend):
         phi_return: torch.Tensor,
     ) -> None:
         """
-        Implement flux matching based on the paper
+        Implement flux matching based on the paper:
         "Proper Orthogonal Decomposition for Reduced Order Thermal Modeling of Air Cooled Data Centers"
 
+        The flux-matching problem is to solve the following linear equation system for the POD coefficients:
+        
+            & \sum_{i=1}^{H}\beta_i(\mathbf{x})(\Phi_\text{out}^{i1}-\Phi_\text{in}^{i1}) = \frac{P_1}{c_\text{p} \rho \alpha_1}, \\
+	        & \sum_{i=1}^{H}\beta_i(\mathbf{x})(\Phi_\text{out}^{i2}-\Phi_\text{in}^{i2}) = \frac{P_2}{c_\text{p} \rho \alpha_2}, \\
+	        & \dots \\
+	        & \sum_{i=1}^{H}\beta_i(\mathbf{x})(\Phi}_\text{out}^{im}-\Phi_\text{in}^{im}) = \frac{P_m}{c_\text{p} \rho \alpha_m},\\
+	        & \sum_{k=1}^{l} \sum_{i=1}^{H} V_k \beta_i(\mathbf{x})(\Phi_\text{return}^{ik}-\Phi_\text{supply}^{ik}) = \frac{\sum_{j=1}^{m}{P_j}}{c_\text{p} \rho}
+
+        where $H$ is the number of used modes, $m$ is the number of servers, $l$ is the number of acus, \beta is the coefficients,
+
         :param server_powers: the power of the servers
-        :param server_volume_flow_rates: the flow rate of the servers
-        :param crac_setpoints: the setpoint of the CRACs
-        :param crac_volume_flow_rates: the flow rate of the CRACs
-        :param mean_temp_inlet: the inlet temperature of the servers
-        :param mean_temp_outlet: the outlet temperature of the servers
-        :param mean_temp_return: the return temperature of the CRACs
+        :param server_volume_flow_rates: the volume flow rates of the servers
+        :param supply_air_temperatures: the supply temperature of the acus
+        :param supply_air_volume_flow_rates: the supply air flow rates of the acus
+        :param mean_temp_inlet: the inlet temperatures of the servers
+        :param mean_temp_outlet: the outlet temperatures of the servers
+        :param mean_temp_return: the return temperature of the acus
         :param phi_inlet: the inlet flux of the servers
         :param phi_outlet: the outlet flux of the servers
-        :param phi_return: the return flux of the CRACs
+        :param phi_return: the return flux of the acus
         """
         # select boundary conditions within the air loop
-        phi_server_matrix = phi_outlet - phi_inlet
-        server_array = server_powers / (self.c_p * self.rho_air * server_volume_flow_rates)
+        phi_server_matrix: torch.Tensor = phi_outlet - phi_inlet
+        server_array: torch.Tensor = server_powers / (torch.tensor((self.c_p * self.rho_air)) * server_volume_flow_rates)
         server_array -= (mean_temp_outlet - mean_temp_inlet)
+        server_array = server_array.view(-1, 1)
 
-        phi_crac_matrix = torch.sum(phi_return * crac_volume_flow_rates.view(-1, 1)).view(1, -1)
-        crac_array = torch.sum(server_powers.sum()) / (self.c_p * self.rho_air)
-        crac_array -= np.sum((mean_temp_return - crac_setpoints) * crac_volume_flow_rates, axis=0)
+        phi_acu_matrix: torch.Tensor = torch.sum(phi_return * supply_air_volume_flow_rates.view(-1, 1), dim=0, keepdim=True)
+        acu_array: torch.Tensor = torch.sum(server_powers) / torch.tensor((self.c_p * self.rho_air))
+        acu_array -= torch.sum((mean_temp_return - supply_air_temperatures) * supply_air_volume_flow_rates)
+        acu_array = acu_array.view(-1, 1)
 
         # assemble all matrices and arrays into a big linear system
-        a = torch.cat([phi_server_matrix, phi_crac_matrix], dim=0)
-        b = torch.cat([server_array, crac_array], dim=0)
+        a = torch.cat([phi_server_matrix, phi_acu_matrix], dim=0)
+        b = torch.cat([server_array, acu_array], dim=0)
         assert a.shape[0] > self.num_modes, "equations are fewer than number of coefficients"
         # solve the least square for optimal coefficients
         self.coefs, _ = torch.linalg.lstsq(a, b)[:2]
+        self.coefs = self.coefs.view(1, -1)
 
     def _gp(
         self,
         server_powers: torch.Tensor,
         server_volume_flow_rates: torch.Tensor,
-        crac_setpoints: torch.Tensor,
-        crac_volume_flow_rate: torch.Tensor,
+        supply_air_temperatures: torch.Tensor,
+        supply_air_volume_flow_rates: torch.Tensor,
         mean_temp_inlet: torch.Tensor,
         mean_temp_outlet: torch.Tensor,
         mean_temp_return: torch.Tensor,
@@ -226,14 +301,14 @@ class PODBackend(Backend):
         Implement POD coefficient estimation based on Gaussian Process Regression.
         :param server_powers: the power of the servers
         :param server_volume_flow_rates: the flow rate of the servers
-        :param crac_setpoints: the setpoint of the CRACs
-        :param crac_volume_flow_rate: the flow rate of the CRACs
+        :param supply_air_temperatures: the setpoint of the acus
+        :param supply_air_volume_flow_rates: the flow rate of the acus
         :param mean_temp_inlet: the inlet temperature of the servers
         :param mean_temp_outlet: the outlet temperature of the servers
-        :param mean_temp_return: the return temperature of the CRACs
+        :param mean_temp_return: the return temperature of the acus
         :param phi_inlet: the inlet flux of the servers
         :param phi_outlet: the outlet flux of the servers
-        :param phi_return: the return flux of the CRACs
+        :param phi_return: the return flux of the acus
         :param local_search: whether to use local search to improve the estimation
         """
         # build the input tensor to the GP model
@@ -241,8 +316,8 @@ class PODBackend(Backend):
             [
                 server_powers.sum().view(1, -1),
                 server_volume_flow_rates.sum().view(1, -1),
-                crac_setpoints.view(1, -1),
-                crac_volume_flow_rate.view(1, -1)
+                supply_air_temperatures.view(1, -1),
+                supply_air_volume_flow_rates.view(1, -1)
             ],
             dim=1
         )
@@ -258,8 +333,8 @@ class PODBackend(Backend):
             self.coefs = self._local_search(
                 server_powers=server_powers,
                 server_volume_flow_rates=server_volume_flow_rates,
-                crac_volume_flow_rate=crac_volume_flow_rate,
-                crac_setpoints=crac_setpoints,
+                supply_air_volume_flow_rates=supply_air_volume_flow_rates,
+                supply_air_temperatures=supply_air_temperatures,
                 coef_hat=coef,
                 coef_std=coef_std,
                 mean_temp_inlet=mean_temp_inlet,
@@ -279,12 +354,12 @@ class PODBackend(Backend):
         raise NotImplementedError("Command is not available for this model.")
 
     @classmethod
-    def load(cls):
+    def load(cls, room: Room, object_mesh_index: Dict) -> "PODBackend":
         """
         Load the POD modes, mean temperature filed, offline trained GP models from the saved file.
         """
         try:
-            pod = cls()
+            pod = cls(room=room, object_mesh_index=object_mesh_index)
             # load pod modes, mean temperature field,
             # training boundary conditions and training labels (POD coefficients)
             with open(Path(config.cfd.pod_dir).joinpath("pod_data.pkl"), "rb") as f:
@@ -321,50 +396,32 @@ class PODBackend(Backend):
 
     def run(
         self,
-        object_mesh_index: Dict,
-        server_powers: torch.Tensor,
-        server_volume_flow_rates: torch.Tensor,
-        crac_setpoints: torch.Tensor,
-        crac_volume_flow_rates: torch.Tensor,
         pod_method: str = "GP-Flux",
+        **boundary_conditions: Dict,
     ) -> np.ndarray:
         """
         Run certain POD coefficient estimation algorithm to predict the temperature field.
-        :param object_mesh_index: the mesh indices of the CRACs and servers
-        :param server_powers: the power of the servers
-        :param server_volume_flow_rates: the flow rate of the servers
-        :param crac_setpoints: the setpoint of the CRACs
-        :param crac_volume_flow_rates: the flow rate of the CRACs
         :param pod_method: the POD coefficient estimation algorithm
+        :param boundary_conditions: boundary conditions for simulation
+           i.e., boundary_conditions = {
+            "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
+            "server_powers": {}, "server_volume_flow_rates": {}
+            }
         """
         assert self.modes is not None, "POD modes are not computed or loaded"
-        mode_data = self._prepare_mode_data(object_mesh_index)
+        input_data = self._pre_process_inputs(**boundary_conditions)
         # POD coefficients calculation for a new test case
         if pod_method == "Flux":
-            self._flux_matching(
-                server_powers=server_powers,
-                server_volume_flow_rates=server_volume_flow_rates,
-                crac_setpoints=crac_setpoints,
-                crac_volume_flow_rates=crac_volume_flow_rates,
-                **mode_data
-            )
+            self._flux_matching(**input_data)
         elif pod_method == "GP":
             self._gp(
-                server_powers=server_powers,
-                server_volume_flow_rates=server_volume_flow_rates,
-                crac_setpoints=crac_setpoints,
-                crac_volume_flow_rate=crac_volume_flow_rates,
                 local_search=False,
-                **mode_data
+                **input_data
             )
         elif pod_method == "GP-Flux":
             self._gp(
-                server_powers=server_powers,
-                server_volume_flow_rates=server_volume_flow_rates,
-                crac_setpoints=crac_setpoints,
-                crac_volume_flow_rate=crac_volume_flow_rates,
                 local_search=True,
-                **mode_data
+                **input_data
             )
         else:
             raise NotImplementedError(f"{pod_method} not implemented")

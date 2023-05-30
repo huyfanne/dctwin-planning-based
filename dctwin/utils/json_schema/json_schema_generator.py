@@ -1,5 +1,5 @@
 import json
-from dctwin.models.objects import Room
+from dctwin.models.cfd.room import Room
 
 schema = Room.schema()
 with open('room_schema.json', 'w') as f:

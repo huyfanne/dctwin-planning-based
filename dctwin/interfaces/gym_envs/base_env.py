@@ -94,7 +94,7 @@ class BaseEnv(gym.Env):
             source=self._actions,
             use_unnormed_value=self._use_unnormed_act,
             count_criteria=lambda a: a.control_type == ActionControlType.AGENT_CONTROLLED,
-            debug_tag='action'
+            debug_tag='action',
         )
         if any(map(lambda a: a.control_type == ActionControlType.CUSTOMIZED, self._actions)):
             if self._schedule_fn is None:
@@ -130,7 +130,8 @@ class BaseEnv(gym.Env):
     def num_constraints(self):
         if self._num_constraints == 0:
             raise NotImplementedError(
-                "environment constraints are not defined"
+                "environment constraints are not defined! "
+                "Please specify the number of constraints in the environment."
             )
         else:
             return self._num_constraints
@@ -213,7 +214,6 @@ class BaseEnv(gym.Env):
         complete_raw_action = []
         ra_ptr = 0
         for a in self._actions:
-            value = None
             if a.control_type == ActionControlType.FIXED:
                 value = a.default_value
             elif a.control_type == ActionControlType.AGENT_CONTROLLED:
@@ -263,7 +263,7 @@ class BaseEnv(gym.Env):
             return 0.0
         self._reward.set_unnormed_value(
             self._reward_fn(
-                self, # the observation can be inspected by calling the class inspect methods
+                self,  # the observation can be inspected by calling the class inspect methods
             )
         )
         return self._reward.get_unnormed_value()
@@ -327,7 +327,7 @@ class BaseEnv(gym.Env):
         if self._use_simulation_time:
             self._timestamp = self._starting_timestamp
         return self._get_observations_to_return(
-            use_unnormed_obs=self._use_unnormed_act
+            use_unnormed_obs=self._use_unnormed_obs,
         ), self._get_additional_info_to_return()
 
     def render(self, mode="human"):
@@ -342,13 +342,13 @@ class BaseEnv(gym.Env):
         Get current observation / status
 
         if observation_name is not specified, all observation values are returned (including the non-exposed ones)
-        if use_unnormed is not specified, it will follow the the general observation space
+        if the use_unnormed is not specified, it will follow the general observation space
 
         Q: Why use "inspect" not "get"?
         A: To highlight that its checks and returned non-exposed observations as well
 
         Q: Why are non-exposed observations accessible as well?
-        A: It is for the convenience of development, as somethings only using the ones exposed to the agent is not
+        A: It is for the convenience of development, accessing only the exposed ones to the agent is not
         sufficient
 
         Q: What if I only want to get those exposed to the agent?
@@ -367,7 +367,8 @@ class BaseEnv(gym.Env):
                 return self._get_scalar_values([o], use_unnormed)[0]
 
     def inspect_next_scheduled_action_value(
-        self, action_name: str
+        self,
+        action_name: str,
     ) -> Union[None, float, int]:
         """
         Q: Why don't we have a similar method just like "inspect_current_observation"?

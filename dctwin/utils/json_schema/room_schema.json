@@ -1,30 +1,27 @@
 {
   "title": "Room",
+  "description": "Room object in a data center\n    ",
   "type": "object",
   "properties": {
-    "name": {
-      "title": "Name",
-      "type": "string"
+    "models": {
+      "$ref": "#/definitions/Model"
     },
-    "geometryModel": {
-      "$ref": "#/definitions/RoomGeometryModel"
+    "inputs": {
+      "$ref": "#/definitions/Inputs"
     },
     "geometry": {
       "$ref": "#/definitions/RoomGeometry"
     },
     "constructions": {
-      "$ref": "#/definitions/RoomConstructions"
+      "$ref": "#/definitions/RoomConstruction"
     },
-    "inputs": {
-      "$ref": "#/definitions/Inputs"
+    "meta": {
+      "title": "Meta",
+      "type": "object"
     }
   },
   "required": [
-    "name",
-    "geometryModel",
-    "geometry",
-    "constructions",
-    "inputs"
+    "geometry"
   ],
   "definitions": {
     "Size": {
@@ -112,8 +109,8 @@
         "offset"
       ]
     },
-    "ACUModel": {
-      "title": "ACUModel",
+    "ACUGeometryModel": {
+      "title": "ACUGeometryModel",
       "type": "object",
       "properties": {
         "size": {
@@ -125,37 +122,27 @@
         "returnFace": {
           "$ref": "#/definitions/ACUFace"
         }
-      },
-      "required": [
-        "size",
-        "supplyFace",
-        "returnFace"
-      ]
+      }
     },
-    "RackModel": {
-      "title": "RackModel",
+    "RackGeometryModel": {
+      "title": "RackGeometryModel",
       "type": "object",
       "properties": {
-        "firstSlotOffset": {
-          "title": "Firstslotoffset",
-          "type": "number"
+        "size": {
+          "$ref": "#/definitions/Size"
         },
         "slot": {
           "title": "Slot",
           "type": "integer"
         },
-        "size": {
-          "$ref": "#/definitions/Size"
+        "firstSlotOffset": {
+          "title": "Firstslotoffset",
+          "type": "number"
         }
-      },
-      "required": [
-        "firstSlotOffset",
-        "slot",
-        "size"
-      ]
+      }
     },
-    "ServerModel": {
-      "title": "ServerModel",
+    "ServerGeometryrModel": {
+      "title": "ServerGeometryrModel",
       "type": "object",
       "properties": {
         "slotOccupation": {
@@ -170,12 +157,7 @@
           "title": "Width",
           "type": "number"
         }
-      },
-      "required": [
-        "slotOccupation",
-        "depth",
-        "width"
-      ]
+      }
     },
     "BoxFaces": {
       "title": "BoxFaces",
@@ -215,57 +197,208 @@
         "right"
       ]
     },
-    "BoxModel": {
-      "title": "BoxModel",
+    "BoxGeometryModel": {
+      "title": "BoxGeometryModel",
       "type": "object",
       "properties": {
         "faces": {
           "$ref": "#/definitions/BoxFaces"
         }
-      },
-      "required": [
-        "faces"
-      ]
+      }
     },
-    "RoomGeometryModel": {
-      "title": "RoomGeometryModel",
+    "GeometryModel": {
+      "title": "GeometryModel",
+      "description": "Object standard geometry ",
       "type": "object",
       "properties": {
         "acus": {
           "title": "Acus",
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/ACUModel"
+            "$ref": "#/definitions/ACUGeometryModel"
           }
         },
         "racks": {
           "title": "Racks",
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/RackModel"
+            "$ref": "#/definitions/RackGeometryModel"
           }
         },
         "servers": {
           "title": "Servers",
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/ServerModel"
+            "$ref": "#/definitions/ServerGeometryrModel"
           }
         },
         "boxes": {
           "title": "Boxes",
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/BoxModel"
+            "$ref": "#/definitions/BoxGeometryModel"
           }
         }
-      },
-      "required": [
-        "acus",
-        "racks",
-        "servers",
-        "boxes"
-      ]
+      }
+    },
+    "ACUCoolingModel": {
+      "title": "ACUCoolingModel",
+      "description": "Model of ACU cooling properties\n    ",
+      "type": "object",
+      "properties": {
+        "coolingType": {
+          "title": "Coolingtype",
+          "type": "string"
+        },
+        "coolingCapacity": {
+          "title": "Coolingcapacity",
+          "type": "number"
+        }
+      }
+    },
+    "ServerCoolingModel": {
+      "title": "ServerCoolingModel",
+      "description": "Model of server cooling properties\n    ",
+      "type": "object",
+      "properties": {
+        "fanType": {
+          "title": "Fantype",
+          "default": "Fixed",
+          "type": "string"
+        },
+        "volumeFlowRateRatio": {
+          "title": "Volumeflowrateratio",
+          "type": "number"
+        },
+        "volumeFlowRate": {
+          "title": "Volumeflowrate",
+          "type": "number"
+        }
+      }
+    },
+    "CoolingModel": {
+      "title": "CoolingModel",
+      "description": "Object standard cooling property ",
+      "type": "object",
+      "properties": {
+        "acus": {
+          "title": "Acus",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ACUCoolingModel"
+          }
+        },
+        "servers": {
+          "title": "Servers",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ServerCoolingModel"
+          }
+        }
+      }
+    },
+    "ACUPowerModel": {
+      "title": "ACUPowerModel",
+      "description": "Model of ACU power properties\n    ",
+      "type": "object",
+      "properties": {
+        "ratedFanPower": {
+          "title": "Ratedfanpower",
+          "type": "number"
+        }
+      }
+    },
+    "ServerPowerModel": {
+      "title": "ServerPowerModel",
+      "description": "Model of server power properties\n    ",
+      "type": "object",
+      "properties": {
+        "ratedPower": {
+          "title": "Ratedpower",
+          "type": "number"
+        }
+      }
+    },
+    "PowerModel": {
+      "title": "PowerModel",
+      "description": "Object standard power property ",
+      "type": "object",
+      "properties": {
+        "acus": {
+          "title": "Acus",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ACUPowerModel"
+          }
+        },
+        "servers": {
+          "title": "Servers",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ServerPowerModel"
+          }
+        }
+      }
+    },
+    "Model": {
+      "title": "Model",
+      "description": "Models is used to define the object models of the building ",
+      "type": "object",
+      "properties": {
+        "geometryModels": {
+          "$ref": "#/definitions/GeometryModel"
+        },
+        "coolingModels": {
+          "$ref": "#/definitions/CoolingModel"
+        },
+        "powerModels": {
+          "$ref": "#/definitions/PowerModel"
+        }
+      }
+    },
+    "ACUInputs": {
+      "title": "ACUInputs",
+      "type": "object",
+      "properties": {
+        "supplyAirTemperature": {
+          "title": "Supplyairtemperature",
+          "type": "number"
+        },
+        "supplyAirVolumeFlowRate": {
+          "title": "Supplyairvolumeflowrate",
+          "type": "number"
+        }
+      }
+    },
+    "ServerInputs": {
+      "title": "ServerInputs",
+      "type": "object",
+      "properties": {
+        "inputPower": {
+          "title": "Inputpower",
+          "type": "number"
+        }
+      }
+    },
+    "Inputs": {
+      "title": "Inputs",
+      "type": "object",
+      "properties": {
+        "acus": {
+          "title": "Acus",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ACUInputs"
+          }
+        },
+        "servers": {
+          "title": "Servers",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ServerInputs"
+          }
+        }
+      }
     },
     "RoomGeometry": {
       "title": "RoomGeometry",
@@ -307,8 +440,8 @@
         "size"
       ]
     },
-    "PlaneGeometry": {
-      "title": "PlaneGeometry",
+    "PanelGeometry": {
+      "title": "PanelGeometry",
       "type": "object",
       "properties": {
         "height": {
@@ -327,12 +460,16 @@
         "height"
       ]
     },
-    "Plane": {
-      "title": "Plane",
+    "Panel": {
+      "title": "Panel",
       "type": "object",
       "properties": {
         "geometry": {
-          "$ref": "#/definitions/PlaneGeometry"
+          "$ref": "#/definitions/PanelGeometry"
+        },
+        "meta": {
+          "title": "Meta",
+          "type": "object"
         }
       },
       "required": [
@@ -350,25 +487,39 @@
           "title": "Model",
           "type": "string"
         },
+        "location": {
+          "$ref": "#/definitions/Vertex"
+        },
         "size": {
           "$ref": "#/definitions/Size"
         },
-        "location": {
-          "$ref": "#/definitions/Vertex"
+        "openingsSide": {
+          "$ref": "#/definitions/Face"
+        },
+        "openings": {
+          "title": "Openings",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Opening"
+          }
         }
       },
       "required": [
-        "model",
-        "size",
-        "location"
+        "location",
+        "size"
       ]
     },
     "Box": {
       "title": "Box",
+      "description": "A box is an abstract 3D object with a size and location in space.\n    ",
       "type": "object",
       "properties": {
         "geometry": {
           "$ref": "#/definitions/BoxGeometry"
+        },
+        "meta": {
+          "title": "Meta",
+          "type": "object"
         }
       },
       "required": [
@@ -390,7 +541,6 @@
         },
         "model": {
           "title": "Model",
-          "default": "",
           "type": "string"
         },
         "orientation": {
@@ -399,18 +549,6 @@
         },
         "location": {
           "$ref": "#/definitions/Vertex"
-        },
-        "minTemperature": {
-          "title": "Mintemperature",
-          "type": "number"
-        },
-        "flowRate": {
-          "title": "Flowrate",
-          "type": "number"
-        },
-        "coolingCapacity": {
-          "title": "Coolingcapacity",
-          "type": "number"
         }
       },
       "required": [
@@ -418,32 +556,86 @@
         "location"
       ]
     },
+    "ACUCooling": {
+      "title": "ACUCooling",
+      "description": "ACU cooling properties\n    ",
+      "type": "object",
+      "properties": {
+        "coolingType": {
+          "title": "Coolingtype",
+          "type": "string"
+        },
+        "coolingCapacity": {
+          "title": "Coolingcapacity",
+          "type": "number"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "supplyAirTemperature": {
+          "title": "Supplyairtemperature",
+          "type": "number"
+        },
+        "supplyAirVolumeFlowRate": {
+          "title": "Supplyairvolumeflowrate",
+          "type": "number"
+        }
+      }
+    },
+    "ACUPower": {
+      "title": "ACUPower",
+      "description": "ACU power properties\n    ",
+      "type": "object",
+      "properties": {
+        "ratedFanPower": {
+          "title": "Ratedfanpower",
+          "type": "number"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "fanPower": {
+          "title": "Fanpower",
+          "type": "number"
+        }
+      }
+    },
     "ACU": {
       "title": "ACU",
+      "description": "ACU object in a data center\n    ",
       "type": "object",
       "properties": {
         "geometry": {
           "$ref": "#/definitions/ACUGeometry"
+        },
+        "cooling": {
+          "$ref": "#/definitions/ACUCooling"
+        },
+        "power": {
+          "$ref": "#/definitions/ACUPower"
+        },
+        "meta": {
+          "title": "Meta",
+          "type": "object"
         }
-      },
-      "required": [
-        "geometry"
-      ]
+      }
     },
     "RackGeometry": {
       "title": "RackGeometry",
       "type": "object",
       "properties": {
-        "firstSlotOffset": {
-          "title": "Firstslotoffset",
-          "type": "number"
+        "size": {
+          "$ref": "#/definitions/Size"
         },
         "slot": {
           "title": "Slot",
           "type": "integer"
         },
-        "size": {
-          "$ref": "#/definitions/Size"
+        "firstSlotOffset": {
+          "title": "Firstslotoffset",
+          "type": "number"
         },
         "model": {
           "title": "Model",
@@ -462,7 +654,6 @@
         }
       },
       "required": [
-        "model",
         "location",
         "orientation",
         "hasBlankingPanel"
@@ -470,7 +661,7 @@
     },
     "ServerGeometry": {
       "title": "ServerGeometry",
-      "description": "depth: server depth\noccupation: How many slots the server will occupy\nrated_power: unit(W)\nextend_to_rack_width: extend the server width to equal the rack width or not",
+      "description": "depth: server depth\noccupation: How many slots the server will occupy\nextend_to_rack_width: extend the server width to equal the rack width or not",
       "type": "object",
       "properties": {
         "slotOccupation": {
@@ -495,21 +686,55 @@
         },
         "orientation": {
           "title": "Orientation",
-          "type": "integer"
-        },
-        "heatLoad": {
-          "title": "Heatload",
-          "type": "number"
-        },
-        "flowRate": {
-          "title": "Flowrate",
           "type": "number"
         }
       },
       "required": [
-        "model",
         "slotPosition"
       ]
+    },
+    "ServerCooling": {
+      "title": "ServerCooling",
+      "description": "Server cooling properties ",
+      "type": "object",
+      "properties": {
+        "fanType": {
+          "title": "Fantype",
+          "default": "Fixed",
+          "type": "string"
+        },
+        "volumeFlowRateRatio": {
+          "title": "Volumeflowrateratio",
+          "type": "number"
+        },
+        "volumeFlowRate": {
+          "title": "Volumeflowrate",
+          "type": "number"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        }
+      }
+    },
+    "ServerPower": {
+      "title": "ServerPower",
+      "description": "Server power properties\n    ",
+      "type": "object",
+      "properties": {
+        "ratedPower": {
+          "title": "Ratedpower",
+          "type": "number"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "inputPower": {
+          "title": "Inputpower",
+          "type": "number"
+        }
+      }
     },
     "Server": {
       "title": "Server",
@@ -517,14 +742,22 @@
       "properties": {
         "geometry": {
           "$ref": "#/definitions/ServerGeometry"
+        },
+        "cooling": {
+          "$ref": "#/definitions/ServerCooling"
+        },
+        "power": {
+          "$ref": "#/definitions/ServerPower"
+        },
+        "meta": {
+          "title": "Meta",
+          "type": "object"
         }
-      },
-      "required": [
-        "geometry"
-      ]
+      }
     },
     "RackConstruction": {
       "title": "RackConstruction",
+      "description": "Rack construction is used to define the servers in a rack\n    ",
       "type": "object",
       "properties": {
         "servers": {
@@ -541,6 +774,7 @@
     },
     "Rack": {
       "title": "Rack",
+      "description": "Rack object in a data center ",
       "type": "object",
       "properties": {
         "geometry": {
@@ -548,15 +782,19 @@
         },
         "constructions": {
           "$ref": "#/definitions/RackConstruction"
+        },
+        "meta": {
+          "title": "Meta",
+          "type": "object"
         }
       },
       "required": [
-        "geometry",
-        "constructions"
+        "geometry"
       ]
     },
     "SensorGeometry": {
       "title": "SensorGeometry",
+      "description": "Sensor geometry that defines the location of the sensor\n    ",
       "type": "object",
       "properties": {
         "location": {
@@ -569,6 +807,7 @@
     },
     "Sensor": {
       "title": "Sensor",
+      "description": "Sensor object in a data center\n    ",
       "type": "object",
       "properties": {
         "geometry": {
@@ -583,15 +822,16 @@
         "geometry"
       ]
     },
-    "RoomConstructions": {
-      "title": "RoomConstructions",
+    "RoomConstruction": {
+      "title": "RoomConstruction",
+      "description": "RoomConstruction is used to build the objects in a room\n    ",
       "type": "object",
       "properties": {
         "raisedFloor": {
-          "$ref": "#/definitions/Plane"
+          "$ref": "#/definitions/Panel"
         },
         "falseCeiling": {
-          "$ref": "#/definitions/Plane"
+          "$ref": "#/definitions/Panel"
         },
         "boxes": {
           "title": "Boxes",
@@ -626,71 +866,6 @@
         "acus",
         "racks",
         "sensors"
-      ]
-    },
-    "ACUInputs": {
-      "title": "ACUInputs",
-      "type": "object",
-      "properties": {
-        "flowRate": {
-          "title": "Flowrate",
-          "type": "number"
-        },
-        "minTemperature": {
-          "title": "Mintemperature",
-          "type": "number"
-        },
-        "coolingCapacity": {
-          "title": "Coolingcapacity",
-          "type": "number"
-        }
-      },
-      "required": [
-        "flowRate",
-        "minTemperature",
-        "coolingCapacity"
-      ]
-    },
-    "ServerInputs": {
-      "title": "ServerInputs",
-      "type": "object",
-      "properties": {
-        "flowRate": {
-          "title": "Flowrate",
-          "type": "number"
-        },
-        "heatLoad": {
-          "title": "Heatload",
-          "type": "number"
-        }
-      },
-      "required": [
-        "flowRate",
-        "heatLoad"
-      ]
-    },
-    "Inputs": {
-      "title": "Inputs",
-      "type": "object",
-      "properties": {
-        "acus": {
-          "title": "Acus",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/ACUInputs"
-          }
-        },
-        "servers": {
-          "title": "Servers",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/ServerInputs"
-          }
-        }
-      },
-      "required": [
-        "acus",
-        "servers"
       ]
     }
   }
