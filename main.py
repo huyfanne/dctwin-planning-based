@@ -24,9 +24,9 @@ def parse_and_upload_result(room: Room, case_dir, host_data_path):
     servers = []
     acus = []
     for server_id in room.constructions.server_keys:
-            inlet_center, outlet_center, _ = room.constructions.server_patch_positions(server_id)
-            result = [inlet_center.__dict__, outlet_center.__dict__, server_id]
-            servers.append(result)
+        inlet_center, outlet_center, _ = room.constructions.server_patch_positions(server_id)
+        result = [inlet_center.__dict__, outlet_center.__dict__, server_id]
+        servers.append(result)
     for acu_id in room.constructions.acu_keys:
         return_center, supply_center, _ = room.constructions.acu_patch_positions(acu_id)
         result = [return_center.__dict__, supply_center.__dict__]
@@ -140,10 +140,10 @@ cfd_manager.run()
 case_dir = host_workspace / "run/result/base"
 parse_and_upload_result(room, case_dir, host_data_path)
 metrics_data = calculate_metrics(
-                case_dir=case_dir,
-                room=room,
-                threshold=preference["threshold"],
-            )
+    case_dir=case_dir,
+    room=room,
+    threshold=preference["threshold"],
+)
 
 os.mkdir(host_workspace / "run/cache_result")
 if metrics_data:
@@ -157,4 +157,3 @@ shutil.make_archive(host_workspace / "run/result", "zip", host_workspace / "run/
 
 shutil.rmtree(host_workspace / "run/cache_result")
 shutil.rmtree(host_workspace / "run/result")
-
