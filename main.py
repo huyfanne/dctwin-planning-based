@@ -24,11 +24,11 @@ def parse_and_upload_result(room: Room, case_dir, host_data_path):
     servers = []
     acus = []
     for server_id in room.constructions.server_keys:
-            inlet_center, outlet_center = room.constructions.server_patch_positions(server_id)
+            inlet_center, outlet_center, _ = room.constructions.server_patch_positions(server_id)
             result = [inlet_center.__dict__, outlet_center.__dict__, server_id]
             servers.append(result)
     for acu_id in room.constructions.acu_keys:
-        return_center, supply_center = room.constructions.acu_patch_positions(acu_id)
+        return_center, supply_center, _ = room.constructions.acu_patch_positions(acu_id)
         result = [return_center.__dict__, supply_center.__dict__]
         acus.append(result)
 
