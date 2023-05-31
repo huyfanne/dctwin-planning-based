@@ -408,7 +408,7 @@ class Room(BaseModel):
 
     def dump(self, file_path: Union[str, Path]) -> None:
         with open(file_path, "w") as f:
-            f.write(self.json(indent=2))
+            f.write(self.json(indent=2,by_alias=True))
 
     @classmethod
     def load(cls, file_path: Union[str, Path]) -> "Room":
