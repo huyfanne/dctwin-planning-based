@@ -248,8 +248,19 @@ class CFDManager:
             }
         :return: temperature fields
         """
+        if boundary_conditions is not None:
+            self.update_boundary_conditions(**boundary_conditions)
+            boundary_conditions = self.format_boundary_conditions
+
+            if save_boundary_conditions:
+                save_json_file(
+                    path=config.cfd.case_dir.joinpath("boundary_conditions.json"),
+                    saved_dict=boundary_conditions,
+                )
+
         if self.pod_backend is not None and not self.run_cfd:
-            # use reduced-order CFD simulation if POD backend is provided and run_cfd flag is set
+            # use reduced-order CFD simulation if POD backend is provided
+            # and run_cfd flag is set to False
             assert self.object_mesh_index is not None, \
                 "object mesh index is not provided， " \
                 "please specify the index file path or read from the mesh directory"
@@ -257,14 +268,17 @@ class CFDManager:
                 pod_method=self.pod_method,
                 **boundary_conditions,
             )
+
         else:
             # use full-fledged CFD simulation
             run_geometry, run_mesh = check_base_dir(
                 episode_idx=episode_idx,
                 case_idx=case_idx,
             )
+            # step 1: build geometry
             if run_geometry:
                 self.build_geometry()
+            # step 2: mesh geometry
             if run_mesh:
                 self.mesh()
                 if save_mesh_index and self.object_mesh_index is None:
@@ -275,17 +289,8 @@ class CFDManager:
                         path=config.cfd.mesh_dir.joinpath("object_mesh_index.json"),
                         saved_dict=self.object_mesh_index,
                     )
-            if boundary_conditions is not None:
-                self.update_boundary_conditions(**boundary_conditions)
-                boundary_conditions = self.format_boundary_conditions
-
+            # step 3: solve
             self.solve(stream=False)
-
-            if save_boundary_conditions:
-                save_json_file(
-                    path=config.cfd.case_dir.joinpath("boundary_conditions.json"),
-                    saved_dict=boundary_conditions,
-                )
 
             if save_simulation_results:
                 save_json_file(
@@ -295,6 +300,7 @@ class CFDManager:
 
             self.last_state_case = config.cfd.case_dir.joinpath(str(self.end_time)) \
                 if not self.steady else None
+
             results = read_temperature(config.cfd.case_dir, str(self.end_time))
 
             if not config.cfd.PRESERVE_FOAM_LOG and not run_mesh and not run_geometry:
