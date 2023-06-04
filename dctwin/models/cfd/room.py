@@ -406,9 +406,9 @@ class Room(BaseModel):
                 f"The object inputs is not defined."
             )
 
-    def dump(self, file_path: Union[str, Path]) -> None:
+    def dump(self, file_path: Union[str, Path], by_alias: bool = True) -> None:
         with open(file_path, "w") as f:
-            f.write(self.json(indent=2,by_alias=True))
+            f.write(self.json(indent=2, by_alias=by_alias))
 
     @classmethod
     def load(cls, file_path: Union[str, Path]) -> "Room":
