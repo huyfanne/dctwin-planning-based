@@ -234,7 +234,7 @@ class CFDManager:
         save_simulation_results: bool = False,
         return_sensor_results: bool = False,
         **boundary_conditions
-    ) -> Union[np.ndarray, torch.Tensor]:
+    ) -> Union[np.ndarray, torch.Tensor, Dict]:
         """Run the whole simulation: geometry -> mesh -> solve
         :param case_idx: case index for different simulation (default: 1)
         :param episode_idx: episode index for different simulation (default: None)
@@ -275,10 +275,13 @@ class CFDManager:
                 pod_method=self.pod_method,
                 **boundary_conditions,
             )
-            sensor_results = read_sensor_temperature_results(
-                object_mesh_index=self.object_mesh_index,
-                temperature=results,
-            )
+            if self.room.constructions.sensors is not None:
+                sensor_results = read_sensor_temperature_results(
+                    object_mesh_index=self.object_mesh_index,
+                    temperature=results,
+                )
+            else:
+                sensor_results = {}
 
         else:
             # use full-fledged CFD simulation
@@ -303,11 +306,14 @@ class CFDManager:
                 if not self.steady else None
             # step 4: read results
             results = read_temperature(config.cfd.case_dir, str(self.end_time))
-            sensor_results = read_sensor_temperature_results(
-                case=config.cfd.case_dir, room=self.room,
-                object_mesh_index=self.object_mesh_index,
-                temperature=results,
-            )
+            if self.room.constructions.sensors is not None:
+                sensor_results = read_sensor_temperature_results(
+                    case=config.cfd.case_dir, room=self.room,
+                    object_mesh_index=self.object_mesh_index,
+                    temperature=results,
+                )
+            else:
+                sensor_results = {}
             if save_simulation_results:
                 save_json_file(
                     path=config.cfd.case_dir.joinpath("simulation_results.json"),
