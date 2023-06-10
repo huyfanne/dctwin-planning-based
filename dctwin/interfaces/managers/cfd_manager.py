@@ -276,12 +276,13 @@ class CFDManager:
                 **boundary_conditions,
             )
             if not self.room.constructions.sensors:
+                sensor_results = {}
+            else:
                 sensor_results = read_sensor_temperature_results(
                     object_mesh_index=self.object_mesh_index,
                     temperature=results,
                 )
-            else:
-                sensor_results = {}
+
 
         else:
             # use full-fledged CFD simulation
@@ -307,13 +308,13 @@ class CFDManager:
             # step 4: read results
             results = read_temperature(config.cfd.case_dir, str(self.end_time))
             if not self.room.constructions.sensors:
+                sensor_results = {}
+            else:
                 sensor_results = read_sensor_temperature_results(
                     case=config.cfd.case_dir, room=self.room,
                     object_mesh_index=self.object_mesh_index,
                     temperature=results,
                 )
-            else:
-                sensor_results = {}
             if save_simulation_results:
                 save_json_file(
                     path=config.cfd.case_dir.joinpath("simulation_results.json"),
