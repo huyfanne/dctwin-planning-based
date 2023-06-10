@@ -60,7 +60,7 @@ def parse_and_upload_result(room: Room, case_dir, host_data_path, iteration):
                     in_internal_field = False
                 elif reading_values:
                     value = float(line.strip())
-                    clipped_value = clip(value, 288.15, 318.15)
+                    clipped_value = clip(value, 273.15, 373.15)
                     new_content.append(f"{clipped_value}\n")
                     continue
             new_content.append(line)
