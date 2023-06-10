@@ -248,7 +248,7 @@ class CFDManager:
             "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
             "server_powers": {}, "server_volume_flow_rates": {}
             }
-        :return: temperature fields
+        :return: temperature fields (np.ndarray, torch.Tensor) or sensor measured results (Dict)
         """
         run_geometry, run_mesh = check_base_dir(
             episode_idx=episode_idx,
@@ -275,14 +275,6 @@ class CFDManager:
                 pod_method=self.pod_method,
                 **boundary_conditions,
             )
-            if not self.room.constructions.sensors:
-                sensor_results = {}
-            else:
-                sensor_results = read_sensor_temperature_results(
-                    object_mesh_index=self.object_mesh_index,
-                    temperature=results,
-                )
-
 
         else:
             # use full-fledged CFD simulation
@@ -307,21 +299,21 @@ class CFDManager:
                 if not self.steady else None
             # step 4: read results
             results = read_temperature(config.cfd.case_dir, str(self.end_time))
-            if not self.room.constructions.sensors:
-                sensor_results = {}
-            else:
-                sensor_results = read_sensor_temperature_results(
-                    case=config.cfd.case_dir, room=self.room,
-                    object_mesh_index=self.object_mesh_index,
-                    temperature=results,
-                )
-            if save_simulation_results:
-                save_json_file(
-                    path=config.cfd.case_dir.joinpath("simulation_results.json"),
-                    saved_dict=sensor_results,
-                )
 
             if not config.cfd.PRESERVE_FOAM_LOG and not run_mesh and not run_geometry:
                 shutil.rmtree(config.cfd.case_dir)
 
-        return results if not return_sensor_results else sensor_results
+        sensor_results = read_sensor_temperature_results(
+            case=config.cfd.case_dir,
+            room=self.room,
+            object_mesh_index=self.object_mesh_index,
+            temperature=results,
+        ) if self.room.constructions.sensors else {}
+
+        if save_simulation_results:
+            save_json_file(
+                path=config.cfd.case_dir.joinpath("simulation_sensor_results.json"),
+                saved_dict=sensor_results,
+            )
+
+        return sensor_results if return_sensor_results else results
