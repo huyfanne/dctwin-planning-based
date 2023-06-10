@@ -10,7 +10,7 @@ from dctwin.models import Vertex
 from dctwin.models import Room
 
 from pathlib import Path
-from typing import Union, Dict
+from typing import Union, Dict, Optional
 
 import numpy as np
 import fluidfoam
@@ -92,22 +92,38 @@ def read_temperature_fields(end_time: str = "500") -> np.ndarray:
     return np.asarray(temperatures)
 
 
-def read_sensor_temperature_results(case: Union[str, Path], room: Room):
+def read_sensor_temperature_results(
+    room: Optional[Room] = None,
+    case: Optional[Union[str, Path]] = None,
+    object_mesh_index: Optional[Dict] = None,
+    temperature: Optional[np.ndarray] = None,
+):
     results = {}
-    while True:
-        if Path(f"{case}/postProcessing/probes/0/T").exists():
-            break
-        else:
-            time.sleep(60)
-            logger.warning(f"{case}/postProcessing/probes/0/T not found")
-            continue
-    with open(f"{case}/postProcessing/probes/0/T") as f:
-        for i in f:
-            if i.startswith("#"):
-                continue
+    if object_mesh_index is not None:
+        # read from object_mesh_index
+        assert temperature is not None, "temperature field is not provided"
+        for sensor_id, index in object_mesh_index["sensors"].items():
+            results[sensor_id] = round(temperature[index], 2)
+    else:
+        # read from postProcessing folder
+        assert room is not None, "room is not provided"
+        post_process_time = time.time()
+        while True:
+            if Path(f"{case}/postProcessing/probes/0/T").exists():
+                break
             else:
-                for idx, key in enumerate(room.constructions.sensors.keys()):
-                    results[key] = round(float(i.split()[idx + 1]) - 273.15, 2)
+                if time.time() - post_process_time > 100:
+                    logger.critical(f"{case}/postProcessing/probes/0/T not found")
+                    exit(-1)
+                continue
+        with open(f"{case}/postProcessing/probes/0/T") as f:
+            for i in f:
+                if i.startswith("#"):
+                    continue
+                else:
+                    for idx, key in enumerate(room.constructions.sensors.keys()):
+                        results[key] = round(float(i.split()[idx + 1]) - 273.15, 2)
+
     return results
 
 
@@ -182,6 +198,8 @@ def check_base_dir(case_idx: int,  episode_idx: int = None) -> Tuple[bool, bool]
         run_geometry, run_mesh = True, True
         config.cfd.case_dir = Path(config.LOG_DIR).joinpath("base")
         config.cfd.mesh_dir = config.cfd.case_dir
+
+    config.cfd.case_dir.mkdir(parents=True, exist_ok=True)
 
     return run_geometry, run_mesh
 

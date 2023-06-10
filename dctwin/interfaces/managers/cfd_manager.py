@@ -232,6 +232,7 @@ class CFDManager:
         save_mesh_index: bool = False,
         save_boundary_conditions: bool = False,
         save_simulation_results: bool = False,
+        return_sensor_results: bool = False,
         **boundary_conditions
     ) -> Union[np.ndarray, torch.Tensor]:
         """Run the whole simulation: geometry -> mesh -> solve
@@ -241,6 +242,7 @@ class CFDManager:
         :param save_mesh_index: whether to save the mesh index
         :param save_boundary_conditions: whether to save the boundary conditions
         :param save_simulation_results: whether to save the simulation results
+        :param return_sensor_results: whether to return sensor results
         :param boundary_conditions: boundary conditions for simulation
            i.e., boundary_conditions = {
             "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
@@ -248,6 +250,11 @@ class CFDManager:
             }
         :return: temperature fields
         """
+        run_geometry, run_mesh = check_base_dir(
+            episode_idx=episode_idx,
+            case_idx=case_idx,
+        )
+
         if boundary_conditions is not None:
             self.update_boundary_conditions(**boundary_conditions)
             boundary_conditions = self.format_boundary_conditions
@@ -268,13 +275,13 @@ class CFDManager:
                 pod_method=self.pod_method,
                 **boundary_conditions,
             )
+            sensor_results = read_sensor_temperature_results(
+                object_mesh_index=self.object_mesh_index,
+                temperature=results,
+            )
 
         else:
             # use full-fledged CFD simulation
-            run_geometry, run_mesh = check_base_dir(
-                episode_idx=episode_idx,
-                case_idx=case_idx,
-            )
             # step 1: build geometry
             if run_geometry:
                 self.build_geometry()
@@ -292,18 +299,22 @@ class CFDManager:
             # step 3: solve
             self.solve(stream=False)
 
+            self.last_state_case = config.cfd.case_dir.joinpath(str(self.end_time)) \
+                if not self.steady else None
+            # step 4: read results
+            results = read_temperature(config.cfd.case_dir, str(self.end_time))
+            sensor_results = read_sensor_temperature_results(
+                case=config.cfd.case_dir, room=self.room,
+                object_mesh_index=self.object_mesh_index,
+                temperature=results,
+            )
             if save_simulation_results:
                 save_json_file(
                     path=config.cfd.case_dir.joinpath("simulation_results.json"),
-                    saved_dict=read_sensor_temperature_results(case=config.cfd.case_dir, room=self.room),
+                    saved_dict=sensor_results,
                 )
-
-            self.last_state_case = config.cfd.case_dir.joinpath(str(self.end_time)) \
-                if not self.steady else None
-
-            results = read_temperature(config.cfd.case_dir, str(self.end_time))
 
             if not config.cfd.PRESERVE_FOAM_LOG and not run_mesh and not run_geometry:
                 shutil.rmtree(config.cfd.case_dir)
 
-        return results
+        return results if not return_sensor_results else sensor_results
