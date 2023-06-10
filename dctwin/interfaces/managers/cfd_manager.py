@@ -275,7 +275,7 @@ class CFDManager:
                 pod_method=self.pod_method,
                 **boundary_conditions,
             )
-            if self.room.constructions.sensors is not None:
+            if not self.room.constructions.sensors:
                 sensor_results = read_sensor_temperature_results(
                     object_mesh_index=self.object_mesh_index,
                     temperature=results,
@@ -306,7 +306,7 @@ class CFDManager:
                 if not self.steady else None
             # step 4: read results
             results = read_temperature(config.cfd.case_dir, str(self.end_time))
-            if self.room.constructions.sensors is not None:
+            if not self.room.constructions.sensors:
                 sensor_results = read_sensor_temperature_results(
                     case=config.cfd.case_dir, room=self.room,
                     object_mesh_index=self.object_mesh_index,
