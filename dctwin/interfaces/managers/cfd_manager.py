@@ -307,7 +307,7 @@ class CFDManager:
             case=config.cfd.case_dir,
             room=self.room,
             object_mesh_index=self.object_mesh_index,
-            temperature=results,
+            temperature=results
         ) if self.room.constructions.sensors else {}
 
         if save_simulation_results:

@@ -2,6 +2,8 @@ import json
 import time
 
 from typing import Tuple
+
+import torch
 from loguru import logger
 
 from dctwin.utils import config
@@ -96,14 +98,15 @@ def read_sensor_temperature_results(
     room: Optional[Room] = None,
     case: Optional[Union[str, Path]] = None,
     object_mesh_index: Optional[Dict] = None,
-    temperature: Optional[np.ndarray] = None,
+    temperature: Optional[Union[np.ndarray, torch.Tensor]] = None,
 ):
     results = {}
     if object_mesh_index is not None:
         # read from object_mesh_index
         assert temperature is not None, "temperature field is not provided"
+        temperature = temperature.detach().cpu().numpy() if isinstance(results, torch.Tensor) else temperature
         for sensor_id, index in object_mesh_index["sensors"].items():
-            results[sensor_id] = round(temperature[index], 2)
+            results[sensor_id] = round(float(temperature.squeeze()[index]), 2)
     else:
         # read from postProcessing folder
         assert room is not None, "room is not provided"
