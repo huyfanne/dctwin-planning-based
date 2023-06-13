@@ -20,19 +20,6 @@ jobs:
       run: |
         curl -sSL https://install.python-poetry.org | python3 -
 
-    - name: Update version
-      run: |
-        old_version=$(poetry version | awk '{print $2}')
-        poetry version patch
-        new_version=$(poetry version | awk '{print $2}')
-        if [ $old_version != $new_version ]
-        then
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -m "Auto bump version to $new_version" -a
-          git push
-        fi
-
     - name: Set vars
       id: vars
       env:
