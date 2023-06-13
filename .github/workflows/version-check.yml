@@ -1,0 +1,82 @@
+name: Version check
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.base_ref }}
+        id: base
+
+      - name: Set up Python for base branch
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Poetry for base branch
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Get poetry version from base branch
+        run: echo "::set-output name=base_poetry_version::$(poetry version | awk '{print $2}')"
+        id: base_poetry_version
+        shell: bash
+
+      - name: Get dctwin version from base branch
+        run: echo "::set-output name=base_dctwin_version::$(grep '__version__' ./dctwin/__init__.py | awk '{print $3}' | tr -d '\"')"
+        id: base_dctwin_version
+        shell: bash
+
+      - name: Checkout head branch
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+        id: head
+
+      - name: Set up Python for head branch
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Poetry for head branch
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Get poetry version from head branch
+        run: echo "::set-output name=head_poetry_version::$(poetry version | awk '{print $2}')"
+        id: head_poetry_version
+        shell: bash
+
+      - name: Get dctwin version from head branch
+        run: echo "::set-output name=head_dctwin_version::$(grep '__version__' ./dctwin/__init__.py | awk '{print $3}' | tr -d '\"')"
+        id: head_dctwin_version
+        shell: bash
+
+      - name: Compare Poetry versions
+        run: |
+          BASE_POETRY_VERSION=${{ steps.base_poetry_version.outputs.base_poetry_version }}
+          HEAD_POETRY_VERSION=${{ steps.head_poetry_version.outputs.head_poetry_version }}
+          if [ "$BASE_POETRY_VERSION" == "$HEAD_POETRY_VERSION" ]; then
+            echo "Poetry version has not been updated in pyproject.toml"
+            exit 1 # This will cause the workflow to fail
+          else
+            echo "Poetry version has been updated from $BASE_POETRY_VERSION to $HEAD_POETRY_VERSION"
+          fi
+
+      - name: Compare Dctwin versions
+        run: |
+          BASE_DCTWIN_VERSION=${{ steps.base_dctwin_version.outputs.base_dctwin_version }}
+          HEAD_DCTWIN_VERSION=${{ steps.head_dctwin_version.outputs.head_dctwin_version }}
+
+          if [ "$BASE_DCTWIN_VERSION" == "$HEAD_DCTWIN_VERSION" ]; then
+            echo "Dctwin version has not been updated in ./dctwin/__init__.py"
+            exit 1 # This will cause the workflow to fail
+          else
+            echo "Dctwin version has been updated from $BASE_DCTWIN_VERSION to $HEAD_DCTWIN_VERSION"
+          fi
