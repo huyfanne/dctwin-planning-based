@@ -5,9 +5,7 @@ cosim_env_config {
     }
     cfd: {
         geometry_file: "model/geometry/miniAlibaba.json"
-        pod_dir: "model/POD"
-        pod_method: "GP"
-        object_mesh_index: "model/POD/object_mesh_index.json"
+        run_cfd: true
         observations: [
            {
               exposed: true
