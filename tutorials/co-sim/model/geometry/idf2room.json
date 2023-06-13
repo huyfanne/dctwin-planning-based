@@ -1,7 +1,7 @@
 {
     "west zone air system": "ACU1",
     "westdatacenter_equip": {
-        "crac": "ACU1",
+        "acu": "ACU1",
         "servers": [
             "A01_01",
             "A01_06",

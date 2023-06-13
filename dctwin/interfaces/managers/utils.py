@@ -202,8 +202,6 @@ def check_base_dir(case_idx: int,  episode_idx: int = None) -> Tuple[bool, bool]
         config.cfd.case_dir = Path(config.LOG_DIR).joinpath("base")
         config.cfd.mesh_dir = config.cfd.case_dir
 
-    config.cfd.case_dir.mkdir(parents=True, exist_ok=True)
-
     return run_geometry, run_mesh
 
 

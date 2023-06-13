@@ -201,6 +201,7 @@ class EplusCFDAdapter:
         cfd_obs = self.cfd_manager.run(
             case_idx=self.step_idx,
             episode_idx=episode_idx,
+            save_mesh_index=True,
             **init_boundary_condition
         )
         self.cfd_sensor_obs, return_temp, _ = self._post_processing(
