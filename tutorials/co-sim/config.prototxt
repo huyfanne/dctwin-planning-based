@@ -67,7 +67,7 @@ cosim_env_config {
         model_file: "model/idf/1ZoneDataCenterHVAC_Alibaba.idf"
         weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
         network: "host"
-        host: "host.docker.internal"
+        host: "localhost"
 
         return_temp_lb: 25.0
         return_temp_ub: 40.0
