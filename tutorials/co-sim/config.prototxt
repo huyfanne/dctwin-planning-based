@@ -6,6 +6,8 @@ cosim_env_config {
     cfd: {
         geometry_file: "model/geometry/miniAlibaba.json"
         run_cfd: true
+        end_time: 100
+        write_interval: 100
         observations: [
            {
               exposed: true
