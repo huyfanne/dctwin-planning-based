@@ -250,10 +250,6 @@ class CFDManager:
             }
         :return: temperature fields (np.ndarray, torch.Tensor) or sensor measured results (Dict)
         """
-        run_geometry, run_mesh = check_base_dir(
-            episode_idx=episode_idx,
-            case_idx=case_idx,
-        )
 
         if boundary_conditions is not None:
             self.update_boundary_conditions(**boundary_conditions)
@@ -275,8 +271,11 @@ class CFDManager:
                 pod_method=self.pod_method,
                 **boundary_conditions,
             )
-
         else:
+            run_geometry, run_mesh = check_base_dir(
+                episode_idx=episode_idx,
+                case_idx=case_idx,
+            )
             # use full-fledged CFD simulation
             # step 1: build geometry
             if run_geometry:
@@ -311,6 +310,7 @@ class CFDManager:
         ) if self.room.constructions.sensors else {}
 
         if save_simulation_results:
+            assert config.cfd.case_dir is not None
             save_json_file(
                 path=config.cfd.case_dir.joinpath("simulation_sensor_results.json"),
                 saved_dict=sensor_results,
