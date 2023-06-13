@@ -7,7 +7,7 @@ from dctwin.utils import read_engine_config, setup_logging
 from google.protobuf import json_format
 
 
-engine_config = "config.prototxt"
+engine_config = "config2.prototxt"
 env_config.eplus.engine_config_file = engine_config
 
 config = read_engine_config(engine_config=engine_config)
