@@ -1,0 +1,169 @@
+logging_config {
+    log_dir: "eplus"
+    level: DEBUG
+    verbose: true
+}
+
+eplus_env_config {
+    model_file: "models/idf/eplus_test.idf"
+    weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
+    network: "host"
+    host: "localhost"
+
+    return_temp_lb: 25.0
+    return_temp_ub: 40.0
+    return_temp_init: 30.0
+
+    inlet_temp_lb: 20.0
+    inlet_temp_ub: 40.0
+    inlet_temp_init: 25.0
+
+    simulation_time_config: {
+        begin_month: 9
+        begin_day_of_month: 1
+        end_month: 9
+        end_day_of_month: 1
+        number_of_timesteps_per_hour: 4
+    }
+    use_unnormed_act: true
+    actions: [
+        {
+            control_type: PRE_SCHEDULED
+            variable_name: "cpu_loading_schedule1"
+            input_source: "data/workloads/schedule/schedule.json"
+            schedule_config:{
+                initial_value: 0.5
+                lb: 0
+                ub: 1
+                schedule_type: ITE
+                scheduled_ite_equipment_name: "WestDataCenter_Equip"
+            }
+        },
+        {
+            variable_name: "ACU1_setpoint"
+            control_type: AGENT_CONTROLLED
+            actuator_config: {
+                actuated_component_unique_name: "West Air Loop Outlet Node"
+                actuated_component_type: System_Node_Setpoint
+                actuated_component_control_type: Temperature_Setpoint
+            }
+            normalize_config: {
+                method: LINEAR
+                lb: 16
+                ub: 22
+            }
+        },
+        {
+            variable_name: "ACU1_flow_rate"
+            control_type: AGENT_CONTROLLED
+            actuator_config: {
+                actuated_component_unique_name: "West Zone Supply Fan"
+                actuated_component_type: Fan
+                actuated_component_control_type: Fan_Air_Mass_Flow_Rate
+            }
+            normalize_config: {
+                method: LINEAR
+                lb: 12
+                ub: 20
+            }
+        },
+        {
+            variable_name: "CHW_supply_temp"
+            control_type: AGENT_CONTROLLED
+            actuator_config: {
+                actuated_component_unique_name: "CW Supply Outlet Node"
+                actuated_component_type: System_Node_Setpoint
+                actuated_component_control_type: Temperature_Setpoint
+            }
+            normalize_config: {
+                method: LINEAR
+                lb: 5
+                ub: 15
+            }
+        }
+    ]
+    observations: [
+       {
+            exposed: true
+            variable_name: "cpu_loading_schedule1"
+            observation_type: EXTERNAL
+            normalize_config: {
+                method: LINEAR
+                lb: 0
+                ub: 1
+            }
+       },
+       {
+          exposed: false
+          variable_name: "HVAC_power"
+          output_variable_config: {
+             key_value: "Whole Building"
+             variable_name: "Facility Total HVAC Electricity Demand Rate"
+             reporting_frequency: "timestep"
+          }
+       },
+       {
+          exposed: false
+          variable_name: "IT_power"
+          output_variable_config: {
+             key_value: "westdatacenter_equip"
+             variable_name: "ITE Total Heat Gain to Zone Rate"
+             reporting_frequency: "timestep"
+          }
+       },
+       {
+          exposed: false
+          variable_name: "total power"
+          output_variable_config: {
+             key_value: "Whole Building"
+             variable_name: "Facility Total Electricity Demand Rate"
+             reporting_frequency: "timestep"
+          }
+       },
+       {
+          exposed: false
+          variable_name: "supply air temperature"
+          output_variable_config: {
+             key_value: "west air loop outlet node"
+             variable_name: "System Node Temperature"
+             reporting_frequency: "timestep"
+          }
+       },
+       {
+          exposed: false
+          variable_name: "supply air flow rate"
+          output_variable_config: {
+             key_value: "West Zone Supply Fan Outlet Node"
+             variable_name: "System Node Mass Flow Rate"
+             reporting_frequency: "timestep"
+          }
+       },
+       {
+          exposed: false
+          variable_name: "chw supply temperature"
+          output_variable_config: {
+             key_value: "CW Supply Outlet Node"
+             variable_name: "System Node Temperature"
+             reporting_frequency: "timestep"
+          }
+       },
+       {
+          exposed: false
+          variable_name: "chw supply mass flow rate"
+          output_variable_config: {
+             key_value: "CW Supply Outlet Node"
+             variable_name: "System Node Mass Flow Rate"
+             reporting_frequency: "timestep"
+          }
+       },
+       {
+          exposed: false
+          variable_name: "chw rt"
+          output_variable_config: {
+             key_value: "CW SUPPLY INLET NODE"
+             variable_name: "System Node Temperature"
+             reporting_frequency: "timestep"
+          }
+       }
+    ]
+}

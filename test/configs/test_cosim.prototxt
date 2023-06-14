@@ -1,13 +1,13 @@
 cosim_env_config {
-    idf2room_map: "model/geometry/idf2room2.json"
+    idf2room_map: "models/idf2room_test.json"
     env_params:{
         num_constraints: 2
     }
     cfd: {
-        geometry_file: "model/geometry/miniAlibaba2.json"
+        geometry_file: "models/geometry/room_test.json"
         run_cfd: true
-        end_time: 100
-        write_interval: 100
+        end_time: 50
+        write_interval: 10
         process_num: 2
         observations: [
            {
@@ -67,7 +67,7 @@ cosim_env_config {
         ]
     },
     eplus: {
-        model_file: "model/idf/1ZoneDataCenterHVAC_Alibaba.idf"
+        model_file: "models/idf/cosim_test.idf"
         weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
         network: "host"
         host: "localhost"
@@ -87,7 +87,7 @@ cosim_env_config {
             end_day_of_month: 1
             number_of_timesteps_per_hour: 4
         }
-
+        use_unnormed_act: true
         actions: [
             {
                 control_type: PRE_SCHEDULED
