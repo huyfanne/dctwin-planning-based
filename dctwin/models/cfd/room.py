@@ -261,11 +261,16 @@ class Room(BaseModel):
 
     @classmethod
     def _validate_racks(cls, racks: Dict, models: Model, inputs: Inputs) -> None:
-        all_servers = {}
+        all_servers, invalid_occupation = {}, {}
         for rack_id, rack in racks.items():
             cls._validate_id(rack_id)
             cls._validate_geometry_models(rack, models.geometry_models.racks) if models.geometry_models else None
-            cls._validate_rack_constructions(rack, rack.constructions, all_servers, models, inputs)
+            cls._validate_rack_constructions(rack, rack.constructions, all_servers, invalid_occupation, models, inputs)
+        if invalid_occupation:
+            msg = f"Server collision error:"
+            for server_a, server_b in invalid_occupation.items():
+                msg += f"\n{server_a} collides with {server_b}"
+            raise ValueError(f"{msg}")
 
     @classmethod
     def _validate_rack_constructions(
@@ -273,13 +278,22 @@ class Room(BaseModel):
         rack: Rack,
         rack_constructions: RackConstruction,
         all_servers: Dict,
+        invalid_occupation: Dict,
         models: Model,
         inputs: Inputs,
     ) -> None:
-        cls._validate_servers(rack, rack_constructions.servers, all_servers, models, inputs)
+        cls._validate_servers(rack, rack_constructions.servers, all_servers, invalid_occupation, models, inputs)
 
     @classmethod
-    def _validate_servers(cls, rack: Rack, servers: Dict, all_server: Dict, models: Model, inputs: Inputs) -> None:
+    def _validate_servers(
+        cls,
+        rack: Rack,
+        servers: Dict,
+        all_server: Dict,
+        invalid_occupation: Dict,
+        models: Model,
+        inputs: Inputs,
+    ) -> None:
         occupied_rack_slot = {}
         for server_id, server in servers.items():
             if server_id not in all_server:
@@ -288,13 +302,20 @@ class Room(BaseModel):
                 cls._validate_cooling_models(server, models.cooling_models.servers) if models.cooling_models.servers else None
                 cls._validate_power_models(server, models.power_models.servers) if models.power_models.servers else None
                 cls._validate_inputs(server, inputs.servers.get(server_id)) if inputs.servers else None
-                cls._validate_server_occupation(rack, server, server_id, occupied_rack_slot)
+                cls._validate_server_occupation(rack, server, server_id, occupied_rack_slot, invalid_occupation)
                 all_server[server_id] = server
             else:
                 raise ValueError(f"Server {server_id} is duplicated")
 
     @classmethod
-    def _validate_server_occupation(cls, rack: Rack, server: Server, server_id: str, occupied_rack_slot: Dict) -> None:
+    def _validate_server_occupation(
+        cls,
+        rack: Rack,
+        server: Server,
+        server_id: str,
+        occupied_rack_slot: Dict,
+        invalid_occupation: Dict
+    ) -> None:
         server.geometry.orientation = rack.geometry.orientation
         slot_position = int(server.geometry.slot_position)
         slot_occupation = int(server.geometry.slot_occupation)
@@ -309,11 +330,7 @@ class Room(BaseModel):
             if i not in occupied_rack_slot:
                 occupied_rack_slot[i] = server_id
             else:
-                raise ValueError(
-                    f"invalid server slot/occupation: "
-                    f"Server({server_id}) has collision with "
-                    f"Server({occupied_rack_slot[i]})"
-                )
+                invalid_occupation[server_id] = occupied_rack_slot[i]
 
     @classmethod
     def _validate_sensors(cls, sensors: Dict) -> None:
