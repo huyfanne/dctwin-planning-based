@@ -1,14 +1,12 @@
 cosim_env_config {
-    idf2room_map: "model/geometry/idf2room2.json"
+    idf2room_map: "model/idf2room.json"
     env_params:{
         num_constraints: 2
     }
     cfd: {
-        geometry_file: "model/geometry/miniAlibaba2.json"
+        geometry_file: "model/geometry/room.json"
         run_cfd: true
-        end_time: 100
-        write_interval: 100
-        process_num: 2
+        process_num: 32
         observations: [
            {
               exposed: true

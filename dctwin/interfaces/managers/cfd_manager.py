@@ -255,12 +255,6 @@ class CFDManager:
             self.update_boundary_conditions(**boundary_conditions)
             boundary_conditions = self.format_boundary_conditions
 
-            if save_boundary_conditions:
-                save_json_file(
-                    path=config.cfd.case_dir.joinpath("boundary_conditions.json"),
-                    saved_dict=boundary_conditions,
-                )
-
         if self.pod_backend is not None and not self.run_cfd:
             # use reduced-order CFD simulation if POD backend is provided
             # and run_cfd flag is set to False
@@ -308,6 +302,13 @@ class CFDManager:
             object_mesh_index=self.object_mesh_index,
             temperature=results
         ) if self.room.constructions.sensors else {}
+
+        if save_boundary_conditions:
+            assert config.cfd.case_dir is not None
+            save_json_file(
+                path=config.cfd.case_dir.joinpath("boundary_conditions.json"),
+                saved_dict=boundary_conditions,
+            )
 
         if save_simulation_results:
             assert config.cfd.case_dir is not None

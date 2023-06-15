@@ -68,7 +68,9 @@ class EplusBackend(Backend):
         """ Create a socket for communication with the BCVTB
         """
         self._socket = socket.socket()
-        self._socket.settimeout(60)
+        # Enable keep-alive for the socket
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        self._socket.settimeout(None)
         self._socket.bind(("0.0.0.0", 0))
         self._socket.listen()
         if self._host == "":

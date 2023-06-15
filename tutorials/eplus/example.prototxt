@@ -8,7 +8,7 @@ eplus_env_config {
     model_file: "model/idf/5DC_4CH.idf"
     weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
     network: "host"
-    host: "host.docker.internal"
+    host: "localhost"
     simulation_time_config: {
         begin_month: 4
         begin_day_of_month: 4
@@ -17,6 +17,7 @@ eplus_env_config {
         number_of_timesteps_per_hour: 4
     }
     use_unnormed_obs: false
+    use_unnormed_act: true
     actions: [
         {
             control_type: PRE_SCHEDULED
