@@ -170,8 +170,8 @@ def generate_snappy_dict(
         "server_wall": {"type": "wall", "level": 2, "refine_level": "(0 3)"},
         "rack_wall": {
             "type": "wall",
-            "level": 1,
-            "refine_level": "(0 1)",
+            "level": 2,
+            "refine_level": "(0 2)",
             "faceType": "baffle",
         },
         "rack_panel": {
