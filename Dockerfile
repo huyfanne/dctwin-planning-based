@@ -19,6 +19,7 @@ RUN apt-get purge build-essential -y && rm -rf /var/lib/apt/lists/* && rm -rf /o
 
 WORKDIR /opt/app
 
-COPY main.py ./
+COPY ./run/cfd.py ./
+COPY ./run/cosim.py ./
 
-CMD [ "python", "./main.py" ]
+CMD [ "python", "./cfd.py" ]
