@@ -41,32 +41,6 @@ def parse_and_upload_result(room: Room, case_dir, host_data_path, iteration):
             f,
         )
     
-    # clip the temperature result (temporary solution, to be removed once unity fix the color issue)
-    def clip(value, min_value, max_value):
-        return max(min_value, min(value, max_value))
-    file_path = f"{case_dir}/{iteration}/T"
-    in_internal_field = False
-    reading_values = False
-    new_content = []
-    with open(file_path, 'r') as file:
-        for line in file:
-            if 'internalField' in line:
-                in_internal_field = True
-            if in_internal_field:
-                if '(' in line:
-                    reading_values = True
-                elif ')' in line:
-                    reading_values = False
-                    in_internal_field = False
-                elif reading_values:
-                    value = float(line.strip())
-                    clipped_value = clip(value, 288.15, 318.15)
-                    new_content.append(f"{clipped_value}\n")
-                    continue
-            new_content.append(line)
-    with open(file_path, 'w') as file:
-        file.writelines(new_content)
-    
     docker_client.containers.run(
         "ntucap/paraview",
         command="pvpython /data/result.py",
