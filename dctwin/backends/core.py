@@ -94,6 +94,7 @@ class Backend(abc.ABC):
             if background:
                 return None
             output_stream = self.container.logs(stream=True, follow=True)
+            # do not change this container_id log, the worker are depending on this to get the container id
             logger.info(f"container_id: {self.container.id}")
             if stream:
                 return output_stream
