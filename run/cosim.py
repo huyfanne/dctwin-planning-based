@@ -9,6 +9,8 @@ from google.protobuf import json_format
 import os
 from pathlib import Path
 import shutil
+import json
+
 
 def map_boundary_condition_fn(
     eplus_adaptor: EplusCFDAdapter,
@@ -50,6 +52,7 @@ def map_boundary_condition_fn(
 
 logging_dir = Path(os.environ["LOGGING_DIR"])
 host_prototxt_path = Path(os.environ["HOST_PROTOTXT_PATH"])
+set_points_path = Path(os.environ["SET_POINTS_PATH"])
 engine_config = host_prototxt_path
 env_config.eplus.engine_config_file = engine_config
 config = read_engine_config(engine_config=engine_config)
@@ -73,11 +76,8 @@ env = CoSimEnv(
 )
 env.reset()
 
-action_dict = {
-    "ACU1_setpoint": 20.0,
-    "ACU1_flow_rate": 15.0,
-    "chw_supply_sp": 10.0
-}
+with open(set_points_path, 'r') as f:
+    action_dict = json.load(f)
 
 act = np.array([
     action_dict["ACU1_setpoint"],
