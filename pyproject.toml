@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dctwin"
-version = "0.6.21"
+version = "0.6.22"
 description = "Building Co-Simulation Digital Twin for Data Centers."
 authors = ["Ruihang Wang <ruihang001@ntu.edu.sg>", "Ryan Wong <ryan.wong@ntu.edu.sg>", "Zhiwei Cao <zhiwei003@ntu.edu.sg>", "Neng <xiad0001@ntu.edu.sg>"]
 packages = [
@@ -25,6 +25,7 @@ protobuf = "3.19.0"
 cvxpylayers = "^0.1.5"
 sympy = "1.11.1"
 docker = "^6.1.2"
+scipy = "1.10.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"

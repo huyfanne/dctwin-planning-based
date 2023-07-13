@@ -15,9 +15,9 @@ class EPlusOutputFormatter:
         # files_to_preserve ['eplusout.csv', 'eplusout.err', 'eplustbl.htm']
         files_to_clean = [
             'eplusmtr.csv', 'eplusout.audit', 'eplusout.bnd',
-            'eplusout.dxf', 'eplusout.eio', 'eplusout.edd',
+            'eplusout.dxf', 'eplusout.eio', # 'eplusout.edd',
             'eplusout.end', 'eplusout.eso', 'eplusout.mdd',
-            'eplusout.mtd', 'eplusout.mtr', 'eplusout.rdd',
+            'eplusout.mtd', 'eplusout.mtr', # 'eplusout.rdd',
             'eplusout.rvaudit', 'eplusout.shd', 'eplusssz.csv',
             'epluszsz.csv', 'sqlite.err', 'eplusout.dbg', 'eplustbl.htm',
         ]
