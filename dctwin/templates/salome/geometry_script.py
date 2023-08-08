@@ -232,6 +232,8 @@ class ACUModel:
 class ServerModel:
     size: dict
     is_meshed: bool
+    inlet_face: Dict
+    outlet_face: Dict
 
     @classmethod
     def from_dict(cls, model_data: dict) -> "ServerModel":
@@ -243,22 +245,32 @@ class ServerModel:
             "z": model_data["slot_occupation"] * slot_height,
         }
         obj.is_meshed = False
+        obj.inlet_face = model_data["inlet_face"]
+        obj.outlet_face = model_data["outlet_face"]
         return obj
 
     @staticmethod
-    def make_sub_face(box, group, side: str):
-        face = util.sub_face(box, side)
+    def make_sub_face(box, group, data: Dict):
+        face = util.sub_face(box, data["side"])
+        face = util.geom.MakeFaceObjHW(face, data["length"], data["width"])
+        face = util.move_placement(face, data["offset"])
         group = util.geom.MakeCutList(group, [face], True)
         return group, face
 
     def mesh(self) -> None:
         box = util.make_box(self.size)
         wall = util.group_by_faces(box, exclude=["front", "rear"])
-        inlet = util.sub_face(box, "front")
-        outlet = util.sub_face(box, "rear")
+        if self.inlet_face is None:
+            group, inlet_face =  util.sub_face(box, "front")
+        else:
+            group, inlet_face = self.make_sub_face(box, "front", self.inlet_face)
+        if self.outlet_face is None:
+            outlet_face = util.sub_face(box, "rear")
+        else:
+            group, outlet_face = self.make_sub_face(box, "rear", self.outlet_face)
         self.wall_mesh = util.mesh(wall, 0.1, 0.6)
-        self.inlet_mesh = util.mesh(inlet, 0.1, 0.6)
-        self.outlet_mesh = util.mesh(outlet, 0.1, 0.6)
+        self.inlet_mesh = util.mesh(inlet_face, 0.1, 0.6)
+        self.outlet_mesh = util.mesh(outlet_face, 0.1, 0.6)
         self.is_meshed = True
 
     def make(self, server_id: str, placement: Dict, orientation: float) -> None:
@@ -279,6 +291,7 @@ class RackModel:
     size: dict
     first_slot_offset: float
     is_meshed: bool
+    excluded_faces: List[str] = ["front", "rear"] # default exclude front and rear for rack
 
     slot_height = 0.045 # 1U = 0.045 mm
 
@@ -288,13 +301,16 @@ class RackModel:
         obj.size = model_data["size"]
         obj.first_slot_offset = model_data["first_slot_offset"]
         obj.is_meshed = False
+        for face in list(SalomeUtil.SUB_FACE_SIZE_INDICES):
+            if model_data["faces"] is not None:
+                if not model_data["faces"] and model_data["faces"] not in obj.excluded_faces:
+                    obj.excluded_faces.append(face)
         return obj
 
     def mesh(self) -> None:
         box = util.make_box(self.size)
-        group = util.group_by_faces(box, exclude=["front", "rear"])
+        group = util.group_by_faces(box, exclude=self.excluded_faces)
         self.rack_wall_mesh = util.mesh(group, 0.1, 2)
-
         blanking_box = util.make_box({**self.size, "z": self.slot_height, "y": 0.1})
         self.rack_blanking_mesh = util.mesh(blanking_box, 0.05, 1)
         self.is_meshed = True
@@ -475,9 +491,13 @@ class Builder:
             try:
                 rack_model = rack_models[rack["geometry"]["model"]]
             except KeyError:
-                logging.warning(f"Rack model {rack['geometry']['model']} not found")
-                rack_model = ACUModel.from_dict(rack["geometry"])
-            rack_model.make(rack_key, rack["geometry"]["location"], rack["geometry"]["orientation"])
+                logging.critical(f"Rack model {rack['geometry']['model']} not found")
+                exit(1)
+            rack_model.make(
+                rack_id=rack_key,
+                placement=rack["geometry"]["location"],
+                orientation=rack["geometry"]["orientation"],
+            )
             self.make_servers(rack_key, rack, rack_model, server_models)
 
     def make_servers(self, rack_key: str, rack: Dict, rack_model: RackModel, server_models: Dict) -> None:

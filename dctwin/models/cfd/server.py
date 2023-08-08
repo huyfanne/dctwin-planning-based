@@ -5,12 +5,22 @@ from typing import Optional, OrderedDict
 from pydantic import Field
 
 from .utils import BaseModel
+from .basics import Size, Vertex, Face
+
+
+class ServerFace(BaseModel):
+    side: Face
+    width: float
+    length: float
+    offset: Vertex
 
 
 class ServerGeometryrModel(BaseModel):
     slot_occupation: Optional[int]
     depth: Optional[float]
     width: Optional[float]
+    inlet_face: Optional[ServerFace]
+    outlet_face: Optional[ServerFace]
 
 
 class ServerGeometry(ServerGeometryrModel):
