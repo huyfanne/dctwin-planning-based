@@ -259,15 +259,15 @@ class ServerModel:
 
     def mesh(self) -> None:
         box = util.make_box(self.size)
-        wall = util.group_by_faces(box, exclude=["front", "rear"])
+        wall = util.group_by_faces(box)
         if self.inlet_face is None:
-            group, inlet_face =  util.sub_face(box, "front")
+            inlet_face =  util.sub_face(box, "front")
         else:
-            group, inlet_face = self.make_sub_face(box, "front", self.inlet_face)
+            wall, inlet_face = self.make_sub_face(box, wall, self.inlet_face)
         if self.outlet_face is None:
             outlet_face = util.sub_face(box, "rear")
         else:
-            group, outlet_face = self.make_sub_face(box, "rear", self.outlet_face)
+            wall, outlet_face = self.make_sub_face(box, wall, self.outlet_face)
         self.wall_mesh = util.mesh(wall, 0.1, 0.6)
         self.inlet_mesh = util.mesh(inlet_face, 0.1, 0.6)
         self.outlet_mesh = util.mesh(outlet_face, 0.1, 0.6)
@@ -303,7 +303,7 @@ class RackModel:
         obj.is_meshed = False
         for face in list(SalomeUtil.SUB_FACE_SIZE_INDICES):
             if model_data["faces"] is not None:
-                if not model_data["faces"] and model_data["faces"] not in obj.excluded_faces:
+                if not model_data["faces"][face] and face not in obj.excluded_faces:
                     obj.excluded_faces.append(face)
         return obj
 

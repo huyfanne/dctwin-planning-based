@@ -8,7 +8,7 @@ eplus_env_config {
     model_file: "model/idf/5DC_4CH.idf"
     weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
     network: "host"
-    host: "localhost"
+    host: "host.docker.internal"
     simulation_time_config: {
         begin_month: 4
         begin_day_of_month: 4
@@ -85,7 +85,12 @@ eplus_env_config {
                 actuated_component_unique_name: "node ch_lp_04"
                 actuated_component_type: System_Node_Setpoint
                 actuated_component_control_type: Temperature_Setpoint
-            }
+            },
+            normalize_config: {
+                 method: LINEAR
+                 lb: 5
+                 ub: 15
+             }
         },
         {
             variable_name: "dc1_supply_temperature"
