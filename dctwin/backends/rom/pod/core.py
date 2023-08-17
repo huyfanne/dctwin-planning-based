@@ -1,5 +1,5 @@
 import pickle
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 from loguru import logger
 import numpy as np
 import cvxpy as cp
@@ -38,18 +38,22 @@ class PODBackend(Backend):
         self.object_mesh_index = object_mesh_index
         self.server_inlet, self.server_outlet = [], []
         self.acu_supply, self.acu_return = [], []
+        self.sensor_index = []
         self._get_object_index()
 
     def _get_object_index(self) -> None:
 
         for rack_name, rack in self.room.constructions.racks.items():
-            for server_name, server in rack.constructions.servers.items():
+            for server_name, _ in rack.constructions.servers.items():
                 self.server_inlet.append(self.object_mesh_index["servers"][server_name]["inlet"])
                 self.server_outlet.append(self.object_mesh_index["servers"][server_name]["outlet"])
 
-        for acu_name, acu_mesh_indices in self.room.constructions.acus.items():
+        for acu_name, _ in self.room.constructions.acus.items():
             self.acu_supply.append(self.object_mesh_index["acus"][acu_name]["supply"])
             self.acu_return.append(self.object_mesh_index["acus"][acu_name]["return"])
+
+        for sen_name, _ in self.room.constructions.sensors.items():
+            self.sensor_index.append(self.object_mesh_index["sensors"][sen_name])
 
     def _as_tensors(
         self,
@@ -57,6 +61,7 @@ class PODBackend(Backend):
         supply_air_volume_flow_rates: Dict,
         server_powers: Dict,
         server_volume_flow_rates: Dict,
+        sensor_temperatures: Optional[Dict] = None,
     ) -> Dict[str, torch.Tensor]:
         """
         convert the boundary conditions into torch.Tensor format
@@ -67,30 +72,38 @@ class PODBackend(Backend):
         """
         server_power_list, server_volume_flow_rate_list = [], []
         supply_air_temperature_list, supply_air_volume_flow_rate_list = [], []
+        sensor_temperature_list = []
 
         for rack_name, rack in self.room.constructions.racks.items():
             for server_name, server in rack.constructions.servers.items():
                 server_power_list.append(server_powers[server_name])
                 server_volume_flow_rate_list.append(server_volume_flow_rates[server_name])
 
-        for acu_name, acu_mesh_indices in self.room.constructions.acus.items():
+        for acu_name, acu in self.room.constructions.acus.items():
             supply_air_temperature_list.append(supply_air_temperatures[acu_name])
             supply_air_volume_flow_rate_list.append(supply_air_volume_flow_rates[acu_name])
+
+        if sensor_temperatures is not None:
+            for sensor_name, sensor in self.room.constructions.sensors.items():
+                sensor_temperature_list.append(sensor_temperatures[sensor_name])
 
         server_powers = torch.tensor(server_power_list, dtype=torch.float32, requires_grad=False)
         server_volume_flow_rates = torch.tensor(server_volume_flow_rate_list, dtype=torch.float32, requires_grad=False)
         supply_air_temperatures = torch.tensor(supply_air_temperature_list, dtype=torch.float32, requires_grad=False)
         supply_air_volume_flow_rates = torch.tensor(supply_air_volume_flow_rate_list, dtype=torch.float32, requires_grad=False)
+        sensor_temperatures = torch.tensor(sensor_temperature_list, dtype=torch.float32, requires_grad=False)
 
         return {
             "server_powers": server_powers,
             "server_volume_flow_rates": server_volume_flow_rates,
             "supply_air_temperatures": supply_air_temperatures,
             "supply_air_volume_flow_rates": supply_air_volume_flow_rates,
+            "sensor_temperatures": sensor_temperatures,
         }
 
     def _pre_process_inputs(
         self,
+        sensor_temperatures: Optional[Dict] = None,
         **boundary_conditions,
     ) -> Dict[str, torch.Tensor]:
         """
@@ -99,15 +112,21 @@ class PODBackend(Backend):
          - remove servers with zero volume flow rate to avoid zero division error
         """
         used_modes = self.modes[:, :self.num_modes]
-        results = self._as_tensors(**boundary_conditions)
+        results = self._as_tensors(
+            sensor_temperatures=sensor_temperatures,
+            **boundary_conditions
+        )
 
         mask = results["server_volume_flow_rates"].ne(0.)
         mean_temp_inlet = torch.masked_select(self.mean_obs[self.server_inlet], mask)
         mean_temp_outlet = torch.masked_select(self.mean_obs[self.server_outlet], mask)
         mean_temp_return = self.mean_obs[self.acu_return]
+        mean_temp_sensor = self.mean_obs[self.sensor_index]
+
         phi_inlet = torch.masked_select(used_modes[self.server_inlet], mask.view(-1,1)).view(-1, self.num_modes)
         phi_outlet = torch.masked_select(used_modes[self.server_outlet], mask.view(-1,1)).view(-1, self.num_modes)
         phi_return = used_modes[self.acu_return]
+        phi_sensor = used_modes[self.sensor_index]
 
         server_powers = torch.masked_select(results["server_powers"], mask)
         server_volume_flow_rates = torch.masked_select(results["server_volume_flow_rates"], mask)
@@ -117,12 +136,15 @@ class PODBackend(Backend):
             "supply_air_volume_flow_rates": results["supply_air_volume_flow_rates"],
             "server_powers": server_powers,
             "server_volume_flow_rates": server_volume_flow_rates,
+            "sensor_temperatures": results["sensor_temperatures"],
             "mean_temp_inlet": mean_temp_inlet,
             "mean_temp_outlet": mean_temp_outlet,
             "mean_temp_return": mean_temp_return,
+            "mean_temp_sensor": mean_temp_sensor,
             "phi_inlet": phi_inlet,
             "phi_outlet": phi_outlet,
             "phi_return": phi_return,
+            "phi_sensor": phi_sensor,
         }
 
         return input_data
@@ -141,6 +163,9 @@ class PODBackend(Backend):
         phi_inlet: torch.Tensor,
         phi_outlet: torch.Tensor,
         phi_return: torch.Tensor,
+        sensor_temperatures: Optional[torch.Tensor] = None,
+        mean_temp_sensor: Optional[torch.Tensor] = None,
+        phi_sensor: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
 
         def make_problem(trust_region=True):
@@ -238,6 +263,9 @@ class PODBackend(Backend):
         phi_inlet: torch.Tensor,
         phi_outlet: torch.Tensor,
         phi_return: torch.Tensor,
+        sensor_temperatures: Optional[torch.Tensor] = None,
+        mean_temp_sensor: Optional[torch.Tensor] = None,
+        phi_sensor: Optional[torch.Tensor] = None,
     ) -> None:
         """
         Implement flux matching based on the paper:
@@ -275,9 +303,11 @@ class PODBackend(Backend):
         acu_array -= torch.sum((mean_temp_return - supply_air_temperatures) * supply_air_volume_flow_rates)
         acu_array = acu_array.view(-1, 1)
 
+        sen_array = sensor_temperatures - mean_temp_sensor
+
         # assemble all matrices and arrays into a big linear system
-        a = torch.cat([phi_server_matrix, phi_acu_matrix], dim=0)
-        b = torch.cat([server_array, acu_array], dim=0)
+        a = torch.cat([phi_server_matrix, phi_acu_matrix, phi_sensor], dim=0)
+        b = torch.cat([server_array, acu_array, sen_array], dim=0)
         assert a.shape[0] > self.num_modes, "equations are fewer than number of coefficients"
         # solve the least square for optimal coefficients
         self.coefs, _ = torch.linalg.lstsq(a, b)[:2]
@@ -295,6 +325,9 @@ class PODBackend(Backend):
         phi_inlet: torch.Tensor,
         phi_outlet: torch.Tensor,
         phi_return: torch.Tensor,
+        sensor_temperatures: Optional[torch.Tensor] = None,
+        mean_temp_sensor: Optional[torch.Tensor] = None,
+        phi_sensor: Optional[torch.Tensor] = None,
         local_search: bool = True,
     ) -> None:
         """
@@ -343,6 +376,9 @@ class PODBackend(Backend):
                 phi_inlet=phi_inlet,
                 phi_outlet=phi_outlet,
                 phi_return=phi_return,
+                sensor_temperatures=sensor_temperatures,
+                mean_temp_sensor=mean_temp_sensor,
+                phi_sensor=phi_sensor,
             )
         else:
             self.coefs = coef
@@ -397,11 +433,13 @@ class PODBackend(Backend):
     def run(
         self,
         pod_method: str = "GP-Flux",
+        sensor_temperatures: Optional[Dict] = None,
         **boundary_conditions: Dict,
     ) -> np.ndarray:
         """
         Run certain POD coefficient estimation algorithm to predict the temperature field.
         :param pod_method: the POD coefficient estimation algorithm
+        :param sensor_temperatures: the temperature of the sensor measurements
         :param boundary_conditions: boundary conditions for simulation
            i.e., boundary_conditions = {
             "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
@@ -409,7 +447,10 @@ class PODBackend(Backend):
             }
         """
         assert self.modes is not None, "POD modes are not computed or loaded"
-        input_data = self._pre_process_inputs(**boundary_conditions)
+        input_data = self._pre_process_inputs(
+            sensor_temperatures=sensor_temperatures,
+            **boundary_conditions
+        )
         # POD coefficients calculation for a new test case
         if pod_method == "Flux":
             self._flux_matching(**input_data)
