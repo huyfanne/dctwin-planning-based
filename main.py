@@ -10,6 +10,24 @@ from pathlib import Path
 
 docker_client = docker.DockerClient(base_url="unix://var/run/docker.sock")
 
+field_config = {
+        "server_inlet": {"type": "patch", "level": 3, "refine_level": "(0 3)"},
+        "server_outlet": {"type": "patch", "level": 3, "refine_level": "(0 3)"},
+        "server_wall": {"type": "wall", "level": 3, "refine_level": "(0 3)"},
+        "rack_wall": {
+            "type": "wall",
+            "level": 3,
+            "refine_level": "(0 3)",
+            "faceType": "baffle",
+        },
+        "rack_panel": {
+            "type": "wall",
+            "level": 3,
+            "refine_level": "(0 3)",
+            "faceType": "baffle",
+        },
+    }
+
 
 def kelvin_to_celsius(kelvin, round_to=None):
     if round_to:
@@ -135,7 +153,12 @@ config.cfd.mesh_dir = ""
 with open(host_workspace / "config/preferences.json", "r") as f:
     preference = json.load(f)
 room = Room.load(host_workspace / "model/model.dt")
-cfd_manager = CFDManager(room=room, mesh_process=32, solve_process=32, end_time=int(preference["iteration"]))
+cfd_manager = CFDManager(
+    room=room,
+    mesh_process=32,
+    solve_process=32,
+    end_time=int(preference["iteration"]),
+    field_config=field_config)
 cfd_manager.run()
 
 case_dir = host_workspace / "run/result/base"
