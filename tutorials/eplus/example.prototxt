@@ -85,7 +85,12 @@ eplus_env_config {
                 actuated_component_unique_name: "node ch_lp_04"
                 actuated_component_type: System_Node_Setpoint
                 actuated_component_control_type: Temperature_Setpoint
-            }
+            },
+            normalize_config: {
+                 method: LINEAR
+                 lb: 5
+                 ub: 15
+             }
         },
         {
             variable_name: "dc1_supply_temperature"
