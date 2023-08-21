@@ -16,7 +16,7 @@ from .resizers import LinearResizer
 
 def validator(method) -> callable:
     def validated_call(self):
-        if self.control_type != ActionControlType.PRE_SCHEDULED:
+        if self.control_type != ActionControlType.PRE_SCHEDULED and self.control_type != ActionControlType.ACTUATOR_PRE_SCHEDULED:
             logger.error(
                 f"{self.debug_name} is not pre_scheduled but schedule related call "
                 f"is made to it! Ignoring..."
@@ -101,7 +101,7 @@ class Action(ScalarDataItem):
         if self.control_type == ActionControlType.FIXED and self.normed_value is None:
             logger.warning(f"{self.debug_name} set to be fixed but no default value was specified! "
                            f"Using {self.default_value} instead...")
-        elif self.control_type == ActionControlType.PRE_SCHEDULED:
+        elif self.control_type == ActionControlType.PRE_SCHEDULED or self.control_type == ActionControlType.ACTUATOR_PRE_SCHEDULED:
             try:
                 self.input_source = config.input_source
                 assert len(self.input_source) > 0, \

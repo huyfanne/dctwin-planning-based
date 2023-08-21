@@ -88,6 +88,7 @@ message EPlusActionConfig {
     AGENT_CONTROLLED = 2;  // i.e. action in the common sense, included in the action space
     PRE_SCHEDULED = 3;  // get from a specified picked list in round-robin manner
     CUSTOMIZED = 4;  // user register a callable function to produce value, example will be provided
+    ACTUATOR_PRE_SCHEDULED = 5;
   }
   optional ControlType control_type = 2 [default = AGENT_CONTROLLED];
   optional string input_source = 3;  // only required/used when control_type == PRE_SCHEDULED, otherwise ignored
