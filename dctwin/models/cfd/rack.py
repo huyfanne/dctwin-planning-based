@@ -4,6 +4,7 @@ from typing import Optional, OrderedDict
 from pydantic import Field
 
 from .basics import Size, Vertex
+from .box import BoxFaces
 from .server import Server
 from .utils import BaseModel
 
@@ -12,6 +13,7 @@ class RackGeometryModel(BaseModel):
     size: Optional[Size]
     slot: Optional[int]
     first_slot_offset: Optional[float]
+    faces: Optional[BoxFaces]
 
 
 class RackGeometry(RackGeometryModel):
@@ -28,7 +30,7 @@ class RackConstruction(BaseModel):
 
 
 class Rack(BaseModel):
-    """ Rack object in a data center """
+    """ Rack object in a data  center """
     geometry: RackGeometry
     constructions: Optional[RackConstruction]
     meta: Optional[OrderedDict] = Field(default_factory=dict)
