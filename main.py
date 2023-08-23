@@ -42,7 +42,7 @@ def highest_2_power_less_than_cpu_count():
     while cpu_count > 1:
         power += 1
         cpu_count = cpu_count >> 1
-    return power
+    return 2 ** power
 
 
 def parse_and_upload_result(room: Room, case_dir, host_data_path, iteration):
