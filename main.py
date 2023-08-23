@@ -36,6 +36,15 @@ def kelvin_to_celsius(kelvin, round_to=None):
         return float(kelvin) - 273.15
 
 
+def highest_2_power_less_than_cpu_count():
+    cpu_count = os.cpu_count()
+    power = 0
+    while cpu_count > 1:
+        power += 1
+        cpu_count = cpu_count >> 1
+    return power
+
+
 def parse_and_upload_result(room: Room, case_dir, host_data_path, iteration):
     base_files = host_data_path / "cosim/base-files"
     shutil.copy(base_files / "result.py", case_dir)
@@ -153,10 +162,11 @@ config.cfd.mesh_dir = ""
 with open(host_workspace / "config/preferences.json", "r") as f:
     preference = json.load(f)
 room = Room.load(host_workspace / "model/model.dt")
+max_processes = highest_2_power_less_than_cpu_count()
 cfd_manager = CFDManager(
     room=room,
-    mesh_process=32,
-    solve_process=32,
+    mesh_process=min(32, max_processes),
+    solve_process=min(32, max_processes),
     end_time=int(preference["iteration"]),
     field_config=field_config)
 cfd_manager.run()
