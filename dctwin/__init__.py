@@ -1,7 +1,7 @@
 from .registraion import make_env
 from dctwin import adapters, backends, interfaces, models, templates, utils
 
-__version__ = "0.6.24"
+__version__ = "0.6.25"
 
 __all__ = [
     "adapters",
