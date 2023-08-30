@@ -22,4 +22,5 @@ RUN apt-get update && apt-get upgrade -y && \
 
 WORKDIR /opt/app
 COPY main.py ./
+COPY main-eplus.py ./
 CMD [ "python", "./main.py" ]
