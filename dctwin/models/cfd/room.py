@@ -226,10 +226,10 @@ class RoomConstruction(BaseModel):
 class Room(BaseModel):
     """ Room object in a data center
     """
-    models: Optional[Model]
-    inputs: Optional[Inputs] = Field(default_factory=Inputs)
+    models: Model = Field(default_factory=Model)
+    inputs: Inputs = Field(default_factory=Inputs)
     geometry: RoomGeometry
-    constructions: Optional[RoomConstruction]
+    constructions: RoomConstruction = Field(default_factory=RoomConstruction)
     meta: Optional[OrderedDict] = Field(default_factory=dict)
 
     @validator("constructions")
