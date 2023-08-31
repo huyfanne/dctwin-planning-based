@@ -226,10 +226,10 @@ class RoomConstruction(BaseModel):
 class Room(BaseModel):
     """ Room object in a data center
     """
-    models: Optional[Model]
-    inputs: Optional[Inputs] = Field(default_factory=Inputs)
+    models: Model = Field(default_factory=Model)
+    inputs: Inputs = Field(default_factory=Inputs)
     geometry: RoomGeometry
-    constructions: Optional[RoomConstruction]
+    constructions: RoomConstruction = Field(default_factory=RoomConstruction)
     meta: Optional[OrderedDict] = Field(default_factory=dict)
 
     @validator("constructions")
@@ -357,10 +357,13 @@ class Room(BaseModel):
             obj.geometry.size = models.get(model_name).size
             obj.geometry.slot = models.get(model_name).slot
             obj.geometry.first_slot_offset = models.get(model_name).first_slot_offset
+            obj.geometry.faces = models.get(model_name).faces
         elif isinstance(obj, Server) and models is not None:
             obj.geometry.slot_occupation = models.get(model_name).slot_occupation
             obj.geometry.width = models.get(model_name).width
             obj.geometry.depth = models.get(model_name).depth
+            obj.geometry.inlet_face = models.get(model_name).inlet_face
+            obj.geometry.outlet_face = models.get(model_name).outlet_face
         elif isinstance(obj, Box) and models is not None:
             obj.geometry.faces = models.get(model_name).faces
         else:
