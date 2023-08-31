@@ -21,6 +21,9 @@ RUN apt-get update && apt-get upgrade -y && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/app
-COPY main.py ./
-COPY main-eplus.py ./
-CMD [ "python", "./main.py" ]
+
+COPY ./run/cfd.py ./
+COPY ./run/cosim.py ./
+COPY ./run/eplus.py ./
+
+CMD [ "python", "./cfd.py" ]
