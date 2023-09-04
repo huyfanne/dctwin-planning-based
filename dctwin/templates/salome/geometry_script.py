@@ -536,7 +536,7 @@ class Builder:
                 )
 
     @staticmethod
-    def make_panels(base_face, plane: Dict) -> None:
+    def make_panels(base_face, plane: Dict, name: str) -> None:
         floor_face = util.move_placement(
             base_face, {"x": 0, "y": 0, "z": plane["geometry"]["height"]}
         )
@@ -549,7 +549,7 @@ class Builder:
             box = util.make_box(opening["size"], opening["location"])
             opening_faces.append(util.sub_face(box, "bottom"))
         floor_face = util.geom.MakeCutList(floor_face, opening_faces)
-        util.export_stl(util.mesh(floor_face, 0.5, 5), "floor_1")
+        util.export_stl(util.mesh(floor_face, 0.5, 5), f"{name}")
 
     def make_room(self, geometry_models: Dict) -> None:
         oz = geompy.MakeVectorDXDYDZ(0, 0, 1)
@@ -572,8 +572,8 @@ class Builder:
         boxes = room["constructions"].get("boxes", None)
         acus = room["constructions"].get("acus", None)
         racks = room["constructions"].get("racks", None)
-        self.make_panels(base_face=face, plane=raised_floor) if raised_floor else None
-        self.make_panels(base_face=face, plane=false_ceiling) if false_ceiling else None
+        self.make_panels(base_face=face, plane=raised_floor, name="floor_1") if raised_floor else None
+        self.make_panels(base_face=face, plane=false_ceiling, name="ceiling_1") if false_ceiling else None
         self.make_boxes(boxes=boxes) if boxes else None
         self.make_acus(
             acus=acus,
