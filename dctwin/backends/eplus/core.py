@@ -247,11 +247,28 @@ class EplusBackend(Backend):
         msg = self._serialize(action)
         self._conn.send(msg.encode())
 
-    def _get_parsed_msg(self) -> Tuple[List[float], bool]:
-        return self._deserialize(
-            self._conn.recv(self._msg_buf_size).decode(encoding=self._encoding).strip()
-        )
+    # def _get_parsed_msg(self) -> Tuple[List[float], bool]:
+    #     return self._deserialize(
+    #         self._conn.recv(self._msg_buf_size).decode(encoding=self._encoding).strip()
+    #     )
 
+    def _get_parsed_msg(self) -> Tuple[List[float], bool]:
+        # Initialize an empty buffer to store the received data
+        buffer = bytearray()
+
+        # Loop until the entire message is received
+        while True:
+            chunk = self._conn.recv(self._msg_buf_size)
+            if not chunk:
+                raise Exception("Connection closed by the other end")
+            buffer.extend(chunk)
+            # print('buffer:', buffer)
+            if self._termination_condition_met(buffer):
+                return self._deserialize(buffer.decode(encoding=self._encoding).strip())
+
+    def _termination_condition_met(self, buffer: bytearray) -> bool:
+        return b'\n' in buffer  # Change '\n' to your desired termination condition
+    
     def receive_status(self) -> Tuple[Union[List[float], None], bool]:
         """
         Receive observations from Eplus
