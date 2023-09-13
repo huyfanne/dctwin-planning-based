@@ -92,7 +92,7 @@ class Builder:
             )
 
 
-class SolverBackend(Backend):
+class SolverBackendMixin:
     """
     Backend for OpenFOAM solver. The class is inherited from the core Backend
     """
@@ -188,6 +188,12 @@ class SolverBackend(Backend):
             case_dir = config.cfd.case_dir
 
         return self.run_container(user=0, stream=stream, case_dir=case_dir)
+
+class SolverBackend(SolverBackendMixin, Backend):
+    pass
+
+# class SalomeBackendKubernetes(SalomeBackendMixin, KubernetesBackend):
+#     pass
 
 
 class SteadySolverBackend(SolverBackend):

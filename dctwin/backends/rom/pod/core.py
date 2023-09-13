@@ -16,7 +16,7 @@ from dctwin.utils import config
 from .models import BatchIndependentMultiTaskGPModel
 
 
-class PODBackend(Backend):
+class PODBackendMixin:
     """
     Backend for the POD model. It is a wrapper of the POD model.
     It accepts the boundary conditions and predict the
@@ -469,3 +469,10 @@ class PODBackend(Backend):
         # reconstruct temperature field
         reconstruct = self.mean_obs + torch.matmul(self.coefs, self.modes[:, :self.num_modes].T)
         return reconstruct
+
+
+class PODBackend(PODBackendMixin, Backend):
+    pass
+
+# class SalomeBackendKubernetes(SalomeBackendMixin, KubernetesBackend):
+#     pass

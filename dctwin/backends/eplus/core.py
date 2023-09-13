@@ -18,7 +18,7 @@ from dctwin.models import Eplus
 from dctwin.utils import config
 
 
-class EplusBackend(Backend):
+class EplusBackendMixin:
     """
     A class to handle the communication with the EnergyPlus with BCVTB
     :param proto_config: the configuration of the eplus model
@@ -302,3 +302,10 @@ class EplusBackend(Backend):
                 self._conn.close()
             self._socket.close()
         logger.debug("EnergyPlus backend closed")
+
+
+class EplusBackend(EplusBackendMixin, Backend):
+    pass
+
+# class SalomeBackendKubernetes(SalomeBackendMixin, KubernetesBackend):
+#     pass

@@ -14,7 +14,7 @@ from dctwin.utils import config
 from dctwin.models import Room
 
 
-class SnappyHexBackend(Backend):
+class SnappyHexBackendMixin:
     """
     Backend for snappyHexMesh. The class is inherited from the core Backend.
     """
@@ -87,3 +87,10 @@ class SnappyHexBackend(Backend):
         self.run_container(user=0, case_dir=case_dir)
 
         logger.info("***** Mesh finished *****\n\n")
+
+
+class SnappyHexBackend(SnappyHexBackendMixin, Backend):
+    pass
+
+# class SalomeBackendKubernetes(SalomeBackendMixin, KubernetesBackend):
+#     pass

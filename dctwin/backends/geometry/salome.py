@@ -72,6 +72,6 @@ class SalomeBackendMixin:
 
 class SalomeBackend(SalomeBackendMixin, Backend):
     pass
-#
-# class SalomeBackendkK8s(SalomeBackendMixin, k8sBackend):
+
+# class SalomeBackendKubernetes(SalomeBackendMixin, KubernetesBackend):
 #     pass
