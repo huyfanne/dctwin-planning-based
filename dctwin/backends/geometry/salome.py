@@ -7,7 +7,7 @@ from dctwin.models import Room
 from dctwin.utils import template_env, config
 
 
-class SalomeBackend(Backend):
+class SalomeBackendMixin:
     """
     A class to manage the geometry generation using Salome.
     """
@@ -69,3 +69,9 @@ class SalomeBackend(Backend):
         )
 
         logger.info("***** Geometry finished *****\n\n")
+
+class SalomeBackend(SalomeBackendMixin, Backend):
+    pass
+#
+# class SalomeBackendkK8s(SalomeBackendMixin, k8sBackend):
+#     pass
