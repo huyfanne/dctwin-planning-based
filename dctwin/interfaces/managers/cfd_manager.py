@@ -300,8 +300,8 @@ class CFDManager:
             )
             # use full-fledged CFD simulation
             # step 1: build geometry
-            # if run_geometry:
-            #     self.build_geometry()
+            if run_geometry:
+                self.build_geometry()
             # step 2: mesh geometry
             if run_mesh:
                 self.mesh()
