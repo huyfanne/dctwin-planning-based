@@ -3,6 +3,7 @@ from pathlib import Path
 
 from loguru import logger
 from dctwin.backends.core import Backend
+from dctwin.backends.core_k8s import BackendK8s
 from dctwin.models import Room
 from dctwin.utils import template_env, config
 
@@ -73,5 +74,5 @@ class SalomeBackendMixin:
 class SalomeBackend(SalomeBackendMixin, Backend):
     pass
 
-# class SalomeBackendKubernetes(SalomeBackendMixin, KubernetesBackend):
-#     pass
+class SalomeBackendK8s(SalomeBackendMixin, BackendK8s):
+    pass

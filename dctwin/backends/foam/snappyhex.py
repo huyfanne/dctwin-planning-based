@@ -5,6 +5,7 @@ from loguru import logger
 from typing import Optional
 
 from dctwin.backends.core import Backend
+from dctwin.backends.core_k8s import BackendK8s
 from dctwin.backends.foam.utils import (
     init_foam,
     generate_block_dict,
@@ -27,18 +28,21 @@ class SnappyHexBackendMixin:
             if len(self.perforated_openings) > 0:
                 topo_set_command = "topoSet &&"
 
-            command = (
-                "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
-                "blockMesh && surfaceFeatureExtract && "
-                "decomposePar -copyZero -force && "
-                "mpirun --allow-run-as-root -np "
-                f"{self.process_num} snappyHexMesh -parallel -overwrite && "
-                "reconstructParMesh -constant -mergeTol 6 && "
-                f"{topo_set_command}"
-                "createPatch -overwrite && "
-                "rm -rf /data/constant/triSurface/*.eMesh' && "
-                "rm -rf /data/processor*"
-            )
+            command = [
+                "bash", "-c",
+                (
+                    "source /opt/OpenFOAM/setImage_v1912.sh && "
+                    "blockMesh && surfaceFeatureExtract && "
+                    "decomposePar -copyZero -force && "
+                    "mpirun --allow-run-as-root -np "
+                    f"{self.process_num} snappyHexMesh -parallel -overwrite && "
+                    "reconstructParMesh -constant -mergeTol 6 && "
+                    f"{topo_set_command}"
+                    "createPatch -overwrite && "
+                    "rm -rf /data/constant/triSurface/*.eMesh && "
+                    "rm -rf /data/processor*"
+                )
+            ]
         else:
             command = (
                 "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
@@ -92,5 +96,5 @@ class SnappyHexBackendMixin:
 class SnappyHexBackend(SnappyHexBackendMixin, Backend):
     pass
 
-# class SalomeBackendKubernetes(SalomeBackendMixin, KubernetesBackend):
-#     pass
+class SnappyHexBackendK8s(SnappyHexBackendMixin, BackendK8s):
+    pass

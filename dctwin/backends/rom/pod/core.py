@@ -10,6 +10,7 @@ from cvxpylayers.torch import CvxpyLayer
 
 
 from dctwin.backends.core import Backend
+from dctwin.backends.core_k8s import BackendK8s
 from dctwin.models import Room
 from dctwin.utils import config
 
@@ -474,5 +475,5 @@ class PODBackendMixin:
 class PODBackend(PODBackendMixin, Backend):
     pass
 
-# class SalomeBackendKubernetes(SalomeBackendMixin, KubernetesBackend):
-#     pass
+class PODBackendK8s(PODBackendMixin, BackendK8s):
+    pass

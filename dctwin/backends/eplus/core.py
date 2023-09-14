@@ -14,6 +14,7 @@ from loguru import logger
 from dctwin.utils import EPlusEnvConfig
 from dctwin.backends.eplus.utils import EPlusOutputFormatter
 from dctwin.backends.core import Backend
+from dctwin.backends.core_k8s import BackendK8s
 from dctwin.models import Eplus
 from dctwin.utils import config
 
@@ -307,5 +308,5 @@ class EplusBackendMixin:
 class EplusBackend(EplusBackendMixin, Backend):
     pass
 
-# class SalomeBackendKubernetes(SalomeBackendMixin, KubernetesBackend):
-#     pass
+class EplusBackendK8s(EplusBackendMixin, BackendK8s):
+    pass

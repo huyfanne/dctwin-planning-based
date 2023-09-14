@@ -7,10 +7,15 @@ from loguru import logger
 
 from dctwin.backends import (
     SalomeBackend,
+    SalomeBackendK8s,
     SnappyHexBackend,
+    SnappyHexBackendK8s,
     SteadySolverBackend,
+    SteadySolverBackendK8s,
     TransientSolverBackend,
+    TransientSolverBackendK8s,
     PODBackend,
+    PODBackendK8s,
 )
 
 from .utils import (
@@ -63,14 +68,16 @@ class CFDManager:
         field_config: Dict = None,
         pod_method: str = "GP",
         docker_client: docker.DockerClient = None,
+        is_k8s: bool = False,
     ) -> None:
-        self.docker_client = docker_client if docker_client else docker.from_env()
-        self.geometry_backend: Optional[SalomeBackend] = None
-        self.mesh_backend: Optional[SnappyHexBackend] = None
+        if not is_k8s:
+            self.docker_client = docker_client if docker_client else docker.from_env()
+        self.geometry_backend: Optional[Union[SalomeBackend, SalomeBackendK8s]] = None
+        self.mesh_backend: Optional[Union[SnappyHexBackend, SnappyHexBackendK8s]] = None
         self.solver_backend: Union[
-            None, TransientSolverBackend, SteadySolverBackend
+            None, TransientSolverBackend, SteadySolverBackend, TransientSolverBackendK8s, SteadySolverBackendK8s
         ] = None
-        self.pod_backend: Optional[PODBackend] = None
+        self.pod_backend: Optional[Union[PODBackend, PODBackendK8s]] = None
 
         self.room: Room = room
         self.steady = steady
@@ -82,6 +89,7 @@ class CFDManager:
         self.field_config = field_config
         self.steady = steady
         self.pod_method = pod_method
+        self.isk8s = is_k8s
 
         self.last_state_case = None
         self.object_mesh_index = read_object_mesh_index(room=self.room)
@@ -94,23 +102,43 @@ class CFDManager:
         solver: buoyantBoussinesqSimpleFoam/buoyantBoussinesqPimpleFoam/POD
         reduced-order solver: POD
         """
-        self.geometry_backend = SalomeBackend(self.docker_client)
-        self.mesh_backend = SnappyHexBackend(
-            self.docker_client, process_num=self.mesh_process
-        )
-        if self.steady:
-            self.solver_backend = SteadySolverBackend(
-                self.docker_client, process_num=self.solve_process
+        if self.isk8s:
+            print('hi')
+            self.geometry_backend = SalomeBackendK8s()
+            self.mesh_backend = SnappyHexBackendK8s(
+                process_num=self.mesh_process
             )
-            # use reduced-order simulation if POD mode is provided
-            if not self.run_cfd and self.pod_method is not None:
-                assert self.object_mesh_index is not None, \
-                    "object mesh index is required for POD simulation"
-                self.pod_backend = PODBackend.load(self.room, self.object_mesh_index)
+            if self.steady:
+                self.solver_backend = SteadySolverBackendK8s(
+                    process_num=self.solve_process
+                )
+                # use reduced-order simulation if POD mode is provided
+                if not self.run_cfd and self.pod_method is not None:
+                    assert self.object_mesh_index is not None, \
+                        "object mesh index is required for POD simulation"
+                    self.pod_backend = PODBackendK8s.load(self.room, self.object_mesh_index)
+            else:
+                self.solver_backend = TransientSolverBackendK8s(
+                    process_num=self.solve_process
+                )
         else:
-            self.solver_backend = TransientSolverBackend(
-                self.docker_client, process_num=self.solve_process
+            self.geometry_backend = SalomeBackend(self.docker_client)
+            self.mesh_backend = SnappyHexBackend(
+                self.docker_client, process_num=self.mesh_process
             )
+            if self.steady:
+                self.solver_backend = SteadySolverBackend(
+                    self.docker_client, process_num=self.solve_process
+                )
+                # use reduced-order simulation if POD mode is provided
+                if not self.run_cfd and self.pod_method is not None:
+                    assert self.object_mesh_index is not None, \
+                        "object mesh index is required for POD simulation"
+                    self.pod_backend = PODBackend.load(self.room, self.object_mesh_index)
+            else:
+                self.solver_backend = TransientSolverBackend(
+                    self.docker_client, process_num=self.solve_process
+                )
 
     def build_geometry(self) -> None:
         """Build geometry from room model"""
@@ -272,8 +300,8 @@ class CFDManager:
             )
             # use full-fledged CFD simulation
             # step 1: build geometry
-            if run_geometry:
-                self.build_geometry()
+            # if run_geometry:
+            #     self.build_geometry()
             # step 2: mesh geometry
             if run_mesh:
                 self.mesh()

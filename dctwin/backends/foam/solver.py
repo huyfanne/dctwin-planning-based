@@ -13,6 +13,7 @@ from typing import Tuple, Dict
 from loguru import logger
 
 from dctwin.backends.core import Backend
+from dctwin.backends.core_k8s import BackendK8s
 from dctwin.backends.foam.boundary import (
     ACUBoundary,
     RoomBoundary,
@@ -192,8 +193,8 @@ class SolverBackendMixin:
 class SolverBackend(SolverBackendMixin, Backend):
     pass
 
-# class SalomeBackendKubernetes(SalomeBackendMixin, KubernetesBackend):
-#     pass
+class SolverBackendK8s(SolverBackendMixin, BackendK8s):
+    pass
 
 
 class SteadySolverBackend(SolverBackend):
@@ -217,6 +218,46 @@ class SteadySolverBackend(SolverBackend):
 
 
 class TransientSolverBackend(SolverBackend):
+    solver = "buoyantBoussinesqPimpleFoam"
+    write_interval = 10
+    end_time = 50
+
+    def generate_control_dict(
+        self,
+        room: Room,
+        delta_t=1e-5,
+    ) -> None:
+        generate_control_dict(
+            probes=list([x.geometry.location for x in room.constructions.sensors.values()]),
+            steady=False,
+            delta_t=delta_t,
+            write_interval=self.write_interval,
+            end_time=self.end_time,
+            process_num=self.process_num,
+        )
+
+
+class SteadySolverBackendK8s(SolverBackendK8s):
+    solver = "buoyantBoussinesqSimpleFoam"
+    write_interval = 100
+    end_time = 500
+
+    def generate_control_dict(
+        self,
+        room: Room,
+        delta_t=1,
+    ) -> None:
+        generate_control_dict(
+            probes=list([x.geometry.location for x in room.constructions.sensors.values()]),
+            steady=True,
+            delta_t=delta_t,
+            write_interval=self.write_interval,
+            end_time=self.end_time,
+            process_num=self.process_num,
+        )
+
+
+class TransientSolverBackendK8s(SolverBackendK8s):
     solver = "buoyantBoussinesqPimpleFoam"
     write_interval = 10
     end_time = 50
