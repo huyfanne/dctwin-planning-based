@@ -103,7 +103,6 @@ class CFDManager:
         reduced-order solver: POD
         """
         if self.isk8s:
-            print('hi')
             self.geometry_backend = SalomeBackendK8s()
             self.mesh_backend = SnappyHexBackendK8s(
                 process_num=self.mesh_process

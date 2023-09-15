@@ -43,12 +43,17 @@ class SnappyHexBackendMixin:
                     "rm -rf /data/processor*"
                 )
             ]
+            # command=["bash", "-c", f"sleep infinity"]
         else:
-            command = (
-                "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
-                "blockMesh && surfaceFeatureExtract && snappyHexMesh -overwrite && "
-                "createPatch -overwrite && rm -rf /data/constant/triSurface/*.eMesh'"
-            )
+            command = [
+                "bash", "-c",
+                (
+                    "source /opt/OpenFOAM/setImage_v1912.sh && "
+                    "blockMesh && surfaceFeatureExtract && snappyHexMesh -overwrite && "
+                    "createPatch -overwrite && rm -rf /data/constant/triSurface/*.eMesh"
+                )
+            ]
+
         return command
 
     def run(

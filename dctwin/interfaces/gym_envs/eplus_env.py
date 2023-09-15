@@ -8,7 +8,7 @@ from typing import (
 )
 from loguru import logger
 from pathlib import Path
-from dctwin.backends import EplusBackend
+from dctwin.backends import EplusBackend, EplusBackendK8s
 from dctwin.utils import config as eplus_env
 from dctwin.utils import EPlusEnvConfig
 
@@ -31,6 +31,7 @@ class EPlusEnv(BaseEnv):
         reward_fn: Optional[Callable] = None,
         schedule_fn: Optional[Callable] = None,
         docker_client: docker.DockerClient = None,
+        is_k8s: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -40,12 +41,20 @@ class EPlusEnv(BaseEnv):
             **kwargs,
         )
         self._set_eplus_environ()
-        self.eplus_backend = EplusBackend(
-            proto_config=config,
-            host=config.host,
-            network=config.network,
-            docker_client=docker_client,
-        )
+        if is_k8s:
+            self.eplus_backend = EplusBackendK8s(
+                proto_config=config,
+                host=config.host,
+                network=config.network,
+                docker_client=docker_client,
+            )
+        else:
+            self.eplus_backend = EplusBackend(
+                proto_config=config,
+                host=config.host,
+                network=config.network,
+                docker_client=docker_client,
+            )
 
     def _set_eplus_environ(self) -> None:
         eplus_env.eplus.idf_file = Path(self._config.model_file)

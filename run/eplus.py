@@ -11,6 +11,7 @@ env_config.LOG_DIR.mkdir(parents=True, exist_ok=True)
 env = make_env(
     env_proto_config=engine_config,
     reward_fn=lambda x: 0.0,
+    is_k8s=True,
 )
 env.reset()
 done = False

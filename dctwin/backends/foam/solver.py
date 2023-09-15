@@ -112,18 +112,20 @@ class SolverBackendMixin:
     def command(self) -> str:
         if self.process_num > 1:
             latest_time = "-latestTime" if self.only_save_latest else ""
-            command = (
-                "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
+            command = [
+                "bash", "-c",
+                ("source /opt/OpenFOAM/setImage_v1912.sh && "
                 "decomposePar -force && "
                 "mpirun --allow-run-as-root "
                 f"-np {self.process_num} {self.solver} -parallel && "
                 f"reconstructPar {latest_time} && "
-                "rm -rf /data/processor*'"
-            )
+                "rm -rf /data/processor*")
+            ]
         else:
-            command = (
-                f"bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && {self.solver}'"
-            )
+            command = [
+                "bash", "-c",
+                (f"source /opt/OpenFOAM/setImage_v1912.sh && {self.solver}")
+            ]
         return command
 
     @classmethod

@@ -8,7 +8,7 @@ eplus_env_config {
     model_file: "models/idf/eplus_test.idf"
     weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
     network: "host"
-    host: "localhost"
+    host: "task-manager-worker-0-test-job-0.task-manager-worker-0-test-job-svc.default.svc.cluster.local"
 
     return_temp_lb: 25.0
     return_temp_ub: 40.0
