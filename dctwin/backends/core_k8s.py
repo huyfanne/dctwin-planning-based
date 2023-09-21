@@ -8,6 +8,7 @@ from dctwin.utils import config
 from kubernetes import config, client
 import time
 import uuid
+import os
 
 
 def delete_job(client, api_instance, namespace="default", job_name="test-job"):
@@ -27,33 +28,6 @@ def delete_job(client, api_instance, namespace="default", job_name="test-job"):
             time.sleep(1)
         except:
             break
-
-
-def create_service(core_api, job_name, namespace="dcwiz", ports=None):
-    # Create a headless service for the job to communicate with each other.
-    # The service name is the same as the "{job_name}-svc"
-    # Before creating the service, we need to delete it if it already exists
-    service_name = f"{job_name}-svc"
-    try:
-        core_api.delete_namespaced_service(
-            name=service_name, namespace=namespace
-        )
-    except:
-        print("Service does not exist. Creating new service")
-    core_api.create_namespaced_service(
-        namespace=namespace,
-        body=client.V1Service(
-            api_version="v1",
-            kind="Service",
-            metadata=client.V1ObjectMeta(name=service_name),
-            spec=client.V1ServiceSpec(
-                cluster_ip=None,
-                selector={"job-name": job_name},
-                ports=[client.V1ServicePort(port=p) for p in (ports or [80])],
-            ),
-        ),
-    )
-
 
 def create_job_object(
         client,
@@ -84,9 +58,7 @@ def create_job_object(
     job = client.V1Job(
         api_version="batch/v1",
         kind="Job",
-        metadata=client.V1ObjectMeta(name=job_name, namespace=namespace, labels={
-            "category": "test123"
-        }),
+        metadata=client.V1ObjectMeta(name=job_name, namespace=namespace),
         spec=client.V1JobSpec(
             template=client.V1PodTemplateSpec(
                 spec=client.V1PodSpec(
@@ -96,10 +68,10 @@ def create_job_object(
                     ],
                     volumes=[
                         client.V1Volume(
-                            name="data-volume",
-                            host_path=client.V1HostPathVolumeSource(
-                                path=str(case_dir)),
-                        )
+                        name="data-volume",
+                        persistent_volume_claim=client.V1PersistentVolumeClaimVolumeSource(
+                        claim_name=pvc_name
+                        ))
                     ],
                     containers=[
                         client.V1Container(
@@ -108,7 +80,7 @@ def create_job_object(
                             command=command,
                             volume_mounts=[
                                 client.V1VolumeMount(
-                                    mount_path=volume_data_dir, name="data-volume"
+                                    mount_path=volume_data_dir, name="data-volume", sub_path=str(case_dir).replace("/tm-data/", "", 1)
                                 )
                             ],
                             env=env,
@@ -216,9 +188,9 @@ class BackendK8s(abc.ABC):
         logger.info("docker run: " + (" ".join(command)))
         if working_dir is None:
             working_dir = self.volume_data_dir
-
-        namespace = "default"
-        worker_name = "task-manager-worker-22"
+        log_dir = os.environ["LOG_DIR"]
+        namespace = "dcwiz"
+        worker_name = os.environ["WORKER_NAME"]
         job_name = uuid.uuid4()
         image = self.docker_image
         config.load_incluster_config()
@@ -229,7 +201,7 @@ class BackendK8s(abc.ABC):
         job_name = f"{worker_name}-{job_name}"
         pvc_name = f"task-manager-worker-data-{worker_name}"
         pod_dns_name = f"{job_name}-0.{job_name}-svc.{namespace}.svc.cluster.local"
-        backoff_limit = 2
+        backoff_limit = 0
 
         job = create_job_object(
             client,
@@ -241,14 +213,13 @@ class BackendK8s(abc.ABC):
             command=command,
             # command=["bash", "-c", f"sleep infinity"],
             backoff_limit=backoff_limit,
-            ttl_seconds_after_finished=60,
+            ttl_seconds_after_finished=10,
             env_vars=environment,
             working_dir=working_dir,
             case_dir=case_dir,
             volume_data_dir=self.volume_data_dir
         )
 
-        create_service(core_v1, job_name, namespace=namespace)
         create_job(batch_v1, job)
         if background:
             return None
