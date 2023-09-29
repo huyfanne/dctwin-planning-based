@@ -39,6 +39,10 @@ class RoomConstruction(BaseModel):
         return len(self.acus.items())
 
     @property
+    def num_rack(self) -> int:
+        return len(self.racks.items())
+
+    @property
     def num_ser(self) -> int:
         count = 0
         for _, rack in self.racks.items():
@@ -110,6 +114,40 @@ class RoomConstruction(BaseModel):
                     )
                     ser_idx += 1
         return acu2ser_dis
+    
+    @property
+    def acu2rack(self) -> np.ndarray:
+        """ Calculate the spatial distance matrix of the ACU inlet to rack
+        """
+        acu2rack_dis = np.zeros([self.num_acu, self.num_rack])
+        for acu_idx, (acu_id, acu) in enumerate(self.acus.items()):
+            rack_idx: int = 0
+            for rack_id, rack in self.racks.items():
+                acu_return, acu_supply, acu_center = self.acu_patch_positions(acu_id)
+                rack_inlet, rack_outlet, rack_center = self.rack_patch_positions(rack_id)
+                acu2rack_dis[acu_idx][rack_idx] = euclidean_distance(
+                    loc_1=(acu_center.x, acu_center.y, acu_center.z),
+                    loc_2=(rack_center.x, rack_center.y, rack_center.z),
+                )
+                rack_idx += 1
+        return acu2rack_dis
+
+    @property
+    def rack2acu(self) -> np.ndarray:
+        """ Calculate the spatial distance matrix of the ACU inlet to rack
+        """
+        rack2acu_dis = np.zeros([self.num_rack, self.num_acu])
+        for rack_idx, (rack_id, rack) in enumerate(self.racks.items()):
+            acu_idx: int = 0
+            for acu_id, acu in self.acus.items():
+                rack_inlet, rack_outlet, rack_center = self.rack_patch_positions(rack_id)
+                acu_return, acu_supply, acu_center = self.acu_patch_positions(acu_id)
+                rack2acu_dis[rack_idx][acu_idx] = euclidean_distance(
+                    loc_1=(rack_center.x, rack_center.y, rack_center.z),
+                    loc_2=(acu_center.x, acu_center.y, acu_center.z),
+                )
+                acu_idx += 1
+        return rack2acu_dis
 
     @property
     def ser2sen(self) -> np.ndarray:
@@ -128,6 +166,43 @@ class RoomConstruction(BaseModel):
                     )
                 ser_idx += 1
         return ser2sen_dis
+
+    def rack_patch_positions(self, rack_id: str) -> Tuple[Vertex, Vertex, Vertex]:
+        """Get the coordinate of rack inlet, outlet and center"""
+
+        try:
+            rack: Rack = self.racks.get(rack_id)
+
+            z = rack.geometry.location.z + rack.geometry.first_slot_offset
+            z = round(z, 3)
+
+            # inlet
+            inlet_x = rack.geometry.location.x + rack.geometry.size.x / 2
+            inlet_y = rack.geometry.location.y
+            inlet_x, inlet_y = rotate(
+                (rack.geometry.location.x, rack.geometry.location.y), (inlet_x, inlet_y), rack.geometry.orientation
+            )
+            inlet = Vertex(x=round(inlet_x, 3), y=round(inlet_y, 3), z=z)
+
+            # outlet
+            outlet_x = rack.geometry.location.x + rack.geometry.size.x / 2
+            outlet_y = rack.geometry.location.y 
+            outlet_x, outlet_y = rotate(
+                (rack.geometry.location.x, rack.geometry.location.y), (outlet_x, outlet_y), rack.geometry.orientation
+            )
+            outlet = Vertex(x=round(outlet_x, 3), y=round(outlet_y, 3), z=z)
+
+            # center
+            center_x = rack.geometry.location.x + rack.geometry.size.x / 2
+            center_y = rack.geometry.location.y 
+            center_x, center_y = rotate(
+                (rack.geometry.location.x, rack.geometry.location.y), (center_x, center_y), rack.geometry.orientation
+            )
+            center = Vertex(x=round(center_x, 3), y=round(center_y, 3), z=z)
+            return inlet, outlet, center
+        
+        except:
+            raise ValueError(f"Rack positions not found")
 
     def acu_patch_positions(self, acu_id: str) -> Tuple[Vertex, Vertex, Vertex]:
         """Get the coordinate of acu return, supply and center"""
@@ -380,9 +455,9 @@ class Room(BaseModel):
     ) -> None:
         model_name = obj.power.model
         if isinstance(obj, ACU) and models is not None:
-            obj.rated_fan_power = models.get(model_name).rated_fan_power
+            obj.power.rated_fan_power = models.get(model_name).rated_fan_power
         elif isinstance(obj, Server) and models is not None:
-            obj.rated_power = models.get(model_name).rated_power
+            obj.power.rated_power = models.get(model_name).rated_power
         else:
             raise ValueError(
                 f"Invalid object type: {type(obj)}: "
