@@ -5,7 +5,7 @@ from typing import Optional, OrderedDict
 from pydantic import Field
 
 from .utils import BaseModel
-from .basics import Size, Vertex, Face
+from .basics import Vertex, Face
 
 
 class ServerFace(BaseModel):

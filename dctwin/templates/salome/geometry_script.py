@@ -259,15 +259,15 @@ class ServerModel:
 
     def mesh(self) -> None:
         box = util.make_box(self.size)
-        wall = util.group_by_faces(box, exclude=["front", "rear"])
+        wall = util.group_by_faces(box)
         if self.inlet_face is None:
-            group, inlet_face =  util.sub_face(box, "front")
+            inlet_face =  util.sub_face(box, "front")
         else:
-            group, inlet_face = self.make_sub_face(box, "front", self.inlet_face)
+            wall, inlet_face = self.make_sub_face(box, wall, self.inlet_face)
         if self.outlet_face is None:
             outlet_face = util.sub_face(box, "rear")
         else:
-            group, outlet_face = self.make_sub_face(box, "rear", self.outlet_face)
+            wall, outlet_face = self.make_sub_face(box, wall, self.outlet_face)
         self.wall_mesh = util.mesh(wall, 0.1, 0.6)
         self.inlet_mesh = util.mesh(inlet_face, 0.1, 0.6)
         self.outlet_mesh = util.mesh(outlet_face, 0.1, 0.6)
@@ -303,7 +303,7 @@ class RackModel:
         obj.is_meshed = False
         for face in list(SalomeUtil.SUB_FACE_SIZE_INDICES):
             if model_data["faces"] is not None:
-                if not model_data["faces"] and model_data["faces"] not in obj.excluded_faces:
+                if not model_data["faces"][face] and face not in obj.excluded_faces:
                     obj.excluded_faces.append(face)
         return obj
 
@@ -538,7 +538,7 @@ class Builder:
         return available_slots
 
     @staticmethod
-    def make_panels(base_face, plane: Dict) -> None:
+    def make_panels(base_face, plane: Dict, name: str) -> None:
         floor_face = util.move_placement(
             base_face, {"x": 0, "y": 0, "z": plane["geometry"]["height"]}
         )
@@ -551,7 +551,7 @@ class Builder:
             box = util.make_box(opening["size"], opening["location"])
             opening_faces.append(util.sub_face(box, "bottom"))
         floor_face = util.geom.MakeCutList(floor_face, opening_faces)
-        util.export_stl(util.mesh(floor_face, 0.5, 5), "floor_1")
+        util.export_stl(util.mesh(floor_face, 0.5, 5), f"{name}")
 
     def make_room(self, geometry_models: Dict) -> None:
         oz = geompy.MakeVectorDXDYDZ(0, 0, 1)
@@ -574,8 +574,8 @@ class Builder:
         boxes = room["constructions"].get("boxes", None)
         acus = room["constructions"].get("acus", None)
         racks = room["constructions"].get("racks", None)
-        self.make_panels(base_face=face, plane=raised_floor) if raised_floor else None
-        self.make_panels(base_face=face, plane=false_ceiling) if false_ceiling else None
+        self.make_panels(base_face=face, plane=raised_floor, name="floor_1") if raised_floor else None
+        self.make_panels(base_face=face, plane=false_ceiling, name="ceiling_1") if false_ceiling else None
         self.make_boxes(boxes=boxes) if boxes else None
         self.make_acus(
             acus=acus,

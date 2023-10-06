@@ -1,24 +1,29 @@
+FROM python:3.10 as builder
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=on
+
+RUN pip install poetry
+COPY . /opt/src
+WORKDIR /opt/src
+RUN poetry build
+
 FROM python:3.10
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=on
 
-COPY . /opt/src
-
-WORKDIR /opt/src
-
-RUN apt-get update && apt-get upgrade -y && apt-get install cmake -y && apt-get install build-essential -y
-
-RUN pip install poetry
-
-RUN poetry build
-
-RUN pip install /opt/src/dist/*.whl
-
-RUN apt-get purge build-essential -y && rm -rf /var/lib/apt/lists/* && rm -rf /opt/src
+COPY --from=builder /opt/src/dist/*.whl /opt/dist/
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install cmake build-essential -y && \
+    pip install /opt/dist/*.whl && \
+    apt-get purge build-essential cmake -y && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/app
 
-COPY main.py ./
+COPY ./run/cfd.py ./
+COPY ./run/cosim.py ./
+COPY ./run/eplus.py ./
 
-CMD [ "python", "./main.py" ]
+CMD [ "python", "./cfd.py" ]

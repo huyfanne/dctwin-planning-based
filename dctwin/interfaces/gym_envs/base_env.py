@@ -222,7 +222,7 @@ class BaseEnv(gym.Env):
                     exit(-1)
                 value = raw_action[ra_ptr]
                 ra_ptr += 1
-            elif a.control_type == ActionControlType.PRE_SCHEDULED:
+            elif a.control_type == ActionControlType.PRE_SCHEDULED or a.control_type == ActionControlType.ACTUATOR_PRE_SCHEDULED:
                 value = next(a)
             elif a.control_type == ActionControlType.CUSTOMIZED:
                 value = self._schedule_fn(a.variable_name, **self._get_customized_schedule_context())

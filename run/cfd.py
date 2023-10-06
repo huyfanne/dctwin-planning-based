@@ -10,12 +10,39 @@ from pathlib import Path
 
 docker_client = docker.DockerClient(base_url="unix://var/run/docker.sock")
 
+field_config = {
+        "server_inlet": {"type": "patch", "level": 3, "refine_level": "(0 3)"},
+        "server_outlet": {"type": "patch", "level": 3, "refine_level": "(0 3)"},
+        "server_wall": {"type": "wall", "level": 3, "refine_level": "(0 3)"},
+        "rack_wall": {
+            "type": "wall",
+            "level": 3,
+            "refine_level": "(0 3)",
+            "faceType": "baffle",
+        },
+        "rack_panel": {
+            "type": "wall",
+            "level": 3,
+            "refine_level": "(0 3)",
+            "faceType": "baffle",
+        },
+    }
+
 
 def kelvin_to_celsius(kelvin, round_to=None):
     if round_to:
         return round(float(kelvin) - 273.15, round_to)
     else:
         return float(kelvin) - 273.15
+
+
+def highest_2_power_less_than_cpu_count():
+    cpu_count = os.cpu_count()
+    power = 0
+    while cpu_count > 1:
+        power += 1
+        cpu_count = cpu_count >> 1
+    return 2 ** power
 
 
 def parse_and_upload_result(room: Room, case_dir, host_data_path, iteration):
@@ -135,7 +162,13 @@ config.cfd.mesh_dir = ""
 with open(host_workspace / "config/preferences.json", "r") as f:
     preference = json.load(f)
 room = Room.load(host_workspace / "model/model.dt")
-cfd_manager = CFDManager(room=room, mesh_process=32, solve_process=32, end_time=int(preference["iteration"]))
+max_processes = highest_2_power_less_than_cpu_count()
+cfd_manager = CFDManager(
+    room=room,
+    mesh_process=min(32, max_processes),
+    solve_process=min(32, max_processes),
+    end_time=int(preference["iteration"]),
+    field_config=field_config)
 cfd_manager.run()
 
 case_dir = host_workspace / "run/result/base"
