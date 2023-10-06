@@ -498,9 +498,20 @@ class Builder:
                 placement=rack["geometry"]["location"],
                 orientation=rack["geometry"]["orientation"],
             )
-            self.make_servers(rack_key, rack, rack_model, server_models)
+            available_slots = self.make_servers(rack_key, rack, rack_model, server_models)
+            if rack["geometry"]["has_blanking_panel"]:
+                blanking_panels = []
+                for slot, is_available in available_slots.items():
+                    if is_available:
+                        blanking_panels.append(slot)
+                rack_model.make_blanking(
+                    rack_key,
+                    rack["geometry"]["location"],
+                    rack["geometry"]["orientation"],
+                    slots=blanking_panels,
+                )
 
-    def make_servers(self, rack_key: str, rack: Dict, rack_model: RackModel, server_models: Dict) -> None:
+    def make_servers(self, rack_key: str, rack: Dict, rack_model: RackModel, server_models: Dict) -> Dict:
         available_slots = {}
         for slot in range(1, rack["geometry"]["slot"] + 1):
             available_slots[slot] = True
@@ -523,17 +534,8 @@ class Builder:
                 {**rack["geometry"]["location"], "z": server_height},
                 rack["geometry"]["orientation"],
             )
-            if rack["geometry"]["has_blanking_panel"]:
-                blanking_panels = []
-                for slot, is_available in available_slots.items():
-                    if is_available:
-                        blanking_panels.append(slot)
-                rack_model.make_blanking(
-                    rack_key,
-                    rack["geometry"]["location"],
-                    rack["geometry"]["orientation"],
-                    slots=blanking_panels,
-                )
+
+        return available_slots
 
     @staticmethod
     def make_panels(base_face, plane: Dict) -> None:
