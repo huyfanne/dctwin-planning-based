@@ -166,6 +166,8 @@ class Eplus:
                 node_names.add(branch[f"component_{idx + 1}_outlet_node_name"])
         for atu in self.epm.ZoneHVAC_AirDistributionUnit:
             node_names.add(atu.air_distribution_unit_outlet_node_name)
+        for mix in self.epm.AirLoopHVAC_ZoneMixer:
+            node_names.add(mix.outlet_node_name)
         return node_names
 
     def _get_branch_names(self):
