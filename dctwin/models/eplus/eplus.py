@@ -436,11 +436,32 @@ class Eplus:
                 lambda x: x.name == thermostat_setpoint_name.lower()).one()
             thermostat_setpoint.cooling_setpoint_temperature_schedule_name = config.variable_name
 
+        def _set_fan_availability_schedule() -> None:
+            fan_name = schedule_config.scheduled_fan_name
+            fan = self.epm.Fan_VariableVolume.select(
+                lambda x: x.name == fan_name.lower()).one()
+            fan.availability_schedule_name = config.variable_name
+
+        def _set_coil_availability_schedule() -> None:
+            coil_name = schedule_config.scheduled_coil_name
+            coil = self.epm.Coil_Cooling_Water.select(
+                lambda x: x.name == coil_name.lower()).one()
+            coil.availability_schedule_name = config.variable_name
+
+        def _set_atu_availability_schedule() -> None:
+            atu_name = schedule_config.scheduled_atu_name
+            atu = self.epm.AirTerminal_SingleDuct_VAV_NoReheat.select(
+                lambda x: x.name == atu_name.lower()).one()
+            atu.availability_schedule_name = config.variable_name
+
         func_dict = {
             "ITE": _set_cpu_load_schedule,
             "ITEDeltaTSupply": _set_delta_temp_supply_schedule,
             "ITEDeltaTReturn": _set_delta_temp_return_schedule,
-            "Room": _set_room_setpoint_schedule
+            "Room": _set_room_setpoint_schedule,
+            "Fan": _set_fan_availability_schedule,
+            "Coil": _set_coil_availability_schedule,
+            "ATU": _set_atu_availability_schedule,
         }
 
         name = config.variable_name
