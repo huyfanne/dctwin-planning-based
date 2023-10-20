@@ -71,7 +71,7 @@ class EplusBackendMixin:
         self._socket = socket.socket()
         # Enable keep-alive for the socket
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        self._socket.settimeout(None)
+        self._socket.settimeout(300)
         self._socket.bind(("0.0.0.0", 0))
         self._socket.listen()
         if self._host == "":
@@ -205,6 +205,7 @@ class EplusBackendMixin:
                 break
             except socket.timeout:
                 logger.info("Waiting for connection...")
+                break
         return self.receive_status()  # as it cannot be done on the very first step
 
     def _serialize(self, actions: list) -> str:
@@ -281,7 +282,8 @@ class EplusBackendMixin:
                 "Likely to be the wrongly estimated simulation time. "
                 "Please check env._curSimTim"
             )
-            exit(-1)
+            # disable for eureka deployment due to 1 time step simulation
+            exit(0)
         if self._cur_sim_time >= self._end_sim_time:
             logger.debug("Came to the end of one episode, terminating")
             done = True
