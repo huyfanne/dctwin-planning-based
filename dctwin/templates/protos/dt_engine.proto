@@ -108,6 +108,7 @@ message EPlusActionConfig {
     IDFXIScheduleConfig schedule_config = 9;
   }
   optional NormalizeConfig normalize_config = 10;
+  optional string masking_variable_name = 11 [default = ""];
 }
 
 message EPlusObservationConfig {

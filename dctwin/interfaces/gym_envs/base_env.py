@@ -221,6 +221,10 @@ class BaseEnv(gym.Env):
                     logger.critical("Insufficient agent-controlled actions are provided!")
                     exit(-1)
                 value = raw_action[ra_ptr]
+                if a.masking_variable_name != "" and self.inspect_current_observation(a.masking_variable_name) == -1: # masking using observation
+                    a.set_mask(True)
+                else:
+                    a.set_mask(False)
                 ra_ptr += 1
             elif a.control_type == ActionControlType.PRE_SCHEDULED or a.control_type == ActionControlType.ACTUATOR_PRE_SCHEDULED:
                 value = next(a)

@@ -68,7 +68,9 @@ class ScalarDataItem:
         return self.normed_value
 
     def get_unnormed_value(self) -> float:
-        if self.resizer is not None:
+        if hasattr(self, "mask") and self.mask:
+            return 0
+        elif self.resizer is not None:
             return self.resizer.denorm(self.normed_value)
         else:
             return self.normed_value
@@ -119,6 +121,9 @@ class Action(ScalarDataItem):
         elif config.HasField("input_source"):
             logger.warning(f"{self.debug_name} is not pre_scheduled but input source was specified. "
                            f"The source will be ignored.")
+        elif self.control_type == ActionControlType.AGENT_CONTROLLED:
+            self.masking_variable_name = config.masking_variable_name
+            self.mask = False
 
     @validator
     def __iter__(self):
@@ -150,5 +155,7 @@ class Action(ScalarDataItem):
         if hasattr(self, "schedule_idx"):
             self.schedule_idx = 0
 
+    def set_mask(self, mask: bool) -> None:
+        self.mask = mask
 
 Reward = ScalarDataItem
