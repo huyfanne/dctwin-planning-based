@@ -99,7 +99,7 @@ def parse_and_upload_result(room: Room, case_dir, host_base_files_path, iteratio
         image=image,
         command=command,
         backoff_limit=backoff_limit,
-        ttl_seconds_after_finished=1000,
+        ttl_seconds_after_finished=10,
         env_vars=environment,
         working_dir=working_dir,
         case_dir=case_dir,
