@@ -1,0 +1,28 @@
+FROM python:3.10
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=on
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN apt-get install cmake build-essential -y
+RUN pip install poetry
+
+COPY ./dist/ /opt/dist/
+RUN pip install /opt/dist/*.whl
+
+COPY . /opt/src
+WORKDIR /opt/src
+RUN rm -r /opt/src/dist
+RUN poetry build
+
+RUN pip install /opt/src/dist/*.whl
+RUN apt-get purge build-essential cmake -y
+RUN rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/app
+
+COPY ./run/cfd.py ./
+COPY ./run/cosim.py ./
+COPY ./run/eplus.py ./
+
+CMD [ "python", "./cfd.py" ]

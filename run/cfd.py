@@ -1,32 +1,33 @@
 from dctwin.utils import config
 from dctwin.models.cfd.room import Room
 from dctwin.interfaces import CFDManager
+from dctwin.backends.core_k8s import create_job_object, create_job, wait_for_job
+from loguru import logger
 
 import os
 import json
 import shutil
-import docker
 from pathlib import Path
-
-docker_client = docker.DockerClient(base_url="unix://var/run/docker.sock")
+from kubernetes import config as k8s_config, client
+import uuid
 
 field_config = {
-        "server_inlet": {"type": "patch", "level": 3, "refine_level": "(0 3)"},
-        "server_outlet": {"type": "patch", "level": 3, "refine_level": "(0 3)"},
-        "server_wall": {"type": "wall", "level": 3, "refine_level": "(0 3)"},
-        "rack_wall": {
-            "type": "wall",
-            "level": 3,
-            "refine_level": "(0 3)",
-            "faceType": "baffle",
-        },
-        "rack_panel": {
-            "type": "wall",
-            "level": 3,
-            "refine_level": "(0 3)",
-            "faceType": "baffle",
-        },
-    }
+    "server_inlet": {"type": "patch", "level": 3, "refine_level": "(0 3)"},
+    "server_outlet": {"type": "patch", "level": 3, "refine_level": "(0 3)"},
+    "server_wall": {"type": "wall", "level": 3, "refine_level": "(0 3)"},
+    "rack_wall": {
+        "type": "wall",
+        "level": 3,
+        "refine_level": "(0 3)",
+        "faceType": "baffle",
+    },
+    "rack_panel": {
+        "type": "wall",
+        "level": 3,
+        "refine_level": "(0 3)",
+        "faceType": "baffle",
+    },
+}
 
 
 def kelvin_to_celsius(kelvin, round_to=None):
@@ -45,9 +46,8 @@ def highest_2_power_less_than_cpu_count():
     return 2 ** power
 
 
-def parse_and_upload_result(room: Room, case_dir, host_data_path, iteration):
-    base_files = host_data_path / "cosim/base-files"
-    shutil.copy(base_files / "result.py", case_dir)
+def parse_and_upload_result(room: Room, case_dir, host_base_files_path, iteration):
+    shutil.copy(host_base_files_path / "result.py", case_dir)
     servers = []
     acus = []
     for server_id in room.constructions.server_keys:
@@ -67,22 +67,50 @@ def parse_and_upload_result(room: Room, case_dir, host_data_path, iteration):
             },
             f,
         )
-    
-    docker_client.containers.run(
-        "ntucap/paraview",
-        command="pvpython /data/result.py",
-        auto_remove=True,
-        environment={
-            "WIDTH": max(i.x for i in room.geometry.plane)
-                     - min(i.x for i in room.geometry.plane),
-            "DEPTH": max(i.y for i in room.geometry.plane)
-                     - min(i.y for i in room.geometry.plane),
-            "HEIGHT": room.geometry.height,
-        },
-        volumes=[f"{case_dir}:/data"],
-        working_dir="/data",
-        detach=False,
+
+    command = ["pvpython", "/data/result.py"]
+    working_dir = "/data"
+    namespace = "dcwiz"
+    worker_name = os.environ["WORKER_NAME"]
+    job_name = uuid.uuid4()
+    image = "ntucap/paraview"
+    k8s_config.load_incluster_config()
+    # Note: we need to use both the core_v1 and batch_v1 APIs. The previous one is for the pods, the latter for the jobs
+    core_v1 = client.CoreV1Api()
+    batch_v1 = client.BatchV1Api()
+
+    job_name = f"{worker_name}-{job_name}"
+    pvc_name = f"task-manager-worker-data-{worker_name}"
+    backoff_limit = 0
+    environment = {
+                "WIDTH": str(max(i.x for i in room.geometry.plane)
+                         - min(i.x for i in room.geometry.plane)),
+                "DEPTH": str(max(i.y for i in room.geometry.plane)
+                         - min(i.y for i in room.geometry.plane)),
+                "HEIGHT": str(room.geometry.height),
+            }
+
+    job = create_job_object(
+        client,
+        batch_v1,
+        namespace=namespace,
+        job_name=job_name,
+        pvc_name=pvc_name,
+        image=image,
+        command=command,
+        backoff_limit=backoff_limit,
+        ttl_seconds_after_finished=1000,
+        env_vars=environment,
+        working_dir=working_dir,
+        case_dir=case_dir,
+        volume_data_dir="/data"
     )
+
+    create_job(batch_v1, job)
+
+    stream_log = wait_for_job(batch_v1, core_v1, job_name, namespace=namespace, backoff_limit=backoff_limit)
+    for line in stream_log:
+        logger.info(line.decode("utf-8").splitlines())
 
 
 def calculate_metrics(case_dir, room: Room, threshold):
@@ -152,7 +180,7 @@ def calculate_metrics(case_dir, room: Room, threshold):
 
 
 host_workspace = Path(os.environ["HOST_WORKSPACE"])
-host_data_path = Path(os.environ["HOST_DATA_PATH"])
+host_base_files_path = Path(os.environ["HOST_BASE_FILES_PATH"])
 host_case_dir = host_workspace / "run/result"
 config.CASE_DIR = host_case_dir
 config.PRESERVE_FOAM_LOG = True
@@ -165,14 +193,17 @@ room = Room.load(host_workspace / "model/model.dt")
 max_processes = highest_2_power_less_than_cpu_count()
 cfd_manager = CFDManager(
     room=room,
-    mesh_process=min(32, max_processes),
-    solve_process=min(32, max_processes),
+    mesh_process=min(16, max_processes),
+    solve_process=min(16, max_processes),
     end_time=int(preference["iteration"]),
-    field_config=field_config)
+    field_config=field_config,
+    is_k8s=True
+)
+
 cfd_manager.run()
 
 case_dir = host_workspace / "run/result/base"
-parse_and_upload_result(room, case_dir, host_data_path, preference["iteration"])
+parse_and_upload_result(room, case_dir, host_base_files_path, preference["iteration"])
 metrics_data = calculate_metrics(
     case_dir=case_dir,
     room=room,

@@ -86,8 +86,8 @@ def create_job_object(
                             env=env,
                             working_dir=working_dir,
                             resources=client.V1ResourceRequirements(
-                                requests={"cpu": "3000m", "memory": "1000Mi", "ephemeral-storage": "1000Mi"},
-                                limits={"cpu": "3000m", "memory": "1000Mi", "ephemeral-storage": "1000Mi"},
+                                requests={"cpu": "16000m", "memory": "5000Mi", "ephemeral-storage": "1000Mi"},
+                                limits={"cpu": "16000m", "memory": "5000Mi", "ephemeral-storage": "1000Mi"},
                             ),
                         )
                     ],
@@ -108,7 +108,6 @@ def create_job(batch_api_instance, job):
     api_response = batch_api_instance.create_namespaced_job(
         namespace=namespace, body=job
     )
-    # print("Job created. status='%s'" % str(api_response.status))
 
 
 def wait_for_job(batch_api_instance, core_api_instance, job_name, namespace="default", backoff_limit=2):
@@ -117,6 +116,10 @@ def wait_for_job(batch_api_instance, core_api_instance, job_name, namespace="def
             api_response = batch_api_instance.read_namespaced_job_status(
                 name=job_name, namespace=namespace
             )
+
+            if api_response.status.ready != 1:
+                time.sleep(1)
+                continue
             pod_list = core_api_instance.list_namespaced_pod(namespace)
             for pod in pod_list.items:
                 if (
@@ -188,7 +191,6 @@ class BackendK8s(abc.ABC):
         logger.info("docker run: " + (" ".join(command)))
         if working_dir is None:
             working_dir = self.volume_data_dir
-        log_dir = os.environ["LOG_DIR"]
         namespace = "dcwiz"
         worker_name = os.environ["WORKER_NAME"]
         job_name = uuid.uuid4()
@@ -221,6 +223,7 @@ class BackendK8s(abc.ABC):
         )
 
         create_job(batch_v1, job)
+        time.sleep(2)
         if background:
             return None
         stream_log = wait_for_job(batch_v1,core_v1, job_name, namespace=namespace, backoff_limit=backoff_limit)
