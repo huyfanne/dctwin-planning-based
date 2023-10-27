@@ -190,6 +190,9 @@ class Eplus:
         for equipment in self.epm.ElectricEquipment_ITE_AirCooled:
             if equipment.cpu_loading_schedule_name is not None:
                 component_names.add(equipment.cpu_loading_schedule_name.name)
+        for setpoint in self.epm.SetpointManager_Scheduled:
+            if setpoint.schedule_name is not None:
+                component_names.add(setpoint.schedule_name.name)
         return component_names
 
     def _get_acu_fan_info(self) -> List:
