@@ -160,6 +160,7 @@ reports/dependency-check-report.html
 
 /examples/
 /patches/
+/test/log
 /tutorials/co-sim/model/POD/
 /tutorials/cfd/log/
 /tutorials/cfd/staging/
