@@ -9,7 +9,8 @@ def make_env(
     env_proto_config: str,
     reward_fn: Callable[[BaseEnv], float],
     schedule_fn: Callable = None,
-    map_boundary_condition_fn: Callable = None
+    map_boundary_condition_fn: Callable = None,
+    is_k8s: bool = False,
 ) -> Union[gym.Env, BaseEnv]:
     """The factory function to create the environment.
     :param env_proto_config: the path to the protobuf config file
@@ -39,6 +40,7 @@ def make_env(
         config=getattr(engine_config, env_config_name),
         reward_fn=reward_fn,
         schedule_fn=schedule_fn,
+        is_k8s=is_k8s,
         **env_params
     )
 

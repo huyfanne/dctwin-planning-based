@@ -14,11 +14,12 @@ from loguru import logger
 from dctwin.utils import EPlusEnvConfig
 from dctwin.backends.eplus.utils import EPlusOutputFormatter
 from dctwin.backends.core import Backend
+from dctwin.backends.core_k8s import BackendK8s
 from dctwin.models import Eplus
 from dctwin.utils import config
 
 
-class EplusBackend(Backend):
+class EplusBackendMixin:
     """
     A class to handle the communication with the EnergyPlus with BCVTB
     :param proto_config: the configuration of the eplus model
@@ -70,7 +71,7 @@ class EplusBackend(Backend):
         self._socket = socket.socket()
         # Enable keep-alive for the socket
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        self._socket.settimeout(None)
+        self._socket.settimeout(3600)
         self._socket.bind(("0.0.0.0", 0))
         self._socket.listen()
         if self._host == "":
@@ -204,6 +205,7 @@ class EplusBackend(Backend):
                 break
             except socket.timeout:
                 logger.info("Waiting for connection...")
+                break
         return self.receive_status()  # as it cannot be done on the very first step
 
     def _serialize(self, actions: list) -> str:
@@ -280,7 +282,8 @@ class EplusBackend(Backend):
                 "Likely to be the wrongly estimated simulation time. "
                 "Please check env._curSimTim"
             )
-            exit(-1)
+            # disable for eureka deployment due to 1 time step simulation
+            exit(0)
         if self._cur_sim_time >= self._end_sim_time:
             logger.debug("Came to the end of one episode, terminating")
             done = True
@@ -302,3 +305,10 @@ class EplusBackend(Backend):
                 self._conn.close()
             self._socket.close()
         logger.debug("EnergyPlus backend closed")
+
+
+class EplusBackend(EplusBackendMixin, Backend):
+    pass
+
+class EplusBackendK8s(EplusBackendMixin, BackendK8s):
+    pass

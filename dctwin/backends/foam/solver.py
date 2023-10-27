@@ -13,6 +13,7 @@ from typing import Tuple, Dict
 from loguru import logger
 
 from dctwin.backends.core import Backend
+from dctwin.backends.core_k8s import BackendK8s
 from dctwin.backends.foam.boundary import (
     ACUBoundary,
     RoomBoundary,
@@ -92,7 +93,7 @@ class Builder:
             )
 
 
-class SolverBackend(Backend):
+class SolverBackendMixin:
     """
     Backend for OpenFOAM solver. The class is inherited from the core Backend
     """
@@ -111,18 +112,20 @@ class SolverBackend(Backend):
     def command(self) -> str:
         if self.process_num > 1:
             latest_time = "-latestTime" if self.only_save_latest else ""
-            command = (
-                "bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && "
+            command = [
+                "bash", "-c",
+                ("source /opt/OpenFOAM/setImage_v1912.sh && "
                 "decomposePar -force && "
                 "mpirun --allow-run-as-root "
                 f"-np {self.process_num} {self.solver} -parallel && "
                 f"reconstructPar {latest_time} && "
-                "rm -rf /data/processor*'"
-            )
+                "rm -rf /data/processor*")
+            ]
         else:
-            command = (
-                f"bash -c 'source /opt/OpenFOAM/setImage_v1912.sh && {self.solver}'"
-            )
+            command = [
+                "bash", "-c",
+                (f"source /opt/OpenFOAM/setImage_v1912.sh && {self.solver}")
+            ]
         return command
 
     @classmethod
@@ -189,6 +192,12 @@ class SolverBackend(Backend):
 
         return self.run_container(user=0, stream=stream, case_dir=case_dir)
 
+class SolverBackend(SolverBackendMixin, Backend):
+    pass
+
+class SolverBackendK8s(SolverBackendMixin, BackendK8s):
+    pass
+
 
 class SteadySolverBackend(SolverBackend):
     solver = "buoyantBoussinesqSimpleFoam"
@@ -211,6 +220,46 @@ class SteadySolverBackend(SolverBackend):
 
 
 class TransientSolverBackend(SolverBackend):
+    solver = "buoyantBoussinesqPimpleFoam"
+    write_interval = 10
+    end_time = 50
+
+    def generate_control_dict(
+        self,
+        room: Room,
+        delta_t=1e-5,
+    ) -> None:
+        generate_control_dict(
+            probes=list([x.geometry.location for x in room.constructions.sensors.values()]),
+            steady=False,
+            delta_t=delta_t,
+            write_interval=self.write_interval,
+            end_time=self.end_time,
+            process_num=self.process_num,
+        )
+
+
+class SteadySolverBackendK8s(SolverBackendK8s):
+    solver = "buoyantBoussinesqSimpleFoam"
+    write_interval = 100
+    end_time = 500
+
+    def generate_control_dict(
+        self,
+        room: Room,
+        delta_t=1,
+    ) -> None:
+        generate_control_dict(
+            probes=list([x.geometry.location for x in room.constructions.sensors.values()]),
+            steady=True,
+            delta_t=delta_t,
+            write_interval=self.write_interval,
+            end_time=self.end_time,
+            process_num=self.process_num,
+        )
+
+
+class TransientSolverBackendK8s(SolverBackendK8s):
     solver = "buoyantBoussinesqPimpleFoam"
     write_interval = 10
     end_time = 50
