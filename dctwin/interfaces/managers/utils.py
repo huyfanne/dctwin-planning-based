@@ -198,7 +198,10 @@ def check_base_dir(case_idx: int,  episode_idx: int = None) -> Tuple[bool, bool]
         if config.cfd.dry_run:
             config.cfd.case_dir = Path(config.LOG_DIR).joinpath("base")
     else:
-        run_geometry, run_mesh = True, True
+        if Path.is_dir(Path(config.LOG_DIR).joinpath("base/constant/polyMesh")):
+            run_geometry, run_mesh = False, False
+        else:
+            run_geometry, run_mesh = True, True
         config.cfd.case_dir = Path(config.LOG_DIR).joinpath("base")
         config.cfd.mesh_dir = config.cfd.case_dir
 

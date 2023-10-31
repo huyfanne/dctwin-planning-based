@@ -204,6 +204,9 @@ class BackendK8s(abc.ABC):
         pvc_name = f"task-manager-worker-data-{worker_name}"
         pod_dns_name = f"{job_name}-0.{job_name}-svc.{namespace}.svc.cluster.local"
         backoff_limit = 0
+        # do not remove, its used in k8s core to kill the job if the job is cancelled
+        logger.info(f"container_id: {job_name}")
+
 
         job = create_job_object(
             client,
