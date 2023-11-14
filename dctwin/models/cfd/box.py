@@ -17,7 +17,7 @@ class BoxFaces(BaseModel):
 
 
 class BoxGeometryModel(BaseModel):
-    faces: Optional[BoxFaces]
+    faces: Optional[BoxFaces] = None
 
 
 class BoxGeometry(BoxGeometryModel):

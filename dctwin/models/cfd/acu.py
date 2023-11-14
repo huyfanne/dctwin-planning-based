@@ -16,9 +16,9 @@ class ACUFace(BaseModel):
 
 
 class ACUGeometryModel(BaseModel):
-    size: Optional[Size]
-    supply_face: Optional[ACUFace]
-    return_face: Optional[ACUFace]
+    size: Optional[Size] = None
+    supply_face: Optional[ACUFace] = None
+    return_face: Optional[ACUFace] = None
 
 
 class ACUGeometry(ACUGeometryModel):
@@ -47,29 +47,29 @@ class ACUGeometry(ACUGeometryModel):
 class ACUCoolingModel(BaseModel):
     """ Model of ACU cooling properties
     """
-    cooling_type: Optional[str] # DX, CW, etc.
-    cooling_capacity: Optional[float] # unit(kW)
+    cooling_type: Optional[str] = None # DX, CW, etc.
+    cooling_capacity: Optional[float] = None # unit(kW)
 
 
 class ACUCooling(ACUCoolingModel):
     """ ACU cooling properties
     """
     model: Optional[str]
-    supply_air_temperature: Optional[float] # unit(C)
-    supply_air_volume_flow_rate: Optional[float] # unit(m3/s)
+    supply_air_temperature: Optional[float] = None # unit(C)
+    supply_air_volume_flow_rate: Optional[float] = None # unit(m3/s)
 
 
 class ACUPowerModel(BaseModel):
     """ Model of ACU power properties
     """
-    rated_fan_power: Optional[float]  # unit(W)
+    rated_fan_power: Optional[float] = None  # unit(W)
 
 
 class ACUPower(ACUPowerModel):
     """ ACU power properties
     """
-    model: Optional[str]
-    fan_power: Optional[float] # unit(W)
+    model: Optional[str] = ""
+    fan_power: Optional[float] = None # unit(W)
 
 
 class ACU(BaseModel):

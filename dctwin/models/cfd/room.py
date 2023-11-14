@@ -4,7 +4,7 @@ import json
 import numpy as np
 from typing import Optional, OrderedDict, List, Tuple, Dict, Union
 
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 from pathlib import Path
 
 from .basics import Vertex, Face
@@ -28,7 +28,7 @@ class RoomConstruction(BaseModel):
     """ RoomConstruction is used to build the objects in a room
     """
     raised_floor: Optional[Panel]
-    false_ceiling: Optional[Panel]
+    false_ceiling: Optional[Panel] = None
     boxes: Optional[OrderedDict[str, Box]]
     acus: OrderedDict[str, ACU]
     racks: OrderedDict[str, Rack]
@@ -307,12 +307,13 @@ class Room(BaseModel):
     constructions: RoomConstruction = Field(default_factory=RoomConstruction)
     meta: Optional[OrderedDict] = Field(default_factory=dict)
 
-    @validator("constructions")
+    @field_validator("constructions")
     def _validate_room_constructions(
         cls,
         room_construction: RoomConstruction,
         values: Dict
     ) -> RoomConstruction:
+        values = values.data
         cls._validate_acus(room_construction.acus, values["models"], values["inputs"])
         cls._validate_boxes(room_construction.boxes, values["models"])
         cls._validate_racks(room_construction.racks, values["models"], values["inputs"])

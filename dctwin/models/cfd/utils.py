@@ -1,7 +1,7 @@
 import math
 from typing import Tuple
 from pydantic import BaseModel as PydanticBaseModel
-
+from pydantic import ConfigDict
 
 def euclidean_distance(loc_1: Tuple[float, float, float], loc_2: Tuple[float, float, float]) -> float:
     x_1, y_1, z_1 = loc_1
@@ -25,5 +25,4 @@ def to_camel(string: str) -> str:
 
 class BaseModel(PydanticBaseModel):
 
-    class Config:
-        alias_generator = to_camel
+    model_config = ConfigDict(alias_generator=to_camel)
