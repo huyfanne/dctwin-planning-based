@@ -56,7 +56,7 @@ class ServerCoolingModel(BaseModel):
 
 class ServerCooling(ServerCoolingModel):
     """ Server cooling properties """
-    model: Optional[str]
+    model: Optional[str] = None
 
 
 class ServerPowerModel(BaseModel):

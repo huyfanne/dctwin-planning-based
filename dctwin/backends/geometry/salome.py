@@ -26,7 +26,7 @@ class SalomeBackendMixin:
             "bash",
             "-c",
             "salome start -t geometry_script.py "
-            f"&& chown -R {os.getuid()}:{os.getgid()} {self.volume_data_dir}",
+            f"\icacls {self.volume_data_dir} /setowner {os.getlogin()} /T",
         ]
 
     def _pre_process(self, room: Room):

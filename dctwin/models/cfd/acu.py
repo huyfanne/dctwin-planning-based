@@ -54,7 +54,7 @@ class ACUCoolingModel(BaseModel):
 class ACUCooling(ACUCoolingModel):
     """ ACU cooling properties
     """
-    model: Optional[str]
+    model: Optional[str] = None
     supply_air_temperature: Optional[float] = None # unit(C)
     supply_air_volume_flow_rate: Optional[float] = None # unit(m3/s)
 
