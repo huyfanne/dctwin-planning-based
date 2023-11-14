@@ -17,15 +17,15 @@ class BoxFaces(BaseModel):
 
 
 class BoxGeometryModel(BaseModel):
-    faces: Optional[BoxFaces]
+    faces: Optional[BoxFaces] = None
 
 
 class BoxGeometry(BoxGeometryModel):
-    model: Optional[str]
+    model: Optional[str] = None
     location: Vertex
     size: Size
-    openings_side: Optional[Face]
-    openings: Optional[OrderedDict[str, Opening]]
+    openings_side: Optional[Face] = None
+    openings: Optional[OrderedDict[str, Opening]] = None
 
 
 class Box(BaseModel):

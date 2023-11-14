@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dctwin"
-version = "0.6.33"
+version = "0.6.34"
 description = "Building Co-Simulation Digital Twin for Data Centers."
 authors = ["Ruihang Wang <ruihang001@ntu.edu.sg>", "Ryan Wong <ryan.wong@ntu.edu.sg>", "Zhiwei Cao <zhiwei003@ntu.edu.sg>", "Neng <xiad0001@ntu.edu.sg>"]
 packages = [
@@ -9,7 +9,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
-pydantic = "1.10.2"
+pydantic = "^2.4.1"
 jinja2 = "3.1.2"
 markupsafe = "2.0.1"
 setuptools = "59.8.0"

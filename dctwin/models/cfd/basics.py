@@ -4,7 +4,7 @@ Unit: m (meter)
 from enum import Enum
 from typing import Optional
 
-from pydantic import validator
+from pydantic import field_validator
 from .utils import BaseModel
 
 
@@ -14,7 +14,7 @@ class Vertex(BaseModel):
     y: float
     z: float
 
-    @validator("x", "y", "z")
+    @field_validator("x", "y", "z")
     def float_check(cls, v):
         return round(v, 3)
 
@@ -25,7 +25,7 @@ class Size(BaseModel):
     y: float
     z: float
 
-    @validator("x", "y", "z")
+    @field_validator("x", "y", "z")
     def float_check(cls, v):
         return round(v, 5)
 

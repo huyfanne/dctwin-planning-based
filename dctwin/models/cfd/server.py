@@ -16,11 +16,11 @@ class ServerFace(BaseModel):
 
 
 class ServerGeometryrModel(BaseModel):
-    slot_occupation: Optional[int]
-    depth: Optional[float]
-    width: Optional[float]
-    inlet_face: Optional[ServerFace]
-    outlet_face: Optional[ServerFace]
+    slot_occupation: Optional[int] = None
+    depth: Optional[float] = None
+    width: Optional[float] = None
+    inlet_face: Optional[ServerFace] = None
+    outlet_face: Optional[ServerFace] = None
 
 
 class ServerGeometry(ServerGeometryrModel):
@@ -31,7 +31,7 @@ class ServerGeometry(ServerGeometryrModel):
     """
     model: Optional[str]
     slot_position: int
-    orientation: Optional[float]
+    orientation: Optional[float] = None
 
     @property
     def height(self) -> float:
@@ -51,25 +51,25 @@ class ServerCoolingModel(BaseModel):
     """
     fan_type: Optional[str] = "Fixed" # Fixed or Variable
     volume_flow_rate_ratio: Optional[float] = None # unit(m3/s/W)
-    volume_flow_rate: Optional[float] # unit(m3/s)
+    volume_flow_rate: Optional[float] = None # unit(m3/s)
 
 
 class ServerCooling(ServerCoolingModel):
     """ Server cooling properties """
-    model: Optional[str]
+    model: Optional[str] = None
 
 
 class ServerPowerModel(BaseModel):
     """ Model of server power properties
     """
-    rated_power: Optional[float]  # unit(W)
+    rated_power: Optional[float] = None # unit(W)
 
 
 class ServerPower(ServerPowerModel):
     """ Server power properties
     """
-    model: Optional[str]
-    input_power: Optional[float]  # unit(W)
+    model: Optional[str] = None
+    input_power: Optional[float] = None # unit(W)
 
 
 class Server(BaseModel):

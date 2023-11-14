@@ -8,21 +8,21 @@ from .utils import BaseModel
 
 
 class ACUInputs(BaseModel):
-    supply_air_temperature: Optional[float] # unit(C)
-    supply_air_volume_flow_rate: Optional[float] # unit(m3/s)
+    supply_air_temperature: Optional[float] = None # unit(C)
+    supply_air_volume_flow_rate: Optional[float] = None # unit(m3/s)
 
 
 class ServerInputs(BaseModel):
-    input_power: Optional[float] # unit(W)
+    input_power: Optional[float] = None # unit(W)
 
 
 class SensorMeasurements(BaseModel):
-    temperature: Optional[float] # unit(C)
+    temperature: Optional[float] = None # unit(C)
 
 
 class Inputs(BaseModel):
-    acus: Optional[OrderedDict[str, ACUInputs]]
-    servers: Optional[OrderedDict[str, ServerInputs]]
+    acus: Optional[OrderedDict[str, ACUInputs]] = None
+    servers: Optional[OrderedDict[str, ServerInputs]] = None
 
     @property
     def format(self) -> Dict:

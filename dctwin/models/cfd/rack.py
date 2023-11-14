@@ -10,10 +10,10 @@ from .utils import BaseModel
 
 
 class RackGeometryModel(BaseModel):
-    size: Optional[Size]
-    slot: Optional[int]
-    first_slot_offset: Optional[float]
-    faces: Optional[BoxFaces]
+    size: Optional[Size] = None
+    slot: Optional[int] = None
+    first_slot_offset: Optional[float] = None
+    faces: Optional[BoxFaces] = None
 
 
 class RackGeometry(RackGeometryModel):
