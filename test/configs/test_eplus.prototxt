@@ -1,169 +1,295 @@
-logging_config {
-    log_dir: "eplus"
-    level: DEBUG
-    verbose: true
-}
-
 eplus_env_config {
-    model_file: "models/idf/eplus_test.idf"
-    weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
-    network: "host"
-    host: "localhost"
-
-    return_temp_lb: 25.0
-    return_temp_ub: 40.0
-    return_temp_init: 30.0
-
-    inlet_temp_lb: 20.0
-    inlet_temp_ub: 40.0
-    inlet_temp_init: 25.0
-
-    simulation_time_config: {
-        begin_month: 9
-        begin_day_of_month: 1
-        end_month: 9
-        end_day_of_month: 1
-        number_of_timesteps_per_hour: 4
+  weather_file: "/Users/dcverse_007/Desktop/RDA/dctwin/test/data/weather/SGP_Singapore.486980_IWEC.epw"
+  model_file: "/Users/dcverse_007/Desktop/RDA/dctwin/test/models/idf/building.idf"
+  simulation_time_config {
+    begin_month: 9
+    begin_day_of_month: 1
+    end_month: 9
+    end_day_of_month: 1
+    number_of_timesteps_per_hour: 4
+  }
+  actions {
+    control_type: PRE_SCHEDULED
+    input_source: "/Users/dcverse_007/Desktop/RDA/dctwin/test/data/schedule/workloads/zone1ite1.json"
+    variable_name: "ZONE1ITE1 cpu loading schedule"
+    schedule_config {
+      initial_value: 1.0
+      lb: 0.0
+      ub: 1.0
+      schedule_type: ITE
+      scheduled_ite_equipment_name: "zone1ite1"
     }
-    use_unnormed_act: true
-    actions: [
-        {
-            control_type: PRE_SCHEDULED
-            variable_name: "cpu_loading_schedule1"
-            input_source: "data/workloads/schedule/schedule.json"
-            schedule_config:{
-                initial_value: 0.5
-                lb: 0
-                ub: 1
-                schedule_type: ITE
-                scheduled_ite_equipment_name: "WestDataCenter_Equip"
-            }
-        },
-        {
-            variable_name: "ACU1_setpoint"
-            control_type: AGENT_CONTROLLED
-            actuator_config: {
-                actuated_component_unique_name: "West Air Loop Outlet Node"
-                actuated_component_type: System_Node_Setpoint
-                actuated_component_control_type: Temperature_Setpoint
-            }
-            normalize_config: {
-                method: LINEAR
-                lb: 16
-                ub: 22
-            }
-        },
-        {
-            variable_name: "ACU1_flow_rate"
-            control_type: AGENT_CONTROLLED
-            actuator_config: {
-                actuated_component_unique_name: "West Zone Supply Fan"
-                actuated_component_type: Fan
-                actuated_component_control_type: Fan_Air_Mass_Flow_Rate
-            }
-            normalize_config: {
-                method: LINEAR
-                lb: 12
-                ub: 20
-            }
-        },
-        {
-            variable_name: "CHW_supply_temp"
-            control_type: AGENT_CONTROLLED
-            actuator_config: {
-                actuated_component_unique_name: "CW Supply Outlet Node"
-                actuated_component_type: System_Node_Setpoint
-                actuated_component_control_type: Temperature_Setpoint
-            }
-            normalize_config: {
-                method: LINEAR
-                lb: 5
-                ub: 15
-            }
-        }
-    ]
-    observations: [
-       {
-            exposed: true
-            variable_name: "cpu_loading_schedule1"
-            observation_type: EXTERNAL
-            normalize_config: {
-                method: LINEAR
-                lb: 0
-                ub: 1
-            }
-       },
-       {
-          exposed: false
-          variable_name: "HVAC_power"
-          output_variable_config: {
-             key_value: "Whole Building"
-             variable_name: "Facility Total HVAC Electricity Demand Rate"
-             reporting_frequency: "timestep"
-          }
-       },
-       {
-          exposed: false
-          variable_name: "IT_power"
-          output_variable_config: {
-             key_value: "westdatacenter_equip"
-             variable_name: "ITE Total Heat Gain to Zone Rate"
-             reporting_frequency: "timestep"
-          }
-       },
-       {
-          exposed: false
-          variable_name: "total power"
-          output_variable_config: {
-             key_value: "Whole Building"
-             variable_name: "Facility Total Electricity Demand Rate"
-             reporting_frequency: "timestep"
-          }
-       },
-       {
-          exposed: false
-          variable_name: "supply air temperature"
-          output_variable_config: {
-             key_value: "west air loop outlet node"
-             variable_name: "System Node Temperature"
-             reporting_frequency: "timestep"
-          }
-       },
-       {
-          exposed: false
-          variable_name: "supply air flow rate"
-          output_variable_config: {
-             key_value: "West Zone Supply Fan Outlet Node"
-             variable_name: "System Node Mass Flow Rate"
-             reporting_frequency: "timestep"
-          }
-       },
-       {
-          exposed: false
-          variable_name: "chw supply temperature"
-          output_variable_config: {
-             key_value: "CW Supply Outlet Node"
-             variable_name: "System Node Temperature"
-             reporting_frequency: "timestep"
-          }
-       },
-       {
-          exposed: false
-          variable_name: "chw supply mass flow rate"
-          output_variable_config: {
-             key_value: "CW Supply Outlet Node"
-             variable_name: "System Node Mass Flow Rate"
-             reporting_frequency: "timestep"
-          }
-       },
-       {
-          exposed: false
-          variable_name: "chw rt"
-          output_variable_config: {
-             key_value: "CW SUPPLY INLET NODE"
-             variable_name: "System Node Temperature"
-             reporting_frequency: "timestep"
-          }
-       }
-    ]
+  }
+  actions {
+    control_type: AGENT_CONTROLLED
+    variable_name: "zone1acu1_supply_air_temperature_setpoint"
+    actuator_config {
+      actuated_component_unique_name: "ZONE1ACU1 air loop supply air temperature schedule"
+      actuated_component_type: Schedule_Constant
+      actuated_component_control_type: Schedule_Value
+    }
+  }
+  actions {
+    control_type: AGENT_CONTROLLED
+    variable_name: "zone1acu1_supply_air_mass_flow_rate"
+    actuator_config {
+      actuated_component_unique_name: "ZONE1ACU1 fan"
+      actuated_component_type: Fan
+      actuated_component_control_type: Fan_Air_Mass_Flow_Rate
+    }
+  }
+  actions {
+    control_type: AGENT_CONTROLLED
+    variable_name: "chilled_water_loop_supply_temperature_setpoint"
+    actuator_config {
+      actuated_component_unique_name: "chilled water loop supply outlet node"
+      actuated_component_type: System_Node_Setpoint
+      actuated_component_control_type: Temperature_Setpoint
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chilled water loop supply temperature"
+    output_variable_config {
+      key_value: "CHILLED WATER LOOP SUPPLY OUTLET NODE"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chilled water loop return temperature"
+    output_variable_config {
+      key_value: "CHILLED WATER LOOP SUPPLY INLET NODE"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chilled water loop supply flow rate"
+    output_variable_config {
+      key_value: "CHILLED WATER LOOP SUPPLY OUTLET NODE"
+      variable_name: "System Node Mass Flow Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chilled water loop return flow rate"
+    output_variable_config {
+      key_value: "CHILLED WATER LOOP SUPPLY INLET NODE"
+      variable_name: "System Node Mass Flow Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1acu1 fan air mass flow rate"
+    output_variable_config {
+      key_value: "ZONE1ACU1 AIR LOOP SUPPLY OUTLET NODE"
+      variable_name: "System Node Mass Flow Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1acu1 fan power consumption"
+    output_variable_config {
+      key_value: "ZONE1ACU1 FAN"
+      variable_name: "Fan Electricity Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1acu1 cooling coil inlet air temperature"
+    output_variable_config {
+      key_value: "ACU_1 OUTDOOR AIR SYSTEM MIXED AIR NODE"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1acu1 cooling coil air mass flow rate"
+    output_variable_config {
+      key_value: "ACU_1 OUTDOOR AIR SYSTEM MIXED AIR NODE"
+      variable_name: "System Node Mass Flow Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1acu1 cooling coil outlet air temperature"
+    output_variable_config {
+      key_value: "ZONE1ACU1 COOLING COIL AIR OUTLET NODE"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1acu1 cooling coil inlet water temperature"
+    output_variable_config {
+      key_value: "ZONE1ACU1 WATER INLET NODE"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1acu1 cooling coil water mass flow rate"
+    output_variable_config {
+      key_value: "ZONE1ACU1 WATER INLET NODE"
+      variable_name: "System Node Mass Flow Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chpump1 mass flow rate"
+    output_variable_config {
+      key_value: "CHPUMP1 OUTLET NODE"
+      variable_name: "System Node Mass Flow Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chpump1 power consumption"
+    output_variable_config {
+      key_value: "CHPUMP1"
+      variable_name: "Pump Electricity Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "pump1 mass flow rate"
+    output_variable_config {
+      key_value: "PUMP1 OUTLET NODE"
+      variable_name: "System Node Mass Flow Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "pump1 power consumption"
+    output_variable_config {
+      key_value: "PUMP1"
+      variable_name: "Pump Electricity Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chiller1 cooling load"
+    output_variable_config {
+      key_value: "CHILLER1"
+      variable_name: "Chiller Evaporator Cooling Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chiller1 chilled water supply temperature"
+    output_variable_config {
+      key_value: "CHILLER1 CHILLED WATER INLET NODE"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chiller1 condenser water supply temperature"
+    output_variable_config {
+      key_value: "CHILLER1 CONDENSER WATER INLET NODE"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chiller1 power consumption"
+    output_variable_config {
+      key_value: "CHILLER1"
+      variable_name: "Chiller Electricity Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "tower1 return water temperature"
+    output_variable_config {
+      key_value: "PUMP1 OUTLET NODE"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "tower1 water mass flow rate"
+    output_variable_config {
+      key_value: "PUMP1 OUTLET NODE"
+      variable_name: "System Node Mass Flow Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "tower1 supply water temperature"
+    output_variable_config {
+      key_value: "TOWER1 OUTLET NODE"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "tower1 air flow rate ratio"
+    output_variable_config {
+      key_value: "TOWER1"
+      variable_name: "Cooling Tower Air Flow Rate Ratio"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "tower1 fan power consumption"
+    output_variable_config {
+      key_value: "TOWER1"
+      variable_name: "Cooling Tower Fan Electricity Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone air temperature"
+    output_variable_config {
+      key_value: "ZONE"
+      variable_name: "Zone Air Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone air relative humidity"
+    output_variable_config {
+      key_value: "ZONE"
+      variable_name: "Zone Air Relative Humidity"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1ite1 inlet dry-bulb temperature"
+    output_variable_config {
+      key_value: "ZONE1ITE1"
+      variable_name: "ITE Air Inlet Dry-Bulb Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  host: "host.docker.internal"
+  network: "host"
 }

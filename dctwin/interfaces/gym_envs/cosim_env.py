@@ -11,10 +11,11 @@ from typing import (
 )
 
 from pathlib import Path
+from dclib.room import Room
+
 from dctwin.adapters import EplusCFDAdapter
 from dctwin.utils import CoSimEnvConfig
 from dctwin.utils import config as cosim_env
-from dctwin.models import Room
 
 from .eplus_env import EPlusEnv
 from .ds import Observation

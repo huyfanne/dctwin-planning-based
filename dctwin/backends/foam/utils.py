@@ -4,7 +4,9 @@ import shutil
 from typing import List, Dict
 from dataclasses import dataclass
 
-from dctwin.models import Rack, Room, Vertex
+from dclib.room import Room
+from dclib.models.geometry.basics import Vertex
+from dclib.ite.racks.rack import Rack
 from dctwin.utils import (
     template_env,
     template_dir,

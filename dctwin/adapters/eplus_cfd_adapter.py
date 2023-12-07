@@ -9,11 +9,11 @@ from pathlib import Path
 from sympy import symbols, solve
 import torch
 
-from dctwin.utils import config
+from dclib.room import Room
 
+from dctwin.utils import config
 from dctwin.interfaces.managers import CFDManager
 from dctwin.backends import EplusBackend
-from dctwin.models import Room
 
 
 class EplusCFDAdapter:
@@ -193,7 +193,7 @@ class EplusCFDAdapter:
     def run(self, episode_idx) -> Tuple[np.ndarray, Any]:
         self.episode_idx = episode_idx
         eplus_obs, done = self.eplus_manager.run(episode_idx)
-        init_boundary_condition = self.cfd_manager.format_boundary_conditions # use the default boundary conditions
+        init_boundary_condition = self.cfd_manager.format_boundary_conditions  # use the default boundary conditions
         init_boundary_condition = self._scale_server_flow_rate(
             boundary_conditions=init_boundary_condition
         )

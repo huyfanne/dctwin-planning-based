@@ -12,6 +12,8 @@ from typing import Tuple, Dict
 
 from loguru import logger
 
+from dclib.room import Room
+
 from dctwin.backends.core import Backend
 from dctwin.backends.core_k8s import BackendK8s
 from dctwin.backends.foam.boundary import (
@@ -21,7 +23,6 @@ from dctwin.backends.foam.boundary import (
 )
 
 from dctwin.backends.foam.utils import generate_control_dict, read_internal_field
-from dctwin.models import Room
 from dctwin.utils import template_env, config
 
 

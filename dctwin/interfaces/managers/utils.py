@@ -8,8 +8,8 @@ from loguru import logger
 
 from dctwin.utils import config
 
-from dctwin.models import Vertex
-from dctwin.models import Room
+from dclib.models.geometry.basics import Vertex
+from dclib.room import Room
 
 from pathlib import Path
 from typing import Union, Dict, Optional
