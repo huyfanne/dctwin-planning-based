@@ -319,7 +319,7 @@ def make_cooling_tower(
 
     obj["Design_Air_Flow_Rate"] = cooling_tower.cooling.design_air_flow_rate
     obj["Design_Approach_Temperature"] = cooling_tower.cooling.design_approach_temperature
-    obj["Design_Inlet_Air_WetBulb_Temperature"] = cooling_tower.design_inlet_air_wet_bulb_temperature
+    obj["Design_Inlet_Air_WetBulb_Temperature"] = cooling_tower.cooling.design_inlet_air_wet_bulb_temperature
     obj["Design_Range_Temperature"] = cooling_tower.cooling.design_range_temperature
     obj["Design_Water_Flow_Rate"] = cooling_tower.cooling.design_water_flow_rate
     obj["Minimum_Air_Flow_Rate_Ratio"] = cooling_tower.cooling.minimum_air_flow_rate_ratio

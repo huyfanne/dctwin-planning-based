@@ -2145,8 +2145,22 @@
   !-   =========== Environment: output
   Output:Variable,*,Site Outdoor Air Drybulb Temperature,Timestep;
   Output:Variable,*,Site Outdoor Air Wetbulb Temperature,Timestep;
+  
+  !-   =========== ITE: output
+
+  Output:Variable,*,Zone ITE CPU Electricity Rate,timestep;
+  Output:Variable,*,Zone ITE Fan Electricity Rate,timestep;
+  Output:Variable,*,Zone ITE UPS Electricity Rate,timestep;
+
+  !-   =========== Chiller: output
+
+  Output:Variable,*,Chiller Part Load Ratio,timestep;
+  Output:Variable,*,Chiller COP,timestep;
+
+  !-   =========== Coil: output
+
+  Output:Variable,*,Cooling Coil Sensible Cooling Rate,timestep;
 
   !-   ===========  PUE: Output
 
   Output:Variable,*,Power Utilization Effectiveness,timestep;
-  

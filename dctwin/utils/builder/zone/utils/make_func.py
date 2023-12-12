@@ -108,11 +108,13 @@ def make_cooling_coil(
     # fill in info
     obj["Design_Air_Flow_Rate"] = acu.cooling.design_air_flow_rate
     obj["Design_Inlet_Air_Humidity_Ratio"] = acu.cooling.design_inlet_air_humidity_ratio
+    obj["Design_Outlet_Air_Humidity_Ratio"] = acu.cooling.design_outlet_air_humidity_ratio
     obj["Design_Inlet_Air_Temperature"] = acu.cooling.design_inlet_air_temperature
     obj["Design_Outlet_Air_Temperature"] = acu.cooling.design_outlet_air_temperature
     obj["Design_Water_Flow_Rate"] = acu.cooling.design_water_flow_rate
     obj["Design_Inlet_Water_Temperature"] = acu.cooling.design_inlet_water_temperature
     obj["Design_Water_Temperature_Difference"] = acu.cooling.design_water_temperature_difference
+    obj["Heat_Exchanger_Configuration"] = acu.cooling.heat_exchanger_configuration
     return obj
 
 
@@ -156,7 +158,7 @@ def make_fan(
     obj["Fan_Power_Minimum_Flow_Rate_Input_Method"] = acu.power.fan_power_minimum_flow_rate_input_method
     obj["Fan_Total_Efficiency"] = acu.power.fan_total_efficiency
     obj["Motor_Efficiency"] = acu.power.motor_efficiency
-    obj["Maximum_Flow_Rate"] = acu.cooling.design_air_flow_rate
+    obj["Maximum_Flow_Rate"] = acu.cooling.maximum_flow_rate
     obj["Pressure_Rise"] = acu.cooling.pressure_rise
     obj["Motor_In_Airstream_Fraction"] = acu.power.motor_in_airstream_fraction
     return obj

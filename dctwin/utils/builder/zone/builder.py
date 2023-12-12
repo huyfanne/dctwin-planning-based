@@ -4,7 +4,7 @@ from eppy.bunch_subclass import EpBunch
 from eppy.modeleditor import IDF
 
 from dclib.ite.composite import ITE
-from dclib.electrical.room.electrical_device import ElectricEquipment, Light
+from dclib.electrical.room.electrical_device import ElectricEquipment, Light, People
 from dclib.room import Room, Thermostats
 from dclib.cooling.room.facilities.acu import ACU, ACUOutdoorAir
 from dclib.cooling.room.sizing import SizingZone, SizingSystem
@@ -142,12 +142,12 @@ class RoomBuilder:
                 Hourly_Value=1.0,
             )
 
-    # def _make_occupancy(self, zone_name: str, config: People):
-    #     if config:
-    #         occupancy = self.model.newidfobject(key="People".upper())
-    #         occupancy["Name"] = config.name
-    #         occupancy["Zone_or_ZoneList_Name"] = zone_name
-    #         occupancy["Number_of_People"] = config.num_people
+    def _make_occupancy(self, zone_name: str, config: People):
+        if config:
+            occupancy = self.model.newidfobject(key="People".upper())
+            occupancy["Name"] = config.name
+            occupancy["Zone_or_ZoneList_Name"] = zone_name
+            occupancy["Number_of_People"] = config.number_of_people
 
     def _make_electrical_equipment(self, zone_name: str, config: ElectricEquipment):
         if config:
@@ -225,7 +225,10 @@ class RoomBuilder:
             Outdoor_Air_Flow_Air_Changes_per_Hour=config.design_specification_outdoor_air_flow_air_changes_per_hour
         )
 
-    def _make_zone_thermostat(self, zone_name: str, config: Thermostats):
+    def _make_zone_thermostat(self, zone_name: str, config: Thermostats, acus: Dict[str, ACU]):
+        num_acu = len(acus)
+        if num_acu == 0:
+            return
         thermostat = self.model.newidfobject(
             key="ThermostatSetpoint:DualSetpoint".upper()
         )
@@ -310,6 +313,8 @@ class RoomBuilder:
         :return:
         """
         num_acu = len(acus)
+        if num_acu == 0:
+            return
         self.model.newidfobject(
             key="ZoneHVAC:EquipmentConnections".upper(),
             Zone_Name=zone_name,
@@ -543,4 +548,4 @@ class RoomBuilder:
             # self._make_lightning(room_name, config.constructions.heat_gains.light)
             # self._make_electrical_equipment(room_name, config.constructions.heat_gains.electric_equipment)
             self._make_zone_sizing(room_name, config.sizing.sizing_zone)
-            self._make_zone_thermostat(room_name, config.thermostats)
+            self._make_zone_thermostat(room_name, config.thermostats, config.constructions.acus)

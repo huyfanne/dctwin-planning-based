@@ -14,7 +14,7 @@ if __name__ == "__main__":
     manager.make()
     manager.save(
         idf_save_dir=Path("models/idf"),
-        device_key_map_save_dir=Path("models/building"),
+        map_save_dir=Path("models/building"),
     )
 
     # Build config file

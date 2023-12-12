@@ -426,6 +426,28 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub
             )
+            # chilled water return temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{chiller_name} chilled water return temperature".lower(),
+                key_value=chiller["chilled water return temperature"].split(":")[0],
+                output_variable_name="System Node Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # condenser water return temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{chiller_name} condenser water return temperature".lower(),
+                key_value=chiller["condensing water return temperature"].split(":")[0],
+                output_variable_name="System Node Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
             # observe chiller power consumption
             self._make_observation(
                 exposed=exposed,
@@ -483,7 +505,7 @@ class ConfigBuilder:
             self._make_observation(
                 exposed=exposed,
                 variable_name=f"{cooling_tower_name} air flow rate ratio".lower(),
-                key_value=cooling_tower["cooling tower air flow rate ratio"].split(":")[0],
+                key_value=cooling_tower["air flow rate ratio"].split(":")[0],
                 output_variable_name="Cooling Tower Air Flow Rate Ratio",
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
@@ -505,7 +527,7 @@ class ConfigBuilder:
             self._make_observation(
                 exposed=exposed,
                 variable_name=f"{cooling_tower_name} fan power consumption".lower(),
-                key_value=cooling_tower["cooling tower fan power"].split(":")[0],
+                key_value=cooling_tower["power"].split(":")[0],
                 output_variable_name="Cooling Tower Fan Electricity Rate",
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,

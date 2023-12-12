@@ -195,7 +195,7 @@ eplus_env_config {
     exposed: false
     variable_name: "chiller1 chilled water supply temperature"
     output_variable_config {
-      key_value: "CHILLER1 CHILLED WATER INLET NODE"
+      key_value: "CHILLER1 CHILLED WATER OUTLET NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
@@ -205,6 +205,24 @@ eplus_env_config {
     variable_name: "chiller1 condenser water supply temperature"
     output_variable_config {
       key_value: "CHILLER1 CONDENSER WATER INLET NODE"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chiller1 chilled water return temperature"
+    output_variable_config {
+      key_value: "CHILLER1 CHILLED WATER INLET NODE"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chiller1 condenser water return temperature"
+    output_variable_config {
+      key_value: "CHILLER1 CONDENSER WATER OUTLET NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }

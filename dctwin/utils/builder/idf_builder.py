@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from loguru import logger
+import copy
 from eppy.modeleditor import IDF
 
 from dclib.models.geometry.basics import Geometry
@@ -111,6 +112,7 @@ class IDFBuilder:
             )
             self.device_key_map["zones"][zone_name]["air temperature"] = f"{zone_obj['Name'].upper()}:Zone Air Temperature [C](TimeStep)"
             self.device_key_map["zones"][zone_name]["air relative humidity"] = f"{zone_obj['Name'].upper()}:Zone Air Relative Humidity [%](TimeStep)"
+            self.device_key_map["zones"][zone_name]["ite power"] = f"{zone_obj['Name'].upper()}:Zone ITE CPU Electricity Rate [W](TimeStep)"
         # create ITE device key mapping
         for ite_name in self.building.constructions.ites:
             self.device_key_map["ites"][ite_name] = {}
@@ -121,7 +123,7 @@ class IDFBuilder:
             self.device_key_map["ites"][ite_name] = {
                 "inlet dry-bulb temperature": f"{ite_obj['Name'].upper()}:ITE Air Inlet Dry-Bulb Temperature [C](TimeStep)"
             }
-
+            
         # create ACU device key mapping
         for acu_name in self.building.constructions.acus:
             self.device_key_map["acus"][acu_name] = {}
@@ -130,7 +132,7 @@ class IDFBuilder:
                 name=f"{acu_name} fan"
             )
             self.device_key_map["acus"][acu_name]["fan"]= {
-                "air mass flow rate": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep) ",
+                "air mass flow rate": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
                 "power": f"{fan_obj['Name'].upper()}:Fan Electricity Rate [W](TimeStep)",
             }
             coil_obj = self.model.getobject(
@@ -152,7 +154,7 @@ class IDFBuilder:
                 name=pump_name
             )
             self.device_key_map["chilled water pumps"][pump_name] = {
-                "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:Pump Mass Flow Rate [kg/s](TimeStep)",
                 "power": f"{pump_obj['Name'].upper()}:Pump Electricity Rate [W](TimeStep)",
             }
         # create chiller device key mapping
@@ -164,7 +166,9 @@ class IDFBuilder:
             )
             self.device_key_map["chillers"][chiller_name] = {
                 "cooling load": f"{chiller_obj['Name'].upper()}:Chiller Evaporator Cooling Rate [W](TimeStep)",
-                "chilled water supply temperature": f"{chiller_obj['Chilled_Water_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "chilled water supply temperature": f"{chiller_obj['Chilled_Water_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "chilled water return temperature": f"{chiller_obj['Chilled_Water_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "condensing water return temperature": f"{chiller_obj['Condenser_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "condensing water supply temperature": f"{chiller_obj['Condenser_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "power": f"{chiller_obj['Name'].upper()}:Chiller Electricity Rate [W](TimeStep)",
             }
@@ -176,7 +180,7 @@ class IDFBuilder:
                 name=pump_name
             )
             self.device_key_map["condenser water pumps"][pump_name] = {
-                "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:Pump Mass Flow Rate [kg/s](TimeStep)",
                 "power": f"{pump_obj['Name'].upper()}:Pump Electricity Rate [W](TimeStep)",
             }
         # create cooling tower device key mapping
@@ -190,10 +194,20 @@ class IDFBuilder:
                 "return water temperature": f"{tower_obj['Water_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "water mass flow rate": f"{tower_obj['Water_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
                 "supply water temperature": f"{tower_obj['Water_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "cooling tower air flow rate ratio": f"{tower_obj['Name'].upper()}:Cooling Tower Air Flow Rate Ratio [](TimeStep)",
+                "air flow rate ratio": f"{tower_obj['Name'].upper()}:Cooling Tower Air Flow Rate Ratio [](TimeStep)",
                 "outside air wetbulb temperature": "Environment:Site Outdoor Air Wetbulb Temperature [C](TimeStep)",
-                "cooling tower fan power": f"{tower_obj['Name'].upper()}:Cooling Tower Fan Electricity Rate [W](TimeStep)",
+                "power": f"{tower_obj['Name'].upper()}:Cooling Tower Fan Electricity Rate [W](TimeStep)"
             }
+
+    def replace_entries_with_dict(self, data):
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if isinstance(value, dict):
+                    self.replace_entries_with_dict(value)
+                else:
+                    data[key] = {
+                        value: []
+                    }
 
     def make(self) -> None:
         self._make_models()
@@ -207,13 +221,18 @@ class IDFBuilder:
     def save(
         self,
         idf_save_dir: Path,
-        device_key_map_save_dir: Path
+        map_save_dir: Path,
     ) -> None:
         if self.model is not None:
             self.model.saveas(str(idf_save_dir.joinpath("building.idf").absolute()))
             logger.info(f"Model saved to {idf_save_dir.joinpath('building.idf').absolute()}")
-            with open(device_key_map_save_dir.joinpath("device_key_map.json"),  "w") as f:
+            with open(map_save_dir.joinpath("device_key_map.json"),  "w") as f:
                 json.dump(self.device_key_map, f, indent=4)
-            logger.info(f"Device key map saved to {device_key_map_save_dir.joinpath('device_key_map.json').absolute()}")
+            with open(map_save_dir.joinpath("calibration_map.json"),  "w") as f:
+                # replace all entries with empty list for calibration
+                self.calibration = copy.deepcopy(self.device_key_map)
+                self.replace_entries_with_dict(self.calibration)
+                json.dump(self.calibration, f, indent=4)
+            logger.info(f"Mapping json saved to {map_save_dir.joinpath('device_key_map.json').absolute()}")
         else:
             logger.critical("Model is empty. Cannot save.")

@@ -794,7 +794,7 @@ FAN:VARIABLEVOLUME,
     ALWAYS ON,                !- Availability Schedule Name
     0.7,                      !- Fan Total Efficiency
     500,                      !- Pressure Rise
-    Autosize,                 !- Maximum Flow Rate
+    autosize,                 !- Maximum Flow Rate
     Fraction,                 !- Fan Power Minimum Flow Rate Input Method
     0.25,                     !- Fan Power Minimum Flow Fraction
     ,                         !- Fan Power Minimum Air Flow Rate
@@ -818,7 +818,7 @@ COIL:COOLING:WATER,
     Autosize,                 !- Design Inlet Air Temperature
     Autosize,                 !- Design Outlet Air Temperature
     Autosize,                 !- Design Inlet Air Humidity Ratio
-    autosize,                 !- Design Outlet Air Humidity Ratio
+    Autosize,                 !- Design Outlet Air Humidity Ratio
     zone1acu1 water inlet node,    !- Water Inlet Node Name
     zone1acu1 water outlet node,    !- Water Outlet Node Name
     acu_1 outdoor air system mixed air node,    !- Air Inlet Node Name
@@ -1270,7 +1270,7 @@ CHILLER:ELECTRIC:EIR,
     1600000,                  !- Reference Capacity
     7.2693727,                !- Reference COP
     10,                       !- Reference Leaving Chilled Water Temperature
-    29.4,                     !- Reference Entering Condenser Fluid Temperature
+    28,                       !- Reference Entering Condenser Fluid Temperature
     0.4,                      !- Reference Chilled Water Flow Rate
     0.45,                     !- Reference Condenser Fluid Flow Rate
     chiller1 cooling capacity function of temperature curve,    !- Cooling Capacity Function of Temperature Curve Name
@@ -1305,14 +1305,14 @@ COOLINGTOWER:VARIABLESPEED,
     tower1,                   !- Name
     pump1 outlet node,        !- Water Inlet Node Name
     tower1 outlet node,       !- Water Outlet Node Name
-    YorkCalc,                 !- Model Type
+    YorkCalcUserDefined,      !- Model Type
     YorkCalc Default Tower Model,    !- Model Coefficient Name
-    25.6,                     !- Design Inlet Air WetBulb Temperature
-    3.9,                      !- Design Approach Temperature
+    26.666,                   !- Design Inlet Air WetBulb Temperature
+    2.84,                     !- Design Approach Temperature
     5.5,                      !- Design Range Temperature
-    autosize,                 !- Design Water Flow Rate
-    autosize,                 !- Design Air Flow Rate
-    autosize,                 !- Design Fan Power
+    0.10169,                  !- Design Water Flow Rate
+    3.54667,                  !- Design Air Flow Rate
+    25000,                    !- Design Fan Power
     tower1 fan power ratio function of air flow rate ratio curve,    !- Fan Power Ratio Function of Air Flow Rate Ratio Curve Name
     0.2,                      !- Minimum Air Flow Rate Ratio
     0,                        !- Fraction of Tower Capacity in Free Convection Regime
@@ -1537,9 +1537,9 @@ SETPOINTMANAGER:FOLLOWOUTDOORAIRTEMPERATURE,
     condenser water loop outdoor air temperature setpoint manager,    !- Name
     Temperature,              !- Control Variable
     OutdoorAirWetBulb,        !- Reference Temperature Type
-    0,                        !- Offset Temperature Difference
-    35,                       !- Maximum Setpoint Temperature
-    25,                       !- Minimum Setpoint Temperature
+    2.5,                      !- Offset Temperature Difference
+    32,                       !- Maximum Setpoint Temperature
+    20,                       !- Minimum Setpoint Temperature
     condenser water loop supply outlet node;    !- Setpoint Node or NodeList Name
 
 CURVE:QUADRATIC,
@@ -1719,6 +1719,36 @@ Output:Variable,
     *,                        !- Key Value
     Site Outdoor Air Wetbulb Temperature,    !- Variable Name
     Timestep;                 !- Reporting Frequency
+
+Output:Variable,
+    *,                        !- Key Value
+    Zone ITE CPU Electricity Rate,    !- Variable Name
+    timestep;                 !- Reporting Frequency
+
+Output:Variable,
+    *,                        !- Key Value
+    Zone ITE Fan Electricity Rate,    !- Variable Name
+    timestep;                 !- Reporting Frequency
+
+Output:Variable,
+    *,                        !- Key Value
+    Zone ITE UPS Electricity Rate,    !- Variable Name
+    timestep;                 !- Reporting Frequency
+
+Output:Variable,
+    *,                        !- Key Value
+    Chiller Part Load Ratio,    !- Variable Name
+    timestep;                 !- Reporting Frequency
+
+Output:Variable,
+    *,                        !- Key Value
+    Chiller COP,              !- Variable Name
+    timestep;                 !- Reporting Frequency
+
+Output:Variable,
+    *,                        !- Key Value
+    Cooling Coil Sensible Cooling Rate,    !- Variable Name
+    timestep;                 !- Reporting Frequency
 
 Output:Variable,
     *,                        !- Key Value
