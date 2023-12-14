@@ -58,7 +58,8 @@ class ConfigBuilder:
         lb: float,
         ub: float,
         masking_variable_name: str = "",
-        default_unnormed_value: float = None
+        default_unnormed_value: float = None,
+        input_source: Path = None
     ):
         if masking_variable_name != "":
             matches = [o for o in self.model.eplus_env_config.observations \
@@ -68,7 +69,9 @@ class ConfigBuilder:
         action.control_type = control_type
         if default_unnormed_value is not None:
             action.default_unnormed_value = default_unnormed_value
-        action.variable_name = variable_name
+        if input_source is not None:
+            action.input_source = str(input_source.absolute())
+        action.variable_name = variable_name.replace("-", "_").replace(" ", "_") # variable name cannot contain dash and space
         if masking_variable_name != "":
             action.masking_variable_name = masking_variable_name
         action.actuator_config.actuated_component_unique_name = actuated_component_unique_name
@@ -616,7 +619,6 @@ class ConfigBuilder:
     ):
         for acu_name, acu in self.device_key_map["acus"].items():
             variable_name = f"{acu_name} supply air temperature setpoint".lower()
-            variable_name = variable_name.replace(" ", "_")
             self._make_actions(
                 variable_name=variable_name,
                 actuated_component_unique_name=f"{acu_name} air loop supply air temperature schedule",
@@ -639,7 +641,6 @@ class ConfigBuilder:
     ):
         for acu_name, acu in self.device_key_map["acus"].items():
             variable_name = f"{acu_name} supply air mass flow rate".lower()
-            variable_name = variable_name.replace(" ", "_")
             self._make_actions(
                 variable_name=variable_name,
                 actuated_component_unique_name=f"{acu_name} fan",
@@ -662,7 +663,6 @@ class ConfigBuilder:
     ):
         for loop_name, loop in self.device_key_map["chilled water loops"].items():
             variable_name = f"{loop_name} supply temperature setpoint".lower()
-            variable_name = variable_name.replace(" ", "_")
             self._make_actions(
                 variable_name=variable_name,
                 actuated_component_unique_name=f"{loop_name} supply outlet node",
@@ -685,7 +685,6 @@ class ConfigBuilder:
     ):
         for loop_name, loop in self.device_key_map["condenser water loops"].items():
             variable_name = f"{loop_name} supply temperature setpoint".lower()
-            variable_name = variable_name.replace(" ", "_")
             self._make_actions(
                 variable_name=variable_name,
                 actuated_component_unique_name=f"{loop_name} supply outlet node",
@@ -698,9 +697,69 @@ class ConfigBuilder:
                 ub=ub
             )
 
+    def make_chilled_water_supply_branch_on_off_actions_prescheduled(
+        self,
+        schedule_dir: Path = Path("data/schedule/branches"),
+        normalize_method: int = 1,
+        lb: float = 0.0,
+        ub: float = 1.0
+    ):
+        for index, (chiller_name, chiller) in enumerate(self.device_key_map["chillers"].items()):
+            self._make_actions(
+                variable_name=f"chilled water supply branch {index+1} on off".lower(),
+                actuated_component_unique_name=f"chilled water supply branch {index+1}",
+                actuated_component_type=4,
+                actuated_component_control_type=4,
+                control_type=5,
+                method=normalize_method,
+                lb=lb,
+                ub=ub,
+                input_source=schedule_dir.joinpath(f"chilled water supply branch {index+1}.json")
+            )
+
+    def make_chilled_water_pump_flow_rates_actions_prescheduled(
+        self,
+        schedule_dir: Path = Path("data/schedule/pumps"),
+        normalize_method: int = 1,
+        lb: float = 0.0,
+        ub: float = 100.0
+    ):
+        for pump_name, pump in self.device_key_map["chilled water pumps"].items():
+            self._make_actions(
+                variable_name=f"{pump_name} mass flow rate".lower(),
+                actuated_component_unique_name=f"{pump_name}",
+                actuated_component_type=2,
+                actuated_component_control_type=2,
+                control_type=5,
+                method=normalize_method,
+                lb=lb,
+                ub=ub,
+                input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json")
+            )
+
+    def make_condenser_water_pump_flow_rates_actions_prescheduled(
+        self,
+        schedule_dir: Path = Path("data/schedule/pumps"),
+        normalize_method: int = 1,
+        lb: float = 0.0,
+        ub: float = 100.0
+    ):
+        for pump_name, pump in self.device_key_map["condenser water pumps"].items():
+            self._make_actions(
+                variable_name=f"{pump_name} mass flow rate".lower(),
+                actuated_component_unique_name=f"{pump_name}",
+                actuated_component_type=2,
+                actuated_component_control_type=2,
+                control_type=5,
+                method=normalize_method,
+                lb=lb,
+                ub=ub,
+                input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json")
+            )
+
     def make_cpu_loading_schedules(
         self,
-        schedule_dir: Path,
+        schedule_dir: Path = Path("data/schedule/workloads"),
         initial_value: float = 1.0,
         lb: float = 0.0,
         ub: float = 1.0

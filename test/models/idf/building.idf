@@ -1539,7 +1539,7 @@ SETPOINTMANAGER:FOLLOWOUTDOORAIRTEMPERATURE,
     OutdoorAirWetBulb,        !- Reference Temperature Type
     2.5,                      !- Offset Temperature Difference
     32,                       !- Maximum Setpoint Temperature
-    20,                       !- Minimum Setpoint Temperature
+    0,                        !- Minimum Setpoint Temperature
     condenser water loop supply outlet node;    !- Setpoint Node or NodeList Name
 
 CURVE:QUADRATIC,
@@ -1733,6 +1733,21 @@ Output:Variable,
 Output:Variable,
     *,                        !- Key Value
     Zone ITE UPS Electricity Rate,    !- Variable Name
+    timestep;                 !- Reporting Frequency
+
+Output:Variable,
+    *,                        !- Key Value
+    ITE CPU Electricity Rate,    !- Variable Name
+    timestep;                 !- Reporting Frequency
+
+Output:Variable,
+    *,                        !- Key Value
+    ITE Fan Electricity Rate,    !- Variable Name
+    timestep;                 !- Reporting Frequency
+
+Output:Variable,
+    *,                        !- Key Value
+    ITE UPS Electricity Rate,    !- Variable Name
     timestep;                 !- Reporting Frequency
 
 Output:Variable,

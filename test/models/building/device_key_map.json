@@ -24,7 +24,10 @@
     },
     "ites": {
         "ZONE1ITE1": {
-            "inlet dry-bulb temperature": "ZONE1ITE1:ITE Air Inlet Dry-Bulb Temperature [C](TimeStep)"
+            "inlet dry-bulb temperature": "ZONE1ITE1:ITE Air Inlet Dry-Bulb Temperature [C](TimeStep)",
+            "cpu power": "ZONE1ITE1:ITE CPU Electricity Rate [%](TimeStep)",
+            "fan power": "ZONE1ITE1:ITE Fan Electricity Rate [%](TimeStep)",
+            "ups power": "ZONE1ITE1:ITE UPS Electricity Rate [W](TimeStep)"
         }
     },
     "acus": {
@@ -44,7 +47,7 @@
     },
     "chilled water pumps": {
         "CHPUMP1": {
-            "mass flow rate": "CHPUMP1 OUTLET NODE:Pump Mass Flow Rate [kg/s](TimeStep)",
+            "mass flow rate": "CHPUMP1 OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
             "power": "CHPUMP1:Pump Electricity Rate [W](TimeStep)"
         }
     },
@@ -60,7 +63,7 @@
     },
     "condenser water pumps": {
         "PUMP1": {
-            "mass flow rate": "PUMP1 OUTLET NODE:Pump Mass Flow Rate [kg/s](TimeStep)",
+            "mass flow rate": "PUMP1 OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
             "power": "PUMP1:Pump Electricity Rate [W](TimeStep)"
         }
     },

@@ -110,9 +110,11 @@ class IDFBuilder:
                 key="Zone".upper(),
                 name=f"{zone_name}"
             )
-            self.device_key_map["zones"][zone_name]["air temperature"] = f"{zone_obj['Name'].upper()}:Zone Air Temperature [C](TimeStep)"
-            self.device_key_map["zones"][zone_name]["air relative humidity"] = f"{zone_obj['Name'].upper()}:Zone Air Relative Humidity [%](TimeStep)"
-            self.device_key_map["zones"][zone_name]["ite power"] = f"{zone_obj['Name'].upper()}:Zone ITE CPU Electricity Rate [W](TimeStep)"
+            self.device_key_map["zones"][zone_name] = {
+                "air temperature": f"{zone_obj['Name'].upper()}:Zone Air Temperature [C](TimeStep)",
+                "air relative humidity": f"{zone_obj['Name'].upper()}:Zone Air Relative Humidity [%](TimeStep)",
+                "ite power": f"{zone_obj['Name'].upper()}:Zone ITE CPU Electricity Rate [W](TimeStep)",
+            }
         # create ITE device key mapping
         for ite_name in self.building.constructions.ites:
             self.device_key_map["ites"][ite_name] = {}
@@ -121,9 +123,11 @@ class IDFBuilder:
                 name=f"{ite_name}"
             )
             self.device_key_map["ites"][ite_name] = {
-                "inlet dry-bulb temperature": f"{ite_obj['Name'].upper()}:ITE Air Inlet Dry-Bulb Temperature [C](TimeStep)"
+                "inlet dry-bulb temperature": f"{ite_obj['Name'].upper()}:ITE Air Inlet Dry-Bulb Temperature [C](TimeStep)",
+                "cpu power": f"{ite_obj['Name'].upper()}:ITE CPU Electricity Rate [%](TimeStep)",
+                "fan power": f"{ite_obj['Name'].upper()}:ITE Fan Electricity Rate [%](TimeStep)",
+                "ups power": f"{ite_obj['Name'].upper()}:ITE UPS Electricity Rate [W](TimeStep)",
             }
-            
         # create ACU device key mapping
         for acu_name in self.building.constructions.acus:
             self.device_key_map["acus"][acu_name] = {}
@@ -154,7 +158,7 @@ class IDFBuilder:
                 name=pump_name
             )
             self.device_key_map["chilled water pumps"][pump_name] = {
-                "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:Pump Mass Flow Rate [kg/s](TimeStep)",
+                "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
                 "power": f"{pump_obj['Name'].upper()}:Pump Electricity Rate [W](TimeStep)",
             }
         # create chiller device key mapping
@@ -180,7 +184,7 @@ class IDFBuilder:
                 name=pump_name
             )
             self.device_key_map["condenser water pumps"][pump_name] = {
-                "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:Pump Mass Flow Rate [kg/s](TimeStep)",
+                "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
                 "power": f"{pump_obj['Name'].upper()}:Pump Electricity Rate [W](TimeStep)",
             }
         # create cooling tower device key mapping

@@ -28,12 +28,10 @@ if __name__ == "__main__":
         network="host",
         host="host.docker.internal"
     )
-    config.make_cpu_loading_schedules(
-        schedule_dir=Path("data/schedule/workloads")
-    )
+    config.make_cpu_loading_schedules()
+    config.make_chilled_water_loop_supply_temperature_actions()
     config.make_acu_supply_air_temperature_actions()
     config.make_acu_supply_air_flow_rate_actions()
-    config.make_chilled_water_loop_supply_temperature_actions()
     config.make_chilled_water_loop_observations(exposed=False)
     config.make_acu_fan_observations(exposed=False)
     config.make_cooling_coil_observations(exposed=False)
@@ -54,7 +52,7 @@ if __name__ == "__main__":
     acu_setpoint_sp = 18.0
     acu_supply_flow = 15.0
     water_supply_sp = 7.0
-    act = np.array([acu_setpoint_sp, acu_supply_flow, water_supply_sp])
+    act = np.array([water_supply_sp, acu_setpoint_sp, acu_supply_flow, ])
     done = False
     while not done:
         obs, rew, done, truncated, info = env.step(act)

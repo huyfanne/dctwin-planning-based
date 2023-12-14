@@ -2152,6 +2152,10 @@
   Output:Variable,*,Zone ITE Fan Electricity Rate,timestep;
   Output:Variable,*,Zone ITE UPS Electricity Rate,timestep;
 
+  Output:Variable,*,ITE CPU Electricity Rate,timestep;
+  Output:Variable,*,ITE Fan Electricity Rate,timestep;
+  Output:Variable,*,ITE UPS Electricity Rate,timestep;
+
   !-   =========== Chiller: output
 
   Output:Variable,*,Chiller Part Load Ratio,timestep;

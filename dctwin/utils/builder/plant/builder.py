@@ -321,7 +321,7 @@ class PlantBuilder:
                 Reference_Temperature_Type="OutdoorAirWetBulb",
                 Offset_Temperature_Difference=2.5,
                 Maximum_Setpoint_Temperature=32,
-                Minimum_Setpoint_Temperature=20,
+                Minimum_Setpoint_Temperature=0,
                 Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node"
             )
 

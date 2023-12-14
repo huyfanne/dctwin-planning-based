@@ -22,6 +22,15 @@ eplus_env_config {
   }
   actions {
     control_type: AGENT_CONTROLLED
+    variable_name: "chilled_water_loop_supply_temperature_setpoint"
+    actuator_config {
+      actuated_component_unique_name: "chilled water loop supply outlet node"
+      actuated_component_type: System_Node_Setpoint
+      actuated_component_control_type: Temperature_Setpoint
+    }
+  }
+  actions {
+    control_type: AGENT_CONTROLLED
     variable_name: "zone1acu1_supply_air_temperature_setpoint"
     actuator_config {
       actuated_component_unique_name: "ZONE1ACU1 air loop supply air temperature schedule"
@@ -36,15 +45,6 @@ eplus_env_config {
       actuated_component_unique_name: "ZONE1ACU1 fan"
       actuated_component_type: Fan
       actuated_component_control_type: Fan_Air_Mass_Flow_Rate
-    }
-  }
-  actions {
-    control_type: AGENT_CONTROLLED
-    variable_name: "chilled_water_loop_supply_temperature_setpoint"
-    actuator_config {
-      actuated_component_unique_name: "chilled water loop supply outlet node"
-      actuated_component_type: System_Node_Setpoint
-      actuated_component_control_type: Temperature_Setpoint
     }
   }
   observations {
