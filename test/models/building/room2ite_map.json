@@ -1,0 +1,9 @@
+{
+    "zone": {
+        "ite_1": {
+            "wattsPerUnit": 1000.0,
+            "numberOfUnits": 10,
+            "totalWatts": 10000.0
+        }
+    }
+}

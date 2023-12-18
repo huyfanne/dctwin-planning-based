@@ -25,8 +25,8 @@ if __name__ == "__main__":
     config.make_eplus_env_config(
         idf_file=Path("models/idf/building.idf"),
         weather_file=Path("data/weather/SGP_Singapore.486980_IWEC.epw"),
-        network="host",
-        host="host.docker.internal"
+        # network="host",
+        # host="host.docker.internal"
     )
     config.make_cpu_loading_schedules()
     config.make_chilled_water_loop_supply_temperature_actions()

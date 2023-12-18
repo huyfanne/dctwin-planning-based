@@ -617,7 +617,7 @@ ELECTRICEQUIPMENT:ITE:AIRCOOLED,
     Watts/Unit,               !- Design Power Input Calculation Method
     1000,                     !- Watts per Unit
     10,                       !- Number of Units
-    ,                         !- Watts per Zone Floor Area
+    0,                        !- Watts per Zone Floor Area
     ZONE1ITE1 operation schedule,    !- Design Power Input Schedule Name
     ZONE1ITE1 cpu schedule,    !- CPU Loading Schedule Name
     zone1ite1 cpu power input function of loading and supply Temperature curve,    !- CPU Power Input Function of Loading and Air Temperature Curve Name
@@ -633,7 +633,7 @@ ELECTRICEQUIPMENT:ITE:AIRCOOLED,
     zone inlet node 1,        !- Supply Air Node Name
     0.1,                      !- Design Recirculation Fraction
     zone1ite1 recirculation function of loading and supply temperature curve,    !- Recirculation Function of Loading and Supply Temperature Curve Name
-    0.9,                      !- Design Electric Power Supply Efficiency
+    1,                        !- Design Electric Power Supply Efficiency
     zone1ite1 electric power supply efficiency function of part load ratio curve,    !- Electric Power Supply Efficiency Function of Part Load Ratio Curve Name
     1,                        !- Fraction of Electric Power Supply Losses to Zone
     ITE-CPU,                  !- CPU EndUse Subcategory

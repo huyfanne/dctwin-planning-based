@@ -58,7 +58,8 @@
             "chilled water return temperature": "CHILLER1 CHILLED WATER INLET NODE:System Node Temperature [C](TimeStep)",
             "condensing water return temperature": "CHILLER1 CONDENSER WATER OUTLET NODE:System Node Temperature [C](TimeStep)",
             "condensing water supply temperature": "CHILLER1 CONDENSER WATER INLET NODE:System Node Temperature [C](TimeStep)",
-            "power": "CHILLER1:Chiller Electricity Rate [W](TimeStep)"
+            "power": "CHILLER1:Chiller Electricity Rate [W](TimeStep)",
+            "mass flow rate": "CHILLER1 CHILLED WATER OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)"
         }
     },
     "condenser water pumps": {
@@ -76,5 +77,6 @@
             "outside air wetbulb temperature": "Environment:Site Outdoor Air Wetbulb Temperature [C](TimeStep)",
             "power": "TOWER1:Cooling Tower Fan Electricity Rate [W](TimeStep)"
         }
-    }
+    },
+    "secondary chilled water pumps": {}
 }

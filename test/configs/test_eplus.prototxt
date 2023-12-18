@@ -33,7 +33,7 @@ eplus_env_config {
     control_type: AGENT_CONTROLLED
     variable_name: "zone1acu1_supply_air_temperature_setpoint"
     actuator_config {
-      actuated_component_unique_name: "ZONE1ACU1 air loop supply air temperature schedule"
+      actuated_component_unique_name: "zone1acu1 air loop supply air temperature schedule"
       actuated_component_type: Schedule_Constant
       actuated_component_control_type: Schedule_Value
     }
@@ -42,7 +42,7 @@ eplus_env_config {
     control_type: AGENT_CONTROLLED
     variable_name: "zone1acu1_supply_air_mass_flow_rate"
     actuator_config {
-      actuated_component_unique_name: "ZONE1ACU1 fan"
+      actuated_component_unique_name: "zone1acu1 fan"
       actuated_component_type: Fan
       actuated_component_control_type: Fan_Air_Mass_Flow_Rate
     }
@@ -308,6 +308,6 @@ eplus_env_config {
       reporting_frequency: "timestep"
     }
   }
-  host: "host.docker.internal"
+  host: "localhost"
   network: "host"
 }

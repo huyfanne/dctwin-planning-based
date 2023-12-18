@@ -175,6 +175,19 @@ class IDFBuilder:
                 "condensing water return temperature": f"{chiller_obj['Condenser_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "condensing water supply temperature": f"{chiller_obj['Condenser_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "power": f"{chiller_obj['Name'].upper()}:Chiller Electricity Rate [W](TimeStep)",
+                "mass flow rate": f"{chiller_obj['Chilled_Water_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+            }
+        # create secondary chilled water pump device key mapping
+        self.device_key_map["secondary chilled water pumps"] = {}
+        pump_names = self.building.constructions.secondary_chilled_water_pumps
+        for pump_name in pump_names:
+            pump_obj = self.model.getobject(
+                key="Pump:VariableSpeed".upper(),
+                name=pump_name
+            )
+            self.device_key_map["secondary chilled water pumps"][pump_name] = {
+                "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "power": f"{pump_obj['Name'].upper()}:Pump Electricity Rate [W](TimeStep)",
             }
         # create condenser water pump device key mapping
         pump_names = self.building.constructions.condenser_water_pumps
@@ -203,6 +216,21 @@ class IDFBuilder:
                 "power": f"{tower_obj['Name'].upper()}:Cooling Tower Fan Electricity Rate [W](TimeStep)"
             }
 
+    def _make_room2ite_mapping(self) -> None:
+        self.room2ite_map = {}
+        for zone_name, zone in self.building.constructions.zones.items():
+            ite2rack = zone.constructions.ite2rack(zone_name)
+            ites = {}
+            for ite_name, ite in zone.constructions.heat_gains.ites.items():
+                ites[ite_name] = {}
+                if ite_name in ite2rack and len(ite2rack[ite_name]["racks"]) > 0:
+                    ites[ite_name]["racks"] = ite2rack[ite_name]["racks"]
+                ites[ite_name]["wattsPerUnit"] = ite.watts_per_unit
+                ites[ite_name]["numberOfUnits"] = ite.number_of_units
+                ites[ite_name]["totalWatts"] = ite.watts_per_unit * ite.number_of_units
+
+            self.room2ite_map[zone_name] = ites
+
     def replace_entries_with_dict(self, data):
         if isinstance(data, dict):
             for key, value in data.items():
@@ -221,6 +249,7 @@ class IDFBuilder:
         self._make_schedule()
         self._make_elctric_load_centers()
         self._make_device_key_mapping()
+        self._make_room2ite_mapping()
 
     def save(
         self,
@@ -232,11 +261,13 @@ class IDFBuilder:
             logger.info(f"Model saved to {idf_save_dir.joinpath('building.idf').absolute()}")
             with open(map_save_dir.joinpath("device_key_map.json"),  "w") as f:
                 json.dump(self.device_key_map, f, indent=4)
-            with open(map_save_dir.joinpath("calibration_map.json"),  "w") as f:
+            with open(map_save_dir.joinpath("device_his_map.json"),  "w") as f:
                 # replace all entries with empty list for calibration
-                self.calibration = copy.deepcopy(self.device_key_map)
-                self.replace_entries_with_dict(self.calibration)
-                json.dump(self.calibration, f, indent=4)
-            logger.info(f"Mapping json saved to {map_save_dir.joinpath('device_key_map.json').absolute()}")
+                self.device_his_map = copy.deepcopy(self.device_key_map)
+                self.replace_entries_with_dict(self.device_his_map)
+                json.dump(self.device_his_map, f, indent=4)
+            with open(map_save_dir.joinpath("room2ite_map.json"),  "w") as f:
+                json.dump(self.room2ite_map, f, indent=4)
+            logger.info(f"Mapping json saved to {map_save_dir.absolute()}")
         else:
             logger.critical("Model is empty. Cannot save.")

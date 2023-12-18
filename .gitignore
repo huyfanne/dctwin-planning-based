@@ -2,7 +2,7 @@
 /output/
 case/
 case*/
-dist/
+# dist/
 build/
 .vim/
 .vscode/
@@ -24,7 +24,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
+# dist/
 downloads/
 eggs/
 .eggs/
