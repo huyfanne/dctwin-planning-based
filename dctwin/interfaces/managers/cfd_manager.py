@@ -192,12 +192,12 @@ class CFDManager:
         for acu_uid, acu in self.room.constructions.acus.items():
             if supply_air_temperatures is not None:
                 try:
-                    acu.cooling.supply_air_temperature = supply_air_temperatures[acu_uid]
+                    acu.cooling.operating.supply_air_temperature = supply_air_temperatures[acu_uid]
                 except KeyError:
                     logger.critical(f"ACU {acu_uid} supply air temperature is missing")
             if supply_air_volume_flow_rates is not None:
                 try:
-                    acu.cooling.supply_air_volume_flow_rate = supply_air_volume_flow_rates[acu_uid]
+                    acu.cooling.operating.supply_air_volume_flow_rate = supply_air_volume_flow_rates[acu_uid]
                 except KeyError:
                     logger.critical(f"ACU {acu_uid} volume flow rate is missing")
 
