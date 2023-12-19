@@ -77,7 +77,7 @@ class Builder:
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_dict)
         with open(Path(config.cfd.case_dir, f"0/{filename}"), "w") as f:
             f.write(
-                template_env.get_template(f"0/{filename}.j2").render(
+                template_env.get_template(f"foam/0/{filename}.j2").render(
                     init_temperature=24 + 273.15,
                     p_rgh=round(self.room_dz * 9.81, 10),
                     acu_boundaries=[ACUBoundary(key, acu) for key, acu in self.acu_dict.items()],
