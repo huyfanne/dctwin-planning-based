@@ -5,13 +5,13 @@ from eppy.modeleditor import IDF
 from dclib.cooling.plant.loops import ChilledWaterLoops, CondenserWaterLoops, Branch, MetaPlant
 from dclib.cooling.plant.plant import Plant
 
-from .utils.make_func import (
+from .utils import (
     make_chiller,
     make_pipe,
     make_cooling_tower,
     make_plant_sizing,
     make_pump,
-    make_cooling_coil,
+    get_cooling_coil,
 )
 
 
@@ -40,7 +40,7 @@ class PlantBuilder:
             "cooling_towers": make_cooling_tower,
             "chillers": make_chiller,
             "pumps": make_pump,
-            "acu": make_cooling_coil
+            "acu": get_cooling_coil,
         }
         branch = self.model.newidfobject("BRANCH", Name=branch_name)
         component_idx = 1

@@ -1,11 +1,15 @@
-from typing import List
+from typing import List, Tuple
 
 from eppy.bunch_subclass import EpBunch
 
 
 def fill_info(
-    idf_obj_name: str, idf_obj: EpBunch, idd_infos, filled_field: List, config
-):
+    idf_obj_name: str,
+    idf_obj: EpBunch,
+    idd_infos,
+    filled_field: List,
+    config,
+) -> Tuple[EpBunch, List]:
     """
     Fill the idf_obj with the configs information. If the field is not in the configs, use the default value in idd file.
     :param idf_obj_name:
@@ -56,7 +60,7 @@ def fill_inlet_outlet(
     name: str,
     inlet_key_name: str,
     outlet_key_name: str,
-):
+) -> EpBunch:
     if branch_component_idx > 1:
         obj[inlet_key_name] = branch[
             f"Component_{branch_component_idx - 1}_Outlet_Node_Name"

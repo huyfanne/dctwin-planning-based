@@ -9,8 +9,13 @@ from dclib.room import Room, Thermostats
 from dclib.cooling.room.facilities.acu import ACU, ACUOutdoorAir
 from dclib.cooling.room.sizing import SizingZone, SizingSystem
 
-from .utils.make_func import make_surfaces, make_oa_system, make_fan, make_system_sizing, make_cooling_coil
-
+from .utils import (
+    make_surfaces,
+    make_oa_system,
+    make_fan,
+    make_system_sizing,
+    make_cooling_coil,
+)
 
 class RoomBuilder:
 

@@ -1,6 +1,6 @@
 eplus_env_config {
-  weather_file: "/Users/dcverse_007/Desktop/RDA/dctwin/test/data/weather/SGP_Singapore.486980_IWEC.epw"
-  model_file: "/Users/dcverse_007/Desktop/RDA/dctwin/test/models/idf/building.idf"
+  weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
+  model_file: "models/idf/building.idf"
   simulation_time_config {
     begin_month: 9
     begin_day_of_month: 1
@@ -10,7 +10,7 @@ eplus_env_config {
   }
   actions {
     control_type: PRE_SCHEDULED
-    input_source: "/Users/dcverse_007/Desktop/RDA/dctwin/test/data/schedule/workloads/zone1ite1.json"
+    input_source: "data/schedule/workloads/zone1ite1.json"
     variable_name: "ZONE1ITE1 cpu loading schedule"
     schedule_config {
       initial_value: 1.0

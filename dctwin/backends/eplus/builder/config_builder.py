@@ -1,13 +1,9 @@
-from typing import Union, OrderedDict
 from google.protobuf import text_format
 from dctwin.utils.dt_engine_pb2 import DTEngineConfig
 from loguru import logger
 
 from dclib import Building
 from pathlib import Path
-
-from dclib.cooling.plant.plant import ChilledWaterLoops, CondenserWaterLoops
-
 
 class ConfigBuilder:
 
@@ -71,7 +67,7 @@ class ConfigBuilder:
         if default_unnormed_value is not None:
             action.default_unnormed_value = default_unnormed_value
         if input_source is not None:
-            action.input_source = str(input_source.absolute())
+            action.input_source = str(input_source)
         action.variable_name = variable_name.replace("-", "_").replace(" ", "_") # variable name cannot contain dash and space
         action.actuator_config.actuated_component_unique_name = actuated_component_unique_name
         action.actuator_config.actuated_component_type = actuated_component_type
@@ -92,7 +88,7 @@ class ConfigBuilder:
     def make_logging_config(
         self, log_dir: Path, level: int, verbose: bool
     ):
-        self.model.logging_config.log_dir = str(log_dir.absolute())
+        self.model.logging_config.log_dir = str(log_dir)
         self.model.logging_config.level = level
         self.model.logging_config.verbose = verbose
 
@@ -108,8 +104,8 @@ class ConfigBuilder:
         network: str = "host",
         host: str = "localhost",
     ):
-        self.model.eplus_env_config.model_file = str(idf_file.absolute())
-        self.model.eplus_env_config.weather_file = str(weather_file.absolute())
+        self.model.eplus_env_config.model_file = str(idf_file)
+        self.model.eplus_env_config.weather_file = str(weather_file)
         self.model.eplus_env_config.network = network
         self.model.eplus_env_config.host = host
         self.model.eplus_env_config.simulation_time_config.begin_month = begin_month
@@ -823,7 +819,7 @@ class ConfigBuilder:
             action = self.model.eplus_env_config.actions.add()
             action.control_type = 3
             action.variable_name = f"{acu_name} on off schedule"
-            action.input_source = str(schedule_dir.joinpath(f"{acu_name.lower()}.json").absolute())
+            action.input_source = str(schedule_dir.joinpath(f"{acu_name.lower()}.json"))
             action.schedule_config.initial_value = initial_value
             action.schedule_config.lb = lb
             action.schedule_config.ub = ub
@@ -841,7 +837,7 @@ class ConfigBuilder:
             action = self.model.eplus_env_config.actions.add()
             action.control_type = 3
             action.variable_name = f"{ite_name} cpu loading schedule"
-            action.input_source = str(schedule_dir.joinpath(f"{ite_name.lower()}.json").absolute())
+            action.input_source = str(schedule_dir.joinpath(f"{ite_name.lower()}.json"))
             action.schedule_config.initial_value = initial_value
             action.schedule_config.lb = lb
             action.schedule_config.ub = ub

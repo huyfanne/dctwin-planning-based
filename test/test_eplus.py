@@ -2,7 +2,7 @@ from pathlib import Path
 import numpy as np
 
 from dclib import Building
-from dctwin.utils.builder import IDFBuilder, ConfigBuilder
+from dctwin import IDFBuilder, ConfigBuilder
 from dctwin.registraion import make_env
 
 if __name__ == "__main__":
@@ -13,8 +13,10 @@ if __name__ == "__main__":
     )
     manager.make()
     manager.save(
-        idf_save_dir=Path("models/idf"),
-        map_save_dir=Path("models/building"),
+        idf_save_path = "models/idf/building.idf",
+        device_key_map_save_path = "models/building/device_key_map.json",
+        # device_his_map_save_path = "models/building/device_his_map.json",
+        # room2ite_map_save_path = "models/building/room2ite_map.json",
     )
 
     # Build config file

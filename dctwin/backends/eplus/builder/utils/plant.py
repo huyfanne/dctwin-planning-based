@@ -1,5 +1,5 @@
 """
-This file implements the make functions for the HVAC system. Each make functions are used to create the corresponding
+This file implements the make functions for the chiller plant system. Each make functions are used to create the corresponding
 HVAC system components in the EnergyPlus model. The make functions are called by the manager in the idf_builder.py file.
 To add a new HVAC system component, you need to add a new make function here and make it callable in the manager.
 """
@@ -12,7 +12,7 @@ from dclib.cooling.plant.facilities import Chiller, Pump, Pipe, CoolingTower
 from dclib.cooling.plant.loops import SizingPlant
 from dclib.cooling.room.facilities.acu import ACU
 
-from ...utils import fill_info, fill_inlet_outlet
+from .utlis import fill_info, fill_inlet_outlet
 
 
 def make_plant_sizing(model: IDF, plant_loop_name: str, sizing_plant: SizingPlant):
@@ -130,7 +130,7 @@ def make_pump(
     return obj
 
 
-def make_cooling_coil(
+def get_cooling_coil(
     model: IDF,
     branch: EpBunch,
     branch_component_idx,

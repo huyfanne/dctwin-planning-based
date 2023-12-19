@@ -10,7 +10,7 @@ from dclib.construction.surfaces import Surface
 from dclib.cooling.room.facilities.duct import Duct
 from dclib.room import RoomGeometry
 
-from ...utils import fill_info, fill_inlet_outlet
+from .utlis import fill_info, fill_inlet_outlet
 
 
 def make_system_sizing(model: IDF, air_loop_name: str, sizing_system: SizingSystem):

@@ -1,22 +1,23 @@
 import json
+import copy
 from pathlib import Path
 from loguru import logger
-import copy
 from eppy.modeleditor import IDF
 
 from dclib.models.geometry.basics import Geometry
 from dclib import Building
 
-from .plant import PlantBuilder
-from .models import ModelBuilder
-from .zone import RoomBuilder, make_surfaces
-from .electric import ElectricSystemBuilder
+from .plant_builder import PlantBuilder
+from .model_builder import ModelBuilder
+from .zone_builder import RoomBuilder
+from .electric_builder import ElectricSystemBuilder
+from .utils import make_surfaces
 
 
 class IDFBuilder:
 
-    idd_path = Path(__file__).parent.parent.parent.joinpath("templates").joinpath("eplus").joinpath("V9-5-0-Energy+.idd")
-    template_idf_path = Path(__file__).parent.parent.parent.joinpath("templates").joinpath("eplus").joinpath("template.idf")
+    idd_path = Path(__file__).parent.parent.parent.parent.joinpath("templates").joinpath("eplus").joinpath("V9-5-0-Energy+.idd")
+    template_idf_path = Path(__file__).parent.parent.parent.parent.joinpath("templates").joinpath("eplus").joinpath("template.idf")
 
     def __init__(
         self,
@@ -248,26 +249,39 @@ class IDFBuilder:
         self._make_plant()
         self._make_schedule()
         self._make_elctric_load_centers()
-        self._make_device_key_mapping()
-        self._make_room2ite_mapping()
 
     def save(
         self,
-        idf_save_dir: Path,
-        map_save_dir: Path,
+        idf_save_path: str | Path = "models/idf/building.idf",
+        device_key_map_save_path: str | Path = "models/building/device_key_map.json",
+        device_his_map_save_path: str | Path = None,
+        room2ite_map_save_path: str | Path = None,
     ) -> None:
         if self.model is not None:
-            self.model.saveas(str(idf_save_dir.joinpath("building.idf").absolute()))
-            logger.info(f"Model saved to {idf_save_dir.joinpath('building.idf').absolute()}")
-            with open(map_save_dir.joinpath("device_key_map.json"),  "w") as f:
-                json.dump(self.device_key_map, f, indent=4)
-            with open(map_save_dir.joinpath("device_his_map.json"),  "w") as f:
-                # replace all entries with empty list for calibration
+            # save idf
+            self.model.saveas(str(idf_save_path)) 
+            logger.info(f"Model saved to {idf_save_path}")
+
+            # save device key map
+            if device_key_map_save_path is not None:
+                self._make_device_key_mapping()
+                with open(device_key_map_save_path,  "w") as f:
+                    json.dump(self.device_key_map, f, indent=4)
+                logger.info(f"Device key map saved to {device_key_map_save_path}")
+
+            # save device history map
+            if device_his_map_save_path is not None:
                 self.device_his_map = copy.deepcopy(self.device_key_map)
                 self.replace_entries_with_dict(self.device_his_map)
-                json.dump(self.device_his_map, f, indent=4)
-            with open(map_save_dir.joinpath("room2ite_map.json"),  "w") as f:
-                json.dump(self.room2ite_map, f, indent=4)
-            logger.info(f"Mapping json saved to {map_save_dir.absolute()}")
+                with open(device_his_map_save_path,  "w") as f:
+                    json.dump(self.device_his_map, f, indent=4)
+                logger.info(f"Device history map saved to {device_his_map_save_path}")
+
+            # save room to ITE map
+            if room2ite_map_save_path is not None:
+                self._make_room2ite_mapping()
+                with open(room2ite_map_save_path,  "w") as f:
+                    json.dump(self.room2ite_map, f, indent=4)
+                logger.info(f"Room to ITE map saved to {room2ite_map_save_path}")
         else:
             logger.critical("Model is empty. Cannot save.")

@@ -5,10 +5,9 @@ from eppy.modeleditor import IDF
 from dclib.electrical.generators import PhotovoltaicGenerator
 from dclib.electrical.auxiliaries import Inverter
 from dclib.electrical.storages import SimpleBattery
-
 from dclib.electrical.center import ElectricalLoadCenter
 
-from ..utils import fill_info
+from .utils import fill_info
 
 
 class ElectricSystemBuilder:
