@@ -473,7 +473,7 @@ description = ""
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "dclib-1.0.0-py3-none-any.whl", hash = "sha256:510ab0eab2650594e144585e2b9e6e9a2ee4218daa64ecc9a4739c3eb35e51a8"},
+    {file = "dclib-1.0.0-py3-none-any.whl", hash = "sha256:c3c2bc8db1dfcb6532630862e645f56decfadd672d56605be1eeefddbd9d6bdd"},
 ]
 
 [package.dependencies]
