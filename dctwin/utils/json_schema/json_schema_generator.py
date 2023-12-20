@@ -1,6 +1,6 @@
 import json
-from dctwin.models.cfd.room import Room
+from dclib.room import Room
 
-schema = Room.schema()
+schema = Room.model_json_schema()
 with open('room_schema.json', 'w') as f:
     json.dump(schema, f, indent=2)

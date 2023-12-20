@@ -34,7 +34,7 @@ from dctwin.utils.errors import (
     MeshBuildError,
     FoamSolveError,
 )
-from dctwin.models import Room
+from dclib.room import Room
 
 
 class CFDManager:
@@ -192,12 +192,12 @@ class CFDManager:
         for acu_uid, acu in self.room.constructions.acus.items():
             if supply_air_temperatures is not None:
                 try:
-                    acu.cooling.supply_air_temperature = supply_air_temperatures[acu_uid]
+                    acu.cooling.operating.supply_air_temperature = supply_air_temperatures[acu_uid]
                 except KeyError:
                     logger.critical(f"ACU {acu_uid} supply air temperature is missing")
             if supply_air_volume_flow_rates is not None:
                 try:
-                    acu.cooling.supply_air_volume_flow_rate = supply_air_volume_flow_rates[acu_uid]
+                    acu.cooling.operating.supply_air_volume_flow_rate = supply_air_volume_flow_rates[acu_uid]
                 except KeyError:
                     logger.critical(f"ACU {acu_uid} volume flow rate is missing")
 
@@ -242,8 +242,8 @@ class CFDManager:
             "server_powers": {}, "server_volume_flow_rates": {}
         }
         for acu_id, acu in self.room.constructions.acus.items():
-            boundary_conditions["supply_air_temperatures"][acu_id] = acu.cooling.supply_air_temperature
-            boundary_conditions["supply_air_volume_flow_rates"][acu_id] = acu.cooling.supply_air_volume_flow_rate
+            boundary_conditions["supply_air_temperatures"][acu_id] = acu.cooling.operating.supply_air_temperature
+            boundary_conditions["supply_air_volume_flow_rates"][acu_id] = acu.cooling.operating.supply_air_volume_flow_rate
 
         for rack_id, rack in self.room.constructions.racks.items():
             for server_id, server in rack.constructions.servers.items():

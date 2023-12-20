@@ -2,9 +2,11 @@ import os
 from pathlib import Path
 
 from loguru import logger
+
+from dclib.room import Room
+
 from dctwin.backends.core import Backend
 from dctwin.backends.core_k8s import BackendK8s
-from dctwin.models import Room
 from dctwin.utils import template_env, config
 
 

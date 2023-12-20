@@ -92,7 +92,7 @@ cosim_env_config {
             {
                 control_type: PRE_SCHEDULED
                 variable_name: "cpu_loading_schedule1"
-                input_source: "data/workloads/schedule/schedule.json"
+                input_source: "data/schedule/workloads/schedule.json"
                 schedule_config:{
                     initial_value: 0.5
                     lb: 0

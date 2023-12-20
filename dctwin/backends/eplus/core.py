@@ -3,6 +3,8 @@ import shutil
 import time
 import socket
 import datetime
+
+import numpy as np
 import opyplus as op
 
 from pathlib import Path
@@ -15,9 +17,9 @@ from dctwin.utils import EPlusEnvConfig
 from dctwin.backends.eplus.utils import EPlusOutputFormatter
 from dctwin.backends.core import Backend
 from dctwin.backends.core_k8s import BackendK8s
-from dctwin.models import Eplus
 from dctwin.utils import config
 
+from .parser import Eplus
 
 class EplusBackendMixin:
     """
@@ -49,6 +51,10 @@ class EplusBackendMixin:
         self._network = network
         self._proto_config = proto_config
         self._set_up_socket()
+
+    @property
+    def current_time(self):
+        return self._cur_sim_time
 
     @staticmethod
     def _get_one_episode_len(idf_path: str) -> float:
