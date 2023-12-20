@@ -3,8 +3,6 @@ import shutil
 import time
 import socket
 import datetime
-
-import numpy as np
 import opyplus as op
 
 from pathlib import Path
@@ -20,6 +18,7 @@ from dctwin.backends.core_k8s import BackendK8s
 from dctwin.utils import config
 
 from .parser import Eplus
+
 
 class EplusBackendMixin:
     """
@@ -195,6 +194,7 @@ class EplusBackendMixin:
             case_dir = config.eplus.case_dir
             network = self._network
             network_mode = None
+        # TODO: run_container should be called in the class that inherits from Backend
         self.run_container(
             environment={
                 "BCVTB_HOME": "/usr/local/bcvtb",
@@ -315,6 +315,7 @@ class EplusBackendMixin:
 
 class EplusBackend(EplusBackendMixin, Backend):
     pass
+
 
 class EplusBackendK8s(EplusBackendMixin, BackendK8s):
     pass

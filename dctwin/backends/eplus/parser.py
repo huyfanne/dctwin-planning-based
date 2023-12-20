@@ -520,8 +520,10 @@ class Eplus:
         if component_type.lower() == "energy component chiller electric eir":
             component_type = "Plant Component Chiller:Electric:EIR"
 
-        control_type = actuator_config.DESCRIPTOR.EnumValueName("ControlType",
-                                                                actuator_config.actuated_component_control_type)
+        control_type = actuator_config.DESCRIPTOR.EnumValueName(
+            "ControlType",
+            actuator_config.actuated_component_control_type
+        )
         control_type = " ".join(control_type.split("_"))
 
         # here we must use "on/off" instead of "on off" as stated by EnergyPlus :)
