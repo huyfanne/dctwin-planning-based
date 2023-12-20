@@ -23,7 +23,7 @@ RUN apt-get update && apt-get upgrade -y && \
 WORKDIR /opt/app
 
 COPY ./run/cfd.py ./
-COPY ./run/cosim.py ./
 COPY ./run/eplus.py ./
+COPY ./run/eplus_cfd_cosim.py ./
 
 CMD [ "python", "./cfd.py" ]

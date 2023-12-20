@@ -69,7 +69,7 @@ jobs:
         run: poetry install
 
       - name: Run python script
-        run: cd test && poetry run python test_cosim.py
+        run: cd test && poetry run python test_eplus_cfd_cosim.py
 
   run-eplus:
     runs-on: ubuntu-latest
