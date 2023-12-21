@@ -73,8 +73,10 @@ class SalomeBackendMixin:
 
         logger.info("***** Geometry finished *****\n\n")
 
+
 class SalomeBackend(SalomeBackendMixin, Backend):
     pass
+
 
 class SalomeBackendK8s(SalomeBackendMixin, BackendK8s):
     pass

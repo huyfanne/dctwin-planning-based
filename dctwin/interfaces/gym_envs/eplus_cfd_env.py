@@ -14,14 +14,14 @@ from pathlib import Path
 from dclib.room import Room
 
 from dctwin.adapters import EplusCFDAdapter
-from dctwin.utils import CoSimEnvConfig
-from dctwin.utils import config as cosim_env
+from dctwin.utils import EPlusEnvConfig
+from dctwin.utils import config as eplus_cfd_env
 
 from .eplus_env import EPlusEnv
 from .ds import Observation
 
 
-class CoSimEnv(EPlusEnv):
+class EplusCFDEnv(EPlusEnv):
     """The environment class for co-simulation of data hall and chiller plant.
 
     :param config: the config of the engine from protobuf
@@ -34,7 +34,7 @@ class CoSimEnv(EPlusEnv):
 
     def __init__(
         self,
-        config: CoSimEnvConfig,
+        config: EPlusEnvConfig,
         map_boundary_condition_fn: Callable,
         reward_fn: Optional[Callable] = None,
         schedule_fn: Optional[Callable] = None,
@@ -48,11 +48,11 @@ class CoSimEnv(EPlusEnv):
             docker_client=docker_client,
             **kwargs,
         )
-        cosim_env.co_sim.idf2room_map = Path(config.idf2room_map)
+        eplus_cfd_env.eplus_cfd.idf2room_map = Path(config.idf2room_map)
         self.cfd_config = config.cfd
-        self._set_cosim_environ()
-        self.co_sim_manager = EplusCFDAdapter(
-            room=Room.load(cosim_env.cfd.geometry_file),
+        self._set_eplus_cfd_environ()
+        self.eplus_cfd_manager = EplusCFDAdapter(
+            room=Room.load(eplus_cfd_env.cfd.geometry_file),
             write_interval=config.cfd.write_interval,
             end_time=config.cfd.end_time,
             field_config=config.cfd.field_config,
@@ -79,14 +79,14 @@ class CoSimEnv(EPlusEnv):
             debug_tag='observation',
         )
 
-    def _set_cosim_environ(self) -> None:
+    def _set_eplus_cfd_environ(self) -> None:
         """Set the environment variables for co-simulation
         """
-        cosim_env.cfd.geometry_file = Path(self.cfd_config.geometry_file)
-        cosim_env.cfd.pod_dir = Path(self.cfd_config.pod_dir)
-        cosim_env.cfd.mesh_dir = Path(self.cfd_config.mesh_dir)
-        cosim_env.cfd.object_mesh_index = Path(self.cfd_config.object_mesh_index)
-        cosim_env.cfd.dry_run = self.cfd_config.dry_run
+        eplus_cfd_env.cfd.geometry_file = Path(self.cfd_config.geometry_file)
+        eplus_cfd_env.cfd.pod_dir = Path(self.cfd_config.pod_dir)
+        eplus_cfd_env.cfd.mesh_dir = Path(self.cfd_config.mesh_dir)
+        eplus_cfd_env.cfd.object_mesh_index = Path(self.cfd_config.object_mesh_index)
+        eplus_cfd_env.cfd.dry_run = self.cfd_config.dry_run
 
     def _get_actions_to_sent(self) -> Dict[str, List]:
         """
@@ -100,13 +100,13 @@ class CoSimEnv(EPlusEnv):
         return action_dict
 
     def _restart_simulation(self) -> Tuple[ndarray, Any]:
-        obs, done = self.co_sim_manager.run(self.episode_idx)
+        obs, done = self.eplus_cfd_manager.run(self.episode_idx)
         return obs, done
 
     def _run_simulation(
         self,
         parsed_actions: Dict
     ) -> Tuple[Union[List[float], None], bool]:
-        self.co_sim_manager.send_action(parsed_actions)
-        obs, done = self.co_sim_manager.receive_status()
+        self.eplus_cfd_manager.send_action(parsed_actions)
+        obs, done = self.eplus_cfd_manager.receive_status()
         return obs, done

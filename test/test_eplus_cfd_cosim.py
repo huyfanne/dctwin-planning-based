@@ -1,6 +1,6 @@
 import numpy as np
 
-from dctwin.interfaces.gym_envs import CoSimEnv
+from dctwin.interfaces.gym_envs import EplusCFDEnv
 from dctwin.utils import config as env_config
 from dctwin.utils import read_engine_config, setup_logging
 from hooks import map_boundary_condition_fn
@@ -18,7 +18,7 @@ env_params = json_format.MessageToDict(
     getattr(config, env_config_name).env_params,
     preserving_proto_field_name=True,
 )
-env = CoSimEnv(
+env = EplusCFDEnv(
     config=getattr(config, env_config_name),
     reward_fn=None,
     schedule_fn=None,

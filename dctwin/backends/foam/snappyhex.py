@@ -15,6 +15,7 @@ from dctwin.backends.foam.utils import (
 )
 from dctwin.utils import config
 
+
 class SnappyHexBackendMixin:
     """
     Backend for snappyHexMesh. The class is inherited from the core Backend.
@@ -92,7 +93,7 @@ class SnappyHexBackendMixin:
             logger.info(f"Concatenated Case Directory: {case_dir}")
         else:
             case_dir = config.cfd.case_dir
-
+        # TODO: run_container should be implemented in the subclass that inherits core Backend class
         self.run_container(user=0, case_dir=case_dir)
 
         logger.info("***** Mesh finished *****\n\n")
@@ -100,6 +101,7 @@ class SnappyHexBackendMixin:
 
 class SnappyHexBackend(SnappyHexBackendMixin, Backend):
     pass
+
 
 class SnappyHexBackendK8s(SnappyHexBackendMixin, BackendK8s):
     pass

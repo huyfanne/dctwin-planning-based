@@ -11,7 +11,13 @@ import uuid
 import os
 
 
-def delete_job(client, api_instance, namespace="default", job_name="test-job"):
+# TODO: Add variable type hints and docstrings
+def delete_job(
+    client,
+    api_instance,
+    namespace="default",
+    job_name="test-job"
+):
     api_response = api_instance.delete_namespaced_job(
         name=job_name,
         namespace=namespace,
@@ -29,20 +35,22 @@ def delete_job(client, api_instance, namespace="default", job_name="test-job"):
         except:
             break
 
+
+# TODO: Add variable type hints and docstrings
 def create_job_object(
-        client,
-        api_instance,
-        namespace="default",
-        job_name="test-job",
-        pvc_name="task-manager-worker-data-task-manager-worker-0",
-        image="ubuntu",
-        command=["ls", "-al", "/tm-data/"],
-        backoff_limit=0,
-        env_vars={},
-        ttl_seconds_after_finished=30,
-        working_dir = None,
-        case_dir = None,
-        volume_data_dir = "/data"
+    client,
+    api_instance,
+    namespace="default",
+    job_name="test-job",
+    pvc_name="task-manager-worker-data-task-manager-worker-0",
+    image="ubuntu",
+    command: list = ["ls", "-al", "/tm-data/"],
+    backoff_limit: float = 0,
+    env_vars: dict = {},
+    ttl_seconds_after_finished: int = 30,
+    working_dir: str = None,
+    case_dir: str = None,
+    volume_data_dir: str = "/data"
 ):
     # delete the job if it already exists
     try:
@@ -102,6 +110,7 @@ def create_job_object(
     return job
 
 
+# TODO: Add variable type hints and docstrings
 def create_job(batch_api_instance, job):
     namespace = job.metadata.namespace
 
@@ -110,6 +119,7 @@ def create_job(batch_api_instance, job):
     )
 
 
+# TODO: Add variable type hints and docstrings
 def wait_for_job(batch_api_instance, core_api_instance, job_name, namespace="default", backoff_limit=2):
     while True:
         try:
@@ -136,8 +146,6 @@ def wait_for_job(batch_api_instance, core_api_instance, job_name, namespace="def
                 time.sleep(2)
         except:
             time.sleep(1)
-
-
 
 
 class BackendK8s(abc.ABC):

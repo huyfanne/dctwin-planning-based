@@ -193,8 +193,10 @@ class SolverBackendMixin:
 
         return self.run_container(user=0, stream=stream, case_dir=case_dir)
 
+
 class SolverBackend(SolverBackendMixin, Backend):
     pass
+
 
 class SolverBackendK8s(SolverBackendMixin, BackendK8s):
     pass

@@ -112,7 +112,7 @@ class BaseEnv(gym.Env):
                 minutes=int(60 / self._config.simulation_time_config.number_of_timesteps_per_hour)
             )
             self._timestamp = self._starting_timestamp
-            base_env.co_sim.timestamp = self._timestamp
+            base_env.eplus_cfd.timestamp = self._timestamp
             self._use_simulation_time = True
         else:
             logger.info("Using real-world time")
