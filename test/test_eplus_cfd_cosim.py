@@ -7,7 +7,7 @@ from hooks import map_boundary_condition_fn
 from google.protobuf import json_format
 
 
-engine_config = "configs/test_cosim.prototxt"
+engine_config = "configs/test_eplus_cfd_cosim.prototxt"
 env_config.eplus.engine_config_file = engine_config
 
 config = read_engine_config(engine_config=engine_config)
