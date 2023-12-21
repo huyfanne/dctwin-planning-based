@@ -1,4 +1,4 @@
-cosim_env_config {
+eplus_cfd_env_config {
     idf2room_map: "models/idf2room_test.json"
     env_params:{
         num_constraints: 2
