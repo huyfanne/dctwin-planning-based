@@ -472,18 +472,19 @@ version = "1.0.0"
 description = ""
 optional = false
 python-versions = ">=3.10,<4.0"
-files = [
-    {file = "dclib-1.0.0-py3-none-any.whl", hash = "sha256:c3c2bc8db1dfcb6532630862e645f56decfadd672d56605be1eeefddbd9d6bdd"},
-]
+files = []
+develop = false
 
 [package.dependencies]
-loguru = ">=0.7.2,<0.8.0"
+loguru = "^0.7.2"
 numpy = "1.24.3"
-pydantic = ">=2.0.0,<3.0.0"
+pydantic = "^2.0.0"
 
 [package.source]
-type = "file"
-url = "dist/dclib-1.0.0-py3-none-any.whl"
+type = "git"
+url = "https://github.com/cap-dcwiz/dclib.git"
+reference = "main"
+resolved_reference = "5e96f3593858507004fc98c5ab1a701a2dfa5f29"
 
 [[package]]
 name = "decorator"
@@ -2807,4 +2808,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "7297352767fca41eb0fbdcdddeae60c3a518ee0877ff9ac410cf1cfeac591251"
+content-hash = "62a2c040d6d19251097d646aad1e1e8c404956a115df63cd525f4e9e3b4fb01e"

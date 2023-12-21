@@ -2,7 +2,7 @@
 /output/
 case/
 case*/
-# dist/
+dist/
 build/
 .vim/
 .vscode/
