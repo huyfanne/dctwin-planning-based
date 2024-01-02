@@ -32,6 +32,8 @@ class EplusCFDAdapter:
     :param docker_client: the docker client to be used for running the docker container
     """
 
+    rho_air = 1.19  # air density kg/m^3
+    
     def __init__(
         self,
         room: Room,
