@@ -138,6 +138,7 @@ class IDFBuilder:
             )
             self.device_key_map["acus"][acu_name]["fan"]= {
                 "air mass flow rate": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "outlet air temperature": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "power": f"{fan_obj['Name'].upper()}:Fan Electricity Rate [W](TimeStep)",
             }
             coil_obj = self.model.getobject(

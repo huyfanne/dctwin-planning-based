@@ -258,6 +258,17 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub
             )
+            # observe ACU air outlet temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{acu_name} fan outlet air temperature".lower(),
+                key_value=acu["fan"]["outlet air temperature"].split(":")[0],
+                output_variable_name="System Node Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
             # observe ACU fan power
             self._make_observation(
                 exposed=exposed,
