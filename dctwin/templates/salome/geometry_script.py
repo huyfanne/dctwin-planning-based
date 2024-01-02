@@ -312,6 +312,7 @@ class RackModel:
         group = util.group_by_faces(box, exclude=self.excluded_faces)
         self.rack_wall_mesh = util.mesh(group, 0.1, 2)
         blanking_box = util.make_box({**self.size, "z": self.slot_height, "y": 0.1})
+        blanking_box = util.group_by_faces(blanking_box, exclude=["rear", "bottom", "top", "left", "right"]) # Remain only front face
         self.rack_blanking_mesh = util.mesh(blanking_box, 0.05, 1)
         self.is_meshed = True
 
