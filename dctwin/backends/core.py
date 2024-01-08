@@ -1,4 +1,3 @@
-import abc
 from pathlib import Path
 
 from loguru import logger
@@ -8,9 +7,10 @@ from docker import DockerClient, from_env
 from docker.errors import ContainerError, ImageNotFound
 
 from dctwin.utils import config
+from dctwin.backends.base_core import BaseBackend
 
 
-class Backend(abc.ABC):
+class Backend(BaseBackend):
     """
     Base class for DCTwin Backend. All backend should inherit this class.
     The Backend is to support the simulation of various simulators (EnergyPlus, OpenFoam, etc.) which is dockerized.
@@ -21,8 +21,7 @@ class Backend(abc.ABC):
     :param client: docker client
     :param process_num: number of cores for simulation
     """
-    volume_data_dir = "/data"
-    volume_geometry_dir = f"{volume_data_dir}/constant/triSurface"
+
 
     def __init__(self, client: DockerClient = None, process_num: int = 1) -> None:
         self.client = client
@@ -31,19 +30,6 @@ class Backend(abc.ABC):
         self.process_num = process_num
         self.container = None
 
-    @property
-    @abc.abstractmethod
-    def docker_image(self) -> str:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def command(self) -> Union[list, str]:
-        pass
-
-    @abc.abstractmethod
-    def run(self, **kwargs) -> None:
-        pass
 
     def check_image(self) -> None:
         try:
