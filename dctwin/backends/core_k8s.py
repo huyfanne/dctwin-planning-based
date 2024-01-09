@@ -5,6 +5,7 @@ import uuid
 import os
 import json
 
+from dctwin.utils import config as dctwin_config
 from loguru import logger
 from kubernetes import config, client
 
@@ -12,18 +13,20 @@ from dctwin.backends.base_core import BaseBackend
 
 
 # Constants
-NAMESPACE = os.environ["K8S_NAMESPACE"]
-WORKER_NAME = os.environ["WORKER_NAME"]
-CFD_RESOURCES = json.loads(os.environ["CFD_RESOURCES"])
+NAMESPACE = os.environ.get("K8S_NAMESPACE", "default")
+WORKER_NAME = os.environ.get("WORKER_NAME", "default-worker")
+CFD_RESOURCES = json.loads(os.environ.get("CFD_RESOURCES", '{"cpu": "16000m", "memory": "4Gi", "ephemeral-storage": "1000Mi"}'))
 DEFAULT_NAMESPACE = "default"
 DEFAULT_JOB_NAME = "test-job"
 DEFAULT_PVC_NAME = "task-manager-worker-data-task-manager-worker-0"
 DEFAULT_IMAGE = "ubuntu"
-DEFAULT_COMMAND = ["ls", "-al", "/tm-data/"]
+DEFAULT_COMMAND = ["sleep", "1000"]
 DEFAULT_BACKOFF_LIMIT = 0
 DEFAULT_ENV_VARS = {}
 DEFAULT_TTL_SECONDS_AFTER_FINISHED = 30
 DEFAULT_VOLUME_DATA_DIR = "/data"
+DEFAULT_LOCAL_VOLUME_PATH= "/tm-data/"
+
 
 def delete_job(api_instance, namespace=DEFAULT_NAMESPACE, job_name=DEFAULT_JOB_NAME):
     api_instance.delete_namespaced_job(
@@ -63,6 +66,38 @@ def create_job_object(
         print("Job does not exist. Creating new job")
 
     env = [client.V1EnvVar(name=key, value=item) for key, item in env_vars.items()]
+    IS_LOCAL_K8S = dctwin_config._environ.get("is_local_k8s", "False") == "True"
+    local_volume_path = DEFAULT_LOCAL_VOLUME_PATH  # New parameter for local volume path
+
+    if IS_LOCAL_K8S:
+        volumes = [
+            client.V1Volume(
+                name="data-volume",
+                host_path=client.V1HostPathVolumeSource(
+                    path=local_volume_path  # Path to the local volume
+                ))
+        ]
+        volume_mounts = [
+            client.V1VolumeMount(
+                mount_path=volume_data_dir,
+                name="data-volume",
+                sub_path="log/base"
+            )
+        ]
+
+    else:
+        volumes = [
+            client.V1Volume(
+                name="data-volume",
+                persistent_volume_claim=client.V1PersistentVolumeClaimVolumeSource(
+                    claim_name=pvc_name
+                ))
+        ]
+        volume_mounts = [
+            client.V1VolumeMount(
+                mount_path=volume_data_dir, name="data-volume", sub_path=str(case_dir).replace("/tm-data/", "", 1)
+            )
+        ]
 
     job = client.V1Job(
         api_version="batch/v1",
@@ -75,23 +110,13 @@ def create_job_object(
                     image_pull_secrets=[
                         client.V1LocalObjectReference(name="regcred")
                     ],
-                    volumes=[
-                        client.V1Volume(
-                        name="data-volume",
-                        persistent_volume_claim=client.V1PersistentVolumeClaimVolumeSource(
-                        claim_name=pvc_name
-                        ))
-                    ],
+                    volumes=volumes,
                     containers=[
                         client.V1Container(
                             name="job",
                             image=image,
                             command=command,
-                            volume_mounts=[
-                                client.V1VolumeMount(
-                                    mount_path=volume_data_dir, name="data-volume", sub_path=str(case_dir).replace("/tm-data/", "", 1)
-                                )
-                            ],
+                            volume_mounts=volume_mounts,
                             env=env,
                             working_dir=working_dir,
                             resources=client.V1ResourceRequirements(
@@ -169,7 +194,12 @@ class BackendK8s(BaseBackend):
         cfd_resources = CFD_RESOURCES
         job_name = uuid.uuid4()
         image = self.docker_image
-        config.load_incluster_config()
+        IS_LOCAL_K8S = dctwin_config._environ.get("is_local_k8s", "False") == "True"
+        if IS_LOCAL_K8S:
+            config.load_kube_config()
+        else:
+            config.load_incluster_config()
+
         core_v1 = client.CoreV1Api()
         batch_v1 = client.BatchV1Api()
 
