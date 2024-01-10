@@ -15,6 +15,7 @@ from dctwin.backends.base_core import BaseBackend
 # Constants
 NAMESPACE = os.environ.get("K8S_NAMESPACE", "default")
 WORKER_NAME = os.environ.get("WORKER_NAME", "default-worker")
+K8S_TAINT = os.environ.get("K8S_TAINT", "")
 CFD_RESOURCES = json.loads(os.environ.get("CFD_RESOURCES", '{"cpu": "16000m", "memory": "4Gi", "ephemeral-storage": "1000Mi"}'))
 DEFAULT_NAMESPACE = "default"
 DEFAULT_JOB_NAME = "test-job"
@@ -99,6 +100,12 @@ def create_job_object(
             )
         ]
 
+    tolerations = []
+    if K8S_TAINT != "":
+        key, value, effect = K8S_TAINT.split(":")
+        toleration = client.V1Toleration(effect=effect, key=key, operator='Equal', value=value)
+        tolerations.append(toleration)
+
     job = client.V1Job(
         api_version="batch/v1",
         kind="Job",
@@ -125,6 +132,7 @@ def create_job_object(
                             ),
                         )
                     ],
+                    tolerations=tolerations,
                     restart_policy="Never",
                 )
             ),
