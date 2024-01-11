@@ -125,6 +125,34 @@ class ConfigBuilder:
         self.model.eplus_env_config.env_params.last_episode_idx = last_episode_idx
 
     """Observation config making functions start here"""
+    def make_pue_observations(
+        self,
+        exposed: bool = True,
+        normalize_method: int = None,
+        lb: float = None,
+        ub: float = None,
+    ):
+        self._make_observation(
+            exposed=exposed,
+            variable_name="total power",
+            key_value="Whole Building",
+            output_variable_name="Facility Total Electricity Demand Rate",
+            reporting_frequency="timestep",
+            normalize_method=normalize_method,
+            lb=lb,
+            ub=ub
+        )
+        self._make_observation(
+            exposed=exposed,
+            variable_name="building power",
+            key_value="Whole Building",
+            output_variable_name="Facility Total Electricity Demand Rate",
+            reporting_frequency="timestep",
+            normalize_method=normalize_method,
+            lb=lb,
+            ub=ub
+        )
+        
     def make_chilled_water_loop_observations(
         self,
         exposed: bool = True,
