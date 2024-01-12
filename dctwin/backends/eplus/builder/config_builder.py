@@ -651,6 +651,17 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub
             )
+            # observe ITE inlet relative humidity
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{ite_name} inlet relative humidity".lower(),
+                key_value=ite["inlet relative humidity"].split(":")[0],
+                output_variable_name="ITE Air Inlet Relative Humidity",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
 
     def make_electric_load_center_observations(
         self,
