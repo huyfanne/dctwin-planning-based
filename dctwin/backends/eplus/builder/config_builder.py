@@ -705,7 +705,7 @@ class ConfigBuilder:
                 method=normalize_method,
                 lb=lb,
                 ub=ub,
-                masking_variable_name=masking_variable_name
+                masking_variable_name=masking_variable_name.lower()
             )
 
     def make_acu_supply_air_flow_rate_actions(
@@ -730,7 +730,7 @@ class ConfigBuilder:
                 method=normalize_method,
                 lb=lb,
                 ub=ub,
-                masking_variable_name=masking_variable_name
+                masking_variable_name=masking_variable_name.lower()
             )
 
     def make_chilled_water_loop_supply_temperature_actions(
@@ -868,7 +868,7 @@ class ConfigBuilder:
             fan_name = f"{acu_name} fan"
             action = self.model.eplus_env_config.actions.add()
             action.control_type = 3
-            action.variable_name = f"{acu_name} on off schedule"
+            action.variable_name = f"{acu_name} on off schedule".lower()
             action.input_source = str(schedule_dir.joinpath(f"{acu_name.lower()}.json"))
             action.schedule_config.initial_value = initial_value
             action.schedule_config.lb = lb
@@ -886,7 +886,7 @@ class ConfigBuilder:
         for ite_name, ite in self.device_key_map["ites"].items():
             action = self.model.eplus_env_config.actions.add()
             action.control_type = 3
-            action.variable_name = f"{ite_name} cpu loading schedule"
+            action.variable_name = f"{ite_name} cpu loading schedule".lower()
             action.input_source = str(schedule_dir.joinpath(f"{ite_name.lower()}.json"))
             action.schedule_config.initial_value = initial_value
             action.schedule_config.lb = lb
@@ -913,7 +913,7 @@ class ConfigBuilder:
             # observe ACU on/off status
             self._make_observation(
                 exposed=exposed,
-                variable_name=f"{acu_name} on off schedule",
+                variable_name=f"{acu_name} on off schedule".lower(),
                 normalize_method=normalize_method,
                 lb=lb,
                 ub=ub,
@@ -939,7 +939,7 @@ class ConfigBuilder:
             # observe CPU loading
             self._make_observation(
                 exposed=exposed,
-                variable_name=f"{ite_name} cpu loading schedule",
+                variable_name=f"{ite_name} cpu loading schedule".lower(),
                 normalize_method=normalize_method,
                 lb=lb,
                 ub=ub,
