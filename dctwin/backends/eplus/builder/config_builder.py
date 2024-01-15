@@ -146,7 +146,7 @@ class ConfigBuilder:
             exposed=exposed,
             variable_name="building power",
             key_value="Whole Building",
-            output_variable_name="Facility Total Electricity Demand Rate",
+            output_variable_name="Facility Total Building Electricity Demand Rate",
             reporting_frequency="timestep",
             normalize_method=normalize_method,
             lb=lb,
