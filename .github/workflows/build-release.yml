@@ -40,3 +40,12 @@ jobs:
             ghcr.io/cap-dcwiz/dctwin:${{ env.IMAGE_VERSION_LONG }}
             ghcr.io/cap-dcwiz/dctwin:${{ env.IMAGE_VERSION_SHORT }}
             ghcr.io/cap-dcwiz/dctwin:latest
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Example using a secret
+      env:
+        GIT_TOKEN: ${{ secrets.GIT_TOKEN_DCLIB }}
+      run: |
+        echo "Using secret value $MY_SECRET_VALUE"
