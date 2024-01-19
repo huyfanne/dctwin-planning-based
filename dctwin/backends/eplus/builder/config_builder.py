@@ -67,7 +67,7 @@ class ConfigBuilder:
         if default_unnormed_value is not None:
             action.default_unnormed_value = default_unnormed_value
         if input_source is not None:
-            action.input_source = str(input_source)
+            action.input_source = str(input_source).replace("\\", "/") # convert to unix style path
         action.variable_name = variable_name.replace("-", "_").replace(" ", "_") # variable name cannot contain dash and space
         action.actuator_config.actuated_component_unique_name = actuated_component_unique_name
         action.actuator_config.actuated_component_type = actuated_component_type
@@ -693,7 +693,7 @@ class ConfigBuilder:
         masking: bool = False
     ):
         for acu_name, acu in self.device_key_map["acus"].items():
-            masking_variable_name = f"{acu_name} on off schedule".lower() if masking else None
+            masking_variable_name = f"{acu_name} on off schedule" if masking else None
             variable_name = f"{acu_name} supply air temperature setpoint".lower()
             self._make_actions(
                 variable_name=variable_name,
@@ -705,7 +705,7 @@ class ConfigBuilder:
                 method=normalize_method,
                 lb=lb,
                 ub=ub,
-                masking_variable_name=masking_variable_name
+                masking_variable_name=masking_variable_name.lower()
             )
 
     def make_acu_supply_air_flow_rate_actions(
@@ -718,7 +718,7 @@ class ConfigBuilder:
         masking: bool = False
     ):
         for acu_name, acu in self.device_key_map["acus"].items():
-            masking_variable_name = f"{acu_name} on off schedule".lower() if masking else None
+            masking_variable_name = f"{acu_name} on off schedule" if masking else None
             variable_name = f"{acu_name} supply air mass flow rate".lower()
             self._make_actions(
                 variable_name=variable_name,
@@ -730,7 +730,7 @@ class ConfigBuilder:
                 method=normalize_method,
                 lb=lb,
                 ub=ub,
-                masking_variable_name=masking_variable_name
+                masking_variable_name=masking_variable_name.lower()
             )
 
     def make_chilled_water_loop_supply_temperature_actions(
@@ -869,7 +869,7 @@ class ConfigBuilder:
             action = self.model.eplus_env_config.actions.add()
             action.control_type = 3
             action.variable_name = f"{acu_name} on off schedule".lower()
-            action.input_source = str(schedule_dir.joinpath(f"{acu_name.lower()}.json"))
+            action.input_source = str(schedule_dir.joinpath(f"{acu_name.lower()}.json")).replace("\\", "/") # convert to unix style path
             action.schedule_config.initial_value = initial_value
             action.schedule_config.lb = lb
             action.schedule_config.ub = ub
@@ -887,7 +887,7 @@ class ConfigBuilder:
             action = self.model.eplus_env_config.actions.add()
             action.control_type = 3
             action.variable_name = f"{ite_name} cpu loading schedule".lower()
-            action.input_source = str(schedule_dir.joinpath(f"{ite_name.lower()}.json"))
+            action.input_source = str(schedule_dir.joinpath(f"{ite_name.lower()}.json")).replace("\\", "/") # convert to unix style path
             action.schedule_config.initial_value = initial_value
             action.schedule_config.lb = lb
             action.schedule_config.ub = ub
