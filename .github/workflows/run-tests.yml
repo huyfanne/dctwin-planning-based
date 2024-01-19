@@ -36,7 +36,7 @@ jobs:
         env:
           MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
         run: |
-          git config --global url."https://${{ secrets.GIT_TOKEN_DCLIB }}".insteadOf "ssh://git"
+          git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
           poetry install
 
       - name: Run python script
@@ -73,7 +73,7 @@ jobs:
         env:
           MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
         run: |
-          git config --global url."https://${{ secrets.GIT_TOKEN_DCLIB }}".insteadOf "ssh://git"
+          git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
           poetry install
 
       - name: Run python script
@@ -110,7 +110,7 @@ jobs:
         env:
           MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
         run: |
-          git config --global url."https://${{ secrets.GIT_TOKEN_DCLIB }}".insteadOf "ssh://git"
+          git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
           poetry install
 
       - name: Run python script
