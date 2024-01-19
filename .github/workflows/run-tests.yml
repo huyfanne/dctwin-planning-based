@@ -35,7 +35,9 @@ jobs:
       - name: Install dependencies with Poetry
         env:
           MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
-        run: poetry install
+        run: |
+          git config --global url."https://${{ secrets.GIT_TOKEN_DCLIB }}".insteadOf "ssh://git"
+          poetry install
 
       - name: Run python script
         run: cd test && poetry run python test_cfd.py
@@ -70,7 +72,9 @@ jobs:
       - name: Install dependencies with Poetry
         env:
           MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
-        run: poetry install
+        run: |
+          git config --global url."https://${{ secrets.GIT_TOKEN_DCLIB }}".insteadOf "ssh://git"
+          poetry install
 
       - name: Run python script
         run: cd test && poetry run python test_eplus_cfd_cosim.py
@@ -105,7 +109,9 @@ jobs:
       - name: Install dependencies with Poetry
         env:
           MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
-        run: poetry install
+        run: |
+          git config --global url."https://${{ secrets.GIT_TOKEN_DCLIB }}".insteadOf "ssh://git"
+          poetry install
 
       - name: Run python script
         run: cd test && poetry run python test_eplus.py
