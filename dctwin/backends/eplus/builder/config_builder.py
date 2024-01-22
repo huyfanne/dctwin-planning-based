@@ -693,7 +693,7 @@ class ConfigBuilder:
         masking: bool = False
     ):
         for acu_name, acu in self.device_key_map["acus"].items():
-            masking_variable_name = f"{acu_name} on off schedule" if masking else None
+            masking_variable_name = f"{acu_name} on off schedule".lower() if masking else None
             variable_name = f"{acu_name} supply air temperature setpoint".lower()
             self._make_actions(
                 variable_name=variable_name,
@@ -705,7 +705,7 @@ class ConfigBuilder:
                 method=normalize_method,
                 lb=lb,
                 ub=ub,
-                masking_variable_name=masking_variable_name.lower()
+                masking_variable_name=masking_variable_name
             )
 
     def make_acu_supply_air_flow_rate_actions(
@@ -718,7 +718,7 @@ class ConfigBuilder:
         masking: bool = False
     ):
         for acu_name, acu in self.device_key_map["acus"].items():
-            masking_variable_name = f"{acu_name} on off schedule" if masking else None
+            masking_variable_name = f"{acu_name} on off schedule".lower() if masking else None
             variable_name = f"{acu_name} supply air mass flow rate".lower()
             self._make_actions(
                 variable_name=variable_name,
@@ -730,7 +730,7 @@ class ConfigBuilder:
                 method=normalize_method,
                 lb=lb,
                 ub=ub,
-                masking_variable_name=masking_variable_name.lower()
+                masking_variable_name=masking_variable_name
             )
 
     def make_chilled_water_loop_supply_temperature_actions(

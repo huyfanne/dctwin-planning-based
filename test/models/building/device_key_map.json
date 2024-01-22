@@ -25,6 +25,7 @@
     "ites": {
         "ZONE1ITE1": {
             "inlet dry-bulb temperature": "ZONE1ITE1:ITE Air Inlet Dry-Bulb Temperature [C](TimeStep)",
+            "inlet relative humidity": "ZONE1ITE1:ITE Air Inlet Relative Humidity [%](TimeStep)",
             "cpu power": "ZONE1ITE1:ITE CPU Electricity Rate [%](TimeStep)",
             "fan power": "ZONE1ITE1:ITE Fan Electricity Rate [%](TimeStep)",
             "ups power": "ZONE1ITE1:ITE UPS Electricity Rate [W](TimeStep)"
@@ -34,6 +35,7 @@
         "ZONE1ACU1": {
             "fan": {
                 "air mass flow rate": "ZONE1ACU1 AIR LOOP SUPPLY OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "outlet air temperature": "ZONE1ACU1 AIR LOOP SUPPLY OUTLET NODE:System Node Temperature [C](TimeStep)",
                 "power": "ZONE1ACU1 FAN:Fan Electricity Rate [W](TimeStep)"
             },
             "cooling coil": {
