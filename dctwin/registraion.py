@@ -25,6 +25,7 @@ def make_env(
             "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
             "server_powers": {}, "server_volume_flow_rates": {}
         }
+    :param is_k8s: whether the environment is running in k8s
     return: the gym-like environment instance
     """
     engine_config = read_engine_config(env_proto_config)
@@ -33,7 +34,7 @@ def make_env(
         getattr(engine_config, env_config_name).env_params,
         preserving_proto_field_name=True,
     )
-    if env_config_name == "cosim_env_config":
+    if env_config_name == "eplus_cfd_env_config":
         env_params.update({"map_boundary_condition_fn": map_boundary_condition_fn})
     env = gym.make(
         get_env_id(env_config_name),

@@ -9,11 +9,11 @@ from pathlib import Path
 from sympy import symbols, solve
 import torch
 
-from dctwin.utils import config
+from dclib.room import Room
 
+from dctwin.utils import config
 from dctwin.interfaces.managers import CFDManager
 from dctwin.backends import EplusBackend
-from dctwin.models import Room
 
 
 class EplusCFDAdapter:
@@ -33,7 +33,7 @@ class EplusCFDAdapter:
     """
 
     rho_air = 1.19  # air density kg/m^3
-
+    
     def __init__(
         self,
         room: Room,
@@ -69,7 +69,7 @@ class EplusCFDAdapter:
         self.cfd_sensor_obs = None
         self.episode_idx, self.step_idx = 1, 1
         self.server_inlet_temps = {}
-        with open(config.co_sim.idf2room_map, "r") as f:
+        with open(config.eplus_cfd.idf2room_map, "r") as f:
             self.idf2room_mapper = json.load(f)
         # callback functions
         self._map_boundary_conditions_fn = map_boundary_condition_fn
@@ -81,9 +81,9 @@ class EplusCFDAdapter:
         )
         Path(config.cfd.case_dir).mkdir(exist_ok=True, parents=True)
         room_path = Path(config.cfd.case_dir).joinpath(config.cfd.geometry_file.name)
-        idf2room_path = Path(config.cfd.case_dir).joinpath(config.co_sim.idf2room_map.name)
+        idf2room_path = Path(config.cfd.case_dir).joinpath(config.eplus_cfd.idf2room_map.name)
         shutil.copy(config.cfd.geometry_file, room_path)
-        shutil.copy(config.co_sim.idf2room_map, idf2room_path)
+        shutil.copy(config.eplus_cfd.idf2room_map, idf2room_path)
         # init log file for cfd results
         filename = Path(config.cfd.case_dir).joinpath('cfd_log.csv')
         config.cfd.file_handler = open(filename, "wt", newline='')
@@ -128,7 +128,7 @@ class EplusCFDAdapter:
         # get boundary conditions and sensor observation
         cfd_sensor_obs_list, cfd_log_dict = [], {}
         total_server_powers, total_server_flow_rates = 0, 0
-        cfd_log_dict.update({"timestamp": config.co_sim.timestamp})
+        cfd_log_dict.update({"timestamp": config.eplus_cfd.timestamp})
 
         for acu_id, _ in self.cfd_manager.object_mesh_index["acus"].items():
             cfd_log_dict.update({f"{acu_id} (C)": round(supply_air_temperatures[acu_id], 3)})
@@ -193,7 +193,7 @@ class EplusCFDAdapter:
     def run(self, episode_idx) -> Tuple[np.ndarray, Any]:
         self.episode_idx = episode_idx
         eplus_obs, done = self.eplus_manager.run(episode_idx)
-        init_boundary_condition = self.cfd_manager.format_boundary_conditions # use the default boundary conditions
+        init_boundary_condition = self.cfd_manager.format_boundary_conditions  # use the default boundary conditions
         init_boundary_condition = self._scale_server_flow_rate(
             boundary_conditions=init_boundary_condition
         )

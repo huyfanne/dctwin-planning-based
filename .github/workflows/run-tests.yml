@@ -33,7 +33,11 @@ jobs:
           docker pull ghcr.io/cap-dcwiz/salome-9-debian10:latest
 
       - name: Install dependencies with Poetry
-        run: poetry install
+        env:
+          MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
+        run: |
+          git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
+          poetry install
 
       - name: Run python script
         run: cd test && poetry run python test_cfd.py
@@ -66,10 +70,14 @@ jobs:
           docker pull ghcr.io/cap-dcwiz/salome-9-debian10:latest
 
       - name: Install dependencies with Poetry
-        run: poetry install
+        env:
+          MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
+        run: |
+          git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
+          poetry install
 
       - name: Run python script
-        run: cd test && poetry run python test_cosim.py
+        run: cd test && poetry run python test_eplus_cfd_cosim.py
 
   run-eplus:
     runs-on: ubuntu-latest
@@ -99,7 +107,11 @@ jobs:
           docker pull ghcr.io/cap-dcwiz/salome-9-debian10:latest
 
       - name: Install dependencies with Poetry
-        run: poetry install
+        env:
+          MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
+        run: |
+          git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
+          poetry install
 
       - name: Run python script
         run: cd test && poetry run python test_eplus.py

@@ -215,7 +215,7 @@ message CFDEnvConfig {
 }
 
 // co-simulation env config
-message CoSimEnvConfig {
+message EplusCFDEnvConfig {
     required string idf2room_map = 1; // path of facility map file
     required CFDEnvConfig cfd = 2; // cfd config
     required EPlusEnvConfig eplus = 3; // energyplus config
@@ -227,7 +227,7 @@ message DTEngineConfig {
   optional LoggingConfig logging_config = 1;
   oneof EnvConfig {
     EPlusEnvConfig eplus_env_config = 2;
-    CoSimEnvConfig cosim_env_config = 3;
+    EplusCFDEnvConfig eplus_cfd_env_config = 3;
   }
   optional CFDEnvConfig cfd_config = 4;
 }

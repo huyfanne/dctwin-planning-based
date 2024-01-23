@@ -1,13 +1,13 @@
 from gym.envs.registration import register
 from loguru import logger
 
-from .gym_envs import BaseEnv, EPlusEnv, CoSimEnv
+from .gym_envs import BaseEnv, EPlusEnv, EplusCFDEnv
 from .managers import CFDManager, PODBuilder
 
 
 registry = dict(
     eplus_env_config=('EplusEnv-v0', 'dctwin.interfaces.gym_envs.eplus_env:EPlusEnv'),
-    cosim_env_config=('CoSimEnv-v0', 'dctwin.interfaces.gym_envs.cosim_env:CoSimEnv'),
+    eplus_cfd_env_config=('EplusCFDEnv-v0', 'dctwin.interfaces.gym_envs.eplus_cfd_env:EplusCFDEnv'),
 )
 
 for env_id, entry_point in registry.values():
@@ -29,7 +29,7 @@ __all__ = [
     "get_env_id",
     "BaseEnv",
     "EPlusEnv",
-    "CoSimEnv",
+    "EplusCFDEnv",
     "CFDManager",
     "PODBuilder",
 ]

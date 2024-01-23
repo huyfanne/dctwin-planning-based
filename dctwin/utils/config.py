@@ -94,7 +94,7 @@ class CFDConfig:
             raise PODConfigError(f"invalid pod directory: {self.pod_dir}")
 
 
-class CoSimConfig:
+class EplusCFDConfig:
     """Co-simulation configuration"""
     def __init__(self, base_config) -> None:
         self.base_config: Config = base_config
@@ -125,7 +125,7 @@ class Config:
 
         self.eplus = EplusConfig(self)
         self.cfd = CFDConfig(self)
-        self.co_sim = CoSimConfig(self)
+        self.eplus_cfd = EplusCFDConfig(self)
 
     def set_log_dir(self, log_dir: typing.Union[str, Path]) -> None:
         self.LOG_DIR = Path(log_dir)
@@ -135,7 +135,7 @@ config: Config = Config()
 
 
 def read_engine_config(
-    engine_config: str = "engine.prototxt"
+    engine_config: str | Path = "engine.prototxt",
 ) -> DTEngineConfig:
     """Read the proto engine configuration file.
     """
