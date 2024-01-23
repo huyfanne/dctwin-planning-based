@@ -51,7 +51,7 @@ class CFDManager:
     :param solve_process: number of CPU cores for solving
     :param steady: use steady or transient simulation
     :param write_interval: data write interval for simulation, can be set as 5, 10, 100, etc.
-    :param end_time: end step/time for steady/transient simulation, can be set as 50, 100, 500 etc. Normally 100-500 is enough.
+    :param end_time: end step for steady simulation, can be set as 50, 100, 150, etc. Normally 100-500 is enough.
     :param field_config: field configuration for meshing
     :param pod_method: POD method, can be GP, Flux, or GP-Flux
     :param docker_client: docker client
@@ -252,6 +252,22 @@ class CFDManager:
 
         return boundary_conditions
 
+    @staticmethod
+    def _scale_server_flow_rate(
+        boundary_conditions: Dict,
+        acu2server_flow_ratio: float = 0.8
+    ) -> Dict:
+        """
+        scale total server flow rate as a ratio of total supply air flow rate
+        """
+        sum_acu_volume_flow_rate = sum(boundary_conditions["supply_air_volume_flow_rates"].values())
+        sum_server_volume_flow_rate = sum(boundary_conditions["server_volume_flow_rates"].values())
+        scale_factor = sum_acu_volume_flow_rate * acu2server_flow_ratio / sum_server_volume_flow_rate
+        # scale server flow rate
+        for server_id, volume_flow_rate in boundary_conditions["server_volume_flow_rates"].items():
+            boundary_conditions["server_volume_flow_rates"][server_id] = volume_flow_rate * scale_factor
+        return boundary_conditions
+
     def run(
         self,
         case_idx: int = 1,
@@ -260,6 +276,8 @@ class CFDManager:
         save_boundary_conditions: bool = False,
         save_simulation_results: bool = False,
         return_sensor_results: bool = False,
+        scale_server_flow_rate: bool = False,
+        acu2server_flow_ratio: float = 0.8,
         **boundary_conditions
     ) -> Union[np.ndarray, torch.Tensor, Dict]:
         """Run the whole simulation: geometry -> mesh -> solve
@@ -270,6 +288,8 @@ class CFDManager:
         :param save_boundary_conditions: whether to save the boundary conditions
         :param save_simulation_results: whether to save the simulation results
         :param return_sensor_results: whether to return sensor results
+        :param scale_server_flow_rate: whether to scale server flow rate
+        :param acu2server_flow_ratio: ratio of total supply air flow rate to total server flow rate
         :param boundary_conditions: boundary conditions for simulation
            i.e., boundary_conditions = {
             "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
@@ -281,6 +301,12 @@ class CFDManager:
         if boundary_conditions is not None:
             self.update_boundary_conditions(**boundary_conditions)
             boundary_conditions = self.format_boundary_conditions
+
+        if scale_server_flow_rate:
+            boundary_conditions = self._scale_server_flow_rate(
+                boundary_conditions=boundary_conditions,
+                acu2server_flow_ratio=acu2server_flow_ratio
+            )
 
         if self.pod_backend is not None and not self.run_cfd:
             # use reduced-order CFD simulation if POD backend is provided
