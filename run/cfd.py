@@ -43,7 +43,7 @@ def highest_2_power_less_than_cpu_count():
     while cpu_count > 1:
         power += 1
         cpu_count = cpu_count >> 1
-    return 2 ** power
+    return 2**power
 
 
 def parse_and_upload_result(room: Room, case_dir, host_base_files_path, iteration):
@@ -51,7 +51,9 @@ def parse_and_upload_result(room: Room, case_dir, host_base_files_path, iteratio
     servers = []
     acus = []
     for server_id in room.constructions.server_keys:
-        inlet_center, outlet_center, _ = room.constructions.server_patch_positions(server_id)
+        inlet_center, outlet_center, _ = room.constructions.server_patch_positions(
+            server_id
+        )
         result = [inlet_center.__dict__, outlet_center.__dict__, server_id]
         servers.append(result)
     for acu_id in room.constructions.acu_keys:
@@ -83,12 +85,16 @@ def parse_and_upload_result(room: Room, case_dir, host_base_files_path, iteratio
     pvc_name = f"task-manager-worker-data-{worker_name}"
     backoff_limit = 0
     environment = {
-                "WIDTH": str(max(i.x for i in room.geometry.plane)
-                         - min(i.x for i in room.geometry.plane)),
-                "DEPTH": str(max(i.y for i in room.geometry.plane)
-                         - min(i.y for i in room.geometry.plane)),
-                "HEIGHT": str(room.geometry.height),
-            }
+        "WIDTH": str(
+            max(i.x for i in room.geometry.plane)
+            - min(i.x for i in room.geometry.plane)
+        ),
+        "DEPTH": str(
+            max(i.y for i in room.geometry.plane)
+            - min(i.y for i in room.geometry.plane)
+        ),
+        "HEIGHT": str(room.geometry.height),
+    }
 
     job = create_job_object(
         client,
@@ -103,12 +109,14 @@ def parse_and_upload_result(room: Room, case_dir, host_base_files_path, iteratio
         env_vars=environment,
         working_dir=working_dir,
         case_dir=case_dir,
-        volume_data_dir="/data"
+        volume_data_dir="/data",
     )
 
     create_job(batch_v1, job)
 
-    stream_log = wait_for_job(batch_v1, core_v1, job_name, namespace=namespace, backoff_limit=backoff_limit)
+    stream_log = wait_for_job(
+        batch_v1, core_v1, job_name, namespace=namespace, backoff_limit=backoff_limit
+    )
     for line in stream_log:
         logger.info(line.decode("utf-8").splitlines())
 
@@ -155,7 +163,9 @@ def calculate_metrics(case_dir, room: Room, threshold):
                             lambda x: kelvin_to_celsius(x, 2) for x in line.split()[1:]
                         )
                         results.append(
-                            list(map(lambda x: kelvin_to_celsius(x, 2), line.split()[1:]))
+                            list(
+                                map(lambda x: kelvin_to_celsius(x, 2), line.split()[1:])
+                            )
                         )
             probe_results = results[-1]
             assert room.constructions.num_sen == len(probe_results)
@@ -197,7 +207,7 @@ cfd_manager = CFDManager(
     solve_process=min(16, max_processes),
     end_time=int(preference["iteration"]),
     field_config=field_config,
-    is_k8s=True
+    is_k8s=True,
 )
 
 cfd_manager.run()
@@ -217,7 +227,9 @@ if metrics_data:
 shutil.copytree(case_dir / "airflow", host_workspace / "run/cache_result/airflow")
 shutil.copytree(case_dir / "thermal", host_workspace / "run/cache_result/thermal")
 
-shutil.make_archive(host_workspace / "run/cache_result", "zip", host_workspace / "run/cache_result")
+shutil.make_archive(
+    host_workspace / "run/cache_result", "zip", host_workspace / "run/cache_result"
+)
 shutil.make_archive(host_workspace / "run/result", "zip", host_workspace / "run/result")
 
 shutil.rmtree(host_workspace / "run/cache_result")

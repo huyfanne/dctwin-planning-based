@@ -45,36 +45,36 @@ class ACUGeometry(ACUGeometryModel):
 
 
 class ACUCoolingModel(BaseModel):
-    """ Model of ACU cooling properties
-    """
-    cooling_type: Optional[str] # DX, CW, etc.
-    cooling_capacity: Optional[float] # unit(kW)
+    """Model of ACU cooling properties"""
+
+    cooling_type: Optional[str]  # DX, CW, etc.
+    cooling_capacity: Optional[float]  # unit(kW)
 
 
 class ACUCooling(ACUCoolingModel):
-    """ ACU cooling properties
-    """
+    """ACU cooling properties"""
+
     model: Optional[str]
-    supply_air_temperature: Optional[float] # unit(C)
-    supply_air_volume_flow_rate: Optional[float] # unit(m3/s)
+    supply_air_temperature: Optional[float]  # unit(C)
+    supply_air_volume_flow_rate: Optional[float]  # unit(m3/s)
 
 
 class ACUPowerModel(BaseModel):
-    """ Model of ACU power properties
-    """
+    """Model of ACU power properties"""
+
     rated_fan_power: Optional[float]  # unit(W)
 
 
 class ACUPower(ACUPowerModel):
-    """ ACU power properties
-    """
+    """ACU power properties"""
+
     model: Optional[str]
-    fan_power: Optional[float] # unit(W)
+    fan_power: Optional[float]  # unit(W)
 
 
 class ACU(BaseModel):
-    """ ACU object in a data center
-    """
+    """ACU object in a data center"""
+
     geometry: ACUGeometry = Field(default_factory=ACUGeometry)
     cooling: ACUCooling = Field(default_factory=ACUCooling)
     power: ACUPower = Field(default_factory=ACUPower)
@@ -88,7 +88,7 @@ class ACU(BaseModel):
         """
         tu = 0.1
         u = float(self.cooling.supply_air_volume_flow_rate / self.geometry.supply_area)
-        k = 1.5 * ((tu / 100) ** 2) * (u ** 2)
+        k = 1.5 * ((tu / 100) ** 2) * (u**2)
         return k
 
     @property
@@ -98,4 +98,4 @@ class ACU(BaseModel):
         """
         nu = 1.5e-05
         eddy_viscosity_ratio = 10
-        return 0.09 * (self.k ** 2) / (nu * eddy_viscosity_ratio)
+        return 0.09 * (self.k**2) / (nu * eddy_viscosity_ratio)

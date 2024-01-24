@@ -24,13 +24,14 @@ class RackGeometry(RackGeometryModel):
 
 
 class RackConstruction(BaseModel):
-    """ Rack construction is used to define the servers in a rack
-    """
+    """Rack construction is used to define the servers in a rack"""
+
     servers: OrderedDict[str, Server]
 
 
 class Rack(BaseModel):
-    """ Rack object in a data  center """
+    """Rack object in a data  center"""
+
     geometry: RackGeometry
     constructions: Optional[RackConstruction]
     meta: Optional[OrderedDict] = Field(default_factory=dict)

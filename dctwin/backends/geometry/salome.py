@@ -12,6 +12,7 @@ class SalomeBackendMixin:
     """
     A class to manage the geometry generation using Salome.
     """
+
     docker_image = "ghcr.io/cap-dcwiz/salome-9-debian10:latest"
 
     def run(self, room: Room):
@@ -50,11 +51,11 @@ class SalomeBackendMixin:
     def _run_backend(self):
         working_path = self.volume_geometry_dir
         geometry_file = f"{working_path}/geometry.json"
-        host_path = os.environ.get('HOST_PATH', None)
+        host_path = os.environ.get("HOST_PATH", None)
         if host_path is not None:
             # concatenate the log path in Docker container with external host path
             log_index = config.cfd.case_dir.parts.index("log")
-            case_dir = '/'.join(config.cfd.case_dir.parts[log_index:])
+            case_dir = "/".join(config.cfd.case_dir.parts[log_index:])
             case_dir = Path(host_path).joinpath(case_dir)
             logger.info(f"Concatenated Case Directory: {case_dir}")
         else:
@@ -71,8 +72,10 @@ class SalomeBackendMixin:
 
         logger.info("***** Geometry finished *****\n\n")
 
+
 class SalomeBackend(SalomeBackendMixin, Backend):
     pass
+
 
 class SalomeBackendK8s(SalomeBackendMixin, BackendK8s):
     pass

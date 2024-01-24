@@ -30,16 +30,14 @@ env = CoSimEnv(
 env.reset()
 
 # run simulation with eplus only
-action_dict = {
-    "ACU1_setpoint": 18.0,
-    "ACU1_flow_rate": 15.0,
-    "chw_supply_sp": 7.0
-}
-act = np.array([
-    action_dict["ACU1_setpoint"],
-    action_dict["ACU1_flow_rate"],
-    action_dict["chw_supply_sp"]
-])
+action_dict = {"ACU1_setpoint": 18.0, "ACU1_flow_rate": 15.0, "chw_supply_sp": 7.0}
+act = np.array(
+    [
+        action_dict["ACU1_setpoint"],
+        action_dict["ACU1_flow_rate"],
+        action_dict["chw_supply_sp"],
+    ]
+)
 done = False
 env_config.cfd.dry_run = True
 env_config.cfd.mesh_dir = env_config.LOG_DIR.joinpath("base")

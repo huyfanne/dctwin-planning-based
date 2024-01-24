@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Union
 from pathlib import Path
 
+
 class BaseBackend(ABC):
     """
     Abstract base class for DCTwin Backend. Both Backend and BackendK8s classes should inherit from this class.
@@ -11,8 +12,7 @@ class BaseBackend(ABC):
     volume_data_dir = "/data"
     volume_geometry_dir = f"{volume_data_dir}/constant/triSurface"
 
-    def __init__(self, client: Any = None, process_num: int = 1) -> None:
-        self.client = client
+    def __init__(self, process_num: int = 1, **kwargs) -> None:
         self.process_num = process_num
         self.container = None
 
@@ -44,8 +44,6 @@ class BaseBackend(ABC):
         self,
         case_dir: Union[Path, str],
         environment: dict = {},
-        auto_remove: bool = True,
-        user: int = None,
         working_dir: str = None,
         stream: bool = False,
         command: list = None,

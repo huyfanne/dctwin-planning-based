@@ -22,20 +22,19 @@ class Backend(BaseBackend):
     :param process_num: number of cores for simulation
     """
 
-
-    def __init__(self, client: DockerClient = None, process_num: int = 1) -> None:
+    def __init__(self, client: DockerClient = None, **kwargs) -> None:
+        super().__init__(**kwargs)
         self.client = client
         if self.client is None:
             self.client = from_env()
-        self.process_num = process_num
-        self.container = None
-
 
     def check_image(self) -> None:
         try:
             self.client.images.get(self.docker_image)
         except ImageNotFound:
-            logger.info(f"docker image ({self.docker_image}) not existed, try to pull ...")
+            logger.info(
+                f"docker image ({self.docker_image}) not existed, try to pull ..."
+            )
             self.client.images.pull(self.docker_image)
 
     def run_container(
@@ -73,9 +72,10 @@ class Backend(BaseBackend):
                 user=user,
                 environment=environment,
                 working_dir=working_dir
-                if working_dir is not None else self.volume_data_dir,
+                if working_dir is not None
+                else self.volume_data_dir,
                 detach=True,
-                **kwargs,        
+                **kwargs,
             )
             if background:
                 return None

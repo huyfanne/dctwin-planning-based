@@ -97,7 +97,7 @@ class SalomeUtil:
     def sub_face_ids(self, geom_obj):
         return self.geom.SubShapeAllIDs(geom_obj, self.geom.ShapeType["FACE"])
 
-    def group_by_faces(self, geom_obj, exclude: List=None):
+    def group_by_faces(self, geom_obj, exclude: List = None):
         group = self.geom.CreateGroup(geom_obj, self.geom.ShapeType["FACE"])
         face_ids = self.sub_face_ids(geom_obj)
         if exclude is not None:
@@ -108,7 +108,7 @@ class SalomeUtil:
         self.geom.UnionIDs(group, face_ids)
         return group
 
-    def sub_faces(self, geom_obj, exclude: List=None):
+    def sub_faces(self, geom_obj, exclude: List = None):
         face_ids = self.sub_face_ids(geom_obj)
         if exclude is not None:
             exclude_indices = [self.SUB_FACE_INDICES[i] for i in exclude]
@@ -153,7 +153,7 @@ class SalomeUtil:
         mesh_obj,
         placement: Dict,
         orientation: float = 0,
-        is_export: bool = True
+        is_export: bool = True,
     ):
         new_mesh_obj = mesh_obj.TranslateObjectMakeMesh(
             mesh_obj, [placement["x"], placement["y"], placement["z"]], 0, name
@@ -261,7 +261,7 @@ class ServerModel:
         box = util.make_box(self.size)
         wall = util.group_by_faces(box)
         if self.inlet_face is None:
-            inlet_face =  util.sub_face(box, "front")
+            inlet_face = util.sub_face(box, "front")
         else:
             wall, inlet_face = self.make_sub_face(box, wall, self.inlet_face)
         if self.outlet_face is None:
@@ -291,9 +291,12 @@ class RackModel:
     size: dict
     first_slot_offset: float
     is_meshed: bool
-    excluded_faces: List[str] = ["front", "rear"] # default exclude front and rear for rack
+    excluded_faces: List[str] = [
+        "front",
+        "rear",
+    ]  # default exclude front and rear for rack
 
-    slot_height = 0.045 # 1U = 0.045 mm
+    slot_height = 0.045  # 1U = 0.045 mm
 
     @classmethod
     def from_dict(cls, model_data: Dict) -> "RackModel":
@@ -311,8 +314,10 @@ class RackModel:
         box = util.make_box(self.size)
         group = util.group_by_faces(box, exclude=self.excluded_faces)
         self.rack_wall_mesh = util.mesh(group, 0.1, 2)
-        blanking_box = util.make_box({**self.size, "z": self.slot_height, "y": 0.1})
-        blanking_box = util.group_by_faces(blanking_box, exclude=["rear", "bottom", "top", "left", "right"]) # Remain only front face
+        blanking_box = util.make_box({**self.size, "z": 0.044, "y": 0.1})
+        blanking_box = util.group_by_faces(
+            blanking_box, exclude=["rear", "bottom", "top", "left", "right"]
+        )  # Remain only front face
         self.rack_blanking_mesh = util.mesh(blanking_box, 0.05, 1)
         self.is_meshed = True
 
@@ -323,7 +328,9 @@ class RackModel:
             f"rack_wall_{rack_id}", self.rack_wall_mesh, placement, orientation
         )
 
-    def make_blanking(self, rack_id: str, placement: Dict, orientation: float, slots: list) -> None:
+    def make_blanking(
+        self, rack_id: str, placement: Dict, orientation: float, slots: list
+    ) -> None:
         if self.is_meshed is False:
             self.mesh()
 
@@ -353,7 +360,7 @@ class RackModel:
 
 class Builder:
 
-    slot_height = 0.045 # 1U = 0.045 mm
+    slot_height = 0.045  # 1U = 0.045 mm
 
     @staticmethod
     def make_acus(acus: Dict, acu_geometry_models: Dict) -> None:
@@ -366,34 +373,55 @@ class Builder:
             except KeyError:
                 logging.warning(f"ACU model {acu['geometry']['model']} not found")
                 acu_model = ACUModel.from_dict(acu["geometry"])
-            acu_model.make_acu(acu_key, acu["geometry"]["location"], acu["geometry"]["orientation"])
+            acu_model.make_acu(
+                acu_key, acu["geometry"]["location"], acu["geometry"]["orientation"]
+            )
 
     @staticmethod
     def make_boxes(boxes: Dict) -> None:
         boxes_types_index = {}
         for box in boxes.values():
-            if box['geometry']['model'] not in boxes_types_index:
-                boxes_types_index[box['geometry']['model']] = 1
+            if box["geometry"]["model"] not in boxes_types_index:
+                boxes_types_index[box["geometry"]["model"]] = 1
             else:
-                boxes_types_index[box['geometry']['model']] += 1
+                boxes_types_index[box["geometry"]["model"]] += 1
             if box["geometry"].get("openings", None) is not None:
                 size = box["geometry"]["size"]
                 location = box["geometry"]["location"]
-                if box["geometry"]["openings_side"] == "front" or box["geometry"]["openings_side"] == "rear":
+                if (
+                    box["geometry"]["openings_side"] == "front"
+                    or box["geometry"]["openings_side"] == "rear"
+                ):
                     basic_face_input = [size["z"], size["x"], 3]
-                elif box["geometry"]["openings_side"] == "left" or box["geometry"]["openings_side"] == "right":
+                elif (
+                    box["geometry"]["openings_side"] == "left"
+                    or box["geometry"]["openings_side"] == "right"
+                ):
                     basic_face_input = [size["z"], size["y"], 2]
-                elif box["geometry"]["openings_side"] == "top" or box["geometry"]["openings_side"] == "bottom":
+                elif (
+                    box["geometry"]["openings_side"] == "top"
+                    or box["geometry"]["openings_side"] == "bottom"
+                ):
                     basic_face_input = [size["x"], size["y"], 1]
                 else:
-                    raise ValueError(f"Unknown openings_side: {box['geometry']['openings_side']}")
+                    raise ValueError(
+                        f"Unknown openings_side: {box['geometry']['openings_side']}"
+                    )
                 basic_face = util.geom.MakeFaceHW(*basic_face_input)
                 box_vector_and_distance_input = []
                 move_box_input = {}
                 for key, opening in box["geometry"]["openings"].items():
-                    if box["geometry"]["openings_side"] == "front" or box["geometry"]["openings_side"] == "rear":
-                        vent_face_input = [opening["size"]["x"], opening["size"]["z"], 3]
-                        vent_face_translation_input = [(
+                    if (
+                        box["geometry"]["openings_side"] == "front"
+                        or box["geometry"]["openings_side"] == "rear"
+                    ):
+                        vent_face_input = [
+                            opening["size"]["x"],
+                            opening["size"]["z"],
+                            3,
+                        ]
+                        vent_face_translation_input = [
+                            (
                                 opening["location"]["x"]
                                 - (size["x"] - opening["size"]["x"]) / 2
                             ),
@@ -401,7 +429,8 @@ class Builder:
                             (
                                 opening["location"]["z"]
                                 - (size["z"] - opening["size"]["z"]) / 2
-                            )]
+                            ),
+                        ]
                         vector_input = [0, 1, 0]
                         vector = util.geom.MakeVectorDXDYDZ(*vector_input)
                         box_vector_and_distance_input = [vector, size["y"]]
@@ -410,8 +439,15 @@ class Builder:
                             "y": location["y"],
                             "z": (size["z"] / 2) + location["z"],
                         }
-                    elif box["geometry"]["openings_side"] == "left" or box["geometry"]["openings_side"] == "right":
-                        vent_face_input = [opening["size"]["y"], opening["size"]["z"], 2]
+                    elif (
+                        box["geometry"]["openings_side"] == "left"
+                        or box["geometry"]["openings_side"] == "right"
+                    ):
+                        vent_face_input = [
+                            opening["size"]["y"],
+                            opening["size"]["z"],
+                            2,
+                        ]
                         vent_face_translation_input = [
                             0,
                             (
@@ -421,7 +457,8 @@ class Builder:
                             (
                                 opening["location"]["z"]
                                 - (size["z"] - opening["size"]["z"]) / 2
-                            )]
+                            ),
+                        ]
                         vector_input = [1, 0, 0]
                         vector = util.geom.MakeVectorDXDYDZ(*vector_input)
                         box_vector_and_distance_input = [vector, size["x"]]
@@ -430,9 +467,17 @@ class Builder:
                             "y": location["y"] + size["y"] / 2,
                             "z": (size["z"] / 2) + location["z"],
                         }
-                    elif box["geometry"]["openings_side"] == "top" or box["geometry"]["openings_side"] == "bottom":
-                        vent_face_input = [opening["size"]["x"], opening["size"]["y"], 1] 
-                        vent_face_translation_input = [(
+                    elif (
+                        box["geometry"]["openings_side"] == "top"
+                        or box["geometry"]["openings_side"] == "bottom"
+                    ):
+                        vent_face_input = [
+                            opening["size"]["x"],
+                            opening["size"]["y"],
+                            1,
+                        ]
+                        vent_face_translation_input = [
+                            (
                                 opening["location"]["x"]
                                 - (size["x"] - opening["size"]["x"]) / 2
                             ),
@@ -441,7 +486,7 @@ class Builder:
                                 - (size["y"] - opening["size"]["y"]) / 2
                             ),
                             0,
-                            ]
+                        ]
                         vector_input = [0, 0, 1]
                         vector = util.geom.MakeVectorDXDYDZ(*vector_input)
                         box_vector_and_distance_input = [vector, size["z"]]
@@ -451,13 +496,16 @@ class Builder:
                             "z": location["z"],
                         }
                     else:
-                        raise ValueError(f"Unknown openings_side: {box['geometry']['openings_side']}")
+                        raise ValueError(
+                            f"Unknown openings_side: {box['geometry']['openings_side']}"
+                        )
                     vent_face = util.geom.MakeFaceHW(*vent_face_input)
-                    vent_face = util.geom.MakeTranslation(vent_face,*vent_face_translation_input)                    
+                    vent_face = util.geom.MakeTranslation(
+                        vent_face, *vent_face_translation_input
+                    )
                     basic_face = util.geom.MakeCut(basic_face, vent_face)
                 _box = util.geom.MakePrismVecH(
-                    basic_face,
-                    *box_vector_and_distance_input
+                    basic_face, *box_vector_and_distance_input
                 )
                 geometry_box = util.move_placement(
                     _box,
@@ -467,11 +515,13 @@ class Builder:
                 mesh_obj = util.mesh(group, 1, 4)
                 util.export_stl(
                     mesh_obj,
-                    f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}"
+                    f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}",
                 )
-                
+
             else:
-                geometry_box = util.make_box(box["geometry"]["size"], box["geometry"]["location"])
+                geometry_box = util.make_box(
+                    box["geometry"]["size"], box["geometry"]["location"]
+                )
                 exclude_faces = []
                 for face in list(SalomeUtil.SUB_FACE_SIZE_INDICES):
                     if not box["geometry"]["faces"][face]:
@@ -479,10 +529,12 @@ class Builder:
                 group = util.group_by_faces(geometry_box, exclude=exclude_faces)
                 util.export_stl(
                     util.mesh(group, 0.5, 2),
-                    f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}"
+                    f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}",
                 )
 
-    def make_racks(self, racks: Dict, rack_geometry_models: Dict, server_geometry_models: Dict) -> None:
+    def make_racks(
+        self, racks: Dict, rack_geometry_models: Dict, server_geometry_models: Dict
+    ) -> None:
         rack_models, server_models = dict(), dict()
         for rack_model_key, rack_model_value in rack_geometry_models.items():
             rack_models[rack_model_key] = RackModel.from_dict(rack_model_value)
@@ -499,7 +551,9 @@ class Builder:
                 placement=rack["geometry"]["location"],
                 orientation=rack["geometry"]["orientation"],
             )
-            available_slots = self.make_servers(rack_key, rack, rack_model, server_models)
+            available_slots = self.make_servers(
+                rack_key, rack, rack_model, server_models
+            )
             if rack["geometry"]["has_blanking_panel"]:
                 blanking_panels = []
                 for slot, is_available in available_slots.items():
@@ -512,7 +566,9 @@ class Builder:
                     slots=blanking_panels,
                 )
 
-    def make_servers(self, rack_key: str, rack: Dict, rack_model: RackModel, server_models: Dict) -> Dict:
+    def make_servers(
+        self, rack_key: str, rack: Dict, rack_model: RackModel, server_models: Dict
+    ) -> Dict:
         available_slots = {}
         for slot in range(1, rack["geometry"]["slot"] + 1):
             available_slots[slot] = True
@@ -524,12 +580,18 @@ class Builder:
                 logging.warning(f"Server model {rack['geometry']['model']} not found")
                 server_model = ServerModel.from_dict(server["geometry"])
             server_starting_slot = server["geometry"]["slot_position"]
-            server_ending_slot = server["geometry"]["slot_position"] + server["geometry"]["slot_occupation"]
+            server_ending_slot = (
+                server["geometry"]["slot_position"]
+                + server["geometry"]["slot_occupation"]
+            )
             for server_slot in range(server_starting_slot, server_ending_slot):
                 available_slots[server_slot] = False
 
-            server_height = rack["geometry"]["location"]["z"] + rack["geometry"][
-                "first_slot_offset"] + self.slot_height * (server_starting_slot - 1)
+            server_height = (
+                rack["geometry"]["location"]["z"]
+                + rack["geometry"]["first_slot_offset"]
+                + self.slot_height * (server_starting_slot - 1)
+            )
             server_model.make(
                 server_key,
                 {**rack["geometry"]["location"], "z": server_height},
@@ -575,8 +637,12 @@ class Builder:
         boxes = room["constructions"].get("boxes", None)
         acus = room["constructions"].get("acus", None)
         racks = room["constructions"].get("racks", None)
-        self.make_panels(base_face=face, plane=raised_floor, name="floor_1") if raised_floor else None
-        self.make_panels(base_face=face, plane=false_ceiling, name="ceiling_1") if false_ceiling else None
+        self.make_panels(
+            base_face=face, plane=raised_floor, name="floor_1"
+        ) if raised_floor else None
+        self.make_panels(
+            base_face=face, plane=false_ceiling, name="ceiling_1"
+        ) if false_ceiling else None
         self.make_boxes(boxes=boxes) if boxes else None
         self.make_acus(
             acus=acus,
@@ -585,7 +651,7 @@ class Builder:
         self.make_racks(
             racks=racks,
             rack_geometry_models=geometry_models["racks"],
-            server_geometry_models=geometry_models["servers"]
+            server_geometry_models=geometry_models["servers"],
         ) if racks else None
 
     def run(self) -> None:

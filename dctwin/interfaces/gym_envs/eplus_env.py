@@ -25,6 +25,7 @@ class EPlusEnv(BaseEnv):
     :param schedule_fn: the callback facility schedule function defined by the user
         e.g., the IT utilization schedule
     """
+
     def __init__(
         self,
         config: EPlusEnvConfig,
@@ -70,8 +71,7 @@ class EPlusEnv(BaseEnv):
         return obs, done
 
     def _run_simulation(
-        self,
-        parsed_actions: List[float]
+        self, parsed_actions: List[float]
     ) -> Tuple[Union[List[float], None], bool]:
         self.eplus_backend.send_action(parsed_actions)
         return self.eplus_backend.receive_status()

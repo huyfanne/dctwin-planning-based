@@ -57,11 +57,7 @@ class Eplus:
 
     variable_name_ems = ["Power Usage Effectiveness"]
 
-    def __init__(
-        self,
-        epm: op.Epm,
-        chw_loop_prefix: str = "CHW"
-    ) -> None:
+    def __init__(self, epm: op.Epm, chw_loop_prefix: str = "CHW") -> None:
         self.epm = epm
         self.node_names = self._get_node_names()
         self.branch_name = self._get_branch_names()
@@ -222,19 +218,26 @@ class Eplus:
         for plant_loop in plant_loops:
             # we assume that all chilled water loops start with "chw" and all condenser water loops start with "cw"
             if plant_loop.name.startswith(plant_type.lower()):
-                chw_supply_outlet_node_names.append(plant_loop.plant_side_outlet_node_name)
+                chw_supply_outlet_node_names.append(
+                    plant_loop.plant_side_outlet_node_name
+                )
         return chw_supply_outlet_node_names
 
     def _get_valid_key_values(self):
-        valid_key_values = self.node_names | self.component_names | \
-                           self.zone_names | {"Whole Building"} | {"whole building"}
+        valid_key_values = (
+            self.node_names
+            | self.component_names
+            | self.zone_names
+            | {"Whole Building"}
+            | {"whole building"}
+        )
         it_equipment = self.epm.ElectricEquipment_ITE_AirCooled.select()
         supply_air_nodes = set()
         ite_names = set()
         for equipment in it_equipment:
             supply_air_nodes.add(equipment.supply_air_node_name)
             ite_names.add(equipment.name)
-        valid_key_values |= (supply_air_nodes | ite_names)
+        valid_key_values |= supply_air_nodes | ite_names
         return valid_key_values
 
     @staticmethod
@@ -269,14 +272,26 @@ class Eplus:
         self.ups_efficiency_as_load_factor = {}
         for it_equipment in self.epm.ElectricEquipment_ITE_AirCooled.select():
             name = it_equipment.name
-            self.power_as_load_temp_parameter[name] = self._get_biquadratic_curve_coefficient(
-                it_equipment.cpu_power_input_function_of_loading_and_air_temperature_curve_name)
-            self.flow_as_load_temp_parameter[name] = self._get_biquadratic_curve_coefficient(
-                it_equipment.air_flow_function_of_loading_and_air_temperature_curve_name)
-            self.power_as_fan_flow_parameter[name] = self._get_quadractic_curve_coefficient(
-                it_equipment.fan_power_input_function_of_flow_curve_name)
-            self.ups_efficiency_as_load_factor[name] = self._get_quadractic_curve_coefficient(
-                it_equipment.electric_power_supply_efficiency_function_of_part_load_ratio_curve_name)
+            self.power_as_load_temp_parameter[
+                name
+            ] = self._get_biquadratic_curve_coefficient(
+                it_equipment.cpu_power_input_function_of_loading_and_air_temperature_curve_name
+            )
+            self.flow_as_load_temp_parameter[
+                name
+            ] = self._get_biquadratic_curve_coefficient(
+                it_equipment.air_flow_function_of_loading_and_air_temperature_curve_name
+            )
+            self.power_as_fan_flow_parameter[
+                name
+            ] = self._get_quadractic_curve_coefficient(
+                it_equipment.fan_power_input_function_of_flow_curve_name
+            )
+            self.ups_efficiency_as_load_factor[
+                name
+            ] = self._get_quadractic_curve_coefficient(
+                it_equipment.electric_power_supply_efficiency_function_of_part_load_ratio_curve_name
+            )
 
     """-------------------------------Internal Curve Management API----------------------------------------"""
 
@@ -296,21 +311,34 @@ class Eplus:
             name = it_equipment.name
             self.design_power_input[name] = it_equipment.watts_per_unit
             self.number_of_units[name] = it_equipment.number_of_units
-            self.design_fraction_fan[name] = it_equipment.design_fan_power_input_fraction
-            self.design_fraction_cpu[name] = 1. - self.design_fraction_fan[name]
-            self.design_cpu_utilization[name] = it_equipment.design_power_input_schedule_name.hourly_value
-            self.ups_efficiency[name] = it_equipment.design_electric_power_supply_efficiency
-            self.design_cpu_power[name] = self.design_power_input[name] * self.design_fraction_cpu[name]
-            self.design_fan_power[name] = self.design_power_input[name] * self.design_fraction_fan[name]
-            self.design_flow_rate_per_watt[name] = it_equipment.design_fan_air_flow_rate_per_power_input
-            self.design_air_volumetric_flow_rate[name] = self.design_flow_rate_per_watt[name] * self.design_power_input[
-                name]
+            self.design_fraction_fan[
+                name
+            ] = it_equipment.design_fan_power_input_fraction
+            self.design_fraction_cpu[name] = 1.0 - self.design_fraction_fan[name]
+            self.design_cpu_utilization[
+                name
+            ] = it_equipment.design_power_input_schedule_name.hourly_value
+            self.ups_efficiency[
+                name
+            ] = it_equipment.design_electric_power_supply_efficiency
+            self.design_cpu_power[name] = (
+                self.design_power_input[name] * self.design_fraction_cpu[name]
+            )
+            self.design_fan_power[name] = (
+                self.design_power_input[name] * self.design_fraction_fan[name]
+            )
+            self.design_flow_rate_per_watt[
+                name
+            ] = it_equipment.design_fan_air_flow_rate_per_power_input
+            self.design_air_volumetric_flow_rate[name] = (
+                self.design_flow_rate_per_watt[name] * self.design_power_input[name]
+            )
 
     def _fun_power_as_load_temp(
         self,
         cpu_loading: Union[float, np.ndarray],
         server_inlet_temperature: Union[float, np.ndarray, Symbol],
-        name: str
+        name: str,
     ) -> Union[float, np.ndarray]:
         """
         Compute CPU power factor with cpu utilization and server inlet temperature
@@ -330,19 +358,25 @@ class Eplus:
         cpu_loading = np.clip(cpu_loading, min_x, max_x)
         if not isinstance(server_inlet_temperature, Symbol):
             server_inlet_temperature = np.clip(server_inlet_temperature, min_y, max_y)
-        factor = constant + \
-                 cpu_loading * coef_cpu + \
-                 cpu_loading ** 2 * coef_cpu_squre + \
-                 server_inlet_temperature * coef_in_temp + \
-                 server_inlet_temperature ** 2 * coef_in_temp_squre + \
-                 cpu_loading * server_inlet_temperature * coef_cross
-        return np.clip(factor, min_factor, max_factor) if not isinstance(factor, Add) else factor
+        factor = (
+            constant
+            + cpu_loading * coef_cpu
+            + cpu_loading**2 * coef_cpu_squre
+            + server_inlet_temperature * coef_in_temp
+            + server_inlet_temperature**2 * coef_in_temp_squre
+            + cpu_loading * server_inlet_temperature * coef_cross
+        )
+        return (
+            np.clip(factor, min_factor, max_factor)
+            if not isinstance(factor, Add)
+            else factor
+        )
 
     def _fun_flow_as_load_temp(
         self,
         cpu_loading: Union[float, np.ndarray],
         server_inlet_temperature: Union[float, np.ndarray, Symbol],
-        name: str
+        name: str,
     ) -> Union[float, np.ndarray]:
         """
         Compute volumetric air flow rate factor for each server with cpu utilization and server inlet temperature
@@ -362,13 +396,19 @@ class Eplus:
         cpu_loading = np.clip(cpu_loading, min_x, max_x)
         if not isinstance(server_inlet_temperature, Symbol):
             server_inlet_temperature = np.clip(server_inlet_temperature, min_y, max_y)
-        factor = constant + \
-                 cpu_loading * coef_cpu + \
-                 cpu_loading ** 2 * coef_cpu_squre + \
-                 server_inlet_temperature * coef_in_temp + \
-                 server_inlet_temperature ** 2 * coef_in_temp_squre + \
-                 cpu_loading * server_inlet_temperature * coef_cross
-        return np.clip(factor, min_factor, max_factor) if not isinstance(factor, Add) else factor
+        factor = (
+            constant
+            + cpu_loading * coef_cpu
+            + cpu_loading**2 * coef_cpu_squre
+            + server_inlet_temperature * coef_in_temp
+            + server_inlet_temperature**2 * coef_in_temp_squre
+            + cpu_loading * server_inlet_temperature * coef_cross
+        )
+        return (
+            np.clip(factor, min_factor, max_factor)
+            if not isinstance(factor, Add)
+            else factor
+        )
 
     def _fun_power_as_flow(
         self,
@@ -381,9 +421,11 @@ class Eplus:
         constant = self.power_as_fan_flow_parameter[name][0]
         coef_air_flow_rate_factor = self.power_as_fan_flow_parameter[name][1]
         coef_air_flow_rate_factor_square = self.power_as_fan_flow_parameter[name][2]
-        factor = constant + \
-                 coef_air_flow_rate_factor * air_flow_rate_factor + \
-                 coef_air_flow_rate_factor_square * air_flow_rate_factor ** 2
+        factor = (
+            constant
+            + coef_air_flow_rate_factor * air_flow_rate_factor
+            + coef_air_flow_rate_factor_square * air_flow_rate_factor**2
+        )
         return factor
 
     def _fun_ups_efficiency_as_partial_load(
@@ -397,9 +439,11 @@ class Eplus:
         constant = self.ups_efficiency_as_load_factor[name][0]
         coef_plr = self.ups_efficiency_as_load_factor[name][1]
         coef_plr_square = self.ups_efficiency_as_load_factor[name][2]
-        factor = constant + \
-                 coef_plr * partial_load_factor + \
-                 coef_plr_square * partial_load_factor ** 2
+        factor = (
+            constant
+            + coef_plr * partial_load_factor
+            + coef_plr_square * partial_load_factor**2
+        )
         return factor
 
     """-------------------------------Internal IDF Modification Function API----------------------------------------"""
@@ -431,16 +475,21 @@ class Eplus:
             ite.return_temperature_difference_schedule = config.variable_name
 
         def _set_room_setpoint_schedule() -> None:
-            thermostat_setpoint_name = schedule_config.scheduled_thermostat_setpoint_name
+            thermostat_setpoint_name = (
+                schedule_config.scheduled_thermostat_setpoint_name
+            )
             thermostat_setpoint = self.epm.thermostatsetpoint_dualsetpoint.select(
-                lambda x: x.name == thermostat_setpoint_name.lower()).one()
-            thermostat_setpoint.cooling_setpoint_temperature_schedule_name = config.variable_name
+                lambda x: x.name == thermostat_setpoint_name.lower()
+            ).one()
+            thermostat_setpoint.cooling_setpoint_temperature_schedule_name = (
+                config.variable_name
+            )
 
         func_dict = {
             "ITE": _set_cpu_load_schedule,
             "ITEDeltaTSupply": _set_delta_temp_supply_schedule,
             "ITEDeltaTReturn": _set_delta_temp_return_schedule,
-            "Room": _set_room_setpoint_schedule
+            "Room": _set_room_setpoint_schedule,
         }
 
         name = config.variable_name
@@ -451,21 +500,34 @@ class Eplus:
             name=schedule_type_limits_name,
             lower_limit_value=schedule_config.lb,
             upper_limit_value=schedule_config.ub,
-            numeric_type="CONTINUOUS"
+            numeric_type="CONTINUOUS",
         )
 
         # check if the external schedule is already exist in the idf file
-        if len(self.epm.ExternalInterface_Schedule.select(lambda x: x.name == name.lower())) > 0:
-            sch = self.epm.ExternalInterface_Schedule.select(lambda x: x.name == name.lower())
+        if (
+            len(
+                self.epm.ExternalInterface_Schedule.select(
+                    lambda x: x.name == name.lower()
+                )
+            )
+            > 0
+        ):
+            sch = self.epm.ExternalInterface_Schedule.select(
+                lambda x: x.name == name.lower()
+            )
             sch.delete()
 
         # add external schedule
-        self.epm.ExternalInterface_Schedule.add(name=name,
-                                                schedule_type_limits_name=schedule_type_limits_name,
-                                                initial_value=schedule_config.initial_value)
+        self.epm.ExternalInterface_Schedule.add(
+            name=name,
+            schedule_type_limits_name=schedule_type_limits_name,
+            initial_value=schedule_config.initial_value,
+        )
 
         # set setpoint/ITE schedule/AirLoopHVAC
-        schedule_type = schedule_config.DESCRIPTOR.EnumValueName("ScheduleType", schedule_config.schedule_type)
+        schedule_type = schedule_config.DESCRIPTOR.EnumValueName(
+            "ScheduleType", schedule_config.schedule_type
+        )
         func_dict[schedule_type]()
 
     def _set_external_actuator(self, config: EPlusActionConfig) -> None:
@@ -476,44 +538,59 @@ class Eplus:
         actuator_config = config.actuator_config
         # check whether the actuated component name is valid
 
-        if actuator_config.actuated_component_unique_name.lower() \
-                not in set.union(self.component_names, self.node_names, self.branch_name):
+        if actuator_config.actuated_component_unique_name.lower() not in set.union(
+            self.component_names, self.node_names, self.branch_name
+        ):
             raise ValueError(
                 f"Actuated Component Unique Name : {actuator_config.actuated_component_unique_name} is not defined in "
-                f"IDF file.")
+                f"IDF file."
+            )
 
         # check if the external schedule is already exist in the idf file
-        if self.epm.ExternalInterface_Actuator.select(lambda x: x.name == name.lower()) is not None:
-            act = self.epm.ExternalInterface_Actuator.select(lambda x: x.name == name.lower())
+        if (
+            self.epm.ExternalInterface_Actuator.select(lambda x: x.name == name.lower())
+            is not None
+        ):
+            act = self.epm.ExternalInterface_Actuator.select(
+                lambda x: x.name == name.lower()
+            )
             act.delete()
 
         # add actuator
         actuated_component_unique_name = actuator_config.actuated_component_unique_name
-        component_type = actuator_config.DESCRIPTOR.EnumValueName("ComponentType",
-                                                                  actuator_config.actuated_component_type)
-        component_type = " ".join(component_type.split("_")) if not component_type.startswith("Schedule")\
+        component_type = actuator_config.DESCRIPTOR.EnumValueName(
+            "ComponentType", actuator_config.actuated_component_type
+        )
+        component_type = (
+            " ".join(component_type.split("_"))
+            if not component_type.startswith("Schedule")
             else ":".join(component_type.split("_"))
+        )
         # here we must use "on/off" instead of "on off" as stated by EnergyPlus :)
         if component_type.lower() == "plant component pump variablespeed":
             component_type = "Plant Component Pump:VariableSpeed"
         if component_type.lower() == "plant component chiller electric eir":
             component_type = "Plant Component Chiller:Electric:EIR"
 
-        control_type = actuator_config.DESCRIPTOR.EnumValueName("ControlType",
-                                                                actuator_config.actuated_component_control_type)
+        control_type = actuator_config.DESCRIPTOR.EnumValueName(
+            "ControlType", actuator_config.actuated_component_control_type
+        )
         control_type = " ".join(control_type.split("_"))
 
         # here we must use "on/off" instead of "on off" as stated by EnergyPlus :)
         if control_type.lower() == "on off supervisory":
             control_type = "on/off supervisory"
 
-        initial_value = actuator_config.initial_value if actuator_config.initial_value else None
+        initial_value = (
+            actuator_config.initial_value if actuator_config.initial_value else None
+        )
         self.epm.ExternalInterface_Actuator.add(
             name=name,
             actuated_component_unique_name=actuated_component_unique_name,
             actuated_component_type=component_type,
             actuated_component_control_type=control_type,
-            optional_initial_value=initial_value)
+            optional_initial_value=initial_value,
+        )
 
     def _set_observation(self, output_variable_config: EPlusObservationConfig) -> None:
         """
@@ -521,16 +598,22 @@ class Eplus:
         """
         # check whether the configuration contains all necessary ingredients
 
-        if output_variable_config.output_variable_config.key_value.lower() \
-                not in set.union(self.valid_key_values, "*"):
+        if (
+            output_variable_config.output_variable_config.key_value.lower()
+            not in set.union(self.valid_key_values, "*")
+        ):
             raise ValueError(
                 f"Key value : {output_variable_config.output_variable_config.key_value} "
-                f"is not a valid key name.")
+                f"is not a valid key name."
+            )
 
         # check if the external schedule is already exist in the idf file
-        match_func = lambda x: \
-            x.key_value == output_variable_config.output_variable_config.key_value.lower() and \
-            x.variable_name == output_variable_config.output_variable_config.variable_name.lower()
+        match_func = (
+            lambda x: x.key_value
+            == output_variable_config.output_variable_config.key_value.lower()
+            and x.variable_name
+            == output_variable_config.output_variable_config.variable_name.lower()
+        )
         if len(self.epm.Output_Variable.select(match_func)) > 0:
             out = self.epm.Output_Variable.select(match_func)
             out.delete()
@@ -539,7 +622,7 @@ class Eplus:
         self.epm.Output_Variable.add(
             key_value=output_variable_config.output_variable_config.key_value,
             variable_name=output_variable_config.output_variable_config.variable_name,
-            reporting_frequency=output_variable_config.output_variable_config.reporting_frequency
+            reporting_frequency=output_variable_config.output_variable_config.reporting_frequency,
         )
 
     """-------------------------------Internal Util Function API----------------------------------------"""
@@ -577,7 +660,9 @@ class Eplus:
         if inlet_temperature is None:
             inlet_temperature = 0
         flow_frac = self._fun_flow_as_load_temp(utilization, inlet_temperature, name)
-        fan_power = self.design_fan_power[name] * self._fun_power_as_flow(flow_frac, name)
+        fan_power = self.design_fan_power[name] * self._fun_power_as_flow(
+            flow_frac, name
+        )
         return fan_power
 
     def _compute_ups_power(
@@ -592,9 +677,14 @@ class Eplus:
             cpu_power:
             fan_power:
         """
-        partial_load_ratio = (cpu_power + fan_power) / (self.design_cpu_power[name] + self.design_fan_power[name])
+        partial_load_ratio = (cpu_power + fan_power) / (
+            self.design_cpu_power[name] + self.design_fan_power[name]
+        )
         ups_power = (cpu_power + fan_power) * (
-                1 - self.ups_efficiency[name] * self._fun_ups_efficiency_as_partial_load(partial_load_ratio, name))
+            1
+            - self.ups_efficiency[name]
+            * self._fun_ups_efficiency_as_partial_load(partial_load_ratio, name)
+        )
         return ups_power
 
     """----------------------------------------------Public API -----------------------------------------------------"""
@@ -607,14 +697,21 @@ class Eplus:
             else:
                 self._set_external_actuator(action_config)
 
-    def batch_set_observations(self, observation_configs: List[EPlusObservationConfig]) -> None:
+    def batch_set_observations(
+        self, observation_configs: List[EPlusObservationConfig]
+    ) -> None:
         for observation_config in observation_configs:
-            if observation_config.DESCRIPTOR.EnumValueName(
+            if (
+                observation_config.DESCRIPTOR.EnumValueName(
                     "ObservationType", observation_config.observation_type
-            ) != "EXTERNAL":
+                )
+                != "EXTERNAL"
+            ):
                 self._set_observation(observation_config)
 
-    def batch_set_inlet_temperature_schedule(self, env_config: EPlusEnvConfig) -> Optional[List[EPlusActionConfig]]:
+    def batch_set_inlet_temperature_schedule(
+        self, env_config: EPlusEnvConfig
+    ) -> Optional[List[EPlusActionConfig]]:
         schedules = []
         for ite in self.zone_ite_equipments:
             if ite.air_flow_calculation_method == "flowcontrolwithapproachtemperatures":
@@ -629,7 +726,9 @@ class Eplus:
                 schedules.append(config)
         return schedules if len(schedules) > 0 else None
 
-    def batch_set_return_temperature_schedule(self, env_config: EPlusEnvConfig) -> Optional[List[EPlusActionConfig]]:
+    def batch_set_return_temperature_schedule(
+        self, env_config: EPlusEnvConfig
+    ) -> Optional[List[EPlusActionConfig]]:
         schedules = []
         for ite in self.zone_ite_equipments:
             if ite.air_flow_calculation_method == "flowcontrolwithapproachtemperatures":
@@ -648,9 +747,7 @@ class Eplus:
         try:
             self.epm.ExternalInterface.one()
         except RecordDoesNotExistError:
-            self.epm.ExternalInterface.add(
-                name_of_external_interface='ptolemyserver'
-            )
+            self.epm.ExternalInterface.add(name_of_external_interface="ptolemyserver")
 
     def set_simulation_time(self, simulation_time_config: SimulationTimeConfig) -> None:
         """
@@ -662,7 +759,9 @@ class Eplus:
         run_periods.end_month = simulation_time_config.end_month
         run_periods.end_day_of_month = simulation_time_config.end_day_of_month
         time_step = self.epm.Timestep.one()
-        time_step.number_of_timesteps_per_hour = simulation_time_config.number_of_timesteps_per_hour
+        time_step.number_of_timesteps_per_hour = (
+            simulation_time_config.number_of_timesteps_per_hour
+        )
 
     def compute_server_power(
         self,
@@ -707,7 +806,9 @@ class Eplus:
         cpu_power = self._compute_cpu_power(utilization, inlet_temperature, name)
         fan_power = self._compute_fan_power(utilization, inlet_temperature, name)
         q_air = np.sum(cpu_power + fan_power)
-        outlet_temperature = inlet_temperature + q_air / (self.air_cp * self.air_density * server_flow_rate)
+        outlet_temperature = inlet_temperature + q_air / (
+            self.air_cp * self.air_density * server_flow_rate
+        )
         return outlet_temperature
 
     def save(self, save_path) -> None:
@@ -731,14 +832,21 @@ class Eplus:
 
         # add Eplus output variables
         for observation_config in observation_configs:
-            if observation_config.DESCRIPTOR.EnumValueName(
+            if (
+                observation_config.DESCRIPTOR.EnumValueName(
                     "ObservationType", observation_config.observation_type
-            ) != "EXTERNAL":
+                )
+                != "EXTERNAL"
+            ):
                 variable_child = ET.SubElement(root, "variable")
                 variable_child.attrib["source"] = "EnergyPlus"
                 eplus_child = ET.SubElement(variable_child, "EnergyPlus")
-                eplus_child.attrib["name"] = observation_config.output_variable_config.key_value
-                eplus_child.attrib["type"] = observation_config.output_variable_config.variable_name
+                eplus_child.attrib[
+                    "name"
+                ] = observation_config.output_variable_config.key_value
+                eplus_child.attrib[
+                    "type"
+                ] = observation_config.output_variable_config.variable_name
 
         # add BCVTB input schedules
         for action in action_configs:
@@ -753,7 +861,7 @@ class Eplus:
 
         if schedule_configs is not None:
             for schedule in schedule_configs:
-                logger.info(f"add internal \"{schedule.variable_name}\" schedule config")
+                logger.info(f'add internal "{schedule.variable_name}" schedule config')
                 variable_child = ET.SubElement(root, "variable")
                 variable_child.attrib["source"] = "Ptolemy"
                 eplus_child = ET.SubElement(variable_child, "EnergyPlus")

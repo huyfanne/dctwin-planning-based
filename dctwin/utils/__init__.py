@@ -43,5 +43,5 @@ __all__ = [
     "ScalarDataItemConfig",
     "SimulationTimeConfig",
     "NormalizeConfig",
-    "CFDObservationConfig"
+    "CFDObservationConfig",
 ]
