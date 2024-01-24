@@ -9,14 +9,17 @@ from dctwin.utils import (
     ScalarDataItemConfig,
     EPlusObservationConfig,
     EPlusActionConfig,
-    CFDObservationConfig
+    CFDObservationConfig,
 )
 from .resizers import LinearResizer
 
 
 def validator(method) -> callable:
     def validated_call(self):
-        if self.control_type != ActionControlType.PRE_SCHEDULED and self.control_type != ActionControlType.ACTUATOR_PRE_SCHEDULED:
+        if (
+            self.control_type != ActionControlType.PRE_SCHEDULED
+            and self.control_type != ActionControlType.ACTUATOR_PRE_SCHEDULED
+        ):
             logger.error(
                 f"{self.debug_name} is not pre_scheduled but schedule related call "
                 f"is made to it! Ignoring..."
@@ -28,32 +31,38 @@ def validator(method) -> callable:
 
 
 class ScalarDataItem:
-
     def __init__(self, config: ScalarDataItemConfig) -> None:
         self.variable_name = config.variable_name
         if config.HasField("normalize_config"):
             norm_config = config.normalize_config
-            assert norm_config.method == NormalizeConfig.Method.LINEAR, \
-                "Only linear resizer is implemented at this moment"
+            assert (
+                norm_config.method == NormalizeConfig.Method.LINEAR
+            ), "Only linear resizer is implemented at this moment"
             self.resizer = LinearResizer(
-                norm_config.lb, norm_config.ub,
-                norm_config.resized_lb, norm_config.resized_ub
+                norm_config.lb,
+                norm_config.ub,
+                norm_config.resized_lb,
+                norm_config.resized_ub,
             )
         else:
             self.resizer = None
 
         self.normed_value = None
-        default_value_type = config.WhichOneof('value')
+        default_value_type = config.WhichOneof("value")
         if default_value_type == "default_normed_value":
             self.set_normed_value(config.default_normed_value)
         elif default_value_type == "default_unnormed_value":
             if config.control_type == ActionControlType.FIXED:
-                logger.info(f"Fixed value {config.default_unnormed_value} is set for {self.variable_name}")
+                logger.info(
+                    f"Fixed value {config.default_unnormed_value} is set for {self.variable_name}"
+                )
             elif self.resizer is None:
-                logger.warning(f"Default unnormed value set for "
-                               f"{self.variable_name} but resizer is not specified!")
+                logger.warning(
+                    f"Default unnormed value set for "
+                    f"{self.variable_name} but resizer is not specified!"
+                )
             self.set_normed_value(config.default_unnormed_value)
-        self.default_value = self.normed_value if self.normed_value is not None else 0.
+        self.default_value = self.normed_value if self.normed_value is not None else 0.0
 
     def set_unnormed_value(self, unnormed_value) -> None:
         if self.resizer is not None:
@@ -78,12 +87,15 @@ class ScalarDataItem:
 
 
 class Observation(ScalarDataItem):
-
-    def __init__(self, config: Union[EPlusObservationConfig, CFDObservationConfig]) -> None:
+    def __init__(
+        self, config: Union[EPlusObservationConfig, CFDObservationConfig]
+    ) -> None:
         super().__init__(config)
         self.exposed = config.exposed
         if type(config) == EPlusObservationConfig:
-            self.type = config.DESCRIPTOR.EnumValueName("ObservationType", config.observation_type)
+            self.type = config.DESCRIPTOR.EnumValueName(
+                "ObservationType", config.observation_type
+            )
         else:
             self.type = None
 
@@ -99,26 +111,37 @@ class Action(ScalarDataItem):
 
         self.debug_name = f"Action {self.variable_name}"
         if self.control_type == ActionControlType.FIXED and self.normed_value is None:
-            logger.warning(f"{self.debug_name} set to be fixed but no default value was specified! "
-                           f"Using {self.default_value} instead...")
-        elif self.control_type == ActionControlType.PRE_SCHEDULED or self.control_type == ActionControlType.ACTUATOR_PRE_SCHEDULED:
+            logger.warning(
+                f"{self.debug_name} set to be fixed but no default value was specified! "
+                f"Using {self.default_value} instead..."
+            )
+        elif (
+            self.control_type == ActionControlType.PRE_SCHEDULED
+            or self.control_type == ActionControlType.ACTUATOR_PRE_SCHEDULED
+        ):
             try:
                 self.input_source = config.input_source
-                assert len(self.input_source) > 0, \
-                    f"{self.debug_name} is pre_scheduled but input source was not specified!"
+                assert (
+                    len(self.input_source) > 0
+                ), f"{self.debug_name} is pre_scheduled but input source was not specified!"
                 if not os.path.isabs(self.input_source):
                     self.input_source = os.path.abspath(self.input_source)
-                with open(self.input_source, 'r') as f:
+                with open(self.input_source, "r") as f:
                     self.schedule = json.load(f)
-                    assert isinstance(self.schedule, list), f"{self.debug_name}: " \
-                                                            f"input source has to be a json list!"
-                    assert len(self.schedule) != 0, f"{self.debug_name} has an input source of length 0!"
+                    assert isinstance(self.schedule, list), (
+                        f"{self.debug_name}: " f"input source has to be a json list!"
+                    )
+                    assert (
+                        len(self.schedule) != 0
+                    ), f"{self.debug_name} has an input source of length 0!"
                     self.schedule_idx = 0
             except Exception:
                 logger.exception("Failed to load input source!")
         elif config.HasField("input_source"):
-            logger.warning(f"{self.debug_name} is not pre_scheduled but input source was specified. "
-                           f"The source will be ignored.")
+            logger.warning(
+                f"{self.debug_name} is not pre_scheduled but input source was specified. "
+                f"The source will be ignored."
+            )
 
     @validator
     def __iter__(self):

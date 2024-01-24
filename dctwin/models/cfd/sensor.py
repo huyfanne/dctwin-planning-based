@@ -8,13 +8,13 @@ from .utils import BaseModel
 
 
 class SensorGeometry(BaseModel):
-    """ Sensor geometry that defines the location of the sensor
-    """
+    """Sensor geometry that defines the location of the sensor"""
+
     location: Vertex
 
 
 class Sensor(BaseModel):
-    """ Sensor object in a data center
-    """
+    """Sensor object in a data center"""
+
     geometry: SensorGeometry
     meta: Optional[OrderedDict] = Field(default_factory=dict)

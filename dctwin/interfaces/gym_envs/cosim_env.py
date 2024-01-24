@@ -62,7 +62,7 @@ class CoSimEnv(EPlusEnv):
             pod_method=config.cfd.pod_method,
             docker_client=docker_client,
             eplus_backend=self.eplus_backend,
-            map_boundary_condition_fn=map_boundary_condition_fn
+            map_boundary_condition_fn=map_boundary_condition_fn,
         )
         # more additional observation can be added if more simulators are introduced in the future
         self._set_cfd_observations()
@@ -71,16 +71,19 @@ class CoSimEnv(EPlusEnv):
         """Append the observations for co-simulation
         Note: there are no external observations for CFD simulation
         """
-        self._observations += [Observation(config=oc) for oc in self.cfd_config.observations]
+        self._observations += [
+            Observation(config=oc) for oc in self.cfd_config.observations
+        ]
         self._use_unnormed_obs = self.cfd_config.use_unnormed_obs
         self.observation_space = self._get_space(
-            self._observations, self._use_unnormed_obs, lambda o: o.exposed,
-            debug_tag='observation',
+            self._observations,
+            self._use_unnormed_obs,
+            lambda o: o.exposed,
+            debug_tag="observation",
         )
 
     def _set_cosim_environ(self) -> None:
-        """Set the environment variables for co-simulation
-        """
+        """Set the environment variables for co-simulation"""
         cosim_env.cfd.geometry_file = Path(self.cfd_config.geometry_file)
         cosim_env.cfd.pod_dir = Path(self.cfd_config.pod_dir)
         cosim_env.cfd.mesh_dir = Path(self.cfd_config.mesh_dir)
@@ -103,8 +106,7 @@ class CoSimEnv(EPlusEnv):
         return obs, done
 
     def _run_simulation(
-        self,
-        parsed_actions: Dict
+        self, parsed_actions: Dict
     ) -> Tuple[Union[List[float], None], bool]:
         self.co_sim_manager.send_action(parsed_actions)
         obs, done = self.co_sim_manager.receive_status()

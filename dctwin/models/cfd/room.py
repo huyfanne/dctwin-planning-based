@@ -25,8 +25,8 @@ class RoomGeometry(BaseModel):
 
 
 class RoomConstruction(BaseModel):
-    """ RoomConstruction is used to build the objects in a room
-    """
+    """RoomConstruction is used to build the objects in a room"""
+
     raised_floor: Optional[Panel]
     false_ceiling: Optional[Panel]
     boxes: Optional[OrderedDict[str, Box]]
@@ -84,8 +84,7 @@ class RoomConstruction(BaseModel):
 
     @property
     def acu2sen(self) -> np.ndarray:
-        """ Calculate the spatial distance matrix of the ACU inlet to sensor connections
-        """
+        """Calculate the spatial distance matrix of the ACU inlet to sensor connections"""
         acu2sen_dis = np.zeros([self.num_acu, self.num_sen])
         for acu_idx, (acu_id, acu) in enumerate(self.acus.items()):
             for sen_idx, (sen_id, sen) in enumerate(self.sensors.items()):
@@ -99,32 +98,36 @@ class RoomConstruction(BaseModel):
 
     @property
     def acu2ser(self) -> np.ndarray:
-        """ Calculate the spatial distance matrix of the ACU inlet to server connections
-        """
+        """Calculate the spatial distance matrix of the ACU inlet to server connections"""
         acu2ser_dis = np.zeros([self.num_acu, self.num_ser])
         for acu_idx, (acu_id, acu) in enumerate(self.acus.items()):
             ser_idx: int = 0
             for rack_id, rack in self.racks.items():
                 for server_id, ser in rack.constructions.servers.items():
-                    acu_return, acu_supply, acu_center = self.acu_patch_positions(acu_id)
-                    ser_inlet, ser_outlet, ser_center = self.server_patch_positions(server_id)
+                    acu_return, acu_supply, acu_center = self.acu_patch_positions(
+                        acu_id
+                    )
+                    ser_inlet, ser_outlet, ser_center = self.server_patch_positions(
+                        server_id
+                    )
                     acu2ser_dis[acu_idx][ser_idx] = euclidean_distance(
                         loc_1=(acu_center.x, acu_center.y, acu_center.z),
                         loc_2=(ser_center.x, ser_center.y, ser_center.z),
                     )
                     ser_idx += 1
         return acu2ser_dis
-    
+
     @property
     def acu2rack(self) -> np.ndarray:
-        """ Calculate the spatial distance matrix of the ACU inlet to rack
-        """
+        """Calculate the spatial distance matrix of the ACU inlet to rack"""
         acu2rack_dis = np.zeros([self.num_acu, self.num_rack])
         for acu_idx, (acu_id, acu) in enumerate(self.acus.items()):
             rack_idx: int = 0
             for rack_id, rack in self.racks.items():
                 acu_return, acu_supply, acu_center = self.acu_patch_positions(acu_id)
-                rack_inlet, rack_outlet, rack_center = self.rack_patch_positions(rack_id)
+                rack_inlet, rack_outlet, rack_center = self.rack_patch_positions(
+                    rack_id
+                )
                 acu2rack_dis[acu_idx][rack_idx] = euclidean_distance(
                     loc_1=(acu_center.x, acu_center.y, acu_center.z),
                     loc_2=(rack_center.x, rack_center.y, rack_center.z),
@@ -134,13 +137,14 @@ class RoomConstruction(BaseModel):
 
     @property
     def rack2acu(self) -> np.ndarray:
-        """ Calculate the spatial distance matrix of the ACU inlet to rack
-        """
+        """Calculate the spatial distance matrix of the ACU inlet to rack"""
         rack2acu_dis = np.zeros([self.num_rack, self.num_acu])
         for rack_idx, (rack_id, rack) in enumerate(self.racks.items()):
             acu_idx: int = 0
             for acu_id, acu in self.acus.items():
-                rack_inlet, rack_outlet, rack_center = self.rack_patch_positions(rack_id)
+                rack_inlet, rack_outlet, rack_center = self.rack_patch_positions(
+                    rack_id
+                )
                 acu_return, acu_supply, acu_center = self.acu_patch_positions(acu_id)
                 rack2acu_dis[rack_idx][acu_idx] = euclidean_distance(
                     loc_1=(rack_center.x, rack_center.y, rack_center.z),
@@ -151,14 +155,15 @@ class RoomConstruction(BaseModel):
 
     @property
     def ser2sen(self) -> np.ndarray:
-        """ Calculate the spatial distance matrix of the server outlet to sensor connections
-        """
+        """Calculate the spatial distance matrix of the server outlet to sensor connections"""
         ser2sen_dis = np.zeros([self.num_ser, self.num_sen])
         ser_idx: int = 0
         for rack_id, rack in self.racks.items():
             for server_id, ser in rack.constructions.servers.items():
                 for sen_idx, (sen_id, sen) in enumerate(self.sensors.items()):
-                    ser_inlet, ser_outlet, ser_center = self.server_patch_positions(server_id)
+                    ser_inlet, ser_outlet, ser_center = self.server_patch_positions(
+                        server_id
+                    )
                     sen_loc = sen.geometry.location
                     ser2sen_dis[ser_idx][sen_idx] = euclidean_distance(
                         loc_1=(ser_center.x, ser_center.y, ser_center.z),
@@ -180,27 +185,33 @@ class RoomConstruction(BaseModel):
             inlet_x = rack.geometry.location.x + rack.geometry.size.x / 2
             inlet_y = rack.geometry.location.y
             inlet_x, inlet_y = rotate(
-                (rack.geometry.location.x, rack.geometry.location.y), (inlet_x, inlet_y), rack.geometry.orientation
+                (rack.geometry.location.x, rack.geometry.location.y),
+                (inlet_x, inlet_y),
+                rack.geometry.orientation,
             )
             inlet = Vertex(x=round(inlet_x, 3), y=round(inlet_y, 3), z=z)
 
             # outlet
             outlet_x = rack.geometry.location.x + rack.geometry.size.x / 2
-            outlet_y = rack.geometry.location.y 
+            outlet_y = rack.geometry.location.y
             outlet_x, outlet_y = rotate(
-                (rack.geometry.location.x, rack.geometry.location.y), (outlet_x, outlet_y), rack.geometry.orientation
+                (rack.geometry.location.x, rack.geometry.location.y),
+                (outlet_x, outlet_y),
+                rack.geometry.orientation,
             )
             outlet = Vertex(x=round(outlet_x, 3), y=round(outlet_y, 3), z=z)
 
             # center
             center_x = rack.geometry.location.x + rack.geometry.size.x / 2
-            center_y = rack.geometry.location.y 
+            center_y = rack.geometry.location.y
             center_x, center_y = rotate(
-                (rack.geometry.location.x, rack.geometry.location.y), (center_x, center_y), rack.geometry.orientation
+                (rack.geometry.location.x, rack.geometry.location.y),
+                (center_x, center_y),
+                rack.geometry.orientation,
             )
             center = Vertex(x=round(center_x, 3), y=round(center_y, 3), z=z)
             return inlet, outlet, center
-        
+
         except:
             raise ValueError(f"Rack positions not found")
 
@@ -245,7 +256,9 @@ class RoomConstruction(BaseModel):
                 y = acu.geometry.location.y + acu.geometry.size.y / 2
                 z = acu.geometry.location.z + acu.geometry.size.z / 2
             x, y = rotate(
-                (acu.geometry.location.x, acu.geometry.location.y), (x, y), acu.geometry.orientation
+                (acu.geometry.location.x, acu.geometry.location.y),
+                (x, y),
+                acu.geometry.orientation,
             )
             return Vertex(x=round(x, 3), y=round(y, 3), z=z)
 
@@ -264,8 +277,15 @@ class RoomConstruction(BaseModel):
                 server_rack = rack
                 rack: Rack = server_rack
 
-                z = rack.geometry.location.z + rack.geometry.first_slot_offset + 0.045 * (
-                        server.geometry.slot_position + server.geometry.slot_occupation / 2 - 1
+                z = (
+                    rack.geometry.location.z
+                    + rack.geometry.first_slot_offset
+                    + 0.045
+                    * (
+                        server.geometry.slot_position
+                        + server.geometry.slot_occupation / 2
+                        - 1
+                    )
                 )
                 z = round(z, 3)
 
@@ -273,7 +293,9 @@ class RoomConstruction(BaseModel):
                 inlet_x = rack.geometry.location.x + rack.geometry.size.x / 2
                 inlet_y = rack.geometry.location.y
                 inlet_x, inlet_y = rotate(
-                    (rack.geometry.location.x, rack.geometry.location.y), (inlet_x, inlet_y), rack.geometry.orientation
+                    (rack.geometry.location.x, rack.geometry.location.y),
+                    (inlet_x, inlet_y),
+                    rack.geometry.orientation,
                 )
                 inlet = Vertex(x=round(inlet_x, 3), y=round(inlet_y, 3), z=z)
 
@@ -281,7 +303,9 @@ class RoomConstruction(BaseModel):
                 outlet_x = rack.geometry.location.x + rack.geometry.size.x / 2
                 outlet_y = rack.geometry.location.y + server.geometry.depth
                 outlet_x, outlet_y = rotate(
-                    (rack.geometry.location.x, rack.geometry.location.y), (outlet_x, outlet_y), rack.geometry.orientation
+                    (rack.geometry.location.x, rack.geometry.location.y),
+                    (outlet_x, outlet_y),
+                    rack.geometry.orientation,
                 )
                 outlet = Vertex(x=round(outlet_x, 3), y=round(outlet_y, 3), z=z)
 
@@ -289,7 +313,9 @@ class RoomConstruction(BaseModel):
                 center_x = rack.geometry.location.x + rack.geometry.size.x / 2
                 center_y = rack.geometry.location.y + server.geometry.depth / 2
                 center_x, center_y = rotate(
-                    (rack.geometry.location.x, rack.geometry.location.y), (center_x, center_y), rack.geometry.orientation
+                    (rack.geometry.location.x, rack.geometry.location.y),
+                    (center_x, center_y),
+                    rack.geometry.orientation,
                 )
                 center = Vertex(x=round(center_x, 3), y=round(center_y, 3), z=z)
                 return inlet, outlet, center
@@ -299,8 +325,8 @@ class RoomConstruction(BaseModel):
 
 
 class Room(BaseModel):
-    """ Room object in a data center
-    """
+    """Room object in a data center"""
+
     models: Model = Field(default_factory=Model)
     inputs: Inputs = Field(default_factory=Inputs)
     geometry: RoomGeometry
@@ -309,9 +335,7 @@ class Room(BaseModel):
 
     @validator("constructions")
     def _validate_room_constructions(
-        cls,
-        room_construction: RoomConstruction,
-        values: Dict
+        cls, room_construction: RoomConstruction, values: Dict
     ) -> RoomConstruction:
         cls._validate_acus(room_construction.acus, values["models"], values["inputs"])
         cls._validate_boxes(room_construction.boxes, values["models"])
@@ -323,24 +347,41 @@ class Room(BaseModel):
     def _validate_acus(cls, acus: Dict, models: Model, inputs: Inputs) -> None:
         for acu_id, acu in acus.items():
             cls._validate_id(acu_id)
-            cls._validate_geometry_models(acu, models.geometry_models.acus) if models.geometry_models else None
-            cls._validate_cooling_models(acu, models.cooling_models.acus) if models.cooling_models.acus else None
-            cls._validate_power_models(acu, models.power_models.acus) if models.power_models.acus else None
+            cls._validate_geometry_models(
+                acu, models.geometry_models.acus
+            ) if models.geometry_models else None
+            cls._validate_cooling_models(
+                acu, models.cooling_models.acus
+            ) if models.cooling_models.acus else None
+            cls._validate_power_models(
+                acu, models.power_models.acus
+            ) if models.power_models.acus else None
             cls._validate_inputs(acu, inputs.acus.get(acu_id)) if inputs.acus else None
 
     @classmethod
     def _validate_boxes(cls, boxes: Dict, models: Model) -> None:
         for box_id, box in boxes.items():
             cls._validate_id(box_id)
-            cls._validate_geometry_models(box, models.geometry_models.boxes) if models.geometry_models else None
+            cls._validate_geometry_models(
+                box, models.geometry_models.boxes
+            ) if models.geometry_models else None
 
     @classmethod
     def _validate_racks(cls, racks: Dict, models: Model, inputs: Inputs) -> None:
         all_servers, invalid_occupation = {}, {}
         for rack_id, rack in racks.items():
             cls._validate_id(rack_id)
-            cls._validate_geometry_models(rack, models.geometry_models.racks) if models.geometry_models else None
-            cls._validate_rack_constructions(rack, rack.constructions, all_servers, invalid_occupation, models, inputs)
+            cls._validate_geometry_models(
+                rack, models.geometry_models.racks
+            ) if models.geometry_models else None
+            cls._validate_rack_constructions(
+                rack,
+                rack.constructions,
+                all_servers,
+                invalid_occupation,
+                models,
+                inputs,
+            )
         if invalid_occupation:
             msg = f"Server collision error:"
             for server_a, server_b in invalid_occupation.items():
@@ -357,7 +398,14 @@ class Room(BaseModel):
         models: Model,
         inputs: Inputs,
     ) -> None:
-        cls._validate_servers(rack, rack_constructions.servers, all_servers, invalid_occupation, models, inputs)
+        cls._validate_servers(
+            rack,
+            rack_constructions.servers,
+            all_servers,
+            invalid_occupation,
+            models,
+            inputs,
+        )
 
     @classmethod
     def _validate_servers(
@@ -373,11 +421,21 @@ class Room(BaseModel):
         for server_id, server in servers.items():
             if server_id not in all_server:
                 cls._validate_id(server_id)
-                cls._validate_geometry_models(server, models.geometry_models.servers) if models.geometry_models else None
-                cls._validate_cooling_models(server, models.cooling_models.servers) if models.cooling_models.servers else None
-                cls._validate_power_models(server, models.power_models.servers) if models.power_models.servers else None
-                cls._validate_inputs(server, inputs.servers.get(server_id)) if inputs.servers else None
-                cls._validate_server_occupation(rack, server, server_id, occupied_rack_slot, invalid_occupation)
+                cls._validate_geometry_models(
+                    server, models.geometry_models.servers
+                ) if models.geometry_models else None
+                cls._validate_cooling_models(
+                    server, models.cooling_models.servers
+                ) if models.cooling_models.servers else None
+                cls._validate_power_models(
+                    server, models.power_models.servers
+                ) if models.power_models.servers else None
+                cls._validate_inputs(
+                    server, inputs.servers.get(server_id)
+                ) if inputs.servers else None
+                cls._validate_server_occupation(
+                    rack, server, server_id, occupied_rack_slot, invalid_occupation
+                )
                 all_server[server_id] = server
             else:
                 raise ValueError(f"Server {server_id} is duplicated")
@@ -389,7 +447,7 @@ class Room(BaseModel):
         server: Server,
         server_id: str,
         occupied_rack_slot: Dict,
-        invalid_occupation: Dict
+        invalid_occupation: Dict,
     ) -> None:
         server.geometry.orientation = rack.geometry.orientation
         slot_position = int(server.geometry.slot_position)
@@ -419,9 +477,7 @@ class Room(BaseModel):
 
     @classmethod
     def _validate_geometry_models(
-        cls,
-        obj: Union[ACU, Server, Rack, Box],
-        models: Dict
+        cls, obj: Union[ACU, Server, Rack, Box], models: Dict
     ) -> None:
         model_name = obj.geometry.model
         if isinstance(obj, ACU) and models is not None:
@@ -448,11 +504,7 @@ class Room(BaseModel):
             )
 
     @classmethod
-    def _validate_power_models(
-        cls,
-        obj: Union[ACU, Server],
-        models: Dict
-    ) -> None:
+    def _validate_power_models(cls, obj: Union[ACU, Server], models: Dict) -> None:
         model_name = obj.power.model
         if isinstance(obj, ACU) and models is not None:
             obj.power.rated_fan_power = models.get(model_name).rated_fan_power
@@ -465,18 +517,16 @@ class Room(BaseModel):
             )
 
     @classmethod
-    def _validate_cooling_models(
-        cls,
-        obj: Union[ACU, Server],
-        models: Dict
-    ) -> None:
+    def _validate_cooling_models(cls, obj: Union[ACU, Server], models: Dict) -> None:
         model_name = obj.cooling.model
         if isinstance(obj, ACU) and models is not None:
             obj.cooling.cooling_type = models.get(model_name).cooling_type
             obj.cooling.cooling_capacity = models.get(model_name).cooling_capacity
         elif isinstance(obj, Server) and models is not None:
             obj.cooling.fan_type = models.get(model_name).fan_type
-            obj.cooling.volume_flow_rate_ratio = models.get(model_name).volume_flow_rate_ratio
+            obj.cooling.volume_flow_rate_ratio = models.get(
+                model_name
+            ).volume_flow_rate_ratio
             obj.cooling.volume_flow_rate = models.get(model_name).volume_flow_rate
         else:
             raise ValueError(

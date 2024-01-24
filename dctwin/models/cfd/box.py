@@ -29,8 +29,7 @@ class BoxGeometry(BoxGeometryModel):
 
 
 class Box(BaseModel):
-    """ A box is an abstract 3D object with a size and location in space.
-    """
+    """A box is an abstract 3D object with a size and location in space."""
+
     geometry: BoxGeometry
     meta: Optional[OrderedDict] = Field(default_factory=dict)
-

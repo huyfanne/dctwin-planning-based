@@ -16,6 +16,7 @@ import datetime
 
 class EplusConfig:
     """EnergyPlus configuration"""
+
     def __init__(self, base_config) -> None:
         self.base_env: Config = base_config
         self.output_path: Path = os.environ.get("EPLUS_OUTPUT_PATH", "")
@@ -43,13 +44,16 @@ class EplusConfig:
 
 class CFDConfig:
     """CFD configuration"""
+
     SOLVER_TURBULENCE: bool
 
     def __init__(self, base_config, base_size: float = 0.18) -> None:
         self.base_config: Config = base_config
         self.geometry_file = Path(os.environ.get("GEOMETRY_FILE", ""))
         self.mesh_dir: Path = Path(os.environ.get("MESH_DIR", ""))
-        self.object_mesh_index: Path = Path(os.environ.get("OBJECT_MESH_INDEX", "object_mesh_index.json"))
+        self.object_mesh_index: Path = Path(
+            os.environ.get("OBJECT_MESH_INDEX", "object_mesh_index.json")
+        )
         self.pod_dir: Path = Path(os.environ.get("POD_DIR", ""))
         self.num_modes: int = os.environ.get("NUM_MODES", 5)
         self.case_dir: Path = Path(os.environ.get("CFD_CASE_DIR", ""))
@@ -83,7 +87,9 @@ class CFDConfig:
 
     def check_object_mesh_index(self) -> None:
         if not self.object_mesh_index.exists():
-            raise PODConfigError(f"invalid object mesh index file: {self.object_mesh_index}")
+            raise PODConfigError(
+                f"invalid object mesh index file: {self.object_mesh_index}"
+            )
 
     def check_mesh(self) -> None:
         if not self.mesh_dir.exists():
@@ -96,11 +102,13 @@ class CFDConfig:
 
 class CoSimConfig:
     """Co-simulation configuration"""
+
     def __init__(self, base_config) -> None:
         self.base_config: Config = base_config
         self.idf2room_map: Path = Path(os.environ.get("MAP_FILE", ""))
         self.timestamp: datetime.datetime = os.environ.get(
-            "TIME_STEP", datetime.datetime.now())  # time step to sync CFD and Eplus
+            "TIME_STEP", datetime.datetime.now()
+        )  # time step to sync CFD and Eplus
 
     def check_map_file(self) -> None:
         if not self.idf2room_map.exists():
@@ -111,6 +119,7 @@ class Config:
     """Base configuration
     :param env: environment variables
     """
+
     BACKEND_LOG_PRINT: bool
 
     def __init__(self, env: typing.MutableMapping = os.environ) -> None:
@@ -134,44 +143,30 @@ class Config:
 config: Config = Config()
 
 
-def read_engine_config(
-    engine_config: str = "engine.prototxt"
-) -> DTEngineConfig:
-    """Read the proto engine configuration file.
-    """
+def read_engine_config(engine_config: str = "engine.prototxt") -> DTEngineConfig:
+    """Read the proto engine configuration file."""
     # noinspection PyBroadException
     try:
-        with open(engine_config, 'r') as f:
+        with open(engine_config, "r") as f:
             dt_config = text_format.Parse(
                 text=f.read(),
                 message=DTEngineConfig(),
             )
         return dt_config
     except Exception:
-        logger.exception(
-            "Failed to parse engine configuration"
-        )
+        logger.exception("Failed to parse engine configuration")
         exit(-1)
 
 
 def setup_logging(
-    logging_config: LoggingConfig,
-    engine_config: Union[Path, str] = "engine.prototxt"
+    logging_config: LoggingConfig, engine_config: Union[Path, str] = "engine.prototxt"
 ) -> None:
-    """Set up the logging for the current experiment.
-    """
-    time_stamp = datetime.datetime.now().strftime(
-        "%Y-%m-%d-%H-%M-%S"
-    )
-    config.LOG_DIR = config.LOG_DIR.joinpath(
-        f"{time_stamp}_{logging_config.log_dir}"
-    )
+    """Set up the logging for the current experiment."""
+    time_stamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    config.LOG_DIR = config.LOG_DIR.joinpath(f"{time_stamp}_{logging_config.log_dir}")
     config.LOG_DIR.mkdir(parents=True, exist_ok=True)
     logger.remove()
-    logger.add(
-        sink=config.LOG_DIR.joinpath('console.log'),
-        level=logging_config.level
-    )
+    logger.add(sink=config.LOG_DIR.joinpath("console.log"), level=logging_config.level)
 
     if logging_config.verbose:
         logger.add(sink=sys.stderr, level=logging_config.level)
@@ -180,4 +175,4 @@ def setup_logging(
     if isinstance(engine_config, str):
         engine_config = Path(engine_config).absolute()
 
-    shutil.copy(engine_config, config.LOG_DIR.joinpath(f'{engine_config.name}'))
+    shutil.copy(engine_config, config.LOG_DIR.joinpath(f"{engine_config.name}"))

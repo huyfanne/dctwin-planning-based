@@ -32,7 +32,7 @@ class BaseEnv(gym.Env):
         e.g., the IT utilization schedule
     :param task_id: the identity of the current environment (defined for multi-task learning)
     :param num_constraints: the number of constraints in the environment (defined 0)
-     """
+    """
 
     def __init__(
         self,
@@ -73,7 +73,9 @@ class BaseEnv(gym.Env):
         self._timestamp: datetime = datetime.now()
 
     def _set_observations(self):
-        self._observations = [Observation(config=oc) for oc in self._config.observations]
+        self._observations = [
+            Observation(config=oc) for oc in self._config.observations
+        ]
         self._num_external_observations = 0
         for o in self._observations:
             if o.type == "EXTERNAL":
@@ -83,7 +85,7 @@ class BaseEnv(gym.Env):
             source=self._observations,
             use_unnormed_value=self._use_unnormed_obs,
             count_criteria=lambda o_: o_.exposed,
-            debug_tag='observation'
+            debug_tag="observation",
         )
         self.last_obs = None
 
@@ -93,12 +95,17 @@ class BaseEnv(gym.Env):
         self.action_space = self._get_space(
             source=self._actions,
             use_unnormed_value=self._use_unnormed_act,
-            count_criteria=lambda a: a.control_type == ActionControlType.AGENT_CONTROLLED,
-            debug_tag='action',
+            count_criteria=lambda a: a.control_type
+            == ActionControlType.AGENT_CONTROLLED,
+            debug_tag="action",
         )
-        if any(map(lambda a: a.control_type == ActionControlType.CUSTOMIZED, self._actions)):
+        if any(
+            map(lambda a: a.control_type == ActionControlType.CUSTOMIZED, self._actions)
+        ):
             if self._schedule_fn is None:
-                logger.critical("Env contains CUSTOMIZED action but no schedule_fn was specified!")
+                logger.critical(
+                    "Env contains CUSTOMIZED action but no schedule_fn was specified!"
+                )
                 exit(-1)
 
     def _set_simulation_time(self) -> None:
@@ -107,9 +114,14 @@ class BaseEnv(gym.Env):
             begin_month = self._config.simulation_time_config.begin_month
             begin_day_of_month = self._config.simulation_time_config.begin_day_of_month
             year = datetime.now().year
-            self._starting_timestamp = datetime(year=year, month=begin_month, day=begin_day_of_month)
+            self._starting_timestamp = datetime(
+                year=year, month=begin_month, day=begin_day_of_month
+            )
             self._timestamp_interval = timedelta(
-                minutes=int(60 / self._config.simulation_time_config.number_of_timesteps_per_hour)
+                minutes=int(
+                    60
+                    / self._config.simulation_time_config.number_of_timesteps_per_hour
+                )
             )
             self._timestamp = self._starting_timestamp
             base_env.co_sim.timestamp = self._timestamp
@@ -141,7 +153,7 @@ class BaseEnv(gym.Env):
         source: List,
         use_unnormed_value: bool,
         count_criteria: Callable,
-        debug_tag: str
+        debug_tag: str,
     ) -> gym.spaces.Box:
         min_, max_ = np.finfo(self._precision).min, np.finfo(self._precision).max
         lb_, ub_ = [], []
@@ -154,12 +166,16 @@ class BaseEnv(gym.Env):
                 lb_.append(item.resizer.lb)
                 ub_.append(item.resizer.ub)
             else:
-                lb_.append(item.resizer.resized_lb if item.resizer is not None else min_)
-                ub_.append(item.resizer.resized_ub if item.resizer is not None else max_)
+                lb_.append(
+                    item.resizer.resized_lb if item.resizer is not None else min_
+                )
+                ub_.append(
+                    item.resizer.resized_ub if item.resizer is not None else max_
+                )
         space = gym.spaces.Box(
             low=np.array(lb_, dtype=self._precision),
             high=np.array(ub_, dtype=self._precision),
-            dtype=self._precision
+            dtype=self._precision,
         )
         if space.shape[0] == 0:
             logger.warning(f"The env has no {debug_tag} exposed to the agent!")
@@ -167,17 +183,18 @@ class BaseEnv(gym.Env):
 
     @staticmethod
     def _find_scalar_item(
-        source: List[ScalarDataItem],
-        name: str
+        source: List[ScalarDataItem], name: str
     ) -> Union[None, Action, Observation]:
         return next((s for s in source if s.variable_name == name), None)
 
     @staticmethod
     def _get_scalar_values(
-        source: List[ScalarDataItem],
-        use_unnormed: bool
+        source: List[ScalarDataItem], use_unnormed: bool
     ) -> Union[list, float, int]:
-        return [d.get_unnormed_value() if use_unnormed else d.get_normed_value() for d in source]
+        return [
+            d.get_unnormed_value() if use_unnormed else d.get_normed_value()
+            for d in source
+        ]
 
     def _get_value_to_set(self, v, ptr, source) -> Tuple[int, Any]:
         if v.type != "EXTERNAL":
@@ -193,7 +210,7 @@ class BaseEnv(gym.Env):
         self,
         source: Union[np.ndarray, List],
         target: Union[List[Observation], List[Action]],
-        is_source_unnormed: bool
+        is_source_unnormed: bool,
     ) -> None:
         ptr = 0
         for v in target:
@@ -218,25 +235,38 @@ class BaseEnv(gym.Env):
                 value = a.default_value
             elif a.control_type == ActionControlType.AGENT_CONTROLLED:
                 if ra_ptr >= len(raw_action):
-                    logger.critical("Insufficient agent-controlled actions are provided!")
+                    logger.critical(
+                        "Insufficient agent-controlled actions are provided!"
+                    )
                     exit(-1)
                 value = raw_action[ra_ptr]
                 ra_ptr += 1
-            elif a.control_type == ActionControlType.PRE_SCHEDULED or a.control_type == ActionControlType.ACTUATOR_PRE_SCHEDULED:
+            elif (
+                a.control_type == ActionControlType.PRE_SCHEDULED
+                or a.control_type == ActionControlType.ACTUATOR_PRE_SCHEDULED
+            ):
                 value = next(a)
             elif a.control_type == ActionControlType.CUSTOMIZED:
-                value = self._schedule_fn(a.variable_name, **self._get_customized_schedule_context())
+                value = self._schedule_fn(
+                    a.variable_name, **self._get_customized_schedule_context()
+                )
             else:
                 logger.critical(f"Unknown type of action! {a.control_type}")
                 exit(-1)
             complete_raw_action.append(value)
         if ra_ptr != len(raw_action):
-            logger.warning("More agent-controlled actions than specified are provided! Ignoring the rest...")
-        self._set_scalar_items(complete_raw_action, self._actions, self._use_unnormed_act)
+            logger.warning(
+                "More agent-controlled actions than specified are provided! Ignoring the rest..."
+            )
+        self._set_scalar_items(
+            complete_raw_action, self._actions, self._use_unnormed_act
+        )
 
     def _prepare_observations(self, raw_observation) -> None:
         # received obs is always unnormed in our case
-        self._set_scalar_items(raw_observation, self._observations, is_source_unnormed=True)
+        self._set_scalar_items(
+            raw_observation, self._observations, is_source_unnormed=True
+        )
 
     def _get_actions_to_sent(self) -> Union[List[float], Dict]:
         return self._get_scalar_values(self._actions, use_unnormed=True)
@@ -254,7 +284,7 @@ class BaseEnv(gym.Env):
 
     def _get_additional_info_to_return(self):
         return dict(
-            time=self._timestamp if hasattr(self, '_timestamp') else datetime.now(),
+            time=self._timestamp if hasattr(self, "_timestamp") else datetime.now(),
             task_id=self._task_id,
         )
 
@@ -284,20 +314,17 @@ class BaseEnv(gym.Env):
         raise NotImplementedError
 
     def _run_simulation(
-        self,
-        parsed_actions: Union[List[float], Dict]
+        self, parsed_actions: Union[List[float], Dict]
     ) -> Tuple[Union[List[float], None], bool]:
-        """ send action, receive obs and if done
-        """
+        """send action, receive obs and if done"""
         raise NotImplementedError
 
     def _restart_simulation(self) -> List[float]:
-        """ restart and returns a raw observation
-        """
+        """restart and returns a raw observation"""
         raise NotImplementedError
 
     def step(self, raw_action):
-        """ step function for the agent
+        """step function for the agent
         gym-like step function
         """
         self._prepare_actions(raw_action)
@@ -307,8 +334,13 @@ class BaseEnv(gym.Env):
         if self._use_simulation_time:
             self._timestamp += self._timestamp_interval
 
-        return self._get_observations_to_return(
-        ), self._calculate_reward(), done, False, self._get_additional_info_to_return()
+        return (
+            self._get_observations_to_return(),
+            self._calculate_reward(),
+            done,
+            False,
+            self._get_additional_info_to_return(),
+        )
 
     def reset(
         self,
@@ -316,7 +348,7 @@ class BaseEnv(gym.Env):
         seed: Optional[int] = None,
         options: Optional[dict] = None,
     ) -> Union[np.ndarray, Tuple[np.ndarray, Dict]]:
-        """ reset the env and return the first observation
+        """reset the env and return the first observation
         gym-like reset function
         """
         if seed is not None:
@@ -326,17 +358,18 @@ class BaseEnv(gym.Env):
         self._prepare_observations(observations)
         if self._use_simulation_time:
             self._timestamp = self._starting_timestamp
-        return self._get_observations_to_return(
-            use_unnormed_obs=self._use_unnormed_obs,
-        ), self._get_additional_info_to_return()
+        return (
+            self._get_observations_to_return(
+                use_unnormed_obs=self._use_unnormed_obs,
+            ),
+            self._get_additional_info_to_return(),
+        )
 
     def render(self, mode="human"):
         raise NotImplementedError
 
     def inspect_current_observation(
-        self,
-        observation_name: str = None,
-        use_unnormed: bool = None
+        self, observation_name: str = None, use_unnormed: bool = None
     ) -> Union[None, float, int, List[Union[float, int]]]:
         """
         Get current observation / status
@@ -384,7 +417,9 @@ class BaseEnv(gym.Env):
         if a is None:
             logger.error(f"Action {action_name} does not exist!")
         elif a.control_type != ActionControlType.PRE_SCHEDULED:
-            logger.error(f'Action {action_name} is not PRE_SCHEDULED, cannot get its next scheduled value!')
+            logger.error(
+                f"Action {action_name} is not PRE_SCHEDULED, cannot get its next scheduled value!"
+            )
         else:
             return a.peek()
 

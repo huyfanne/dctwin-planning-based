@@ -7,212 +7,288 @@ from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
+
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n\x0f\x64t_engine.proto\x12\x08\x44TEngine"\xa2\x01\n\rLoggingConfig\x12\x0f\n\x07log_dir\x18\x01 \x02(\t\x12\x33\n\x05level\x18\x02 \x01(\x0e\x32\x1d.DTEngine.LoggingConfig.Level:\x05\x44\x45\x42UG\x12\x15\n\x07verbose\x18\x03 \x01(\x08:\x04true"4\n\x05Level\x12\t\n\x05\x44\x45\x42UG\x10\n\x12\x08\n\x04INFO\x10\x14\x12\x0b\n\x07WARNING\x10\x1e\x12\t\n\x05\x45RROR\x10\x32"\xa8\x01\n\x0fNormalizeConfig\x12\x38\n\x06method\x18\x01 \x01(\x0e\x32 .DTEngine.NormalizeConfig.Method:\x06LINEAR\x12\n\n\x02lb\x18\x02 \x02(\x01\x12\n\n\x02ub\x18\x03 \x02(\x01\x12\x16\n\nresized_lb\x18\x04 \x01(\x01:\x02-1\x12\x15\n\nresized_ub\x18\x05 \x01(\x01:\x01\x31"\x14\n\x06Method\x12\n\n\x06LINEAR\x10\x01"\xd9\x02\n\x13IDFXIScheduleConfig\x12\x15\n\rinitial_value\x18\x01 \x02(\x02\x12\n\n\x02lb\x18\x02 \x01(\x02\x12\n\n\x02ub\x18\x03 \x01(\x02\x12\x41\n\rschedule_type\x18\x05 \x02(\x0e\x32*.DTEngine.IDFXIScheduleConfig.ScheduleType\x12$\n\x1cscheduled_ite_equipment_name\x18\x06 \x01(\t\x12 \n\x18scheduled_hvac_loop_name\x18\x07 \x01(\t\x12*\n"scheduled_thermostat_setpoint_name\x18\x08 \x01(\t"\\\n\x0cScheduleType\x12\x07\n\x03ITE\x10\x00\x12\x13\n\x0fITEDeltaTSupply\x10\x01\x12\x13\n\x0fITEDeltaTReturn\x10\x02\x12\x0f\n\x0b\x41irLoopHVAC\x10\x03\x12\x08\n\x04Room\x10\x04"\xf2\x04\n\x13IDFXIActuatorConfig\x12&\n\x1e\x61\x63tuated_component_unique_name\x18\x01 \x02(\t\x12L\n\x17\x61\x63tuated_component_type\x18\x02 \x02(\x0e\x32+.DTEngine.IDFXIActuatorConfig.ComponentType\x12R\n\x1f\x61\x63tuated_component_control_type\x18\x03 \x02(\x0e\x32).DTEngine.IDFXIActuatorConfig.ControlType\x12\x15\n\rinitial_value\x18\x04 \x01(\x02"\xd5\x01\n\rComponentType\x12\x07\n\x03\x46\x61n\x10\x00\x12\x18\n\x14System_Node_Setpoint\x10\x01\x12\x08\n\x04PUMP\x10\x02\x12\x15\n\x11Schedule_Constant\x10\x03\x12\x16\n\x12Supply_Side_Branch\x10\x04\x12\x16\n\x12\x44\x65mand_Side_Branch\x10\x05\x12&\n"Plant_Component_Pump_VariableSpeed\x10\x06\x12(\n$Plant_Component_Chiller_Electric_EIR\x10\x07"\xa1\x01\n\x0b\x43ontrolType\x12\x1a\n\x16\x46\x61n_Air_Mass_Flow_Rate\x10\x00\x12\x18\n\x14Temperature_Setpoint\x10\x01\x12\x17\n\x13Pump_Mass_Flow_Rate\x10\x02\x12\x12\n\x0eSchedule_Value\x10\x03\x12\x16\n\x12On_Off_Supervisory\x10\x04\x12\x17\n\x13\x41vailability_Status\x10\x05"j\n\x17IDFOutputVariableConfig\x12\x11\n\tkey_value\x18\x01 \x02(\t\x12\x15\n\rvariable_name\x18\x02 \x02(\t\x12%\n\x13reporting_frequency\x18\x03 \x01(\t:\x08timestep"\xad\x01\n\x14ScalarDataItemConfig\x12\x15\n\rvariable_name\x18\x02 \x02(\t\x12\x1e\n\x14\x64\x65\x66\x61ult_normed_value\x18\x03 \x01(\x01H\x00\x12 \n\x16\x64\x65\x66\x61ult_unnormed_value\x18\x04 \x01(\x01H\x00\x12\x33\n\x10normalize_config\x18\x05 \x01(\x0b\x32\x19.DTEngine.NormalizeConfigB\x07\n\x05value"\x81\x04\n\x11\x45PlusActionConfig\x12O\n\x0c\x63ontrol_type\x18\x02 \x01(\x0e\x32\'.DTEngine.EPlusActionConfig.ControlType:\x10\x41GENT_CONTROLLED\x12\x14\n\x0cinput_source\x18\x03 \x01(\t\x12\x15\n\rvariable_name\x18\x05 \x02(\t\x12\x1e\n\x14\x64\x65\x66\x61ult_normed_value\x18\x06 \x01(\x01H\x00\x12 \n\x16\x64\x65\x66\x61ult_unnormed_value\x18\x07 \x01(\x01H\x00\x12\x38\n\x0f\x61\x63tuator_config\x18\x08 \x01(\x0b\x32\x1d.DTEngine.IDFXIActuatorConfigH\x01\x12\x38\n\x0fschedule_config\x18\t \x01(\x0b\x32\x1d.DTEngine.IDFXIScheduleConfigH\x01\x12\x33\n\x10normalize_config\x18\n \x01(\x0b\x32\x19.DTEngine.NormalizeConfig"m\n\x0b\x43ontrolType\x12\t\n\x05\x46IXED\x10\x01\x12\x14\n\x10\x41GENT_CONTROLLED\x10\x02\x12\x11\n\rPRE_SCHEDULED\x10\x03\x12\x0e\n\nCUSTOMIZED\x10\x04\x12\x1a\n\x16\x41\x43TUATOR_PRE_SCHEDULED\x10\x05\x42\x07\n\x05valueB\x0b\n\tIDFConfig"\x89\x03\n\x16\x45PlusObservationConfig\x12\x16\n\x07\x65xposed\x18\x02 \x01(\x08:\x05\x66\x61lse\x12\x15\n\rvariable_name\x18\x03 \x02(\t\x12\x1e\n\x14\x64\x65\x66\x61ult_normed_value\x18\x04 \x01(\x01H\x00\x12 \n\x16\x64\x65\x66\x61ult_unnormed_value\x18\x05 \x01(\x01H\x00\x12\x41\n\x16output_variable_config\x18\x06 \x01(\x0b\x32!.DTEngine.IDFOutputVariableConfig\x12\x33\n\x10normalize_config\x18\x07 \x01(\x0b\x32\x19.DTEngine.NormalizeConfig\x12Q\n\x10observation_type\x18\x08 \x01(\x0e\x32\x30.DTEngine.EPlusObservationConfig.ObservationType:\x05\x45PLUS"*\n\x0fObservationType\x12\t\n\x05\x45PLUS\x10\x01\x12\x0c\n\x08\x45XTERNAL\x10\x02\x42\x07\n\x05value"\xc4\x01\n\x14\x43\x46\x44ObservationConfig\x12\x15\n\x07\x65xposed\x18\x02 \x01(\x08:\x04true\x12\x15\n\rvariable_name\x18\x03 \x02(\t\x12\x1e\n\x14\x64\x65\x66\x61ult_normed_value\x18\x04 \x01(\x01H\x00\x12 \n\x16\x64\x65\x66\x61ult_unnormed_value\x18\x05 \x01(\x01H\x00\x12\x33\n\x10normalize_config\x18\x07 \x01(\x0b\x32\x19.DTEngine.NormalizeConfigB\x07\n\x05value"\xbe\x01\n\x14SimulationTimeConfig\x12\x13\n\x0b\x62\x65gin_month\x18\x01 \x02(\x05\x12\x1a\n\x12\x62\x65gin_day_of_month\x18\x02 \x02(\x05\x12\x11\n\tend_month\x18\x03 \x02(\x05\x12\x18\n\x10\x65nd_day_of_month\x18\x04 \x02(\x05\x12$\n\x1cnumber_of_timesteps_per_hour\x18\x05 \x02(\x05\x12"\n\x13use_simulation_time\x18\x06 \x01(\x08:\x05\x66\x61lse"\xff\x03\n\x0e\x45PlusEnvConfig\x12\x14\n\x0cweather_file\x18\x03 \x01(\t\x12\x12\n\nmodel_file\x18\x04 \x02(\t\x12>\n\x16simulation_time_config\x18\x06 \x01(\x0b\x32\x1e.DTEngine.SimulationTimeConfig\x12,\n\x07\x61\x63tions\x18\x07 \x03(\x0b\x32\x1b.DTEngine.EPlusActionConfig\x12\x1f\n\x10use_unnormed_act\x18\x08 \x01(\x08:\x05\x66\x61lse\x12\x36\n\x0cobservations\x18\t \x03(\x0b\x32 .DTEngine.EPlusObservationConfig\x12\x1f\n\x10use_unnormed_obs\x18\n \x01(\x08:\x05\x66\x61lse\x12\x16\n\x0ereturn_temp_lb\x18\x0b \x02(\x02\x12\x16\n\x0ereturn_temp_ub\x18\x0c \x02(\x02\x12\x18\n\x10return_temp_init\x18\r \x02(\x02\x12\x15\n\rinlet_temp_lb\x18\x0e \x02(\x02\x12\x15\n\rinlet_temp_ub\x18\x0f \x02(\x02\x12\x17\n\x0finlet_temp_init\x18\x10 \x02(\x02\x12\x0e\n\x04host\x18\x11 \x01(\t:\x00\x12\x11\n\x07network\x18\x12 \x01(\t:\x00\x12\'\n\nenv_params\x18\x13 \x01(\x0b\x32\x13.DTEngine.EnvParams"U\n\tEnvParams\x12\x12\n\x07task_id\x18\x01 \x01(\t:\x01\x30\x12\x1a\n\x0fnum_constraints\x18\x02 \x01(\x05:\x01\x30\x12\x18\n\x10last_episode_idx\x18\x03 \x01(\x05"\x8f\x01\n\x10ObjectMeshConfig\x12\x33\n\x04type\x18\x01 \x02(\x0e\x32%.DTEngine.ObjectMeshConfig.ObjectType\x12\r\n\x05level\x18\x02 \x02(\x03\x12\x14\n\x0crefine_level\x18\x03 \x02(\t"!\n\nObjectType\x12\x08\n\x04wall\x10\x00\x12\t\n\x05patch\x10\x01"\xcd\x02\n\rCFDMeshConfig\x12\x31\n\x0bserver_wall\x18\x01 \x01(\x0b\x32\x1a.DTEngine.ObjectMeshConfigH\x00\x12\x32\n\x0cserver_inlet\x18\x02 \x01(\x0b\x32\x1a.DTEngine.ObjectMeshConfigH\x00\x12\x33\n\rserver_outlet\x18\x03 \x01(\x0b\x32\x1a.DTEngine.ObjectMeshConfigH\x00\x12.\n\x08\x61\x63u_wall\x18\x04 \x01(\x0b\x32\x1a.DTEngine.ObjectMeshConfigH\x00\x12\x30\n\nacu_supply\x18\x05 \x01(\x0b\x32\x1a.DTEngine.ObjectMeshConfigH\x00\x12\x30\n\nacu_return\x18\x06 \x01(\x0b\x32\x1a.DTEngine.ObjectMeshConfigH\x00\x42\x0c\n\nMeshConfig"\xad\x03\n\x0c\x43\x46\x44\x45nvConfig\x12\x15\n\rgeometry_file\x18\x01 \x02(\t\x12\x0f\n\x07pod_dir\x18\x03 \x01(\t\x12\x31\n\x11object_mesh_index\x18\x04 \x01(\t:\x16object_mesh_index.json\x12\x16\n\x0bprocess_num\x18\x05 \x01(\x03:\x01\x38\x12\x14\n\x06steady\x18\x06 \x01(\x08:\x04true\x12\x1b\n\x0ewrite_interval\x18\x07 \x01(\x03:\x03\x31\x30\x30\x12\x15\n\x08\x65nd_time\x18\x08 \x01(\x03:\x03\x35\x30\x30\x12\x12\n\x08mesh_dir\x18\t \x01(\t:\x00\x12-\n\x0c\x66ield_config\x18\n \x03(\x0b\x32\x17.DTEngine.CFDMeshConfig\x12\x16\n\npod_method\x18\x0b \x01(\t:\x02GP\x12\x34\n\x0cobservations\x18\x0c \x03(\x0b\x32\x1e.DTEngine.CFDObservationConfig\x12\x1f\n\x10use_unnormed_obs\x18\r \x01(\x08:\x05\x66\x61lse\x12\x16\n\x07\x64ry_run\x18\x0e \x01(\x08:\x05\x66\x61lse\x12\x16\n\x07run_cfd\x18\x0f \x01(\x08:\x05\x66\x61lse"\x9d\x01\n\x0e\x43oSimEnvConfig\x12\x14\n\x0cidf2room_map\x18\x01 \x02(\t\x12#\n\x03\x63\x66\x64\x18\x02 \x02(\x0b\x32\x16.DTEngine.CFDEnvConfig\x12\'\n\x05\x65plus\x18\x03 \x02(\x0b\x32\x18.DTEngine.EPlusEnvConfig\x12\'\n\nenv_params\x18\x04 \x01(\x0b\x32\x13.DTEngine.EnvParams"\xe6\x01\n\x0e\x44TEngineConfig\x12/\n\x0elogging_config\x18\x01 \x01(\x0b\x32\x17.DTEngine.LoggingConfig\x12\x34\n\x10\x65plus_env_config\x18\x02 \x01(\x0b\x32\x18.DTEngine.EPlusEnvConfigH\x00\x12\x34\n\x10\x63osim_env_config\x18\x03 \x01(\x0b\x32\x18.DTEngine.CoSimEnvConfigH\x00\x12*\n\ncfd_config\x18\x04 \x01(\x0b\x32\x16.DTEngine.CFDEnvConfigB\x0b\n\tEnvConfig'
+)
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x64t_engine.proto\x12\x08\x44TEngine\"\xa2\x01\n\rLoggingConfig\x12\x0f\n\x07log_dir\x18\x01 \x02(\t\x12\x33\n\x05level\x18\x02 \x01(\x0e\x32\x1d.DTEngine.LoggingConfig.Level:\x05\x44\x45\x42UG\x12\x15\n\x07verbose\x18\x03 \x01(\x08:\x04true\"4\n\x05Level\x12\t\n\x05\x44\x45\x42UG\x10\n\x12\x08\n\x04INFO\x10\x14\x12\x0b\n\x07WARNING\x10\x1e\x12\t\n\x05\x45RROR\x10\x32\"\xa8\x01\n\x0fNormalizeConfig\x12\x38\n\x06method\x18\x01 \x01(\x0e\x32 .DTEngine.NormalizeConfig.Method:\x06LINEAR\x12\n\n\x02lb\x18\x02 \x02(\x01\x12\n\n\x02ub\x18\x03 \x02(\x01\x12\x16\n\nresized_lb\x18\x04 \x01(\x01:\x02-1\x12\x15\n\nresized_ub\x18\x05 \x01(\x01:\x01\x31\"\x14\n\x06Method\x12\n\n\x06LINEAR\x10\x01\"\xd9\x02\n\x13IDFXIScheduleConfig\x12\x15\n\rinitial_value\x18\x01 \x02(\x02\x12\n\n\x02lb\x18\x02 \x01(\x02\x12\n\n\x02ub\x18\x03 \x01(\x02\x12\x41\n\rschedule_type\x18\x05 \x02(\x0e\x32*.DTEngine.IDFXIScheduleConfig.ScheduleType\x12$\n\x1cscheduled_ite_equipment_name\x18\x06 \x01(\t\x12 \n\x18scheduled_hvac_loop_name\x18\x07 \x01(\t\x12*\n\"scheduled_thermostat_setpoint_name\x18\x08 \x01(\t\"\\\n\x0cScheduleType\x12\x07\n\x03ITE\x10\x00\x12\x13\n\x0fITEDeltaTSupply\x10\x01\x12\x13\n\x0fITEDeltaTReturn\x10\x02\x12\x0f\n\x0b\x41irLoopHVAC\x10\x03\x12\x08\n\x04Room\x10\x04\"\xf2\x04\n\x13IDFXIActuatorConfig\x12&\n\x1e\x61\x63tuated_component_unique_name\x18\x01 \x02(\t\x12L\n\x17\x61\x63tuated_component_type\x18\x02 \x02(\x0e\x32+.DTEngine.IDFXIActuatorConfig.ComponentType\x12R\n\x1f\x61\x63tuated_component_control_type\x18\x03 \x02(\x0e\x32).DTEngine.IDFXIActuatorConfig.ControlType\x12\x15\n\rinitial_value\x18\x04 \x01(\x02\"\xd5\x01\n\rComponentType\x12\x07\n\x03\x46\x61n\x10\x00\x12\x18\n\x14System_Node_Setpoint\x10\x01\x12\x08\n\x04PUMP\x10\x02\x12\x15\n\x11Schedule_Constant\x10\x03\x12\x16\n\x12Supply_Side_Branch\x10\x04\x12\x16\n\x12\x44\x65mand_Side_Branch\x10\x05\x12&\n\"Plant_Component_Pump_VariableSpeed\x10\x06\x12(\n$Plant_Component_Chiller_Electric_EIR\x10\x07\"\xa1\x01\n\x0b\x43ontrolType\x12\x1a\n\x16\x46\x61n_Air_Mass_Flow_Rate\x10\x00\x12\x18\n\x14Temperature_Setpoint\x10\x01\x12\x17\n\x13Pump_Mass_Flow_Rate\x10\x02\x12\x12\n\x0eSchedule_Value\x10\x03\x12\x16\n\x12On_Off_Supervisory\x10\x04\x12\x17\n\x13\x41vailability_Status\x10\x05\"j\n\x17IDFOutputVariableConfig\x12\x11\n\tkey_value\x18\x01 \x02(\t\x12\x15\n\rvariable_name\x18\x02 \x02(\t\x12%\n\x13reporting_frequency\x18\x03 \x01(\t:\x08timestep\"\xad\x01\n\x14ScalarDataItemConfig\x12\x15\n\rvariable_name\x18\x02 \x02(\t\x12\x1e\n\x14\x64\x65\x66\x61ult_normed_value\x18\x03 \x01(\x01H\x00\x12 \n\x16\x64\x65\x66\x61ult_unnormed_value\x18\x04 \x01(\x01H\x00\x12\x33\n\x10normalize_config\x18\x05 \x01(\x0b\x32\x19.DTEngine.NormalizeConfigB\x07\n\x05value\"\x81\x04\n\x11\x45PlusActionConfig\x12O\n\x0c\x63ontrol_type\x18\x02 \x01(\x0e\x32\'.DTEngine.EPlusActionConfig.ControlType:\x10\x41GENT_CONTROLLED\x12\x14\n\x0cinput_source\x18\x03 \x01(\t\x12\x15\n\rvariable_name\x18\x05 \x02(\t\x12\x1e\n\x14\x64\x65\x66\x61ult_normed_value\x18\x06 \x01(\x01H\x00\x12 \n\x16\x64\x65\x66\x61ult_unnormed_value\x18\x07 \x01(\x01H\x00\x12\x38\n\x0f\x61\x63tuator_config\x18\x08 \x01(\x0b\x32\x1d.DTEngine.IDFXIActuatorConfigH\x01\x12\x38\n\x0fschedule_config\x18\t \x01(\x0b\x32\x1d.DTEngine.IDFXIScheduleConfigH\x01\x12\x33\n\x10normalize_config\x18\n \x01(\x0b\x32\x19.DTEngine.NormalizeConfig\"m\n\x0b\x43ontrolType\x12\t\n\x05\x46IXED\x10\x01\x12\x14\n\x10\x41GENT_CONTROLLED\x10\x02\x12\x11\n\rPRE_SCHEDULED\x10\x03\x12\x0e\n\nCUSTOMIZED\x10\x04\x12\x1a\n\x16\x41\x43TUATOR_PRE_SCHEDULED\x10\x05\x42\x07\n\x05valueB\x0b\n\tIDFConfig\"\x89\x03\n\x16\x45PlusObservationConfig\x12\x16\n\x07\x65xposed\x18\x02 \x01(\x08:\x05\x66\x61lse\x12\x15\n\rvariable_name\x18\x03 \x02(\t\x12\x1e\n\x14\x64\x65\x66\x61ult_normed_value\x18\x04 \x01(\x01H\x00\x12 \n\x16\x64\x65\x66\x61ult_unnormed_value\x18\x05 \x01(\x01H\x00\x12\x41\n\x16output_variable_config\x18\x06 \x01(\x0b\x32!.DTEngine.IDFOutputVariableConfig\x12\x33\n\x10normalize_config\x18\x07 \x01(\x0b\x32\x19.DTEngine.NormalizeConfig\x12Q\n\x10observation_type\x18\x08 \x01(\x0e\x32\x30.DTEngine.EPlusObservationConfig.ObservationType:\x05\x45PLUS\"*\n\x0fObservationType\x12\t\n\x05\x45PLUS\x10\x01\x12\x0c\n\x08\x45XTERNAL\x10\x02\x42\x07\n\x05value\"\xc4\x01\n\x14\x43\x46\x44ObservationConfig\x12\x15\n\x07\x65xposed\x18\x02 \x01(\x08:\x04true\x12\x15\n\rvariable_name\x18\x03 \x02(\t\x12\x1e\n\x14\x64\x65\x66\x61ult_normed_value\x18\x04 \x01(\x01H\x00\x12 \n\x16\x64\x65\x66\x61ult_unnormed_value\x18\x05 \x01(\x01H\x00\x12\x33\n\x10normalize_config\x18\x07 \x01(\x0b\x32\x19.DTEngine.NormalizeConfigB\x07\n\x05value\"\xbe\x01\n\x14SimulationTimeConfig\x12\x13\n\x0b\x62\x65gin_month\x18\x01 \x02(\x05\x12\x1a\n\x12\x62\x65gin_day_of_month\x18\x02 \x02(\x05\x12\x11\n\tend_month\x18\x03 \x02(\x05\x12\x18\n\x10\x65nd_day_of_month\x18\x04 \x02(\x05\x12$\n\x1cnumber_of_timesteps_per_hour\x18\x05 \x02(\x05\x12\"\n\x13use_simulation_time\x18\x06 \x01(\x08:\x05\x66\x61lse\"\xff\x03\n\x0e\x45PlusEnvConfig\x12\x14\n\x0cweather_file\x18\x03 \x01(\t\x12\x12\n\nmodel_file\x18\x04 \x02(\t\x12>\n\x16simulation_time_config\x18\x06 \x01(\x0b\x32\x1e.DTEngine.SimulationTimeConfig\x12,\n\x07\x61\x63tions\x18\x07 \x03(\x0b\x32\x1b.DTEngine.EPlusActionConfig\x12\x1f\n\x10use_unnormed_act\x18\x08 \x01(\x08:\x05\x66\x61lse\x12\x36\n\x0cobservations\x18\t \x03(\x0b\x32 .DTEngine.EPlusObservationConfig\x12\x1f\n\x10use_unnormed_obs\x18\n \x01(\x08:\x05\x66\x61lse\x12\x16\n\x0ereturn_temp_lb\x18\x0b \x02(\x02\x12\x16\n\x0ereturn_temp_ub\x18\x0c \x02(\x02\x12\x18\n\x10return_temp_init\x18\r \x02(\x02\x12\x15\n\rinlet_temp_lb\x18\x0e \x02(\x02\x12\x15\n\rinlet_temp_ub\x18\x0f \x02(\x02\x12\x17\n\x0finlet_temp_init\x18\x10 \x02(\x02\x12\x0e\n\x04host\x18\x11 \x01(\t:\x00\x12\x11\n\x07network\x18\x12 \x01(\t:\x00\x12\'\n\nenv_params\x18\x13 \x01(\x0b\x32\x13.DTEngine.EnvParams\"U\n\tEnvParams\x12\x12\n\x07task_id\x18\x01 \x01(\t:\x01\x30\x12\x1a\n\x0fnum_constraints\x18\x02 \x01(\x05:\x01\x30\x12\x18\n\x10last_episode_idx\x18\x03 \x01(\x05\"\x8f\x01\n\x10ObjectMeshConfig\x12\x33\n\x04type\x18\x01 \x02(\x0e\x32%.DTEngine.ObjectMeshConfig.ObjectType\x12\r\n\x05level\x18\x02 \x02(\x03\x12\x14\n\x0crefine_level\x18\x03 \x02(\t\"!\n\nObjectType\x12\x08\n\x04wall\x10\x00\x12\t\n\x05patch\x10\x01\"\xcd\x02\n\rCFDMeshConfig\x12\x31\n\x0bserver_wall\x18\x01 \x01(\x0b\x32\x1a.DTEngine.ObjectMeshConfigH\x00\x12\x32\n\x0cserver_inlet\x18\x02 \x01(\x0b\x32\x1a.DTEngine.ObjectMeshConfigH\x00\x12\x33\n\rserver_outlet\x18\x03 \x01(\x0b\x32\x1a.DTEngine.ObjectMeshConfigH\x00\x12.\n\x08\x61\x63u_wall\x18\x04 \x01(\x0b\x32\x1a.DTEngine.ObjectMeshConfigH\x00\x12\x30\n\nacu_supply\x18\x05 \x01(\x0b\x32\x1a.DTEngine.ObjectMeshConfigH\x00\x12\x30\n\nacu_return\x18\x06 \x01(\x0b\x32\x1a.DTEngine.ObjectMeshConfigH\x00\x42\x0c\n\nMeshConfig\"\xad\x03\n\x0c\x43\x46\x44\x45nvConfig\x12\x15\n\rgeometry_file\x18\x01 \x02(\t\x12\x0f\n\x07pod_dir\x18\x03 \x01(\t\x12\x31\n\x11object_mesh_index\x18\x04 \x01(\t:\x16object_mesh_index.json\x12\x16\n\x0bprocess_num\x18\x05 \x01(\x03:\x01\x38\x12\x14\n\x06steady\x18\x06 \x01(\x08:\x04true\x12\x1b\n\x0ewrite_interval\x18\x07 \x01(\x03:\x03\x31\x30\x30\x12\x15\n\x08\x65nd_time\x18\x08 \x01(\x03:\x03\x35\x30\x30\x12\x12\n\x08mesh_dir\x18\t \x01(\t:\x00\x12-\n\x0c\x66ield_config\x18\n \x03(\x0b\x32\x17.DTEngine.CFDMeshConfig\x12\x16\n\npod_method\x18\x0b \x01(\t:\x02GP\x12\x34\n\x0cobservations\x18\x0c \x03(\x0b\x32\x1e.DTEngine.CFDObservationConfig\x12\x1f\n\x10use_unnormed_obs\x18\r \x01(\x08:\x05\x66\x61lse\x12\x16\n\x07\x64ry_run\x18\x0e \x01(\x08:\x05\x66\x61lse\x12\x16\n\x07run_cfd\x18\x0f \x01(\x08:\x05\x66\x61lse\"\x9d\x01\n\x0e\x43oSimEnvConfig\x12\x14\n\x0cidf2room_map\x18\x01 \x02(\t\x12#\n\x03\x63\x66\x64\x18\x02 \x02(\x0b\x32\x16.DTEngine.CFDEnvConfig\x12\'\n\x05\x65plus\x18\x03 \x02(\x0b\x32\x18.DTEngine.EPlusEnvConfig\x12\'\n\nenv_params\x18\x04 \x01(\x0b\x32\x13.DTEngine.EnvParams\"\xe6\x01\n\x0e\x44TEngineConfig\x12/\n\x0elogging_config\x18\x01 \x01(\x0b\x32\x17.DTEngine.LoggingConfig\x12\x34\n\x10\x65plus_env_config\x18\x02 \x01(\x0b\x32\x18.DTEngine.EPlusEnvConfigH\x00\x12\x34\n\x10\x63osim_env_config\x18\x03 \x01(\x0b\x32\x18.DTEngine.CoSimEnvConfigH\x00\x12*\n\ncfd_config\x18\x04 \x01(\x0b\x32\x16.DTEngine.CFDEnvConfigB\x0b\n\tEnvConfig')
-
-
-
-_LOGGINGCONFIG = DESCRIPTOR.message_types_by_name['LoggingConfig']
-_NORMALIZECONFIG = DESCRIPTOR.message_types_by_name['NormalizeConfig']
-_IDFXISCHEDULECONFIG = DESCRIPTOR.message_types_by_name['IDFXIScheduleConfig']
-_IDFXIACTUATORCONFIG = DESCRIPTOR.message_types_by_name['IDFXIActuatorConfig']
-_IDFOUTPUTVARIABLECONFIG = DESCRIPTOR.message_types_by_name['IDFOutputVariableConfig']
-_SCALARDATAITEMCONFIG = DESCRIPTOR.message_types_by_name['ScalarDataItemConfig']
-_EPLUSACTIONCONFIG = DESCRIPTOR.message_types_by_name['EPlusActionConfig']
-_EPLUSOBSERVATIONCONFIG = DESCRIPTOR.message_types_by_name['EPlusObservationConfig']
-_CFDOBSERVATIONCONFIG = DESCRIPTOR.message_types_by_name['CFDObservationConfig']
-_SIMULATIONTIMECONFIG = DESCRIPTOR.message_types_by_name['SimulationTimeConfig']
-_EPLUSENVCONFIG = DESCRIPTOR.message_types_by_name['EPlusEnvConfig']
-_ENVPARAMS = DESCRIPTOR.message_types_by_name['EnvParams']
-_OBJECTMESHCONFIG = DESCRIPTOR.message_types_by_name['ObjectMeshConfig']
-_CFDMESHCONFIG = DESCRIPTOR.message_types_by_name['CFDMeshConfig']
-_CFDENVCONFIG = DESCRIPTOR.message_types_by_name['CFDEnvConfig']
-_COSIMENVCONFIG = DESCRIPTOR.message_types_by_name['CoSimEnvConfig']
-_DTENGINECONFIG = DESCRIPTOR.message_types_by_name['DTEngineConfig']
-_LOGGINGCONFIG_LEVEL = _LOGGINGCONFIG.enum_types_by_name['Level']
-_NORMALIZECONFIG_METHOD = _NORMALIZECONFIG.enum_types_by_name['Method']
-_IDFXISCHEDULECONFIG_SCHEDULETYPE = _IDFXISCHEDULECONFIG.enum_types_by_name['ScheduleType']
-_IDFXIACTUATORCONFIG_COMPONENTTYPE = _IDFXIACTUATORCONFIG.enum_types_by_name['ComponentType']
-_IDFXIACTUATORCONFIG_CONTROLTYPE = _IDFXIACTUATORCONFIG.enum_types_by_name['ControlType']
-_EPLUSACTIONCONFIG_CONTROLTYPE = _EPLUSACTIONCONFIG.enum_types_by_name['ControlType']
-_EPLUSOBSERVATIONCONFIG_OBSERVATIONTYPE = _EPLUSOBSERVATIONCONFIG.enum_types_by_name['ObservationType']
-_OBJECTMESHCONFIG_OBJECTTYPE = _OBJECTMESHCONFIG.enum_types_by_name['ObjectType']
-LoggingConfig = _reflection.GeneratedProtocolMessageType('LoggingConfig', (_message.Message,), {
-  'DESCRIPTOR' : _LOGGINGCONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.LoggingConfig)
-  })
+_LOGGINGCONFIG = DESCRIPTOR.message_types_by_name["LoggingConfig"]
+_NORMALIZECONFIG = DESCRIPTOR.message_types_by_name["NormalizeConfig"]
+_IDFXISCHEDULECONFIG = DESCRIPTOR.message_types_by_name["IDFXIScheduleConfig"]
+_IDFXIACTUATORCONFIG = DESCRIPTOR.message_types_by_name["IDFXIActuatorConfig"]
+_IDFOUTPUTVARIABLECONFIG = DESCRIPTOR.message_types_by_name["IDFOutputVariableConfig"]
+_SCALARDATAITEMCONFIG = DESCRIPTOR.message_types_by_name["ScalarDataItemConfig"]
+_EPLUSACTIONCONFIG = DESCRIPTOR.message_types_by_name["EPlusActionConfig"]
+_EPLUSOBSERVATIONCONFIG = DESCRIPTOR.message_types_by_name["EPlusObservationConfig"]
+_CFDOBSERVATIONCONFIG = DESCRIPTOR.message_types_by_name["CFDObservationConfig"]
+_SIMULATIONTIMECONFIG = DESCRIPTOR.message_types_by_name["SimulationTimeConfig"]
+_EPLUSENVCONFIG = DESCRIPTOR.message_types_by_name["EPlusEnvConfig"]
+_ENVPARAMS = DESCRIPTOR.message_types_by_name["EnvParams"]
+_OBJECTMESHCONFIG = DESCRIPTOR.message_types_by_name["ObjectMeshConfig"]
+_CFDMESHCONFIG = DESCRIPTOR.message_types_by_name["CFDMeshConfig"]
+_CFDENVCONFIG = DESCRIPTOR.message_types_by_name["CFDEnvConfig"]
+_COSIMENVCONFIG = DESCRIPTOR.message_types_by_name["CoSimEnvConfig"]
+_DTENGINECONFIG = DESCRIPTOR.message_types_by_name["DTEngineConfig"]
+_LOGGINGCONFIG_LEVEL = _LOGGINGCONFIG.enum_types_by_name["Level"]
+_NORMALIZECONFIG_METHOD = _NORMALIZECONFIG.enum_types_by_name["Method"]
+_IDFXISCHEDULECONFIG_SCHEDULETYPE = _IDFXISCHEDULECONFIG.enum_types_by_name[
+    "ScheduleType"
+]
+_IDFXIACTUATORCONFIG_COMPONENTTYPE = _IDFXIACTUATORCONFIG.enum_types_by_name[
+    "ComponentType"
+]
+_IDFXIACTUATORCONFIG_CONTROLTYPE = _IDFXIACTUATORCONFIG.enum_types_by_name[
+    "ControlType"
+]
+_EPLUSACTIONCONFIG_CONTROLTYPE = _EPLUSACTIONCONFIG.enum_types_by_name["ControlType"]
+_EPLUSOBSERVATIONCONFIG_OBSERVATIONTYPE = _EPLUSOBSERVATIONCONFIG.enum_types_by_name[
+    "ObservationType"
+]
+_OBJECTMESHCONFIG_OBJECTTYPE = _OBJECTMESHCONFIG.enum_types_by_name["ObjectType"]
+LoggingConfig = _reflection.GeneratedProtocolMessageType(
+    "LoggingConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _LOGGINGCONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.LoggingConfig)
+    },
+)
 _sym_db.RegisterMessage(LoggingConfig)
 
-NormalizeConfig = _reflection.GeneratedProtocolMessageType('NormalizeConfig', (_message.Message,), {
-  'DESCRIPTOR' : _NORMALIZECONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.NormalizeConfig)
-  })
+NormalizeConfig = _reflection.GeneratedProtocolMessageType(
+    "NormalizeConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _NORMALIZECONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.NormalizeConfig)
+    },
+)
 _sym_db.RegisterMessage(NormalizeConfig)
 
-IDFXIScheduleConfig = _reflection.GeneratedProtocolMessageType('IDFXIScheduleConfig', (_message.Message,), {
-  'DESCRIPTOR' : _IDFXISCHEDULECONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.IDFXIScheduleConfig)
-  })
+IDFXIScheduleConfig = _reflection.GeneratedProtocolMessageType(
+    "IDFXIScheduleConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _IDFXISCHEDULECONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.IDFXIScheduleConfig)
+    },
+)
 _sym_db.RegisterMessage(IDFXIScheduleConfig)
 
-IDFXIActuatorConfig = _reflection.GeneratedProtocolMessageType('IDFXIActuatorConfig', (_message.Message,), {
-  'DESCRIPTOR' : _IDFXIACTUATORCONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.IDFXIActuatorConfig)
-  })
+IDFXIActuatorConfig = _reflection.GeneratedProtocolMessageType(
+    "IDFXIActuatorConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _IDFXIACTUATORCONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.IDFXIActuatorConfig)
+    },
+)
 _sym_db.RegisterMessage(IDFXIActuatorConfig)
 
-IDFOutputVariableConfig = _reflection.GeneratedProtocolMessageType('IDFOutputVariableConfig', (_message.Message,), {
-  'DESCRIPTOR' : _IDFOUTPUTVARIABLECONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.IDFOutputVariableConfig)
-  })
+IDFOutputVariableConfig = _reflection.GeneratedProtocolMessageType(
+    "IDFOutputVariableConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _IDFOUTPUTVARIABLECONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.IDFOutputVariableConfig)
+    },
+)
 _sym_db.RegisterMessage(IDFOutputVariableConfig)
 
-ScalarDataItemConfig = _reflection.GeneratedProtocolMessageType('ScalarDataItemConfig', (_message.Message,), {
-  'DESCRIPTOR' : _SCALARDATAITEMCONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.ScalarDataItemConfig)
-  })
+ScalarDataItemConfig = _reflection.GeneratedProtocolMessageType(
+    "ScalarDataItemConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _SCALARDATAITEMCONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.ScalarDataItemConfig)
+    },
+)
 _sym_db.RegisterMessage(ScalarDataItemConfig)
 
-EPlusActionConfig = _reflection.GeneratedProtocolMessageType('EPlusActionConfig', (_message.Message,), {
-  'DESCRIPTOR' : _EPLUSACTIONCONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.EPlusActionConfig)
-  })
+EPlusActionConfig = _reflection.GeneratedProtocolMessageType(
+    "EPlusActionConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _EPLUSACTIONCONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.EPlusActionConfig)
+    },
+)
 _sym_db.RegisterMessage(EPlusActionConfig)
 
-EPlusObservationConfig = _reflection.GeneratedProtocolMessageType('EPlusObservationConfig', (_message.Message,), {
-  'DESCRIPTOR' : _EPLUSOBSERVATIONCONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.EPlusObservationConfig)
-  })
+EPlusObservationConfig = _reflection.GeneratedProtocolMessageType(
+    "EPlusObservationConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _EPLUSOBSERVATIONCONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.EPlusObservationConfig)
+    },
+)
 _sym_db.RegisterMessage(EPlusObservationConfig)
 
-CFDObservationConfig = _reflection.GeneratedProtocolMessageType('CFDObservationConfig', (_message.Message,), {
-  'DESCRIPTOR' : _CFDOBSERVATIONCONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.CFDObservationConfig)
-  })
+CFDObservationConfig = _reflection.GeneratedProtocolMessageType(
+    "CFDObservationConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _CFDOBSERVATIONCONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.CFDObservationConfig)
+    },
+)
 _sym_db.RegisterMessage(CFDObservationConfig)
 
-SimulationTimeConfig = _reflection.GeneratedProtocolMessageType('SimulationTimeConfig', (_message.Message,), {
-  'DESCRIPTOR' : _SIMULATIONTIMECONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.SimulationTimeConfig)
-  })
+SimulationTimeConfig = _reflection.GeneratedProtocolMessageType(
+    "SimulationTimeConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _SIMULATIONTIMECONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.SimulationTimeConfig)
+    },
+)
 _sym_db.RegisterMessage(SimulationTimeConfig)
 
-EPlusEnvConfig = _reflection.GeneratedProtocolMessageType('EPlusEnvConfig', (_message.Message,), {
-  'DESCRIPTOR' : _EPLUSENVCONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.EPlusEnvConfig)
-  })
+EPlusEnvConfig = _reflection.GeneratedProtocolMessageType(
+    "EPlusEnvConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _EPLUSENVCONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.EPlusEnvConfig)
+    },
+)
 _sym_db.RegisterMessage(EPlusEnvConfig)
 
-EnvParams = _reflection.GeneratedProtocolMessageType('EnvParams', (_message.Message,), {
-  'DESCRIPTOR' : _ENVPARAMS,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.EnvParams)
-  })
+EnvParams = _reflection.GeneratedProtocolMessageType(
+    "EnvParams",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _ENVPARAMS,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.EnvParams)
+    },
+)
 _sym_db.RegisterMessage(EnvParams)
 
-ObjectMeshConfig = _reflection.GeneratedProtocolMessageType('ObjectMeshConfig', (_message.Message,), {
-  'DESCRIPTOR' : _OBJECTMESHCONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.ObjectMeshConfig)
-  })
+ObjectMeshConfig = _reflection.GeneratedProtocolMessageType(
+    "ObjectMeshConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _OBJECTMESHCONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.ObjectMeshConfig)
+    },
+)
 _sym_db.RegisterMessage(ObjectMeshConfig)
 
-CFDMeshConfig = _reflection.GeneratedProtocolMessageType('CFDMeshConfig', (_message.Message,), {
-  'DESCRIPTOR' : _CFDMESHCONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.CFDMeshConfig)
-  })
+CFDMeshConfig = _reflection.GeneratedProtocolMessageType(
+    "CFDMeshConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _CFDMESHCONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.CFDMeshConfig)
+    },
+)
 _sym_db.RegisterMessage(CFDMeshConfig)
 
-CFDEnvConfig = _reflection.GeneratedProtocolMessageType('CFDEnvConfig', (_message.Message,), {
-  'DESCRIPTOR' : _CFDENVCONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.CFDEnvConfig)
-  })
+CFDEnvConfig = _reflection.GeneratedProtocolMessageType(
+    "CFDEnvConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _CFDENVCONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.CFDEnvConfig)
+    },
+)
 _sym_db.RegisterMessage(CFDEnvConfig)
 
-CoSimEnvConfig = _reflection.GeneratedProtocolMessageType('CoSimEnvConfig', (_message.Message,), {
-  'DESCRIPTOR' : _COSIMENVCONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.CoSimEnvConfig)
-  })
+CoSimEnvConfig = _reflection.GeneratedProtocolMessageType(
+    "CoSimEnvConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _COSIMENVCONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.CoSimEnvConfig)
+    },
+)
 _sym_db.RegisterMessage(CoSimEnvConfig)
 
-DTEngineConfig = _reflection.GeneratedProtocolMessageType('DTEngineConfig', (_message.Message,), {
-  'DESCRIPTOR' : _DTENGINECONFIG,
-  '__module__' : 'dt_engine_pb2'
-  # @@protoc_insertion_point(class_scope:DTEngine.DTEngineConfig)
-  })
+DTEngineConfig = _reflection.GeneratedProtocolMessageType(
+    "DTEngineConfig",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _DTENGINECONFIG,
+        "__module__": "dt_engine_pb2"
+        # @@protoc_insertion_point(class_scope:DTEngine.DTEngineConfig)
+    },
+)
 _sym_db.RegisterMessage(DTEngineConfig)
 
 if _descriptor._USE_C_DESCRIPTORS == False:
 
-  DESCRIPTOR._options = None
-  _LOGGINGCONFIG._serialized_start=30
-  _LOGGINGCONFIG._serialized_end=192
-  _LOGGINGCONFIG_LEVEL._serialized_start=140
-  _LOGGINGCONFIG_LEVEL._serialized_end=192
-  _NORMALIZECONFIG._serialized_start=195
-  _NORMALIZECONFIG._serialized_end=363
-  _NORMALIZECONFIG_METHOD._serialized_start=343
-  _NORMALIZECONFIG_METHOD._serialized_end=363
-  _IDFXISCHEDULECONFIG._serialized_start=366
-  _IDFXISCHEDULECONFIG._serialized_end=711
-  _IDFXISCHEDULECONFIG_SCHEDULETYPE._serialized_start=619
-  _IDFXISCHEDULECONFIG_SCHEDULETYPE._serialized_end=711
-  _IDFXIACTUATORCONFIG._serialized_start=714
-  _IDFXIACTUATORCONFIG._serialized_end=1340
-  _IDFXIACTUATORCONFIG_COMPONENTTYPE._serialized_start=963
-  _IDFXIACTUATORCONFIG_COMPONENTTYPE._serialized_end=1176
-  _IDFXIACTUATORCONFIG_CONTROLTYPE._serialized_start=1179
-  _IDFXIACTUATORCONFIG_CONTROLTYPE._serialized_end=1340
-  _IDFOUTPUTVARIABLECONFIG._serialized_start=1342
-  _IDFOUTPUTVARIABLECONFIG._serialized_end=1448
-  _SCALARDATAITEMCONFIG._serialized_start=1451
-  _SCALARDATAITEMCONFIG._serialized_end=1624
-  _EPLUSACTIONCONFIG._serialized_start=1627
-  _EPLUSACTIONCONFIG._serialized_end=2140
-  _EPLUSACTIONCONFIG_CONTROLTYPE._serialized_start=2009
-  _EPLUSACTIONCONFIG_CONTROLTYPE._serialized_end=2118
-  _EPLUSOBSERVATIONCONFIG._serialized_start=2143
-  _EPLUSOBSERVATIONCONFIG._serialized_end=2536
-  _EPLUSOBSERVATIONCONFIG_OBSERVATIONTYPE._serialized_start=2485
-  _EPLUSOBSERVATIONCONFIG_OBSERVATIONTYPE._serialized_end=2527
-  _CFDOBSERVATIONCONFIG._serialized_start=2539
-  _CFDOBSERVATIONCONFIG._serialized_end=2735
-  _SIMULATIONTIMECONFIG._serialized_start=2738
-  _SIMULATIONTIMECONFIG._serialized_end=2928
-  _EPLUSENVCONFIG._serialized_start=2931
-  _EPLUSENVCONFIG._serialized_end=3442
-  _ENVPARAMS._serialized_start=3444
-  _ENVPARAMS._serialized_end=3529
-  _OBJECTMESHCONFIG._serialized_start=3532
-  _OBJECTMESHCONFIG._serialized_end=3675
-  _OBJECTMESHCONFIG_OBJECTTYPE._serialized_start=3642
-  _OBJECTMESHCONFIG_OBJECTTYPE._serialized_end=3675
-  _CFDMESHCONFIG._serialized_start=3678
-  _CFDMESHCONFIG._serialized_end=4011
-  _CFDENVCONFIG._serialized_start=4014
-  _CFDENVCONFIG._serialized_end=4443
-  _COSIMENVCONFIG._serialized_start=4446
-  _COSIMENVCONFIG._serialized_end=4603
-  _DTENGINECONFIG._serialized_start=4606
-  _DTENGINECONFIG._serialized_end=4836
+    DESCRIPTOR._options = None
+    _LOGGINGCONFIG._serialized_start = 30
+    _LOGGINGCONFIG._serialized_end = 192
+    _LOGGINGCONFIG_LEVEL._serialized_start = 140
+    _LOGGINGCONFIG_LEVEL._serialized_end = 192
+    _NORMALIZECONFIG._serialized_start = 195
+    _NORMALIZECONFIG._serialized_end = 363
+    _NORMALIZECONFIG_METHOD._serialized_start = 343
+    _NORMALIZECONFIG_METHOD._serialized_end = 363
+    _IDFXISCHEDULECONFIG._serialized_start = 366
+    _IDFXISCHEDULECONFIG._serialized_end = 711
+    _IDFXISCHEDULECONFIG_SCHEDULETYPE._serialized_start = 619
+    _IDFXISCHEDULECONFIG_SCHEDULETYPE._serialized_end = 711
+    _IDFXIACTUATORCONFIG._serialized_start = 714
+    _IDFXIACTUATORCONFIG._serialized_end = 1340
+    _IDFXIACTUATORCONFIG_COMPONENTTYPE._serialized_start = 963
+    _IDFXIACTUATORCONFIG_COMPONENTTYPE._serialized_end = 1176
+    _IDFXIACTUATORCONFIG_CONTROLTYPE._serialized_start = 1179
+    _IDFXIACTUATORCONFIG_CONTROLTYPE._serialized_end = 1340
+    _IDFOUTPUTVARIABLECONFIG._serialized_start = 1342
+    _IDFOUTPUTVARIABLECONFIG._serialized_end = 1448
+    _SCALARDATAITEMCONFIG._serialized_start = 1451
+    _SCALARDATAITEMCONFIG._serialized_end = 1624
+    _EPLUSACTIONCONFIG._serialized_start = 1627
+    _EPLUSACTIONCONFIG._serialized_end = 2140
+    _EPLUSACTIONCONFIG_CONTROLTYPE._serialized_start = 2009
+    _EPLUSACTIONCONFIG_CONTROLTYPE._serialized_end = 2118
+    _EPLUSOBSERVATIONCONFIG._serialized_start = 2143
+    _EPLUSOBSERVATIONCONFIG._serialized_end = 2536
+    _EPLUSOBSERVATIONCONFIG_OBSERVATIONTYPE._serialized_start = 2485
+    _EPLUSOBSERVATIONCONFIG_OBSERVATIONTYPE._serialized_end = 2527
+    _CFDOBSERVATIONCONFIG._serialized_start = 2539
+    _CFDOBSERVATIONCONFIG._serialized_end = 2735
+    _SIMULATIONTIMECONFIG._serialized_start = 2738
+    _SIMULATIONTIMECONFIG._serialized_end = 2928
+    _EPLUSENVCONFIG._serialized_start = 2931
+    _EPLUSENVCONFIG._serialized_end = 3442
+    _ENVPARAMS._serialized_start = 3444
+    _ENVPARAMS._serialized_end = 3529
+    _OBJECTMESHCONFIG._serialized_start = 3532
+    _OBJECTMESHCONFIG._serialized_end = 3675
+    _OBJECTMESHCONFIG_OBJECTTYPE._serialized_start = 3642
+    _OBJECTMESHCONFIG_OBJECTTYPE._serialized_end = 3675
+    _CFDMESHCONFIG._serialized_start = 3678
+    _CFDMESHCONFIG._serialized_end = 4011
+    _CFDENVCONFIG._serialized_start = 4014
+    _CFDENVCONFIG._serialized_end = 4443
+    _COSIMENVCONFIG._serialized_start = 4446
+    _COSIMENVCONFIG._serialized_end = 4603
+    _DTENGINECONFIG._serialized_start = 4606
+    _DTENGINECONFIG._serialized_end = 4836
 # @@protoc_insertion_point(module_scope)
