@@ -52,7 +52,9 @@ def generate_control_dict(
     )
     with open(Path(config.cfd.case_dir, "system/controlDict"), "w") as f:
         f.write(
-            template_env.get_template(f"foam/system/{system_folder}/controlDict.j2").render(
+            template_env.get_template(
+                f"foam/system/{system_folder}/controlDict.j2"
+            ).render(
                 delta_t=delta_t,
                 write_interval=write_interval,
                 end_time=end_time,
@@ -77,7 +79,9 @@ def init_foam():
     Path(config.cfd.case_dir, "system").mkdir(parents=True, exist_ok=True)
     Path(config.cfd.case_dir, "case.foam").touch(exist_ok=True)
 
-    shutil.copy(Path(template_dir, "foam/constant/g"), Path(config.cfd.case_dir, "constant/g"))
+    shutil.copy(
+        Path(template_dir, "foam/constant/g"), Path(config.cfd.case_dir, "constant/g")
+    )
     shutil.copy(
         Path(template_dir, "foam/constant/thermophysicalProperties"),
         Path(config.cfd.case_dir, "constant/thermophysicalProperties"),

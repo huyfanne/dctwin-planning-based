@@ -33,7 +33,7 @@ class EplusCFDAdapter:
     """
 
     rho_air = 1.19  # air density kg/m^3
-    
+
     def __init__(
         self,
         room: Room,
@@ -83,7 +83,9 @@ class EplusCFDAdapter:
         )
         Path(config.cfd.case_dir).mkdir(exist_ok=True, parents=True)
         room_path = Path(config.cfd.case_dir).joinpath(config.cfd.geometry_file.name)
-        idf2room_path = Path(config.cfd.case_dir).joinpath(config.eplus_cfd.idf2room_map.name)
+        idf2room_path = Path(config.cfd.case_dir).joinpath(
+            config.eplus_cfd.idf2room_map.name
+        )
         shutil.copy(config.cfd.geometry_file, room_path)
         shutil.copy(config.eplus_cfd.idf2room_map, idf2room_path)
         # init log file for cfd results
@@ -227,7 +229,9 @@ class EplusCFDAdapter:
     def run(self, episode_idx) -> Tuple[np.ndarray, Any]:
         self.episode_idx = episode_idx
         eplus_obs, done = self.eplus_manager.run(episode_idx)
-        init_boundary_condition = self.cfd_manager.format_boundary_conditions  # use the default boundary conditions
+        init_boundary_condition = (
+            self.cfd_manager.format_boundary_conditions
+        )  # use the default boundary conditions
         init_boundary_condition = self._scale_server_flow_rate(
             boundary_conditions=init_boundary_condition
         )

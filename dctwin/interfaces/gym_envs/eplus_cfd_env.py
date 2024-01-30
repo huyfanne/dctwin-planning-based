@@ -84,8 +84,7 @@ class EplusCFDEnv(EPlusEnv):
         )
 
     def _set_eplus_cfd_environ(self) -> None:
-        """Set the environment variables for co-simulation
-        """
+        """Set the environment variables for co-simulation"""
         eplus_cfd_env.cfd.geometry_file = Path(self.cfd_config.geometry_file)
         eplus_cfd_env.cfd.pod_dir = Path(self.cfd_config.pod_dir)
         eplus_cfd_env.cfd.mesh_dir = Path(self.cfd_config.mesh_dir)

@@ -2,6 +2,7 @@
 Custom errors for DCTwin.
 """
 
+
 class DCTwinError(Exception):
     def __init__(self, *args, **kwargs):  # real signature unknown
         pass

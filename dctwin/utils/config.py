@@ -146,8 +146,7 @@ config: Config = Config()
 def read_engine_config(
     engine_config: str | Path = "engine.prototxt",
 ) -> DTEngineConfig:
-    """Read the proto engine configuration file.
-    """
+    """Read the proto engine configuration file."""
     # noinspection PyBroadException
     try:
         with open(engine_config, "r") as f:

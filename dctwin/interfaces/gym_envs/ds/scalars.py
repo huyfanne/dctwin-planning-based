@@ -140,8 +140,10 @@ class Action(ScalarDataItem):
             except Exception:
                 logger.exception("Failed to load input source!")
         elif config.HasField("input_source"):
-            logger.warning(f"{self.debug_name} is not pre_scheduled but input source was specified. "
-                           f"The source will be ignored.")
+            logger.warning(
+                f"{self.debug_name} is not pre_scheduled but input source was specified. "
+                f"The source will be ignored."
+            )
         elif self.control_type == ActionControlType.AGENT_CONTROLLED:
             self.masking_variable_name = config.masking_variable_name
             self.mask = False
@@ -178,5 +180,6 @@ class Action(ScalarDataItem):
 
     def set_mask(self, mask: bool) -> None:
         self.mask = mask
+
 
 Reward = ScalarDataItem
