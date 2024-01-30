@@ -69,7 +69,9 @@ def fill_inlet_outlet(
         branch[f"Component_{branch_component_idx}_Inlet_Node_Name"] = branch[
             f"Component_{branch_component_idx - 1}_Outlet_Node_Name"
         ]
-        branch[f"Component_{branch_component_idx}_Outlet_Node_Name"] = obj[outlet_key_name]
+        branch[f"Component_{branch_component_idx}_Outlet_Node_Name"] = obj[
+            outlet_key_name
+        ]
     else:
         obj[inlet_key_name] = f"{name} inlet node"
         obj[outlet_key_name] = f"{name} outlet node"

@@ -25,11 +25,9 @@ if __name__ == "__main__":
         idf_file=Path("models/idf/building.idf"),
         weather_file=Path("data/weather/SGP_Singapore.486980_IWEC.epw"),
         network="host",
-        host="host.docker.internal"
+        host="host.docker.internal",
     )
-    config.make_cpu_loading_schedules(
-        schedule_dir=Path("data/schedule/workloads")
-    )
+    config.make_cpu_loading_schedules(schedule_dir=Path("data/schedule/workloads"))
     config.make_acu_supply_air_temperature_actions()
     config.make_acu_supply_air_flow_rate_actions()
     config.make_loop_supply_temperature_actions(

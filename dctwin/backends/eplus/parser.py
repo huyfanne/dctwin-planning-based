@@ -224,8 +224,14 @@ class Eplus:
         return chw_supply_outlet_node_names
 
     def _get_valid_key_values(self):
-        valid_key_values = self.node_names | self.component_names | \
-                           self.zone_names | {"Whole Building"} | {"whole building"} | {"pv load center"}
+        valid_key_values = (
+            self.node_names
+            | self.component_names
+            | self.zone_names
+            | {"Whole Building"}
+            | {"whole building"}
+            | {"pv load center"}
+        )
         it_equipment = self.epm.ElectricEquipment_ITE_AirCooled.select()
         supply_air_nodes = set()
         ite_names = set()
@@ -483,19 +489,22 @@ class Eplus:
         def _set_fan_availability_schedule() -> None:
             fan_name = schedule_config.scheduled_fan_name
             fan = self.epm.Fan_VariableVolume.select(
-                lambda x: x.name == fan_name.lower()).one()
+                lambda x: x.name == fan_name.lower()
+            ).one()
             fan.availability_schedule_name = config.variable_name
 
         def _set_coil_availability_schedule() -> None:
             coil_name = schedule_config.scheduled_coil_name
             coil = self.epm.Coil_Cooling_Water.select(
-                lambda x: x.name == coil_name.lower()).one()
+                lambda x: x.name == coil_name.lower()
+            ).one()
             coil.availability_schedule_name = config.variable_name
 
         def _set_atu_availability_schedule() -> None:
             atu_name = schedule_config.scheduled_atu_name
             atu = self.epm.AirTerminal_SingleDuct_VAV_NoReheat.select(
-                lambda x: x.name == atu_name.lower()).one()
+                lambda x: x.name == atu_name.lower()
+            ).one()
             atu.availability_schedule_name = config.variable_name
 
         func_dict = {
@@ -587,8 +596,7 @@ class Eplus:
             component_type = "Plant Component Chiller:Electric:EIR"
 
         control_type = actuator_config.DESCRIPTOR.EnumValueName(
-            "ControlType",
-            actuator_config.actuated_component_control_type
+            "ControlType", actuator_config.actuated_component_control_type
         )
         control_type = " ".join(control_type.split("_"))
 
@@ -709,11 +717,16 @@ class Eplus:
             else:
                 self._set_external_actuator(action_config)
 
-    def batch_set_observations(self, observation_configs: List[EPlusObservationConfig]) -> None:
+    def batch_set_observations(
+        self, observation_configs: List[EPlusObservationConfig]
+    ) -> None:
         for observation_config in observation_configs:
-            if observation_config.DESCRIPTOR.EnumValueName(
+            if (
+                observation_config.DESCRIPTOR.EnumValueName(
                     "ObservationType", observation_config.observation_type
-            ) == "EPLUS":
+                )
+                == "EPLUS"
+            ):
                 self._set_observation(observation_config)
 
     def batch_set_inlet_temperature_schedule(
@@ -839,14 +852,21 @@ class Eplus:
 
         # add Eplus output variables
         for observation_config in observation_configs:
-            if observation_config.DESCRIPTOR.EnumValueName(
+            if (
+                observation_config.DESCRIPTOR.EnumValueName(
                     "ObservationType", observation_config.observation_type
-            ) == "EPLUS":
+                )
+                == "EPLUS"
+            ):
                 variable_child = ET.SubElement(root, "variable")
                 variable_child.attrib["source"] = "EnergyPlus"
                 eplus_child = ET.SubElement(variable_child, "EnergyPlus")
-                eplus_child.attrib["name"] = observation_config.output_variable_config.key_value
-                eplus_child.attrib["type"] = observation_config.output_variable_config.variable_name
+                eplus_child.attrib[
+                    "name"
+                ] = observation_config.output_variable_config.key_value
+                eplus_child.attrib[
+                    "type"
+                ] = observation_config.output_variable_config.variable_name
 
         # add BCVTB input schedules
         for action in action_configs:

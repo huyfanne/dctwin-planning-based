@@ -93,14 +93,20 @@ def make_cooling_coil(
     obj = model.newidfobject("coil:cooling:water".upper(), Name=cooling_coil_name)
     obj["Availability_Schedule_Name"] = f"Always On".upper()
     if branch_component_idx > 1:
-        obj["Air_Inlet_Node_Name"] = branch[f"Component_{branch_component_idx - 1}_Outlet_Node_Name"]
+        obj["Air_Inlet_Node_Name"] = branch[
+            f"Component_{branch_component_idx - 1}_Outlet_Node_Name"
+        ]
         obj["Air_Outlet_Node_Name"] = f"{cooling_coil_name} air outlet node"
         branch[f"Component_{branch_component_idx}_Inlet_Node_Name"] = branch[
             f"Component_{branch_component_idx - 1}_Outlet_Node_Name"
         ]
-        branch[f"Component_{branch_component_idx}_Outlet_Node_Name"] = obj["Air_Outlet_Node_Name"]
+        branch[f"Component_{branch_component_idx}_Outlet_Node_Name"] = obj[
+            "Air_Outlet_Node_Name"
+        ]
     else:
-        obj["Air_Inlet_Node_Name"] = branch[f"Component_{branch_component_idx - 1}_Outlet_Node_Name"]
+        obj["Air_Inlet_Node_Name"] = branch[
+            f"Component_{branch_component_idx - 1}_Outlet_Node_Name"
+        ]
         obj["Air_Inlet_Node_Name"] = f"{cooling_coil_name} air inlet node"
         obj["Air_Outlet_Node_Name"] = f"{cooling_coil_name} air outlet node"
         branch["Component_1_Inlet_Node_Name"] = obj["Air_Inlet_Node_Name"]
@@ -108,12 +114,16 @@ def make_cooling_coil(
     # fill in info
     obj["Design_Air_Flow_Rate"] = acu.cooling.design_air_flow_rate
     obj["Design_Inlet_Air_Humidity_Ratio"] = acu.cooling.design_inlet_air_humidity_ratio
-    obj["Design_Outlet_Air_Humidity_Ratio"] = acu.cooling.design_outlet_air_humidity_ratio
+    obj[
+        "Design_Outlet_Air_Humidity_Ratio"
+    ] = acu.cooling.design_outlet_air_humidity_ratio
     obj["Design_Inlet_Air_Temperature"] = acu.cooling.design_inlet_air_temperature
     obj["Design_Outlet_Air_Temperature"] = acu.cooling.design_outlet_air_temperature
     obj["Design_Water_Flow_Rate"] = acu.cooling.design_water_flow_rate
     obj["Design_Inlet_Water_Temperature"] = acu.cooling.design_inlet_water_temperature
-    obj["Design_Water_Temperature_Difference"] = acu.cooling.design_water_temperature_difference
+    obj[
+        "Design_Water_Temperature_Difference"
+    ] = acu.cooling.design_water_temperature_difference
     obj["Heat_Exchanger_Configuration"] = acu.cooling.heat_exchanger_configuration
     return obj
 
@@ -139,13 +149,19 @@ def make_fan(
     obj = model.newidfobject("fan:variablevolume".upper(), Name=fan_name)
     obj["Availability_Schedule_Name"] = f"Always On".upper()
     loop = kwargs["loop"]
-    obj["Air_Inlet_Node_Name"] = branch[f"Component_{branch_component_idx - 1}_Outlet_Node_Name"]
+    obj["Air_Inlet_Node_Name"] = branch[
+        f"Component_{branch_component_idx - 1}_Outlet_Node_Name"
+    ]
     obj["Air_Outlet_Node_Name"] = loop["Supply_Side_Outlet_Node_Names"]
     branch[f"Component_{branch_component_idx}_Inlet_Node_Name"] = branch[
         f"Component_{branch_component_idx - 1}_Outlet_Node_Name"
     ]
-    branch[f"Component_{branch_component_idx}_Outlet_Node_Name"] = obj["Air_Outlet_Node_Name"]
-    branch[f"Component_{branch_component_idx}_Object_Type"] = "Fan:VariableVolume".upper()
+    branch[f"Component_{branch_component_idx}_Outlet_Node_Name"] = obj[
+        "Air_Outlet_Node_Name"
+    ]
+    branch[
+        f"Component_{branch_component_idx}_Object_Type"
+    ] = "Fan:VariableVolume".upper()
     branch[f"Component_{branch_component_idx}_Name"] = fan_name
 
     obj["Fan_Power_Coefficient_1"] = acu.power.fan_power_coefficient_1
@@ -155,7 +171,9 @@ def make_fan(
     obj["Fan_Power_Coefficient_5"] = acu.power.fan_power_coefficient_5
     obj["Fan_Power_Minimum_Air_Flow_Rate"] = acu.power.fan_power_minimum_air_flow_rate
     obj["Fan_Power_Minimum_Flow_Fraction"] = acu.power.fan_power_minimum_flow_fraction
-    obj["Fan_Power_Minimum_Flow_Rate_Input_Method"] = acu.power.fan_power_minimum_flow_rate_input_method
+    obj[
+        "Fan_Power_Minimum_Flow_Rate_Input_Method"
+    ] = acu.power.fan_power_minimum_flow_rate_input_method
     obj["Fan_Total_Efficiency"] = acu.power.fan_total_efficiency
     obj["Motor_Efficiency"] = acu.power.motor_efficiency
     obj["Maximum_Flow_Rate"] = acu.cooling.maximum_flow_rate
@@ -173,28 +191,21 @@ def make_oa_equipment_list(model: IDF, oa_name: str, air_loop: EpBunch):
     """
     obj = model.newidfobject(
         "AirLoopHVAC:OutdoorAirSystem:EquipmentList".upper(),
-        Name=f"{oa_name} outdoor air equipment"
+        Name=f"{oa_name} outdoor air equipment",
     )
     obj["Component_1_Object_Type"] = "OutdoorAir:Mixer".upper()
     obj["Component_1_Name"] = f"{oa_name} mixer box"
-    mixer = model.newidfobject(
-        "OutdoorAir:Mixer".upper(),
-        Name=f"{oa_name} mixer box"
-    )
+    mixer = model.newidfobject("OutdoorAir:Mixer".upper(), Name=f"{oa_name} mixer box")
     mixer["Mixed_Air_Node_Name"] = f"{oa_name} mixed air node"
     mixer["Relief_Air_Stream_Node_Name"] = f"{oa_name} relief air outlet node"
     mixer["Outdoor_Air_Stream_Node_Name"] = f"{oa_name} outside air inlet node"
     outdoor_node_list = model.newidfobject("OutdoorAir:NodeList".upper())
     outdoor_node_list["Node_or_NodeList_Name_1"] = f"{oa_name} outside air inlet node"
     node_list = model.newidfobject(
-        "NodeList".upper(),
-        Name=f"{oa_name} outside air inlet nodes"
+        "NodeList".upper(), Name=f"{oa_name} outside air inlet nodes"
     )
     node_list["Node_1_Name"] = f"{oa_name} outside air inlet node"
-    airloop = model.getobject(
-        "AirLoopHVAC".upper(),
-        name=air_loop["Name"]
-    )
+    airloop = model.getobject("AirLoopHVAC".upper(), name=air_loop["Name"])
     mixer["Return_Air_Stream_Node_Name"] = airloop["Supply_Side_Inlet_Node_Name"]
     return obj
 
@@ -215,7 +226,9 @@ def make_oa_system(
     :param kwargs:
     :return:
     """
-    obj = model.newidfobject("AirLoopHVAC:OutdoorAirSystem".upper(), Name=oa.uid.lower())
+    obj = model.newidfobject(
+        "AirLoopHVAC:OutdoorAirSystem".upper(), Name=oa.uid.lower()
+    )
     obj["Controller_List_Name"] = f"{oa.uid.lower()} controllers"
     obj["Outdoor_Air_Equipment_List_Name"] = f"{oa.uid.lower()} outdoor air equipment"
     obj["Availability_Manager_List_Name"] = f"{oa.uid.lower()} availability list"
@@ -227,21 +240,31 @@ def make_oa_system(
 
     availability_manager = model.newidfobject(
         "AvailabilityManagerAssignmentList".upper(),
-        Name=f"{oa.uid.lower()} availability manager list"
+        Name=f"{oa.uid.lower()} availability manager list",
     )
-    availability_manager["Availability_Manager_1_Object_Type"] = "AvailabilityManager:Scheduled"
-    availability_manager["Availability_Manager_1_Name"] = f"{oa.uid.lower()} availability manager"
+    availability_manager[
+        "Availability_Manager_1_Object_Type"
+    ] = "AvailabilityManager:Scheduled"
+    availability_manager[
+        "Availability_Manager_1_Name"
+    ] = f"{oa.uid.lower()} availability manager"
     model.newidfobject(
         "AvailabilityManager:Scheduled".upper(),
         Name=f"{oa.uid.lower()} availability manager",
-        Schedule_Name="Always On".upper()
+        Schedule_Name="Always On".upper(),
     )
-    obj["Availability_Manager_List_Name"] = f"{oa.uid.lower()} availability manager list"
+    obj[
+        "Availability_Manager_List_Name"
+    ] = f"{oa.uid.lower()} availability manager list"
 
     return obj
 
 
-def make_surfaces(model: IDF, geometry_config: RoomGeometry | Geometry, surfaces_config: Dict[str, Surface]):
+def make_surfaces(
+    model: IDF,
+    geometry_config: RoomGeometry | Geometry,
+    surfaces_config: Dict[str, Surface],
+):
 
     planes = geometry_config.plane
     height = geometry_config.height
@@ -254,13 +277,31 @@ def make_surfaces(model: IDF, geometry_config: RoomGeometry | Geometry, surfaces
         surface["Construction_Name"] = surface_config.construction_name
         surface["Zone_Name"] = surface_config.zone_name
         # "Ground" if surface_config.type.value == "Floor" else "Outdoors"
-        surface["Outside_Boundary_Condition"] = surface_config.outside_boundary_condition.value
-        surface["Outside_Boundary_Condition_Object"] = surface_config.outside_boundary_condition_object
-        surface["Sun_Exposure"] = "NoSun" if (surface_config.type.value == "Floor" or
-                                              surface_config.type.value == "Ceiling") else "SunExposed"
-        surface["Wind_Exposure"] = "NoWind" if (surface_config.type.value == "Floor" or
-                                                surface_config.type.value == "Ceiling") else "WindExposed"
-        surface["View_Factor_to_Ground"] = surface_config.view_factor_to_ground  # to change?
+        surface[
+            "Outside_Boundary_Condition"
+        ] = surface_config.outside_boundary_condition.value
+        surface[
+            "Outside_Boundary_Condition_Object"
+        ] = surface_config.outside_boundary_condition_object
+        surface["Sun_Exposure"] = (
+            "NoSun"
+            if (
+                surface_config.type.value == "Floor"
+                or surface_config.type.value == "Ceiling"
+            )
+            else "SunExposed"
+        )
+        surface["Wind_Exposure"] = (
+            "NoWind"
+            if (
+                surface_config.type.value == "Floor"
+                or surface_config.type.value == "Ceiling"
+            )
+            else "WindExposed"
+        )
+        surface[
+            "View_Factor_to_Ground"
+        ] = surface_config.view_factor_to_ground  # to change?
         surface["Number_of_Vertices"] = surface_config.number_of_vertices
 
         if surface_config.type.value == "Wall":
@@ -286,7 +327,10 @@ def make_surfaces(model: IDF, geometry_config: RoomGeometry | Geometry, surfaces
                 surface[f"Vertex_{idx + 1}_Ycoordinate"] = f"{planes[2-idx].y}"
                 surface[f"Vertex_{idx + 1}_Zcoordinate"] = f"{planes[2-idx].z}"
 
-        elif surface_config.type.value == "Roof" or surface_config.type.value == "Ceiling":
+        elif (
+            surface_config.type.value == "Roof"
+            or surface_config.type.value == "Ceiling"
+        ):
             for idx in range(len(planes)):
                 surface[f"Vertex_{idx + 1}_Xcoordinate"] = f"{planes[idx].x}"
                 surface[f"Vertex_{idx + 1}_Ycoordinate"] = f"{planes[idx].y}"

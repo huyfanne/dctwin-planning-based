@@ -5,8 +5,8 @@ from loguru import logger
 from dclib import Building
 from pathlib import Path
 
-class ConfigBuilder:
 
+class ConfigBuilder:
     def __init__(
         self,
         building: Building,
@@ -17,17 +17,18 @@ class ConfigBuilder:
         self.model = DTEngineConfig()
 
     """Private utility functions"""
+
     def _make_observation(
         self,
         exposed: bool,
         variable_name: str,
         key_value: str = None,
-        output_variable_name:str = None,
+        output_variable_name: str = None,
         reporting_frequency: str = None,
         normalize_method: int = None,
         lb: float = None,
         ub: float = None,
-        observation_type: int = None
+        observation_type: int = None,
     ):
         observation = self.model.eplus_env_config.observations.add()
         observation.exposed = exposed
@@ -38,15 +39,16 @@ class ConfigBuilder:
             observation.output_variable_config.reporting_frequency = reporting_frequency
         if normalize_method:
             assert lb is not None and ub is not None, (
-                logger.critical("For normalized observations, the lower bound and upper bound must be provided."),
-                exit(1)
+                logger.critical(
+                    "For normalized observations, the lower bound and upper bound must be provided."
+                ),
+                exit(1),
             )
             observation.normalize_config.method = normalize_method
             observation.normalize_config.lb = lb
             observation.normalize_config.ub = ub
         if observation_type is not None:
             observation.observation_type = observation_type
-        
 
     def _make_actions(
         self,
@@ -60,34 +62,46 @@ class ConfigBuilder:
         ub: float,
         masking_variable_name: str = None,
         default_unnormed_value: float = None,
-        input_source: Path = None
+        input_source: Path = None,
     ):
         action = self.model.eplus_env_config.actions.add()
         action.control_type = control_type
         if default_unnormed_value is not None:
             action.default_unnormed_value = default_unnormed_value
         if input_source is not None:
-            action.input_source = str(input_source).replace("\\", "/") # convert to unix style path
-        action.variable_name = variable_name.replace("-", "_").replace(" ", "_") # variable name cannot contain dash and space
-        action.actuator_config.actuated_component_unique_name = actuated_component_unique_name
+            action.input_source = str(input_source).replace(
+                "\\", "/"
+            )  # convert to unix style path
+        action.variable_name = variable_name.replace("-", "_").replace(
+            " ", "_"
+        )  # variable name cannot contain dash and space
+        action.actuator_config.actuated_component_unique_name = (
+            actuated_component_unique_name
+        )
         action.actuator_config.actuated_component_type = actuated_component_type
-        action.actuator_config.actuated_component_control_type = actuated_component_control_type
+        action.actuator_config.actuated_component_control_type = (
+            actuated_component_control_type
+        )
         if method != None:
             action.normalize_config.method = method
             action.normalize_config.lb = lb
             action.normalize_config.ub = ub
         if masking_variable_name is not None:
-            matches = [o for o in self.model.eplus_env_config.observations \
-                    if o.variable_name == masking_variable_name]
-            assert len(matches) > 0, f"Cannot find observation for {masking_variable_name}"
+            matches = [
+                o
+                for o in self.model.eplus_env_config.observations
+                if o.variable_name == masking_variable_name
+            ]
+            assert (
+                len(matches) > 0
+            ), f"Cannot find observation for {masking_variable_name}"
             action.masking_variable_name = masking_variable_name
 
     """Public APIs"""
 
     """Simulation and logging config making functions start here"""
-    def make_logging_config(
-        self, log_dir: Path, level: int, verbose: bool
-    ):
+
+    def make_logging_config(self, log_dir: Path, level: int, verbose: bool):
         self.model.logging_config.log_dir = str(log_dir)
         self.model.logging_config.level = level
         self.model.logging_config.verbose = verbose
@@ -109,22 +123,26 @@ class ConfigBuilder:
         self.model.eplus_env_config.network = network
         self.model.eplus_env_config.host = host
         self.model.eplus_env_config.simulation_time_config.begin_month = begin_month
-        self.model.eplus_env_config.simulation_time_config.begin_day_of_month = begin_day_of_month
+        self.model.eplus_env_config.simulation_time_config.begin_day_of_month = (
+            begin_day_of_month
+        )
         self.model.eplus_env_config.simulation_time_config.end_month = end_month
-        self.model.eplus_env_config.simulation_time_config.end_day_of_month = end_day_of_month
-        self.model.eplus_env_config.simulation_time_config.number_of_timesteps_per_hour = number_of_timesteps_per_hour
+        self.model.eplus_env_config.simulation_time_config.end_day_of_month = (
+            end_day_of_month
+        )
+        self.model.eplus_env_config.simulation_time_config.number_of_timesteps_per_hour = (
+            number_of_timesteps_per_hour
+        )
 
     def make_env_params_config(
-        self,
-        task_id: str,
-        num_constraints: int = 0,
-        last_episode_idx: int = 0
+        self, task_id: str, num_constraints: int = 0, last_episode_idx: int = 0
     ):
         self.model.eplus_env_config.env_params.task_id = task_id
         self.model.eplus_env_config.env_params.num_constraints = num_constraints
         self.model.eplus_env_config.env_params.last_episode_idx = last_episode_idx
 
     """Observation config making functions start here"""
+
     def make_pue_observations(
         self,
         exposed: bool = True,
@@ -140,7 +158,7 @@ class ConfigBuilder:
             reporting_frequency="timestep",
             normalize_method=normalize_method,
             lb=lb,
-            ub=ub
+            ub=ub,
         )
         self._make_observation(
             exposed=exposed,
@@ -150,9 +168,9 @@ class ConfigBuilder:
             reporting_frequency="timestep",
             normalize_method=normalize_method,
             lb=lb,
-            ub=ub
+            ub=ub,
         )
-        
+
     def make_chilled_water_loop_observations(
         self,
         exposed: bool = True,
@@ -160,7 +178,9 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
     ):
-        for chilled_water_loop_name, chilled_water_loop in self.device_key_map["chilled water loops"].items():
+        for chilled_water_loop_name, chilled_water_loop in self.device_key_map[
+            "chilled water loops"
+        ].items():
             # observe chilled water loop supply temperature
             self._make_observation(
                 exposed=exposed,
@@ -181,7 +201,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe chilled water loop supply flow rate
             self._make_observation(
@@ -192,7 +212,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe chilled water loop return flow rate
             self._make_observation(
@@ -203,7 +223,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
 
     def make_condenser_water_loop_observations(
@@ -213,7 +233,9 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
     ):
-        for condenser_water_loop_name, condenser_water_loop in self.device_key_map["condenser water loops"].items():
+        for condenser_water_loop_name, condenser_water_loop in self.device_key_map[
+            "condenser water loops"
+        ].items():
             # observe condenser water loop supply temperature
             self._make_observation(
                 exposed=exposed,
@@ -223,7 +245,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe condenser water loop return temperature
             self._make_observation(
@@ -234,7 +256,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe condenser water loop supply flow rate
             self._make_observation(
@@ -245,7 +267,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe condenser water loop return flow rate
             self._make_observation(
@@ -256,7 +278,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
 
     def make_acu_fan_observations(
@@ -264,7 +286,7 @@ class ConfigBuilder:
         exposed: bool = True,
         normalize_method: int = None,
         lb: float = None,
-        ub: float = None
+        ub: float = None,
     ):
         """
         Make observations for ACU fans
@@ -284,7 +306,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe ACU air mass flow rate
             self._make_observation(
@@ -295,7 +317,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe ACU air outlet temperature
             self._make_observation(
@@ -306,7 +328,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe ACU air inlet temperature
             self._make_observation(
@@ -317,7 +339,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
 
     def make_acu_fan_hum_observations(
@@ -325,7 +347,7 @@ class ConfigBuilder:
         exposed: bool = True,
         normalize_method: int = None,
         lb: float = None,
-        ub: float = None
+        ub: float = None,
     ):
         """
         Make observations for ACU fans
@@ -345,7 +367,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe ACU air inlet relative humidity
             self._make_observation(
@@ -356,7 +378,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
 
     def make_cooling_coil_observations(
@@ -364,7 +386,7 @@ class ConfigBuilder:
         exposed: bool = True,
         normalize_method: int = None,
         lb: float = None,
-        ub: float = None
+        ub: float = None,
     ):
         for acu_name, acu in self.device_key_map["acus"].items():
             # observe inlet air temperautre
@@ -376,7 +398,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe inlet air mass flow rate
             self._make_observation(
@@ -387,7 +409,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe outlet air temperature
             self._make_observation(
@@ -398,7 +420,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe inlet water temperature
             self._make_observation(
@@ -409,7 +431,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe inlet water mass flow rate
             self._make_observation(
@@ -420,7 +442,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
 
     def make_pump_observations(
@@ -428,9 +450,11 @@ class ConfigBuilder:
         exposed: bool = True,
         normalize_method: int = None,
         lb: float = None,
-        ub: float = None
+        ub: float = None,
     ):
-        for chw_pump_name, chw_pump in self.device_key_map["chilled water pumps"].items():
+        for chw_pump_name, chw_pump in self.device_key_map[
+            "chilled water pumps"
+        ].items():
             # observe chilled water pump mass flow rate
             self._make_observation(
                 exposed=exposed,
@@ -440,7 +464,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe chilled water pump power consumption
             self._make_observation(
@@ -451,9 +475,11 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
-        for cw_pump_name, cw_pump in self.device_key_map["condenser water pumps"].items():
+        for cw_pump_name, cw_pump in self.device_key_map[
+            "condenser water pumps"
+        ].items():
             # observe condenser water pump mass flow rate
             self._make_observation(
                 exposed=exposed,
@@ -463,7 +489,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe condenser water pump power consumption
             self._make_observation(
@@ -474,10 +500,12 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
         if "secondary chilled water pumps" in self.device_key_map:
-            for schw_pump_name, schw_pump in self.device_key_map["secondary chilled water pumps"].items():
+            for schw_pump_name, schw_pump in self.device_key_map[
+                "secondary chilled water pumps"
+            ].items():
                 # observe secondary chilled water pump mass flow rate
                 self._make_observation(
                     exposed=exposed,
@@ -487,7 +515,7 @@ class ConfigBuilder:
                     reporting_frequency="timestep",
                     normalize_method=normalize_method,
                     lb=lb,
-                    ub=ub
+                    ub=ub,
                 )
                 # observe secondary chilled water pump power consumption
                 self._make_observation(
@@ -498,7 +526,7 @@ class ConfigBuilder:
                     reporting_frequency="timestep",
                     normalize_method=normalize_method,
                     lb=lb,
-                    ub=ub
+                    ub=ub,
                 )
 
     def make_chiller_observations(
@@ -506,7 +534,7 @@ class ConfigBuilder:
         exposed: bool = True,
         normalize_method: int = None,
         lb: float = None,
-        ub: float = None
+        ub: float = None,
     ):
         for chiller_name, chiller in self.device_key_map["chillers"].items():
             # observe chiller cooling load
@@ -518,7 +546,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # chilled water supply temperature
             self._make_observation(
@@ -529,7 +557,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # condenser water supply temperature
             self._make_observation(
@@ -540,7 +568,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # chilled water return temperature
             self._make_observation(
@@ -551,7 +579,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # condenser water return temperature
             self._make_observation(
@@ -562,7 +590,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe chiller power consumption
             self._make_observation(
@@ -573,7 +601,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
 
     def make_cooling_tower_observations(
@@ -581,9 +609,11 @@ class ConfigBuilder:
         exposed: bool = True,
         normalize_method: int = None,
         lb: float = None,
-        ub: float = None
+        ub: float = None,
     ):
-        for cooling_tower_name, cooling_tower in self.device_key_map["cooling towers"].items():
+        for cooling_tower_name, cooling_tower in self.device_key_map[
+            "cooling towers"
+        ].items():
             # observe cooling tower return water temperature
             self._make_observation(
                 exposed=exposed,
@@ -593,7 +623,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe cooling tower water mass flow rate
             self._make_observation(
@@ -604,7 +634,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe cooling tower supply water temperature
             self._make_observation(
@@ -615,7 +645,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe cooling tower air flow rate ratio
             self._make_observation(
@@ -626,7 +656,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # # observe cooling tower outside air wetbulb temperature
             # self._make_observation(
@@ -648,7 +678,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
 
     def make_zone_observations(
@@ -656,7 +686,7 @@ class ConfigBuilder:
         exposed: bool = True,
         normalize_method: int = None,
         lb: float = None,
-        ub: float = None
+        ub: float = None,
     ):
         for zone_name, zone in self.device_key_map["zones"].items():
             # observe zone air temperature
@@ -668,7 +698,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe zone air relative humidity
             self._make_observation(
@@ -679,7 +709,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
 
     def make_ite_observations(
@@ -687,7 +717,7 @@ class ConfigBuilder:
         exposed: bool = True,
         normalize_method: int = None,
         lb: float = None,
-        ub: float = None
+        ub: float = None,
     ):
         for ite_name, ite in self.device_key_map["ites"].items():
             # observe ITE inlet dry-bulb temperature
@@ -699,7 +729,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
             # observe ITE inlet relative humidity
             self._make_observation(
@@ -710,7 +740,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
 
     def make_electric_load_center_observations(
@@ -718,9 +748,12 @@ class ConfigBuilder:
         exposed: bool = True,
         normalize_method: int = None,
         lb: float = None,
-        ub: float = None
+        ub: float = None,
     ):
-        for load_center_name, load_center in self.building.constructions.electrical_load_centers.items():
+        for (
+            load_center_name,
+            load_center,
+        ) in self.building.constructions.electrical_load_centers.items():
             self._make_observation(
                 exposed=exposed,
                 variable_name=f"{load_center.uid} produced electricity".lower(),
@@ -729,10 +762,11 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
 
     """Action config making functions start here"""
+
     def make_acu_supply_air_temperature_actions(
         self,
         control_type: int = 2,
@@ -740,10 +774,12 @@ class ConfigBuilder:
         normalize_method: int = None,
         lb: float = None,
         ub: float = None,
-        masking: bool = False
+        masking: bool = False,
     ):
         for acu_name, acu in self.device_key_map["acus"].items():
-            masking_variable_name = f"{acu_name} on off schedule".lower() if masking else None
+            masking_variable_name = (
+                f"{acu_name} on off schedule".lower() if masking else None
+            )
             variable_name = f"{acu_name} supply air temperature setpoint".lower()
             self._make_actions(
                 variable_name=variable_name,
@@ -755,7 +791,7 @@ class ConfigBuilder:
                 method=normalize_method,
                 lb=lb,
                 ub=ub,
-                masking_variable_name=masking_variable_name
+                masking_variable_name=masking_variable_name,
             )
 
     def make_acu_supply_air_flow_rate_actions(
@@ -765,10 +801,12 @@ class ConfigBuilder:
         normalize_method: int = None,
         lb: float = None,
         ub: float = None,
-        masking: bool = False
+        masking: bool = False,
     ):
         for acu_name, acu in self.device_key_map["acus"].items():
-            masking_variable_name = f"{acu_name} on off schedule".lower() if masking else None
+            masking_variable_name = (
+                f"{acu_name} on off schedule".lower() if masking else None
+            )
             variable_name = f"{acu_name} supply air mass flow rate".lower()
             self._make_actions(
                 variable_name=variable_name,
@@ -780,7 +818,7 @@ class ConfigBuilder:
                 method=normalize_method,
                 lb=lb,
                 ub=ub,
-                masking_variable_name=masking_variable_name
+                masking_variable_name=masking_variable_name,
             )
 
     def make_chilled_water_loop_supply_temperature_actions(
@@ -789,7 +827,7 @@ class ConfigBuilder:
         normalize_method: int = None,
         lb: float = None,
         ub: float = None,
-        default_unnormed_value: float = None
+        default_unnormed_value: float = None,
     ):
         for loop_name, loop in self.device_key_map["chilled water loops"].items():
             variable_name = f"{loop_name} supply temperature setpoint".lower()
@@ -802,7 +840,7 @@ class ConfigBuilder:
                 default_unnormed_value=default_unnormed_value,
                 method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
 
     def make_condensed_water_loop_supply_temperature_actions(
@@ -811,7 +849,7 @@ class ConfigBuilder:
         normalize_method: int = None,
         lb: float = None,
         ub: float = None,
-        default_unnormed_value: float = None
+        default_unnormed_value: float = None,
     ):
         for loop_name, loop in self.device_key_map["condenser water loops"].items():
             variable_name = f"{loop_name} supply temperature setpoint".lower()
@@ -824,7 +862,7 @@ class ConfigBuilder:
                 default_unnormed_value=default_unnormed_value,
                 method=normalize_method,
                 lb=lb,
-                ub=ub
+                ub=ub,
             )
 
     def make_chilled_water_supply_branch_on_off_actions_prescheduled(
@@ -832,9 +870,11 @@ class ConfigBuilder:
         schedule_dir: Path = Path("data/schedule/branches"),
         normalize_method: int = 1,
         lb: float = 0.0,
-        ub: float = 1.0
+        ub: float = 1.0,
     ):
-        for index, (chiller_name, chiller) in enumerate(self.device_key_map["chillers"].items()):
+        for index, (chiller_name, chiller) in enumerate(
+            self.device_key_map["chillers"].items()
+        ):
             self._make_actions(
                 variable_name=f"chilled water supply branch {index+1} on off".lower(),
                 actuated_component_unique_name=f"chilled water supply branch {index+1}",
@@ -844,7 +884,9 @@ class ConfigBuilder:
                 method=normalize_method,
                 lb=lb,
                 ub=ub,
-                input_source=schedule_dir.joinpath(f"chilled water supply branch {index+1}.json")
+                input_source=schedule_dir.joinpath(
+                    f"chilled water supply branch {index+1}.json"
+                ),
             )
 
     def make_chilled_water_pump_flow_rates_actions_prescheduled(
@@ -852,7 +894,7 @@ class ConfigBuilder:
         schedule_dir: Path = Path("data/schedule/pumps"),
         normalize_method: int = 1,
         lb: float = 0.0,
-        ub: float = 100.0
+        ub: float = 100.0,
     ):
         for pump_name, pump in self.device_key_map["chilled water pumps"].items():
             self._make_actions(
@@ -864,7 +906,7 @@ class ConfigBuilder:
                 method=normalize_method,
                 lb=lb,
                 ub=ub,
-                input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json")
+                input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
             )
 
     def make_secondary_chilled_water_pump_flow_rates_actions_prescheduled(
@@ -872,9 +914,11 @@ class ConfigBuilder:
         schedule_dir: Path = Path("data/schedule/pumps"),
         normalize_method: int = 1,
         lb: float = 0.0,
-        ub: float = 100.0
+        ub: float = 100.0,
     ):
-        for pump_name, pump in self.device_key_map["secondary chilled water pumps"].items():
+        for pump_name, pump in self.device_key_map[
+            "secondary chilled water pumps"
+        ].items():
             self._make_actions(
                 variable_name=f"{pump_name} mass flow rate".lower(),
                 actuated_component_unique_name=f"{pump_name}",
@@ -884,7 +928,7 @@ class ConfigBuilder:
                 method=normalize_method,
                 lb=lb,
                 ub=ub,
-                input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json")
+                input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
             )
 
     def make_condenser_water_pump_flow_rates_actions_prescheduled(
@@ -892,7 +936,7 @@ class ConfigBuilder:
         schedule_dir: Path = Path("data/schedule/pumps"),
         normalize_method: int = 1,
         lb: float = 0.0,
-        ub: float = 100.0
+        ub: float = 100.0,
     ):
         for pump_name, pump in self.device_key_map["condenser water pumps"].items():
             self._make_actions(
@@ -904,7 +948,7 @@ class ConfigBuilder:
                 method=normalize_method,
                 lb=lb,
                 ub=ub,
-                input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json")
+                input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
             )
 
     def make_acu_on_off_schedules(
@@ -912,14 +956,18 @@ class ConfigBuilder:
         schedule_dir: Path = Path("data/schedule/acus/fan_on_off"),
         initial_value: float = 1.0,
         lb: float = 0.0,
-        ub: float = 1.0
+        ub: float = 1.0,
     ):
         for acu_name, acu in self.device_key_map["acus"].items():
             fan_name = f"{acu_name} fan"
             action = self.model.eplus_env_config.actions.add()
             action.control_type = 3
             action.variable_name = f"{acu_name} on off schedule".lower()
-            action.input_source = str(schedule_dir.joinpath(f"{acu_name.lower()}.json")).replace("\\", "/") # convert to unix style path
+            action.input_source = str(
+                schedule_dir.joinpath(f"{acu_name.lower()}.json")
+            ).replace(
+                "\\", "/"
+            )  # convert to unix style path
             action.schedule_config.initial_value = initial_value
             action.schedule_config.lb = lb
             action.schedule_config.ub = ub
@@ -931,25 +979,29 @@ class ConfigBuilder:
         schedule_dir: Path = Path("data/schedule/workloads"),
         initial_value: float = 1.0,
         lb: float = 0.0,
-        ub: float = 1.0
+        ub: float = 1.0,
     ):
         for ite_name, ite in self.device_key_map["ites"].items():
             action = self.model.eplus_env_config.actions.add()
             action.control_type = 3
             action.variable_name = f"{ite_name} cpu loading schedule".lower()
-            action.input_source = str(schedule_dir.joinpath(f"{ite_name.lower()}.json")).replace("\\", "/") # convert to unix style path
+            action.input_source = str(
+                schedule_dir.joinpath(f"{ite_name.lower()}.json")
+            ).replace(
+                "\\", "/"
+            )  # convert to unix style path
             action.schedule_config.initial_value = initial_value
             action.schedule_config.lb = lb
             action.schedule_config.ub = ub
             action.schedule_config.schedule_type = 0
-            action.schedule_config.scheduled_ite_equipment_name = f"{ite_name.lower()}"        
+            action.schedule_config.scheduled_ite_equipment_name = f"{ite_name.lower()}"
 
     def make_acu_on_off_observations(
         self,
         exposed: bool = True,
         normalize_method: int = 1,
         lb: float = 0.0,
-        ub: float = 1.0
+        ub: float = 1.0,
     ):
         """
         Make observations for ACU on/off status
@@ -967,7 +1019,7 @@ class ConfigBuilder:
                 normalize_method=normalize_method,
                 lb=lb,
                 ub=ub,
-                observation_type=2
+                observation_type=2,
             )
 
     def make_cpu_loading_observations(
@@ -975,7 +1027,7 @@ class ConfigBuilder:
         exposed: bool = True,
         normalize_method: int = 1,
         lb: float = 0.0,
-        ub: float = 1.0
+        ub: float = 1.0,
     ):
         """
         Make observations for CPU loading
@@ -993,9 +1045,9 @@ class ConfigBuilder:
                 normalize_method=normalize_method,
                 lb=lb,
                 ub=ub,
-                observation_type=2
+                observation_type=2,
             )
 
-    def save(self, path: Path = Path('configs/eplus.prototxt')):
-        with open(path, 'w') as f:
+    def save(self, path: Path = Path("configs/eplus.prototxt")):
+        with open(path, "w") as f:
             f.write(text_format.MessageToString(self.model))

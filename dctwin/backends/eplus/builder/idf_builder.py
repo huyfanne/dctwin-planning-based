@@ -16,8 +16,18 @@ from .utils import make_surfaces
 
 class IDFBuilder:
 
-    idd_path = Path(__file__).parent.parent.parent.parent.joinpath("templates").joinpath("eplus").joinpath("V9-5-0-Energy+.idd")
-    template_idf_path = Path(__file__).parent.parent.parent.parent.joinpath("templates").joinpath("eplus").joinpath("template.idf")
+    idd_path = (
+        Path(__file__)
+        .parent.parent.parent.parent.joinpath("templates")
+        .joinpath("eplus")
+        .joinpath("V9-5-0-Energy+.idd")
+    )
+    template_idf_path = (
+        Path(__file__)
+        .parent.parent.parent.parent.joinpath("templates")
+        .joinpath("eplus")
+        .joinpath("template.idf")
+    )
 
     def __init__(
         self,
@@ -43,14 +53,21 @@ class IDFBuilder:
         geometry[
             "Daylighting_Reference_Point_Coordinate_System"
         ] = geometry_config.daylighting_reference_point_coordinate_system
-        geometry["Rectangular_Surface_Coordinate_System"] = geometry_config.rectangular_surface_coordinate_system
+        geometry[
+            "Rectangular_Surface_Coordinate_System"
+        ] = geometry_config.rectangular_surface_coordinate_system
 
     def _make_models(self):
         self.model_builder.make_models(self.building.models)
 
     def _make_surfaces(self):
-        if self.building.constructions.surfaces is not None and self.building.geometry is not None:
-            make_surfaces(self.model, self.building.geometry, self.building.constructions.surfaces)
+        if (
+            self.building.constructions.surfaces is not None
+            and self.building.geometry is not None
+        ):
+            make_surfaces(
+                self.model, self.building.geometry, self.building.constructions.surfaces
+            )
 
     def _make_rooms(self) -> None:
         self.room_builder.make_rooms(self.building.constructions.zones)
@@ -82,8 +99,7 @@ class IDFBuilder:
         chilled_water_loop_names = self.building.constructions.plant.chilled_water_loops
         for chilled_water_loop_name in chilled_water_loop_names:
             chilled_water_loop_obj = self.model.getobject(
-                key="PlantLoop".upper(),
-                name=chilled_water_loop_name
+                key="PlantLoop".upper(), name=chilled_water_loop_name
             )
             self.device_key_map["chilled water loops"][chilled_water_loop_name] = {
                 "supply temperature": f"{chilled_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
@@ -92,11 +108,12 @@ class IDFBuilder:
                 "return flow rate": f"{chilled_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
             }
         # create condenser water loop device key mapping
-        condenser_water_loop_names = self.building.constructions.plant.condenser_water_loops
+        condenser_water_loop_names = (
+            self.building.constructions.plant.condenser_water_loops
+        )
         for condenser_water_loop_name in condenser_water_loop_names:
             condenser_water_loop_obj = self.model.getobject(
-                key="PlantLoop".upper(),
-                name=condenser_water_loop_name
+                key="PlantLoop".upper(), name=condenser_water_loop_name
             )
             self.device_key_map["condenser water loops"][condenser_water_loop_name] = {
                 "supply temperature": f"{condenser_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
@@ -107,10 +124,7 @@ class IDFBuilder:
         # create zone device key mapping
         for zone_name in self.building.constructions.zones:
             self.device_key_map["zones"][zone_name] = {}
-            zone_obj = self.model.getobject(
-                key="Zone".upper(),
-                name=f"{zone_name}"
-            )
+            zone_obj = self.model.getobject(key="Zone".upper(), name=f"{zone_name}")
             self.device_key_map["zones"][zone_name] = {
                 "air temperature": f"{zone_obj['Name'].upper()}:Zone Air Temperature [C](TimeStep)",
                 "air relative humidity": f"{zone_obj['Name'].upper()}:Zone Air Relative Humidity [%](TimeStep)",
@@ -120,8 +134,7 @@ class IDFBuilder:
         for ite_name in self.building.constructions.ites:
             self.device_key_map["ites"][ite_name] = {}
             ite_obj = self.model.getobject(
-                key="ElectricEquipment:ITE:AirCooled".upper(),
-                name=f"{ite_name}"
+                key="ElectricEquipment:ITE:AirCooled".upper(), name=f"{ite_name}"
             )
             self.device_key_map["ites"][ite_name] = {
                 "inlet dry-bulb temperature": f"{ite_obj['Name'].upper()}:ITE Air Inlet Dry-Bulb Temperature [C](TimeStep)",
@@ -134,20 +147,18 @@ class IDFBuilder:
         for acu_name in self.building.constructions.acus:
             self.device_key_map["acus"][acu_name] = {}
             fan_obj = self.model.getobject(
-                key="Fan:VariableVolume".upper(),
-                name=f"{acu_name} fan"
+                key="Fan:VariableVolume".upper(), name=f"{acu_name} fan"
             )
-            self.device_key_map["acus"][acu_name]["fan"]= {
+            self.device_key_map["acus"][acu_name]["fan"] = {
                 "air mass flow rate": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
                 "outlet air temperature": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "power": f"{fan_obj['Name'].upper()}:Fan Electricity Rate [W](TimeStep)",
                 "inlet air temperature": f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "outlet air relative humidity": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
-                "inlet air relative humidity": f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)"
+                "inlet air relative humidity": f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
             }
             coil_obj = self.model.getobject(
-                key="Coil:Cooling:Water".upper(),
-                name=f"{acu_name} cooling coil"
+                key="Coil:Cooling:Water".upper(), name=f"{acu_name} cooling coil"
             )
             self.device_key_map["acus"][acu_name]["cooling coil"] = {
                 "inlet air temperature": f"{coil_obj['Air_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
@@ -160,8 +171,7 @@ class IDFBuilder:
         pump_names = self.building.constructions.chilled_water_pumps
         for pump_name in pump_names:
             pump_obj = self.model.getobject(
-                key="Pump:VariableSpeed".upper(),
-                name=pump_name
+                key="Pump:VariableSpeed".upper(), name=pump_name
             )
             self.device_key_map["chilled water pumps"][pump_name] = {
                 "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
@@ -171,8 +181,7 @@ class IDFBuilder:
         chiller_names = self.building.constructions.chillers
         for chiller_name in chiller_names:
             chiller_obj = self.model.getobject(
-                key="Chiller:Electric:EIR".upper(),
-                name=chiller_name
+                key="Chiller:Electric:EIR".upper(), name=chiller_name
             )
             self.device_key_map["chillers"][chiller_name] = {
                 "cooling load": f"{chiller_obj['Name'].upper()}:Chiller Evaporator Cooling Rate [W](TimeStep)",
@@ -188,8 +197,7 @@ class IDFBuilder:
         pump_names = self.building.constructions.secondary_chilled_water_pumps
         for pump_name in pump_names:
             pump_obj = self.model.getobject(
-                key="Pump:VariableSpeed".upper(),
-                name=pump_name
+                key="Pump:VariableSpeed".upper(), name=pump_name
             )
             self.device_key_map["secondary chilled water pumps"][pump_name] = {
                 "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
@@ -199,8 +207,7 @@ class IDFBuilder:
         pump_names = self.building.constructions.condenser_water_pumps
         for pump_name in pump_names:
             pump_obj = self.model.getobject(
-                key="Pump:VariableSpeed".upper(),
-                name=pump_name
+                key="Pump:VariableSpeed".upper(), name=pump_name
             )
             self.device_key_map["condenser water pumps"][pump_name] = {
                 "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
@@ -210,8 +217,7 @@ class IDFBuilder:
         tower_names = self.building.constructions.cooling_towers
         for tower_name in tower_names:
             tower_obj = self.model.getobject(
-                key="CoolingTower:VariableSpeed".upper(),
-                name=tower_name
+                key="CoolingTower:VariableSpeed".upper(), name=tower_name
             )
             self.device_key_map["cooling towers"][tower_name] = {
                 "return water temperature": f"{tower_obj['Water_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
@@ -219,7 +225,7 @@ class IDFBuilder:
                 "supply water temperature": f"{tower_obj['Water_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "air flow rate ratio": f"{tower_obj['Name'].upper()}:Cooling Tower Air Flow Rate Ratio [](TimeStep)",
                 "outside air wetbulb temperature": "Environment:Site Outdoor Air Wetbulb Temperature [C](TimeStep)",
-                "power": f"{tower_obj['Name'].upper()}:Cooling Tower Fan Electricity Rate [W](TimeStep)"
+                "power": f"{tower_obj['Name'].upper()}:Cooling Tower Fan Electricity Rate [W](TimeStep)",
             }
 
     def _make_room2ite_mapping(self) -> None:
@@ -243,9 +249,7 @@ class IDFBuilder:
                 if isinstance(value, dict):
                     self.replace_entries_with_dict(value)
                 else:
-                    data[key] = {
-                        value: []
-                    }
+                    data[key] = {value: []}
 
     def make(self) -> None:
         self._make_models()
@@ -264,13 +268,13 @@ class IDFBuilder:
     ) -> None:
         if self.model is not None:
             # save idf
-            self.model.saveas(str(idf_save_path)) 
+            self.model.saveas(str(idf_save_path))
             logger.info(f"Model saved to {idf_save_path}")
 
             # save device key map
             if device_key_map_save_path is not None:
                 self._make_device_key_mapping()
-                with open(device_key_map_save_path,  "w") as f:
+                with open(device_key_map_save_path, "w") as f:
                     json.dump(self.device_key_map, f, indent=4)
                 logger.info(f"Device key map saved to {device_key_map_save_path}")
 
@@ -278,14 +282,14 @@ class IDFBuilder:
             if device_his_map_save_path is not None:
                 self.device_his_map = copy.deepcopy(self.device_key_map)
                 self.replace_entries_with_dict(self.device_his_map)
-                with open(device_his_map_save_path,  "w") as f:
+                with open(device_his_map_save_path, "w") as f:
                     json.dump(self.device_his_map, f, indent=4)
                 logger.info(f"Device history map saved to {device_his_map_save_path}")
 
             # save room to ITE map
             if room2ite_map_save_path is not None:
                 self._make_room2ite_mapping()
-                with open(room2ite_map_save_path,  "w") as f:
+                with open(room2ite_map_save_path, "w") as f:
                     json.dump(self.room2ite_map, f, indent=4)
                 logger.info(f"Room to ITE map saved to {room2ite_map_save_path}")
         else:

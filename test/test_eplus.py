@@ -13,8 +13,8 @@ if __name__ == "__main__":
     )
     manager.make()
     manager.save(
-        idf_save_path = "models/idf/building.idf",
-        device_key_map_save_path = "models/building/device_key_map.json",
+        idf_save_path="models/idf/building.idf",
+        device_key_map_save_path="models/building/device_key_map.json",
         # device_his_map_save_path = "models/building/device_his_map.json",
         # room2ite_map_save_path = "models/building/room2ite_map.json",
     )
@@ -54,7 +54,13 @@ if __name__ == "__main__":
     acu_setpoint_sp = 18.0
     acu_supply_flow = 15.0
     water_supply_sp = 7.0
-    act = np.array([water_supply_sp, acu_setpoint_sp, acu_supply_flow, ])
+    act = np.array(
+        [
+            water_supply_sp,
+            acu_setpoint_sp,
+            acu_supply_flow,
+        ]
+    )
     done = False
     while not done:
         obs, rew, done, truncated, info = env.step(act)

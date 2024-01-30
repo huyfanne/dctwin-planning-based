@@ -240,7 +240,10 @@ class BaseEnv(gym.Env):
                     )
                     exit(-1)
                 value = raw_action[ra_ptr]
-                if a.masking_variable_name != "" and self.inspect_current_observation(a.masking_variable_name) == -1: # masking using observation
+                if (
+                    a.masking_variable_name != ""
+                    and self.inspect_current_observation(a.masking_variable_name) == -1
+                ):  # masking using observation
                     a.set_mask(True)
                 else:
                     a.set_mask(False)
@@ -486,7 +489,7 @@ class BaseEnv(gym.Env):
             a.set_unnormed_value(unnormed_value)
             normed_act = a.get_normed_value()
             return normed_act
-        
+
     def get_act_masking_variable_name(
         self,
         variable_name: str = None,
