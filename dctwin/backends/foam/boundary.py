@@ -96,19 +96,10 @@ class ACUBoundary(Boundary):
     def __init__(self, acu_id: str, acu: ACU) -> None:
         self.acu_id = acu_id
         self.object = acu
-<<<<<<< HEAD
         self.supply_kelvin = round(acu.cooling.operating.supply_air_temperature + 273.15, 2)
         self.supply_air_volume_flow_rate = round(acu.cooling.operating.supply_air_volume_flow_rate, 6)
         self.supply_air_mass_flow_rate = rho_air * self.supply_air_volume_flow_rate
         self.cooling_capacity = round(acu.cooling.cooling_capacity, 6) # unit: kW
-=======
-        self.supply_kelvin = round(acu.cooling.supply_air_temperature + 273.15, 2)
-        self.supply_air_volume_flow_rate = round(
-            acu.cooling.supply_air_volume_flow_rate, 6
-        )
-        self.supply_air_mass_flow_rate = self.rho_air * self.supply_air_volume_flow_rate
-        self.cooling_capacity = round(acu.cooling.cooling_capacity, 6)  # unit: kW
->>>>>>> main
 
     @property
     def p_rgh(self) -> str:

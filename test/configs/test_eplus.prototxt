@@ -11,7 +11,7 @@ eplus_env_config {
   actions {
     control_type: PRE_SCHEDULED
     input_source: "data/schedule/workloads/zone1ite1.json"
-    variable_name: "ZONE1ITE1 cpu loading schedule"
+    variable_name: "zone1ite1 cpu loading schedule"
     schedule_config {
       initial_value: 1.0
       lb: 0.0
@@ -85,6 +85,15 @@ eplus_env_config {
   }
   observations {
     exposed: false
+    variable_name: "zone1acu1 fan power consumption"
+    output_variable_config {
+      key_value: "ZONE1ACU1 FAN"
+      variable_name: "Fan Electricity Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
     variable_name: "zone1acu1 fan air mass flow rate"
     output_variable_config {
       key_value: "ZONE1ACU1 AIR LOOP SUPPLY OUTLET NODE"
@@ -94,10 +103,19 @@ eplus_env_config {
   }
   observations {
     exposed: false
-    variable_name: "zone1acu1 fan power consumption"
+    variable_name: "zone1acu1 fan outlet air temperature"
     output_variable_config {
-      key_value: "ZONE1ACU1 FAN"
-      variable_name: "Fan Electricity Rate"
+      key_value: "ZONE1ACU1 AIR LOOP SUPPLY OUTLET NODE"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1acu1 fan inlet air temperature"
+    output_variable_config {
+      key_value: "ZONE1ACU1 COOLING COIL AIR OUTLET NODE"
+      variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
   }
@@ -305,6 +323,15 @@ eplus_env_config {
     output_variable_config {
       key_value: "ZONE1ITE1"
       variable_name: "ITE Air Inlet Dry-Bulb Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1ite1 inlet relative humidity"
+    output_variable_config {
+      key_value: "ZONE1ITE1"
+      variable_name: "ITE Air Inlet Relative Humidity"
       reporting_frequency: "timestep"
     }
   }

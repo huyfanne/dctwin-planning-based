@@ -83,7 +83,6 @@ class EplusCFDEnv(EPlusEnv):
             debug_tag="observation",
         )
 
-<<<<<<< HEAD:dctwin/interfaces/gym_envs/eplus_cfd_env.py
     def _set_eplus_cfd_environ(self) -> None:
         """Set the environment variables for co-simulation
         """
@@ -92,15 +91,6 @@ class EplusCFDEnv(EPlusEnv):
         eplus_cfd_env.cfd.mesh_dir = Path(self.cfd_config.mesh_dir)
         eplus_cfd_env.cfd.object_mesh_index = Path(self.cfd_config.object_mesh_index)
         eplus_cfd_env.cfd.dry_run = self.cfd_config.dry_run
-=======
-    def _set_cosim_environ(self) -> None:
-        """Set the environment variables for co-simulation"""
-        cosim_env.cfd.geometry_file = Path(self.cfd_config.geometry_file)
-        cosim_env.cfd.pod_dir = Path(self.cfd_config.pod_dir)
-        cosim_env.cfd.mesh_dir = Path(self.cfd_config.mesh_dir)
-        cosim_env.cfd.object_mesh_index = Path(self.cfd_config.object_mesh_index)
-        cosim_env.cfd.dry_run = self.cfd_config.dry_run
->>>>>>> main:dctwin/interfaces/gym_envs/cosim_env.py
 
     def _get_actions_to_sent(self) -> Dict[str, List]:
         """

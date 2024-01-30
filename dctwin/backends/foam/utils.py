@@ -77,13 +77,7 @@ def init_foam():
     Path(config.cfd.case_dir, "system").mkdir(parents=True, exist_ok=True)
     Path(config.cfd.case_dir, "case.foam").touch(exist_ok=True)
 
-<<<<<<< HEAD
     shutil.copy(Path(template_dir, "foam/constant/g"), Path(config.cfd.case_dir, "constant/g"))
-=======
-    shutil.copy(
-        Path(template_dir, "constant/g"), Path(config.cfd.case_dir, "constant/g")
-    )
->>>>>>> main
     shutil.copy(
         Path(template_dir, "foam/constant/thermophysicalProperties"),
         Path(config.cfd.case_dir, "constant/thermophysicalProperties"),

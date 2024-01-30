@@ -12,16 +12,6 @@ from kubernetes import config, client
 from dctwin.backends.base_core import BaseBackend
 
 
-<<<<<<< HEAD
-# TODO: Add variable type hints and docstrings
-def delete_job(
-    client,
-    api_instance,
-    namespace="default",
-    job_name="test-job"
-):
-    api_response = api_instance.delete_namespaced_job(
-=======
 # Constants
 DEFAULT_NAMESPACE = "default"
 DEFAULT_JOB_NAME = "test-job"
@@ -37,7 +27,6 @@ DEFAULT_LOCAL_VOLUME_PATH = "/tm-data/"
 
 def delete_job(api_instance, namespace=DEFAULT_NAMESPACE, job_name=DEFAULT_JOB_NAME):
     api_instance.delete_namespaced_job(
->>>>>>> main
         name=job_name,
         namespace=namespace,
         body=client.V1DeleteOptions(
@@ -52,23 +41,6 @@ def delete_job(api_instance, namespace=DEFAULT_NAMESPACE, job_name=DEFAULT_JOB_N
             break
 
 
-<<<<<<< HEAD
-# TODO: Add variable type hints and docstrings
-def create_job_object(
-    client,
-    api_instance,
-    namespace="default",
-    job_name="test-job",
-    pvc_name="task-manager-worker-data-task-manager-worker-0",
-    image="ubuntu",
-    command: list = ["ls", "-al", "/tm-data/"],
-    backoff_limit: float = 0,
-    env_vars: dict = {},
-    ttl_seconds_after_finished: int = 30,
-    working_dir: str = None,
-    case_dir: str = None,
-    volume_data_dir: str = "/data"
-=======
 def create_job_object(
     api_instance,
     cfd_resources,
@@ -84,7 +56,6 @@ def create_job_object(
     case_dir=None,
     volume_data_dir=DEFAULT_VOLUME_DATA_DIR,
     k8s_taint="",
->>>>>>> main
 ):
     try:
         delete_job(api_instance, namespace=namespace, job_name=job_name)
@@ -171,16 +142,11 @@ def create_job_object(
     return job
 
 
-# TODO: Add variable type hints and docstrings
 def create_job(batch_api_instance, job):
     namespace = job.metadata.namespace
     batch_api_instance.create_namespaced_job(namespace=namespace, body=job)
 
 
-<<<<<<< HEAD
-# TODO: Add variable type hints and docstrings
-def wait_for_job(batch_api_instance, core_api_instance, job_name, namespace="default", backoff_limit=2):
-=======
 def wait_for_job(
     batch_api_instance,
     core_api_instance,
@@ -188,7 +154,6 @@ def wait_for_job(
     namespace=DEFAULT_NAMESPACE,
     backoff_limit=DEFAULT_BACKOFF_LIMIT,
 ):
->>>>>>> main
     while True:
         try:
             api_response = batch_api_instance.read_namespaced_job_status(
@@ -222,42 +187,6 @@ def wait_for_job(
             time.sleep(1)
 
 
-<<<<<<< HEAD
-class BackendK8s(abc.ABC):
-    """
-    Base class for DCTwin Backend. All backend should inherit this class.
-    The Backend is to support the simulation of various simulators (EnergyPlus, OpenFoam, etc.) which is dockerized.
-    It mainly takes care of the following tasks:
-    1. Check the docker image of specific simulator
-    2. Run the docker container of specific simulator
-
-    :param client: docker client
-    :param process_num: number of cores for simulation
-    """
-    volume_data_dir = "/data"
-    volume_geometry_dir = f"{volume_data_dir}/constant/triSurface"
-
-    # todo: remove client, cannot be remove currently due to the dependency of run_container of the child class
-    def __init__(self, client: Any = None, process_num: int = 1) -> None:
-        self.process_num = process_num
-        self.container = None
-
-    @property
-    @abc.abstractmethod
-    def docker_image(self) -> str:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def command(self) -> Union[list, str]:
-        pass
-
-    @abc.abstractmethod
-    def run(self, **kwargs) -> None:
-        pass
-
-    # todo: remove auto_remove,user, cannot be remove currently due to the dependency of run_container of the child class
-=======
 class BackendK8s(BaseBackend):
     def __init__(self, k8s_config=None, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -275,7 +204,6 @@ class BackendK8s(BaseBackend):
             )
         )
 
->>>>>>> main
     def run_container(
         self,
         case_dir: Union[Path, str],

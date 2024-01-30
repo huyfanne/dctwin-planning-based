@@ -224,18 +224,8 @@ class Eplus:
         return chw_supply_outlet_node_names
 
     def _get_valid_key_values(self):
-<<<<<<< HEAD:dctwin/backends/eplus/parser.py
         valid_key_values = self.node_names | self.component_names | \
                            self.zone_names | {"Whole Building"} | {"whole building"} | {"pv load center"}
-=======
-        valid_key_values = (
-            self.node_names
-            | self.component_names
-            | self.zone_names
-            | {"Whole Building"}
-            | {"whole building"}
-        )
->>>>>>> main:dctwin/models/eplus/eplus.py
         it_equipment = self.epm.ElectricEquipment_ITE_AirCooled.select()
         supply_air_nodes = set()
         ite_names = set()
@@ -513,12 +503,9 @@ class Eplus:
             "ITEDeltaTSupply": _set_delta_temp_supply_schedule,
             "ITEDeltaTReturn": _set_delta_temp_return_schedule,
             "Room": _set_room_setpoint_schedule,
-<<<<<<< HEAD:dctwin/backends/eplus/parser.py
             "Fan": _set_fan_availability_schedule,
             "Coil": _set_coil_availability_schedule,
             "ATU": _set_atu_availability_schedule,
-=======
->>>>>>> main:dctwin/models/eplus/eplus.py
         }
 
         name = config.variable_name
@@ -567,21 +554,11 @@ class Eplus:
         actuator_config = config.actuator_config
         # check whether the actuated component name is valid
 
-<<<<<<< HEAD:dctwin/backends/eplus/parser.py
         # if actuator_config.actuated_component_unique_name.lower() \
         #         not in set.union(self.component_names, self.node_names, self.branch_name):
         #     raise ValueError(
         #         f"Actuated Component Unique Name : {actuator_config.actuated_component_unique_name} is not defined in "
         #         f"IDF file.")
-=======
-        if actuator_config.actuated_component_unique_name.lower() not in set.union(
-            self.component_names, self.node_names, self.branch_name
-        ):
-            raise ValueError(
-                f"Actuated Component Unique Name : {actuator_config.actuated_component_unique_name} is not defined in "
-                f"IDF file."
-            )
->>>>>>> main:dctwin/models/eplus/eplus.py
 
         # check if the external schedule is already exist in the idf file
         if (
@@ -610,12 +587,8 @@ class Eplus:
             component_type = "Plant Component Chiller:Electric:EIR"
 
         control_type = actuator_config.DESCRIPTOR.EnumValueName(
-<<<<<<< HEAD:dctwin/backends/eplus/parser.py
             "ControlType",
             actuator_config.actuated_component_control_type
-=======
-            "ControlType", actuator_config.actuated_component_control_type
->>>>>>> main:dctwin/models/eplus/eplus.py
         )
         control_type = " ".join(control_type.split("_"))
 
@@ -640,22 +613,11 @@ class Eplus:
         """
         # check whether the configuration contains all necessary ingredients
 
-<<<<<<< HEAD:dctwin/backends/eplus/parser.py
         # if output_variable_config.output_variable_config.key_value.lower() \
         #         not in set.union(self.valid_key_values, "*"):
         #     raise ValueError(
         #         f"Key value : {output_variable_config.output_variable_config.key_value} "
         #         f"is not a valid key name.")
-=======
-        if (
-            output_variable_config.output_variable_config.key_value.lower()
-            not in set.union(self.valid_key_values, "*")
-        ):
-            raise ValueError(
-                f"Key value : {output_variable_config.output_variable_config.key_value} "
-                f"is not a valid key name."
-            )
->>>>>>> main:dctwin/models/eplus/eplus.py
 
         # check if the external schedule is already exist in the idf file
         match_func = (
@@ -747,20 +709,11 @@ class Eplus:
             else:
                 self._set_external_actuator(action_config)
 
-    def batch_set_observations(
-        self, observation_configs: List[EPlusObservationConfig]
-    ) -> None:
+    def batch_set_observations(self, observation_configs: List[EPlusObservationConfig]) -> None:
         for observation_config in observation_configs:
-            if (
-                observation_config.DESCRIPTOR.EnumValueName(
+            if observation_config.DESCRIPTOR.EnumValueName(
                     "ObservationType", observation_config.observation_type
-<<<<<<< HEAD:dctwin/backends/eplus/parser.py
             ) == "EPLUS":
-=======
-                )
-                != "EXTERNAL"
-            ):
->>>>>>> main:dctwin/models/eplus/eplus.py
                 self._set_observation(observation_config)
 
     def batch_set_inlet_temperature_schedule(
@@ -886,25 +839,14 @@ class Eplus:
 
         # add Eplus output variables
         for observation_config in observation_configs:
-            if (
-                observation_config.DESCRIPTOR.EnumValueName(
+            if observation_config.DESCRIPTOR.EnumValueName(
                     "ObservationType", observation_config.observation_type
-<<<<<<< HEAD:dctwin/backends/eplus/parser.py
             ) == "EPLUS":
-=======
-                )
-                != "EXTERNAL"
-            ):
->>>>>>> main:dctwin/models/eplus/eplus.py
                 variable_child = ET.SubElement(root, "variable")
                 variable_child.attrib["source"] = "EnergyPlus"
                 eplus_child = ET.SubElement(variable_child, "EnergyPlus")
-                eplus_child.attrib[
-                    "name"
-                ] = observation_config.output_variable_config.key_value
-                eplus_child.attrib[
-                    "type"
-                ] = observation_config.output_variable_config.variable_name
+                eplus_child.attrib["name"] = observation_config.output_variable_config.key_value
+                eplus_child.attrib["type"] = observation_config.output_variable_config.variable_name
 
         # add BCVTB input schedules
         for action in action_configs:
