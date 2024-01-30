@@ -34,7 +34,6 @@ class Boundary(abc.ABC):
 
 
 class RoomBoundary(Boundary):
-
     def __init__(self, room: Room) -> None:
         self.room = room
 
@@ -54,12 +53,11 @@ class RoomBoundary(Boundary):
                 boxes_types_index[box.geometry.model] = 1
             else:
                 boxes_types_index[box.geometry.model] += 1
-            boxes_name_list.append(f"box_{box.geometry.model}_{boxes_types_index[box.geometry.model]}")
+            boxes_name_list.append(
+                f"box_{box.geometry.model}_{boxes_types_index[box.geometry.model]}"
+            )
         boxes_boundary = "\n".join(
-            [
-                f"{box_name} {type_define}"
-                for box_name in boxes_name_list
-            ]
+            [f"{box_name} {type_define}" for box_name in boxes_name_list]
         )
 
         rack_boundary = "\n".join(
@@ -74,10 +72,7 @@ class RoomBoundary(Boundary):
                 rack_with_panel.append(key)
 
         rack_panel_boundary = "\n".join(
-            [
-                f"rack_panel_{key} {type_define}"
-                for key in rack_with_panel
-            ]
+            [f"rack_panel_{key} {type_define}" for key in rack_with_panel]
         )
         return f"""
         room_wall_1 {type_define}
@@ -98,14 +93,22 @@ class RoomBoundary(Boundary):
 
 
 class ACUBoundary(Boundary):
-
     def __init__(self, acu_id: str, acu: ACU) -> None:
         self.acu_id = acu_id
         self.object = acu
+<<<<<<< HEAD
         self.supply_kelvin = round(acu.cooling.operating.supply_air_temperature + 273.15, 2)
         self.supply_air_volume_flow_rate = round(acu.cooling.operating.supply_air_volume_flow_rate, 6)
         self.supply_air_mass_flow_rate = rho_air * self.supply_air_volume_flow_rate
         self.cooling_capacity = round(acu.cooling.cooling_capacity, 6) # unit: kW
+=======
+        self.supply_kelvin = round(acu.cooling.supply_air_temperature + 273.15, 2)
+        self.supply_air_volume_flow_rate = round(
+            acu.cooling.supply_air_volume_flow_rate, 6
+        )
+        self.supply_air_mass_flow_rate = self.rho_air * self.supply_air_volume_flow_rate
+        self.cooling_capacity = round(acu.cooling.cooling_capacity, 6)  # unit: kW
+>>>>>>> main
 
     @property
     def p_rgh(self) -> str:
@@ -172,7 +175,6 @@ class ACUBoundary(Boundary):
 
 
 class ServerBoundary(Boundary):
-
     def __init__(self, server_id: str, server: Server) -> None:
         self.server_id = server_id
         self.object: Server = server

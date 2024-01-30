@@ -16,11 +16,7 @@ from dclib.room import Room
 
 from dctwin.backends.core import Backend
 from dctwin.backends.core_k8s import BackendK8s
-from dctwin.backends.foam.boundary import (
-    ACUBoundary,
-    RoomBoundary,
-    ServerBoundary
-)
+from dctwin.backends.foam.boundary import ACUBoundary, RoomBoundary, ServerBoundary
 
 from dctwin.backends.foam.utils import generate_control_dict, read_internal_field
 from dctwin.utils import template_env, config
@@ -34,6 +30,7 @@ class Builder:
     :param last_state_case: the last state of the case, if it is None,
         the state will be reset to the initial state
     """
+
     def __init__(self, room: Room, last_state_case=None) -> None:
         self.room = room
         self.room_dz = room.geometry.height
@@ -80,9 +77,12 @@ class Builder:
                 template_env.get_template(f"foam/0/{filename}.j2").render(
                     init_temperature=24 + 273.15,
                     p_rgh=round(self.room_dz * 9.81, 10),
-                    acu_boundaries=[ACUBoundary(key, acu) for key, acu in self.acu_dict.items()],
+                    acu_boundaries=[
+                        ACUBoundary(key, acu) for key, acu in self.acu_dict.items()
+                    ],
                     server_boundaries=[
-                        ServerBoundary(key, server) for key, server in self.server_dict.items()
+                        ServerBoundary(key, server)
+                        for key, server in self.server_dict.items()
                     ],
                     room_boundary=RoomBoundary(self.room),
                     acu_k=acu_k,
@@ -98,6 +98,7 @@ class SolverBackendMixin:
     """
     Backend for OpenFOAM solver. The class is inherited from the core Backend
     """
+
     docker_image = "ghcr.io/cap-dcwiz/openfoam-v1912-centos72:latest"
 
     only_save_latest = True
@@ -114,18 +115,22 @@ class SolverBackendMixin:
         if self.process_num > 1:
             latest_time = "-latestTime" if self.only_save_latest else ""
             command = [
-                "bash", "-c",
-                ("source /opt/OpenFOAM/setImage_v1912.sh && "
-                "decomposePar -force && "
-                "mpirun --allow-run-as-root "
-                f"-np {self.process_num} {self.solver} -parallel && "
-                f"reconstructPar {latest_time} && "
-                "rm -rf /data/processor*")
+                "bash",
+                "-c",
+                (
+                    "source /opt/OpenFOAM/setImage_v1912.sh && "
+                    "decomposePar -force && "
+                    "mpirun --allow-run-as-root "
+                    f"-np {self.process_num} {self.solver} -parallel && "
+                    f"reconstructPar {latest_time} && "
+                    "rm -rf /data/processor*"
+                ),
             ]
         else:
             command = [
-                "bash", "-c",
-                (f"source /opt/OpenFOAM/setImage_v1912.sh && {self.solver}")
+                "bash",
+                "-c",
+                (f"source /opt/OpenFOAM/setImage_v1912.sh && {self.solver}"),
             ]
         return command
 
@@ -163,9 +168,13 @@ class SolverBackendMixin:
             if not Path(f"{config.cfd.case_dir}/0").exists():
                 shutil.copytree(f"{config.cfd.mesh_dir}/0", f"{config.cfd.case_dir}/0")
             if not Path(f"{config.cfd.case_dir}/constant").exists():
-                shutil.copytree(f"{config.cfd.mesh_dir}/constant", f"{config.cfd.case_dir}/constant")
+                shutil.copytree(
+                    f"{config.cfd.mesh_dir}/constant", f"{config.cfd.case_dir}/constant"
+                )
             if not Path(f"{config.cfd.case_dir}/system").exists():
-                shutil.copytree(f"{config.cfd.mesh_dir}/system", f"{config.cfd.case_dir}/system")
+                shutil.copytree(
+                    f"{config.cfd.mesh_dir}/system", f"{config.cfd.case_dir}/system"
+                )
             Path(config.cfd.case_dir, "case.foam").touch(exist_ok=True)
             time.sleep(1)
 
@@ -181,11 +190,11 @@ class SolverBackendMixin:
         if config.cfd.dry_run:
             return
 
-        host_path = os.environ.get('HOST_PATH', None)
+        host_path = os.environ.get("HOST_PATH", None)
         if host_path is not None:
             # concatenate the log path in Docker container with external host path
             log_index = config.cfd.case_dir.parts.index("log")
-            case_dir = '/'.join(config.cfd.case_dir.parts[log_index:])
+            case_dir = "/".join(config.cfd.case_dir.parts[log_index:])
             case_dir = Path(host_path).joinpath(case_dir)
             logger.info(f"Concatenated Case Directory: {case_dir}")
         else:
@@ -213,7 +222,9 @@ class SteadySolverBackend(SolverBackend):
         delta_t=1,
     ) -> None:
         generate_control_dict(
-            probes=list([x.geometry.location for x in room.constructions.sensors.values()]),
+            probes=list(
+                [x.geometry.location for x in room.constructions.sensors.values()]
+            ),
             steady=True,
             delta_t=delta_t,
             write_interval=self.write_interval,
@@ -233,7 +244,9 @@ class TransientSolverBackend(SolverBackend):
         delta_t=1e-5,
     ) -> None:
         generate_control_dict(
-            probes=list([x.geometry.location for x in room.constructions.sensors.values()]),
+            probes=list(
+                [x.geometry.location for x in room.constructions.sensors.values()]
+            ),
             steady=False,
             delta_t=delta_t,
             write_interval=self.write_interval,
@@ -253,7 +266,9 @@ class SteadySolverBackendK8s(SolverBackendK8s):
         delta_t=1,
     ) -> None:
         generate_control_dict(
-            probes=list([x.geometry.location for x in room.constructions.sensors.values()]),
+            probes=list(
+                [x.geometry.location for x in room.constructions.sensors.values()]
+            ),
             steady=True,
             delta_t=delta_t,
             write_interval=self.write_interval,
@@ -273,7 +288,9 @@ class TransientSolverBackendK8s(SolverBackendK8s):
         delta_t=1e-5,
     ) -> None:
         generate_control_dict(
-            probes=list([x.geometry.location for x in room.constructions.sensors.values()]),
+            probes=list(
+                [x.geometry.location for x in room.constructions.sensors.values()]
+            ),
             steady=False,
             delta_t=delta_t,
             write_interval=self.write_interval,

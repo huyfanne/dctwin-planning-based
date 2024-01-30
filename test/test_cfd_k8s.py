@@ -4,6 +4,7 @@ from dctwin.utils import config
 
 room = Room.load("models/geometry/room_test.json")
 config.PRESERVE_FOAM_LOG = True
+config._environ.__setitem__("is_local_k8s", "True")
 
 manager = CFDManager(
     room=room,
