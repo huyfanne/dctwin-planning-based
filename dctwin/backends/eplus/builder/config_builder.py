@@ -275,6 +275,17 @@ class ConfigBuilder:
         :return:
         """
         for acu_name, acu in self.device_key_map["acus"].items():
+            # observe ACU fan power
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{acu_name} fan power consumption".lower(),
+                key_value=acu["fan"]["power"].split(":")[0],
+                output_variable_name="Fan Electricity Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
             # observe ACU air mass flow rate
             self._make_observation(
                 exposed=exposed,
@@ -297,12 +308,51 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub
             )
-            # observe ACU fan power
+            # observe ACU air inlet temperature
             self._make_observation(
                 exposed=exposed,
-                variable_name=f"{acu_name} fan power consumption".lower(),
-                key_value=acu["fan"]["power"].split(":")[0],
-                output_variable_name="Fan Electricity Rate",
+                variable_name=f"{acu_name} fan inlet air temperature".lower(),
+                key_value=acu["fan"]["inlet air temperature"].split(":")[0],
+                output_variable_name="System Node Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+
+    def make_acu_fan_hum_observations(
+        self,
+        exposed: bool = True,
+        normalize_method: int = None,
+        lb: float = None,
+        ub: float = None
+    ):
+        """
+        Make observations for ACU fans
+        :param exposed: whether the observation is exposed to the agent
+        :param normalize_method: the normalization method
+        :param lb: the lower bound of the normalization
+        :param ub: the upper bound of the normalization
+        :return:
+        """
+        for acu_name, acu in self.device_key_map["acus"].items():
+            # observe ACU air outlet relative humidity
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{acu_name} fan outlet air relative humidity".lower(),
+                key_value=acu["fan"]["outlet air relative humidity"].split(":")[0],
+                output_variable_name="System Node Relative Humidity",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # observe ACU air inlet relative humidity
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{acu_name} fan inlet air relative humidity".lower(),
+                key_value=acu["fan"]["inlet air relative humidity"].split(":")[0],
+                output_variable_name="System Node Relative Humidity",
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
