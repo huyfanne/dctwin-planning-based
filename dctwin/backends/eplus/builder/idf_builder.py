@@ -141,6 +141,9 @@ class IDFBuilder:
                 "air mass flow rate": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
                 "outlet air temperature": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "power": f"{fan_obj['Name'].upper()}:Fan Electricity Rate [W](TimeStep)",
+                "inlet air temperature": f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "outlet air relative humidity": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
+                "inlet air relative humidity": f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)"
             }
             coil_obj = self.model.getobject(
                 key="Coil:Cooling:Water".upper(),
