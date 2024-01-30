@@ -25,27 +25,39 @@ def map_boundary_condition_fn(
     and flow rate model are from parsing the idf file automatically.
     """
     boundary_conditions = {
-        "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
-        "server_powers": {}, "server_volume_flow_rates": {}
+        "supply_air_temperatures": {},
+        "supply_air_volume_flow_rates": {},
+        "server_powers": {},
+        "server_volume_flow_rates": {},
     }
     for crac in eplus_adaptor.eplus_manager.idf_parser.epm.AirLoopHVAC:
         uid = eplus_adaptor.idf2room_mapper[crac.name]
-        boundary_conditions["supply_air_temperatures"][uid] = action_dict[f"{uid}_setpoint"]
-        boundary_conditions["supply_air_volume_flow_rates"][uid] = action_dict[f"{uid}_flow_rate"] / eplus_adaptor.rho_air
-    for idx, it_equipment in enumerate(eplus_adaptor.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled):
+        boundary_conditions["supply_air_temperatures"][uid] = action_dict[
+            f"{uid}_setpoint"
+        ]
+        boundary_conditions["supply_air_volume_flow_rates"][uid] = (
+            action_dict[f"{uid}_flow_rate"] / eplus_adaptor.rho_air
+        )
+    for idx, it_equipment in enumerate(
+        eplus_adaptor.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled
+    ):
         for server_id in eplus_adaptor.idf2room_mapper[it_equipment.name]["servers"]:
             heat_load = eplus_adaptor.eplus_manager.idf_parser.compute_server_power(
                 utilization=action_dict[f"cpu_loading_schedule{idx + 1}"],
                 inlet_temperature=eplus_adaptor.server_inlet_temps[server_id],
-                name=it_equipment.name
+                name=it_equipment.name,
             )
-            volume_flow_rate = eplus_adaptor.eplus_manager.idf_parser.compute_server_flow_rate(
-                utilization=action_dict[f"cpu_loading_schedule{idx + 1}"],
-                inlet_temperature=eplus_adaptor.server_inlet_temps[server_id],
-                name=it_equipment.name
+            volume_flow_rate = (
+                eplus_adaptor.eplus_manager.idf_parser.compute_server_flow_rate(
+                    utilization=action_dict[f"cpu_loading_schedule{idx + 1}"],
+                    inlet_temperature=eplus_adaptor.server_inlet_temps[server_id],
+                    name=it_equipment.name,
+                )
             )
             boundary_conditions["server_powers"][server_id] = heat_load
-            boundary_conditions["server_volume_flow_rates"][server_id] = volume_flow_rate
+            boundary_conditions["server_volume_flow_rates"][
+                server_id
+            ] = volume_flow_rate
 
     return boundary_conditions
 
@@ -59,7 +71,7 @@ config = read_engine_config(engine_config=engine_config)
 
 env_config.LOG_DIR = logging_dir
 env_config.LOG_DIR.mkdir(parents=True, exist_ok=True)
-shutil.copy(engine_config, env_config.LOG_DIR.joinpath(f'{engine_config.name}'))
+shutil.copy(engine_config, env_config.LOG_DIR.joinpath(f"{engine_config.name}"))
 
 
 env_config_name = config.WhichOneof("EnvConfig")
@@ -76,14 +88,16 @@ env = EplusCFDEnv(
 )
 env.reset()
 
-with open(set_points_path, 'r') as f:
+with open(set_points_path, "r") as f:
     action_dict = json.load(f)
 
-act = np.array([
-    action_dict["ACU1_setpoint"],
-    action_dict["ACU1_flow_rate"],
-    action_dict["chw_supply_sp"]
-])
+act = np.array(
+    [
+        action_dict["ACU1_setpoint"],
+        action_dict["ACU1_flow_rate"],
+        action_dict["chw_supply_sp"],
+    ]
+)
 done = False
 env_config.cfd.dry_run = True
 env_config.cfd.mesh_dir = env_config.LOG_DIR.joinpath("base")

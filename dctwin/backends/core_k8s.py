@@ -1,68 +1,111 @@
-import abc
 from pathlib import Path
-
-from loguru import logger
 from typing import Union, Any
-
-from dctwin.utils import config
-from kubernetes import config, client
 import time
 import uuid
 import os
+import json
+
+from dctwin.utils import config as dctwin_config
+from loguru import logger
+from kubernetes import config, client
+
+from dctwin.backends.base_core import BaseBackend
 
 
-# TODO: Add variable type hints and docstrings
-def delete_job(
-    client,
-    api_instance,
-    namespace="default",
-    job_name="test-job"
-):
-    api_response = api_instance.delete_namespaced_job(
+# Constants
+DEFAULT_NAMESPACE = "default"
+DEFAULT_JOB_NAME = "test-job"
+DEFAULT_PVC_NAME = "task-manager-worker-data-task-manager-worker-0"
+DEFAULT_IMAGE = "ubuntu"
+DEFAULT_COMMAND = ["sleep", "1000"]
+DEFAULT_BACKOFF_LIMIT = 0
+DEFAULT_ENV_VARS = {}
+DEFAULT_TTL_SECONDS_AFTER_FINISHED = 30
+DEFAULT_VOLUME_DATA_DIR = "/data"
+DEFAULT_LOCAL_VOLUME_PATH = "/tm-data/"
+
+
+def delete_job(api_instance, namespace=DEFAULT_NAMESPACE, job_name=DEFAULT_JOB_NAME):
+    api_instance.delete_namespaced_job(
         name=job_name,
         namespace=namespace,
         body=client.V1DeleteOptions(
             propagation_policy="Foreground", grace_period_seconds=5
         ),
     )
-    # wait for the job to be deleted
     while True:
         try:
-            api_response = api_instance.read_namespaced_job(
-                name=job_name, namespace=namespace
-            )
+            api_instance.read_namespaced_job(name=job_name, namespace=namespace)
             time.sleep(1)
         except:
             break
 
 
-# TODO: Add variable type hints and docstrings
 def create_job_object(
-    client,
     api_instance,
-    namespace="default",
-    job_name="test-job",
-    pvc_name="task-manager-worker-data-task-manager-worker-0",
-    image="ubuntu",
-    command: list = ["ls", "-al", "/tm-data/"],
-    backoff_limit: float = 0,
-    env_vars: dict = {},
-    ttl_seconds_after_finished: int = 30,
-    working_dir: str = None,
-    case_dir: str = None,
-    volume_data_dir: str = "/data"
+    cfd_resources,
+    namespace=DEFAULT_NAMESPACE,
+    job_name=DEFAULT_JOB_NAME,
+    pvc_name=DEFAULT_PVC_NAME,
+    image=DEFAULT_IMAGE,
+    command=DEFAULT_COMMAND,
+    backoff_limit=DEFAULT_BACKOFF_LIMIT,
+    env_vars=DEFAULT_ENV_VARS,
+    ttl_seconds_after_finished=DEFAULT_TTL_SECONDS_AFTER_FINISHED,
+    working_dir=None,
+    case_dir=None,
+    volume_data_dir=DEFAULT_VOLUME_DATA_DIR,
+    k8s_taint="",
 ):
-    # delete the job if it already exists
     try:
         delete_job(api_instance, namespace=namespace, job_name=job_name)
     except:
         print("Job does not exist. Creating new job")
 
-    env = []
-    for key, item in env_vars.items():
-        env.append(client.V1EnvVar(name=key, value=item))
+    env = [client.V1EnvVar(name=key, value=item) for key, item in env_vars.items()]
+    IS_LOCAL_K8S = dctwin_config._environ.get("is_local_k8s", "False") == "True"
+    local_volume_path = DEFAULT_LOCAL_VOLUME_PATH  # New parameter for local volume path
 
-    # Configureate Pod template container
+    if IS_LOCAL_K8S:
+        volumes = [
+            client.V1Volume(
+                name="data-volume",
+                host_path=client.V1HostPathVolumeSource(
+                    path=local_volume_path  # Path to the local volume
+                ),
+            )
+        ]
+        volume_mounts = [
+            client.V1VolumeMount(
+                mount_path=volume_data_dir, name="data-volume", sub_path="log/base"
+            )
+        ]
+
+    else:
+        volumes = [
+            client.V1Volume(
+                name="data-volume",
+                persistent_volume_claim=client.V1PersistentVolumeClaimVolumeSource(
+                    claim_name=pvc_name
+                ),
+            )
+        ]
+        volume_mounts = [
+            client.V1VolumeMount(
+                mount_path=volume_data_dir,
+                name="data-volume",
+                sub_path=str(case_dir).replace("/tm-data/", "", 1),
+            )
+        ]
+
+    tolerations = []
+    if k8s_taint != "":
+        key, value, effect = k8s_taint.split(":")
+        toleration = client.V1Toleration(
+            effect=effect, key=key, operator="Equal", value=value
+        )
+        tolerations.append(toleration)
+
     job = client.V1Job(
         api_version="batch/v1",
         kind="Job",
@@ -71,38 +114,27 @@ def create_job_object(
             template=client.V1PodTemplateSpec(
                 spec=client.V1PodSpec(
                     subdomain=f"{job_name}-svc",
-                    image_pull_secrets=[
-                        client.V1LocalObjectReference(name="regcred")
-                    ],
-                    volumes=[
-                        client.V1Volume(
-                        name="data-volume",
-                        persistent_volume_claim=client.V1PersistentVolumeClaimVolumeSource(
-                        claim_name=pvc_name
-                        ))
-                    ],
+                    image_pull_secrets=[client.V1LocalObjectReference(name="regcred")],
+                    volumes=volumes,
                     containers=[
                         client.V1Container(
                             name="job",
                             image=image,
                             command=command,
-                            volume_mounts=[
-                                client.V1VolumeMount(
-                                    mount_path=volume_data_dir, name="data-volume", sub_path=str(case_dir).replace("/tm-data/", "", 1)
-                                )
-                            ],
+                            volume_mounts=volume_mounts,
                             env=env,
                             working_dir=working_dir,
                             resources=client.V1ResourceRequirements(
-                                requests={"cpu": "16000m", "memory": "5000Mi", "ephemeral-storage": "1000Mi"},
-                                limits={"cpu": "16000m", "memory": "5000Mi", "ephemeral-storage": "1000Mi"},
+                                requests=cfd_resources,
+                                limits=cfd_resources,
                             ),
                         )
                     ],
+                    tolerations=tolerations,
                     restart_policy="Never",
                 )
             ),
-            backoff_limit=backoff_limit,  # number of retries (+1 for the initial run)
+            backoff_limit=backoff_limit,
             completion_mode="Indexed",
             ttl_seconds_after_finished=ttl_seconds_after_finished,
         ),
@@ -110,17 +142,18 @@ def create_job_object(
     return job
 
 
-# TODO: Add variable type hints and docstrings
 def create_job(batch_api_instance, job):
     namespace = job.metadata.namespace
-
-    api_response = batch_api_instance.create_namespaced_job(
-        namespace=namespace, body=job
-    )
+    batch_api_instance.create_namespaced_job(namespace=namespace, body=job)
 
 
-# TODO: Add variable type hints and docstrings
-def wait_for_job(batch_api_instance, core_api_instance, job_name, namespace="default", backoff_limit=2):
+def wait_for_job(
+    batch_api_instance,
+    core_api_instance,
+    job_name,
+    namespace=DEFAULT_NAMESPACE,
+    backoff_limit=DEFAULT_BACKOFF_LIMIT,
+):
     while True:
         try:
             api_response = batch_api_instance.read_namespaced_job_status(
@@ -133,14 +166,20 @@ def wait_for_job(batch_api_instance, core_api_instance, job_name, namespace="def
             pod_list = core_api_instance.list_namespaced_pod(namespace)
             for pod in pod_list.items:
                 if (
-                        pod.metadata.owner_references
-                        and pod.metadata.owner_references[0].kind == "Job"
-                        and pod.metadata.owner_references[0].name == job_name
+                    pod.metadata.owner_references
+                    and pod.metadata.owner_references[0].kind == "Job"
+                    and pod.metadata.owner_references[0].name == job_name
                 ):
-                    return core_api_instance.read_namespaced_pod_log(pod.metadata.name, namespace, follow=True,
-                                                                         _preload_content=False).stream()
-            if api_response.status.succeeded or api_response.status.failed == backoff_limit + 1:
-                # if api_response.status.succeeded or not api_response.status.active:
+                    return core_api_instance.read_namespaced_pod_log(
+                        pod.metadata.name,
+                        namespace,
+                        follow=True,
+                        _preload_content=False,
+                    ).stream()
+            if (
+                api_response.status.succeeded
+                or api_response.status.failed == backoff_limit + 1
+            ):
                 break
             else:
                 time.sleep(2)
@@ -148,46 +187,27 @@ def wait_for_job(batch_api_instance, core_api_instance, job_name, namespace="def
             time.sleep(1)
 
 
-class BackendK8s(abc.ABC):
-    """
-    Base class for DCTwin Backend. All backend should inherit this class.
-    The Backend is to support the simulation of various simulators (EnergyPlus, OpenFoam, etc.) which is dockerized.
-    It mainly takes care of the following tasks:
-    1. Check the docker image of specific simulator
-    2. Run the docker container of specific simulator
+class BackendK8s(BaseBackend):
+    def __init__(self, k8s_config=None, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.k8s_config = k8s_config
+        # get from k8s config
+        self.namespace = k8s_config.get("k8s_namespace", "default")
+        self.worker_name = k8s_config.get("worker_name", "default-worker")
+        self.k8s_taint = k8s_config.get("k8s_taint", "")
+        self.cfd_resources = json.loads(
+            k8s_config.get(
+                "cfd_resources",
+                json.dumps(
+                    {"cpu": "16000m", "memory": "4Gi", "ephemeral-storage": "1000Mi"}
+                ),
+            )
+        )
 
-    :param client: docker client
-    :param process_num: number of cores for simulation
-    """
-    volume_data_dir = "/data"
-    volume_geometry_dir = f"{volume_data_dir}/constant/triSurface"
-
-    # todo: remove client, cannot be remove currently due to the dependency of run_container of the child class
-    def __init__(self, client: Any = None, process_num: int = 1) -> None:
-        self.process_num = process_num
-        self.container = None
-
-    @property
-    @abc.abstractmethod
-    def docker_image(self) -> str:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def command(self) -> Union[list, str]:
-        pass
-
-    @abc.abstractmethod
-    def run(self, **kwargs) -> None:
-        pass
-
-    # todo: remove auto_remove,user, cannot be remove currently due to the dependency of run_container of the child class
     def run_container(
         self,
         case_dir: Union[Path, str],
         environment: dict = {},
-        auto_remove: bool = True,
-        user: int = None,
         stream: bool = False,
         working_dir: str = None,
         command: list = None,
@@ -199,42 +219,53 @@ class BackendK8s(abc.ABC):
         logger.info("docker run: " + (" ".join(command)))
         if working_dir is None:
             working_dir = self.volume_data_dir
-        namespace = "dcwiz"
-        worker_name = os.environ["WORKER_NAME"]
+        namespace = self.namespace
+        worker_name = self.worker_name
+        cfd_resources = self.cfd_resources
         job_name = uuid.uuid4()
         image = self.docker_image
-        config.load_incluster_config()
-        # Note: we need to use both the core_v1 and batch_v1 APIs. The previous one is for the pods, the latter for the jobs
+        IS_LOCAL_K8S = dctwin_config._environ.get("is_local_k8s", "False") == "True"
+        if IS_LOCAL_K8S:
+            config.load_kube_config()
+        else:
+            config.load_incluster_config()
+
         core_v1 = client.CoreV1Api()
         batch_v1 = client.BatchV1Api()
 
         job_name = f"{worker_name}-{job_name}"
         pvc_name = f"task-manager-worker-data-{worker_name}"
-        pod_dns_name = f"{job_name}-0.{job_name}-svc.{namespace}.svc.cluster.local"
         backoff_limit = 0
+        logger.info(f"container_id: {job_name}")
 
         job = create_job_object(
-            client,
             batch_v1,
+            cfd_resources,
             namespace=namespace,
             job_name=job_name,
             pvc_name=pvc_name,
             image=image,
             command=command,
-            # command=["bash", "-c", f"sleep infinity"],
             backoff_limit=backoff_limit,
             ttl_seconds_after_finished=10,
             env_vars=environment,
             working_dir=working_dir,
             case_dir=case_dir,
-            volume_data_dir=self.volume_data_dir
+            volume_data_dir=self.volume_data_dir,
+            k8s_taint=self.k8s_taint,
         )
 
         create_job(batch_v1, job)
         time.sleep(2)
         if background:
             return None
-        stream_log = wait_for_job(batch_v1,core_v1, job_name, namespace=namespace, backoff_limit=backoff_limit)
+        stream_log = wait_for_job(
+            batch_v1,
+            core_v1,
+            job_name,
+            namespace=namespace,
+            backoff_limit=backoff_limit,
+        )
         if stream:
             return stream_log
         else:

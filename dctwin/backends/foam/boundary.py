@@ -34,7 +34,6 @@ class Boundary(abc.ABC):
 
 
 class RoomBoundary(Boundary):
-
     def __init__(self, room: Room) -> None:
         self.room = room
 
@@ -54,12 +53,11 @@ class RoomBoundary(Boundary):
                 boxes_types_index[box.geometry.model] = 1
             else:
                 boxes_types_index[box.geometry.model] += 1
-            boxes_name_list.append(f"box_{box.geometry.model}_{boxes_types_index[box.geometry.model]}")
+            boxes_name_list.append(
+                f"box_{box.geometry.model}_{boxes_types_index[box.geometry.model]}"
+            )
         boxes_boundary = "\n".join(
-            [
-                f"{box_name} {type_define}"
-                for box_name in boxes_name_list
-            ]
+            [f"{box_name} {type_define}" for box_name in boxes_name_list]
         )
 
         rack_boundary = "\n".join(
@@ -74,10 +72,7 @@ class RoomBoundary(Boundary):
                 rack_with_panel.append(key)
 
         rack_panel_boundary = "\n".join(
-            [
-                f"rack_panel_{key} {type_define}"
-                for key in rack_with_panel
-            ]
+            [f"rack_panel_{key} {type_define}" for key in rack_with_panel]
         )
         return f"""
         room_wall_1 {type_define}
@@ -98,7 +93,6 @@ class RoomBoundary(Boundary):
 
 
 class ACUBoundary(Boundary):
-
     def __init__(self, acu_id: str, acu: ACU) -> None:
         self.acu_id = acu_id
         self.object = acu
@@ -172,7 +166,6 @@ class ACUBoundary(Boundary):
 
 
 class ServerBoundary(Boundary):
-
     def __init__(self, server_id: str, server: Server) -> None:
         self.server_id = server_id
         self.object: Server = server

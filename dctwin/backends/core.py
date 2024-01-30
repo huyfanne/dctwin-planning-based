@@ -1,4 +1,3 @@
-import abc
 from pathlib import Path
 
 from loguru import logger
@@ -8,9 +7,10 @@ from docker import DockerClient, from_env
 from docker.errors import ContainerError, ImageNotFound
 
 from dctwin.utils import config
+from dctwin.backends.base_core import BaseBackend
 
 
-class Backend(abc.ABC):
+class Backend(BaseBackend):
     """
     Base class for DCTwin Backend. All backend should inherit this class.
     The Backend is to support the simulation of various simulators (EnergyPlus, OpenFoam, etc.) which is dockerized.
@@ -21,35 +21,20 @@ class Backend(abc.ABC):
     :param client: docker client
     :param process_num: number of cores for simulation
     """
-    volume_data_dir = "/data"
-    volume_geometry_dir = f"{volume_data_dir}/constant/triSurface"
 
-    def __init__(self, client: DockerClient = None, process_num: int = 1) -> None:
+    def __init__(self, client: DockerClient = None, **kwargs) -> None:
+        super().__init__(**kwargs)
         self.client = client
         if self.client is None:
             self.client = from_env()
-        self.process_num = process_num
-        self.container = None
-
-    @property
-    @abc.abstractmethod
-    def docker_image(self) -> str:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def command(self) -> Union[list, str]:
-        pass
-
-    @abc.abstractmethod
-    def run(self, **kwargs) -> None:
-        pass
 
     def check_image(self) -> None:
         try:
             self.client.images.get(self.docker_image)
         except ImageNotFound:
-            logger.info(f"docker image ({self.docker_image}) not existed, try to pull ...")
+            logger.info(
+                f"docker image ({self.docker_image}) not existed, try to pull ..."
+            )
             self.client.images.pull(self.docker_image)
 
     def run_container(
@@ -87,9 +72,10 @@ class Backend(abc.ABC):
                 user=user,
                 environment=environment,
                 working_dir=working_dir
-                if working_dir is not None else self.volume_data_dir,
+                if working_dir is not None
+                else self.volume_data_dir,
                 detach=True,
-                **kwargs,        
+                **kwargs,
             )
             if background:
                 return None

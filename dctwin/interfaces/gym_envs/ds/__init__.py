@@ -1,10 +1,4 @@
-from .scalars import (
-    Action,
-    ActionControlType,
-    Observation,
-    Reward,
-    ScalarDataItem
-)
+from .scalars import Action, ActionControlType, Observation, Reward, ScalarDataItem
 from .resizers import LinearResizer
 
 __all__ = [
@@ -13,5 +7,5 @@ __all__ = [
     "ActionControlType",
     "Observation",
     "Reward",
-    "LinearResizer"
+    "LinearResizer",
 ]

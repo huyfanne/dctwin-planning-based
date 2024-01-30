@@ -20,8 +20,10 @@ class SnappyHexBackendMixin:
     """
     Backend for snappyHexMesh. The class is inherited from the core Backend.
     """
+
     docker_image = "ghcr.io/cap-dcwiz/openfoam-v1912-centos72:latest"
     perforated_openings = {}
+
     @property
     def command(self) -> str:
         if self.process_num > 1:
@@ -30,7 +32,8 @@ class SnappyHexBackendMixin:
                 topo_set_command = "topoSet &&"
 
             command = [
-                "bash", "-c",
+                "bash",
+                "-c",
                 (
                     "source /opt/OpenFOAM/setImage_v1912.sh && "
                     "blockMesh && surfaceFeatureExtract && "
@@ -42,17 +45,18 @@ class SnappyHexBackendMixin:
                     "createPatch -overwrite && "
                     "rm -rf /data/constant/triSurface/*.eMesh && "
                     "rm -rf /data/processor*"
-                )
+                ),
             ]
             # command=["bash", "-c", f"sleep infinity"]
         else:
             command = [
-                "bash", "-c",
+                "bash",
+                "-c",
                 (
                     "source /opt/OpenFOAM/setImage_v1912.sh && "
                     "blockMesh && surfaceFeatureExtract && snappyHexMesh -overwrite && "
                     "createPatch -overwrite && rm -rf /data/constant/triSurface/*.eMesh"
-                )
+                ),
             ]
 
         return command
@@ -67,8 +71,14 @@ class SnappyHexBackendMixin:
             self.process_num = process_num
 
         # check perforated tile opening angle
-        if room.constructions.raised_floor and room.constructions.raised_floor.geometry.openings:
-            for key, opening in room.constructions.raised_floor.geometry.openings.items():
+        if (
+            room.constructions.raised_floor
+            and room.constructions.raised_floor.geometry.openings
+        ):
+            for (
+                key,
+                opening,
+            ) in room.constructions.raised_floor.geometry.openings.items():
                 if opening.velocity:
                     self.perforated_openings[key] = opening
 
@@ -84,11 +94,11 @@ class SnappyHexBackendMixin:
         if config.cfd.dry_run:
             return
 
-        host_path = os.environ.get('HOST_PATH', None)
+        host_path = os.environ.get("HOST_PATH", None)
         if host_path is not None:
             # concatenate the log path in Docker container with external host path
             log_index = config.cfd.case_dir.parts.index("log")
-            case_dir = '/'.join(config.cfd.case_dir.parts[log_index:])
+            case_dir = "/".join(config.cfd.case_dir.parts[log_index:])
             case_dir = Path(host_path).joinpath(case_dir)
             logger.info(f"Concatenated Case Directory: {case_dir}")
         else:

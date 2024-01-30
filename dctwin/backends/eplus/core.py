@@ -28,6 +28,7 @@ class EplusBackendMixin:
     :param network: The network to connect to (default: "")
     :param docker_client: The docker client to use (default: None)
     """
+
     docker_image = "ghcr.io/cap-dcwiz/energyplus-9-5-0:latest"
     _version = 2
     _cur_sim_time = 0.0
@@ -41,7 +42,7 @@ class EplusBackendMixin:
         host: str = "",
         network: str = "",
         *args,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__(client=docker_client, *args, **kwargs)
         self._host = host
@@ -65,14 +66,17 @@ class EplusBackendMixin:
         end_year = 2013
         end_month = run_periods.end_month
         end_day_of_month = run_periods.end_day_of_month
-        start_time = datetime.datetime(begin_year, begin_month, begin_day_of_month, 0, 0, 0)
-        end_time = datetime.datetime(end_year, end_month, end_day_of_month, 23, 0, 0) + datetime.timedelta(0, 3600)
+        start_time = datetime.datetime(
+            begin_year, begin_month, begin_day_of_month, 0, 0, 0
+        )
+        end_time = datetime.datetime(
+            end_year, end_month, end_day_of_month, 23, 0, 0
+        ) + datetime.timedelta(0, 3600)
         delta_sec = (end_time - start_time).total_seconds()
         return delta_sec
 
     def _set_up_socket(self) -> None:
-        """ Create a socket for communication with the BCVTB
-        """
+        """Create a socket for communication with the BCVTB"""
         self._socket = socket.socket()
         # Enable keep-alive for the socket
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
@@ -86,18 +90,21 @@ class EplusBackendMixin:
 
     @staticmethod
     def _create_socket_cfg(host: str, port: int) -> None:
-        """ Create socket config file so that BCVTB can work with
-        """
-        top = ET.Element('BCVTB-client')
-        ipc = ET.SubElement(top, 'ipc')
-        _ = ET.SubElement(ipc, 'socket', {'port': str(port), 'hostname': host})
+        """Create socket config file so that BCVTB can work with"""
+        top = ET.Element("BCVTB-client")
+        ipc = ET.SubElement(top, "ipc")
+        _ = ET.SubElement(ipc, "socket", {"port": str(port), "hostname": host})
         tree = ET.ElementTree(top)
         ET.indent(tree, space="\t", level=0)
-        with open(config.eplus.case_dir.joinpath("socket.cfg"), 'wb') as f:
-            f.write('<?xml version="1.0" encoding="ISO-8859-1"?>\n'.encode("ISO-8859-1"))
+        with open(config.eplus.case_dir.joinpath("socket.cfg"), "wb") as f:
+            f.write(
+                '<?xml version="1.0" encoding="ISO-8859-1"?>\n'.encode("ISO-8859-1")
+            )
             tree.write(f)
 
-    def run(self, episode_idx: int = 0) -> Tuple[Union[float, None], Union[float, None]]:
+    def run(
+        self, episode_idx: int = 0
+    ) -> Tuple[Union[float, None], Union[float, None]]:
         self._pre_process(episode_idx)
         obs, done = self._run_backend()
         return obs, done
@@ -111,7 +118,7 @@ class EplusBackendMixin:
             f"-c",
             f"/usr/local/EnergyPlus-9-5-0/energyplus "
             f"-w {config.eplus.weather_file.name} "
-            f"-r {config.eplus.idf_file.name}"
+            f"-r {config.eplus.idf_file.name}",
         ]
 
     def _parse_idf_and_gen_bcvtb_config(
@@ -156,9 +163,7 @@ class EplusBackendMixin:
             weather_path = Path(config.eplus.case_dir).joinpath(
                 config.eplus.weather_file.name
             )
-            idf_path = Path(config.eplus.case_dir).joinpath(
-                config.eplus.idf_file.name
-            )
+            idf_path = Path(config.eplus.case_dir).joinpath(config.eplus.idf_file.name)
             shutil.copy(config.eplus.idf_file, idf_path)
             shutil.copy(config.eplus.weather_file, weather_path)
         else:
@@ -181,11 +186,11 @@ class EplusBackendMixin:
             logger.info(f"Failed to clean output dir {config.eplus.case_dir}")
 
     def _run_backend(self) -> Tuple[Union[float, None], Union[float, None]]:
-        host_path = os.environ.get('HOST_PATH', None)
+        host_path = os.environ.get("HOST_PATH", None)
         if host_path is not None:
             # concatenate the log path in Docker container with external host path
             log_index = config.eplus.case_dir.parts.index("log")
-            case_dir = '/'.join(config.eplus.case_dir.parts[log_index:])
+            case_dir = "/".join(config.eplus.case_dir.parts[log_index:])
             case_dir = Path(host_path).joinpath(case_dir)
             logger.info(f"Concatenated Case Directory: {case_dir}")
             network = None
@@ -275,8 +280,8 @@ class EplusBackendMixin:
                 return self._deserialize(buffer.decode(encoding=self._encoding).strip())
 
     def _termination_condition_met(self, buffer: bytearray) -> bool:
-        return b'\n' in buffer  # Change '\n' to your desired termination condition
-    
+        return b"\n" in buffer  # Change '\n' to your desired termination condition
+
     def receive_status(self) -> Tuple[Union[List[float], None], bool]:
         """
         Receive observations from Eplus
@@ -303,8 +308,7 @@ class EplusBackendMixin:
         self._post_process()
 
     def __del__(self) -> None:
-        """Close Eplus process and socket connection
-        """
+        """Close Eplus process and socket connection"""
         if hasattr(self, "_socket") and self._socket is not None:
             logger.debug("Closing socket...")
             if hasattr(self, "_conn"):

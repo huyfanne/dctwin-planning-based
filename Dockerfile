@@ -21,7 +21,7 @@ RUN echo "https://x-access-token:${GIT_TOKEN}@github.com" > ${HOME}/.git-credent
 
 COPY --from=builder /opt/src/dist/*.whl /opt/dist/
 RUN apt-get update && apt-get upgrade -y && \
-    apt-get install cmake build-essential -y && \
+    apt-get install cmake build-essential pigz -y && \
     pip install /opt/dist/*.whl && \
     apt-get purge build-essential cmake -y && \
     rm -rf /var/lib/apt/lists/* && \

@@ -21,21 +21,37 @@ import fluidfoam
 def read_boundary_conditions(
     room: Room,
 ) -> np.ndarray:
-    subfolders = [f for f in Path(config.cfd.case_dir).iterdir() if f.is_dir() and f.name != "base"]
+    subfolders = [
+        f
+        for f in Path(config.cfd.case_dir).iterdir()
+        if f.is_dir() and f.name != "base"
+    ]
     num_acus = len(room.constructions.acus)
     boundary_conditions = np.zeros((len(subfolders), 2 * num_acus + 2))
-    for idx, subfolder in enumerate(sorted(subfolders, key=lambda x: int(x.name.split("-")[-1]))):
+    for idx, subfolder in enumerate(
+        sorted(subfolders, key=lambda x: int(x.name.split("-")[-1]))
+    ):
         with open(Path(subfolder).joinpath("boundary_conditions.json"), "r") as f:
             boundary_condition_dict = json.load(f)
-        boundary_conditions[idx, 0] = np.sum(list(boundary_condition_dict["server_powers"].values()))
-        boundary_conditions[idx, 1] = np.sum(list(boundary_condition_dict["server_volume_flow_rates"].values()))
+        boundary_conditions[idx, 0] = np.sum(
+            list(boundary_condition_dict["server_powers"].values())
+        )
+        boundary_conditions[idx, 1] = np.sum(
+            list(boundary_condition_dict["server_volume_flow_rates"].values())
+        )
         supply_air_temperatures = []
         supply_air_volume_flow_rates = []
         for acu_name, acu in room.constructions.acus.items():
-            supply_air_temperatures.append(boundary_condition_dict["supply_air_temperatures"][acu_name])
-            supply_air_volume_flow_rates.append(boundary_condition_dict["supply_air_volume_flow_rates"][acu_name])
-        boundary_conditions[idx, 2:num_acus+2] = np.array(supply_air_temperatures)
-        boundary_conditions[idx, num_acus+2:] = np.array(supply_air_volume_flow_rates)
+            supply_air_temperatures.append(
+                boundary_condition_dict["supply_air_temperatures"][acu_name]
+            )
+            supply_air_volume_flow_rates.append(
+                boundary_condition_dict["supply_air_volume_flow_rates"][acu_name]
+            )
+        boundary_conditions[idx, 2 : num_acus + 2] = np.array(supply_air_temperatures)
+        boundary_conditions[idx, num_acus + 2 :] = np.array(
+            supply_air_volume_flow_rates
+        )
     return boundary_conditions
 
 
@@ -55,12 +71,9 @@ def read_object_mesh_index(room: Room = None) -> Union[Dict, None]:
 
 
 def read_mesh_coordinates() -> np.ndarray:
-    assert Path(config.cfd.mesh_dir).exists(), \
-        "mesh files not found"
+    assert Path(config.cfd.mesh_dir).exists(), "mesh files not found"
     logger.info(f"Reading mesh coordinates from {config.cfd.mesh_dir}")
-    x, y, z = fluidfoam.readof.readmesh(
-        str(config.cfd.mesh_dir), verbose=False
-    )
+    x, y, z = fluidfoam.readof.readmesh(str(config.cfd.mesh_dir), verbose=False)
     x = np.reshape(x, newshape=(-1, 1))
     y = np.reshape(y, newshape=(-1, 1))
     z = np.reshape(z, newshape=(-1, 1))
@@ -68,10 +81,7 @@ def read_mesh_coordinates() -> np.ndarray:
 
 
 def read_temperature(solution_dir: Path, end_time: str = "500"):
-    logger.info(
-        f"Reading temperature from "
-        f"{solution_dir.joinpath(end_time, 'T')}"
-    )
+    logger.info(f"Reading temperature from " f"{solution_dir.joinpath(end_time, 'T')}")
     temperature = fluidfoam.readof.readscalar(
         solution_dir, end_time, "T", verbose=False
     )
@@ -80,7 +90,9 @@ def read_temperature(solution_dir: Path, end_time: str = "500"):
 
 
 def read_temperature_fields(end_time: str = "500") -> np.ndarray:
-    subfolders = [f for f in config.cfd.case_dir.iterdir() if f.is_dir() and f.name != "base"]
+    subfolders = [
+        f for f in config.cfd.case_dir.iterdir() if f.is_dir() and f.name != "base"
+    ]
     temperatures = []
     for subfloder in sorted(subfolders, key=lambda x: int(x.name.split("-")[-1])):
         try:
@@ -88,8 +100,7 @@ def read_temperature_fields(end_time: str = "500") -> np.ndarray:
             temperatures.append(temperature)
         except Exception:
             raise FileNotFoundError(
-                f"fail to read temperature for "
-                f"{subfloder.name}"
+                f"fail to read temperature for " f"{subfloder.name}"
             )
     return np.asarray(temperatures)
 
@@ -104,7 +115,11 @@ def read_sensor_temperature_results(
     if object_mesh_index is not None:
         # read from object_mesh_index
         assert temperature is not None, "temperature field is not provided"
-        temperature = temperature.detach().cpu().numpy() if isinstance(results, torch.Tensor) else temperature
+        temperature = (
+            temperature.detach().cpu().numpy()
+            if isinstance(results, torch.Tensor)
+            else temperature
+        )
         for sensor_id, index in object_mesh_index["sensors"].items():
             results[sensor_id] = round(float(temperature.squeeze()[index]), 2)
     else:
@@ -131,7 +146,6 @@ def read_sensor_temperature_results(
 
 
 def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
-
     def find_nearest_mesh_index(
         object_coodrinate: Vertex,
         mesh_coordinates: np.ndarray,
@@ -139,49 +153,58 @@ def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
         coordinates_array = np.asarray(
             [[object_coodrinate.x, object_coodrinate.y, object_coodrinate.z]]
         )
-        return int(np.argmin(
-            np.sum((coordinates_array - mesh_coordinates) ** 2, axis=1)
-        ))
+        return int(
+            np.argmin(np.sum((coordinates_array - mesh_coordinates) ** 2, axis=1))
+        )
 
     object_mesh_index = {"servers": {}, "acus": {}, "sensors": {}}
 
     for rack in room.constructions.racks.values():
         for ser_idx, ser in rack.constructions.servers.items():
-            inlet_center, outlet_center, _ = room.constructions.server_patch_positions(ser_idx)
-            nearest_inlet_mesh_index = find_nearest_mesh_index(inlet_center, mesh_points)
-            nearest_outlet_mesh_index = find_nearest_mesh_index(outlet_center, mesh_points)
+            inlet_center, outlet_center, _ = room.constructions.server_patch_positions(
+                ser_idx
+            )
+            nearest_inlet_mesh_index = find_nearest_mesh_index(
+                inlet_center, mesh_points
+            )
+            nearest_outlet_mesh_index = find_nearest_mesh_index(
+                outlet_center, mesh_points
+            )
             object_mesh_index["servers"].update(
                 {
-                    f"{ser_idx}":
-                        {
-                            "inlet": int(nearest_inlet_mesh_index),
-                            "outlet": int(nearest_outlet_mesh_index)
-                        }
+                    f"{ser_idx}": {
+                        "inlet": int(nearest_inlet_mesh_index),
+                        "outlet": int(nearest_outlet_mesh_index),
+                    }
                 }
             )
 
     for acu_idx, acu in room.constructions.acus.items():
-        return_center, supply_center, _ = room.constructions.acu_patch_positions(acu_idx)
+        return_center, supply_center, _ = room.constructions.acu_patch_positions(
+            acu_idx
+        )
         nearest_supply_mesh_index = find_nearest_mesh_index(supply_center, mesh_points)
         nearest_return_mesh_index = find_nearest_mesh_index(return_center, mesh_points)
         object_mesh_index["acus"].update(
             {
-                f"{acu_idx}":
-                    {
-                        "supply": int(nearest_supply_mesh_index),
-                        "return": int(nearest_return_mesh_index)
-                    }
+                f"{acu_idx}": {
+                    "supply": int(nearest_supply_mesh_index),
+                    "return": int(nearest_return_mesh_index),
+                }
             }
         )
     for sen_idx, sen in room.constructions.sensors.items():
-        nearest_sensor_mesh_index = find_nearest_mesh_index(sen.geometry.location, mesh_points)
+        nearest_sensor_mesh_index = find_nearest_mesh_index(
+            sen.geometry.location, mesh_points
+        )
         object_mesh_index["sensors"].update(
-            {f"{sen_idx}": int(nearest_sensor_mesh_index)})
+            {f"{sen_idx}": int(nearest_sensor_mesh_index)}
+        )
 
     return object_mesh_index
 
 
-def check_base_dir(case_idx: int,  episode_idx: int = None) -> Tuple[bool, bool]:
+def check_base_dir(case_idx: int, episode_idx: int = None) -> Tuple[bool, bool]:
     if config.cfd.mesh_dir != Path(""):
         base_case_path = Path(config.cfd.mesh_dir)
         assert Path.is_dir(base_case_path), "mesh is not a directory"
@@ -198,7 +221,10 @@ def check_base_dir(case_idx: int,  episode_idx: int = None) -> Tuple[bool, bool]
         if config.cfd.dry_run:
             config.cfd.case_dir = Path(config.LOG_DIR).joinpath("base")
     else:
-        run_geometry, run_mesh = True, True
+        if Path.is_dir(Path(config.LOG_DIR).joinpath("base/constant/polyMesh")):
+            run_geometry, run_mesh = False, False
+        else:
+            run_geometry, run_mesh = True, True
         config.cfd.case_dir = Path(config.LOG_DIR).joinpath("base")
         config.cfd.mesh_dir = config.cfd.case_dir
 

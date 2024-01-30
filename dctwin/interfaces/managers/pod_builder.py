@@ -57,15 +57,18 @@ class PODBuilder:
     def _build_correlation_matrix(self) -> np.ndarray:
         num_observation = self.temperatures.shape[0]
         residual_temperature_fields = self.temperatures - self.mean_temperature
-        correlation_matrix = np.dot(residual_temperature_fields,
-                                    np.transpose(residual_temperature_fields)) / (num_observation - 1)
+        correlation_matrix = np.dot(
+            residual_temperature_fields, np.transpose(residual_temperature_fields)
+        ) / (num_observation - 1)
         return correlation_matrix
 
     def _calc_pod_modes(self) -> Tuple[np.ndarray, np.ndarray]:
         # first_step: solve eigenvalue problem for the correlation matrix
         eigen_values, eigen_vectors = linalg.eig(self.correlation_matrix)
         # second step: calculate spatial mode (n_point, n_observation)
-        phi = np.dot(np.transpose(self.temperatures - self.mean_temperature), eigen_vectors)
+        phi = np.dot(
+            np.transpose(self.temperatures - self.mean_temperature), eigen_vectors
+        )
         sqrt_diagonals = np.sqrt(np.diag(np.dot(np.transpose(phi), phi)))
         # normalize so that the POD mode has unit length
         phi /= sqrt_diagonals
@@ -76,7 +79,9 @@ class PODBuilder:
         available_modes = self.pod_modes.shape[1]
         for temperature in self.temperatures:
             coef = []
-            temperature -= self.mean_temperature  # subtract reference temperature field is necessary
+            temperature -= (
+                self.mean_temperature
+            )  # subtract reference temperature field is necessary
             for mode_idx in range(available_modes):
                 coef.append(np.vdot(temperature, self.pod_modes[:, mode_idx]))
             coefs.append(coef)
@@ -85,22 +90,24 @@ class PODBuilder:
 
     def _build_estimator(self) -> None:
         # prepare data
-        self.train_bc = torch.FloatTensor(
-            read_boundary_conditions(self.room)
-        )
+        self.train_bc = torch.FloatTensor(read_boundary_conditions(self.room))
         self.train_coef = torch.FloatTensor(self._compute_coef())
-        self.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=self.num_modes)
+        self.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(
+            num_tasks=self.num_modes
+        )
         self.model = BatchIndependentMultiTaskGPModel(
             train_x=self.train_bc,
             train_y=self.train_coef,
             likelihood=self.likelihood,
-            num_modes=self.num_modes
+            num_modes=self.num_modes,
         )
         # specify the GP model and the likelihood model in the training mode (require gradient)
         self.model.train()
         self.likelihood.train()
         # Use the adam optimizer
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)  # Includes GaussianLikelihood parameters
+        optimizer = torch.optim.Adam(
+            self.model.parameters(), lr=self.lr
+        )  # Includes GaussianLikelihood parameters
         # "Loss" for GPs - the marginal log likelihood
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
         # train the multi-output GP model with Adam Optimizer (Stochastic Gradient Descend)
@@ -117,17 +124,21 @@ class PODBuilder:
             else:
                 prev_loss = loss
             loss.backward()
-            pbar.set_description("Iter = {:d}, Loss = {:.3f}".format(_iter, loss.item()))
+            pbar.set_description(
+                "Iter = {:d}, Loss = {:.3f}".format(_iter, loss.item())
+            )
             _iter += 1
             optimizer.step()
 
         for param_name, param in self.model.named_parameters():
-            logger.info(f'Parameter name: {param_name:42} value = {param}')
+            logger.info(f"Parameter name: {param_name:42} value = {param}")
 
     def run(self, end_time: str = "500") -> None:
         logger.info("Reading temperature fields")
         self.temperatures = read_temperature_fields(end_time)
-        logger.info(f"Read {self.temperatures.shape[0]} temperature fields with dim = {self.temperatures.shape[1]}")
+        logger.info(
+            f"Read {self.temperatures.shape[0]} temperature fields with dim = {self.temperatures.shape[1]}"
+        )
         logger.info("Calculating mean temperature field")
         self.mean_temperature = self._calc_mean_temperature_field()
         logger.info("Building correlation matrix and solve eigenvalue problem")

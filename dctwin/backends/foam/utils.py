@@ -272,7 +272,8 @@ def generate_snappy_dict(
             f.write(
                 template_env.get_template(f"foam/system/steady/topoSetDict.j2").render(
                     perforated_openings=perforated_openings,
-                    min_floor_height=room.constructions.raised_floor.geometry.height - 0.05,
+                    min_floor_height=room.constructions.raised_floor.geometry.height
+                    - 0.05,
                     max_floor_height=room.constructions.raised_floor.geometry.height,
                 )
             )
@@ -284,7 +285,7 @@ def read_internal_field(filename: Union[str, Path]):
         for line in f:
             if line.strip().startswith("internalField"):
                 started = True
-                yield line[len("internalField"):]
+                yield line[len("internalField") :]
             elif started:
                 if ";" not in line:
                     yield line
