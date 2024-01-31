@@ -124,7 +124,7 @@ class BaseEnv(gym.Env):
                 )
             )
             self._timestamp = self._starting_timestamp
-            base_env.co_sim.timestamp = self._timestamp
+            base_env.eplus_cfd.timestamp = self._timestamp
             self._use_simulation_time = True
         else:
             logger.info("Using real-world time")
@@ -240,6 +240,13 @@ class BaseEnv(gym.Env):
                     )
                     exit(-1)
                 value = raw_action[ra_ptr]
+                if (
+                    a.masking_variable_name != ""
+                    and self.inspect_current_observation(a.masking_variable_name) == -1
+                ):  # masking using observation
+                    a.set_mask(True)
+                else:
+                    a.set_mask(False)
                 ra_ptr += 1
             elif (
                 a.control_type == ActionControlType.PRE_SCHEDULED
@@ -482,3 +489,17 @@ class BaseEnv(gym.Env):
             a.set_unnormed_value(unnormed_value)
             normed_act = a.get_normed_value()
             return normed_act
+
+    def get_act_masking_variable_name(
+        self,
+        variable_name: str = None,
+    ) -> Union[None, str]:
+        a = self._find_scalar_item(self._actions, variable_name)
+        if a is None:
+            logger.error(f"{variable_name} does not exist!")
+            return ""
+        elif a.masking_variable_name is None:
+            logger.error(f"{variable_name} does not have a masking variable!")
+            return ""
+        else:
+            return a.masking_variable_name

@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "dctwin"
-version = "0.8.1"
-description = "Building Co-Simulation Digital Twin for Data Centers."
+version = "1.0.3"
+description = "Building Multiphysics Digital Twin for Data Centers."
 authors = ["Ruihang Wang <ruihang001@ntu.edu.sg>", "Ryan Wong <ryan.wong@ntu.edu.sg>", "Zhiwei Cao <zhiwei003@ntu.edu.sg>", "Neng <xiad0001@ntu.edu.sg>"]
 packages = [
     {include = "dctwin"},
@@ -9,7 +9,6 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
-pydantic = "1.10.2"
 jinja2 = "3.1.2"
 markupsafe = "2.0.1"
 setuptools = "59.8.0"
@@ -17,7 +16,6 @@ gym = "^0.26.2"
 cvxpy = "^1.2.1"
 opyplus = "^1.4.2"
 fluidfoam = "^0.2.3"
-loguru = "^0.6.0"
 torch = "1.11.0"
 gpytorch = "^1.9.0"
 tqdm = "^4.64.1"
@@ -27,6 +25,8 @@ sympy = "1.11.1"
 docker = "^6.1.2"
 scipy = "1.10.1"
 kubernetes = "^27.2.0"
+eppy = "^0.5.63"
+dclib = {git = "https://github.com/cap-dcwiz/dclib.git"}
 sh = "^2.0.6"
 
 [tool.poetry.group.dev.dependencies]

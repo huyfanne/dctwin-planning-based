@@ -36,8 +36,11 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
+      env:
+        MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
       with:
         context: .
         push: true

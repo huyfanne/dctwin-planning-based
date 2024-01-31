@@ -1,0 +1,846 @@
+{
+    "meta": {
+        "name": "Demo data center",
+        "description": "A virtual data center that is built with the tutorial in tutorials/building.ipynb. The data center has one data hall with 10 servers. The data center has one chiller plant with one chiller and one cooling tower. The data center has one electric load center with one PV panel and one battery."
+    },
+    "models": {
+        "curveModels": {
+            "DataCenterServerPowerFLoadTemp": {
+                "type": "Biquadratic",
+                "coefficients": [
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "minX": 0.0,
+                "maxX": 1.0,
+                "minY": 0.0,
+                "maxY": 100.0,
+                "inputTypeOfX": "Dimensionless",
+                "inputTypeOfY": "Temperature",
+                "outputType": "Dimensionless"
+            },
+            "DataCenterServersAirflowFLoadTemp": {
+                "type": "Biquadratic",
+                "coefficients": [
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "minX": 0.0,
+                "maxX": 1.0,
+                "minY": 0.0,
+                "maxY": 100.0,
+                "inputTypeOfX": "Dimensionless",
+                "inputTypeOfY": "Temperature",
+                "outputType": "Dimensionless"
+            },
+            "DataCenterServersFanPowerFFlow": {
+                "type": "Quadratic",
+                "coefficients": [
+                    0.0,
+                    1.0,
+                    0.0
+                ],
+                "minX": 0.0,
+                "maxX": 1.0
+            },
+            "DataCenterRecirculationFLoadTemp": {
+                "type": "Biquadratic",
+                "coefficients": [
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "minX": 0.0,
+                "maxX": 1.0,
+                "minY": 0.0,
+                "maxY": 100.0,
+                "inputTypeOfX": "Dimensionless",
+                "inputTypeOfY": "Temperature",
+                "outputType": "Dimensionless"
+            },
+            "UPSEfficiencyfPLR": {
+                "type": "Quadratic",
+                "coefficients": [
+                    1.0,
+                    0.0,
+                    0.0
+                ],
+                "minX": 0.0,
+                "maxX": 1.0
+            },
+            "ChillerCoolingCapacityFTemp": {
+                "type": "Biquadratic",
+                "coefficients": [
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "minX": 0.0,
+                "maxX": 100.0,
+                "minY": 0.0,
+                "maxY": 100.0
+            },
+            "ChillerEnergyInputToCoolingOutputFTemp": {
+                "type": "Biquadratic",
+                "coefficients": [
+                    0.47449676,
+                    -0.08900207,
+                    0.00214058,
+                    0.06906117,
+                    -0.00112497,
+                    0.00060898
+                ],
+                "minX": 0,
+                "maxX": 100.0,
+                "minY": 0.0,
+                "maxY": 100.0
+            },
+            "ChillerEnergyInputToCoolingOutputFPLR": {
+                "type": "Quadratic",
+                "coefficients": [
+                    0.0,
+                    1.0,
+                    0.0
+                ],
+                "minX": 0.0,
+                "maxX": 1.0
+            },
+            "CoolingTowerFanRatioCurve": {
+                "type": "Cubic",
+                "coefficients": [
+                    -0.00931516301535329,
+                    0.0512333965844443,
+                    -0.0838364671381841,
+                    1.04191823356909
+                ],
+                "minX": 0.0,
+                "maxX": 1.0
+            }
+        },
+        "materialModels": {
+            "1/2IN Gypsum": {
+                "roughness": "Smooth",
+                "conductivity": 0.16,
+                "density": 800.0,
+                "specificHeat": 1090.0,
+                "thickness": 0.0127,
+                "thermalAbsorptance": 0.9,
+                "solarAbsorptance": 0.7,
+                "visibleAbsorptance": 0.7
+            },
+            "C19 - 2 IN LIGHT WEIGHT CONCRETE": {
+                "roughness": "MediumRough",
+                "conductivity": 0.1298912,
+                "density": 480.5539,
+                "specificHeat": 836.8,
+                "thickness": 0.0508,
+                "thermalAbsorptance": 0.9,
+                "solarAbsorptance": 0.7,
+                "visibleAbsorptance": 0.7
+            },
+            "E1 - 3 / 4 IN PLASTER OR GYP BOARD": {
+                "roughness": "Smooth",
+                "conductivity": 0.7264,
+                "density": 800.0,
+                "specificHeat": 1090.0,
+                "thickness": 0.01905,
+                "thermalAbsorptance": 0.9,
+                "solarAbsorptance": 0.7,
+                "visibleAbsorptance": 0.7
+            },
+            "C6 - 8 IN CLAY TILE": {
+                "roughness": "MediumRough",
+                "conductivity": 0.7264,
+                "density": 1120.0,
+                "specificHeat": 837.0,
+                "thickness": 0.2032,
+                "thermalAbsorptance": 0.9,
+                "solarAbsorptance": 0.7,
+                "visibleAbsorptance": 0.7
+            },
+            "8IN Concrete HW": {
+                "roughness": "MediumRough",
+                "conductivity": 1.729599,
+                "density": 2242.99,
+                "specificHeat": 836.99,
+                "thickness": 0.2032,
+                "thermalAbsorptance": 0.9,
+                "solarAbsorptance": 0.65,
+                "visibleAbsorptance": 0.65
+            }
+        },
+        "constructionModels": {
+            "ext-walls": {
+                "materials": [
+                    "1/2IN Gypsum",
+                    "C19 - 2 IN LIGHT WEIGHT CONCRETE",
+                    "E1 - 3 / 4 IN PLASTER OR GYP BOARD",
+                    "C6 - 8 IN CLAY TILE"
+                ]
+            },
+            "FLOOR": {
+                "materials": [
+                    "8IN Concrete HW"
+                ]
+            },
+            "ROOF": {
+                "materials": [
+                    "1/2IN Gypsum"
+                ]
+            },
+            "Ceiling": {
+                "materials": [
+                    "8IN Concrete HW"
+                ]
+            }
+        },
+        "geometryModels": {},
+        "coolingModels": {
+            "acus": {
+                "crac": {
+                    "coolingType": "CW",
+                    "coolingCapacity": 100,
+                    "pressureRise": 500
+                }
+            },
+            "chillers": {
+                "typical chiller": {
+                    "referenceCapacity": 1600000.0,
+                    "referenceCop": 7.2693727,
+                    "referenceLeavingChilledWaterTemperature": 10.0,
+                    "referenceEnteringCondenserFluidTemperature": 28.0,
+                    "referenceChilledWaterFlowRate": 0.4,
+                    "referenceCondenserFluidFlowRate": 0.45,
+                    "coolingCapacityFunctionOfTemperatureCurveModel": "ChillerCoolingCapacityFTemp",
+                    "electricInputToCoolingOutputRatioFunctionOfTemperatureCurveModel": "ChillerEnergyInputToCoolingOutputFTemp",
+                    "electricInputToCoolingOutputRatioFunctionOfPartLoadRatioCurveModel": "ChillerEnergyInputToCoolingOutputFPLR"
+                }
+            },
+            "pumps": {
+                "chw pump": {
+                    "designMaximumFlowRate": 0.5652
+                },
+                "condenser water pump": {
+                    "designMaximumFlowRate": 0.642
+                }
+            },
+            "coolingTowers": {
+                "YorkCalcUserDefined": {
+                    "modelCoefficientName": "YorkCalc Default Tower Model",
+                    "designInletAirWetBulbTemperature": 26.666,
+                    "designApproachTemperature": 2.84,
+                    "designWaterFlowRate": 0.10169,
+                    "designAirFlowRate": 3.54667,
+                    "designFanPower": 22000,
+                    "numberOfCells": 4
+                }
+            }
+        },
+        "powerModels": {
+            "acus": {
+                "crac": {
+                    "fanTotalEfficiency": 0.7,
+                    "maximumFlowRate": "autosize",
+                    "fanPowerMinimumFlowRateInputMethod": "Fraction",
+                    "fanPowerMinimumFlowFraction": 0.25,
+                    "motorEfficiency": 0.9,
+                    "motorInAirstreamFraction": 0.0,
+                    "fanPowerCoefficient1": 0.35071223,
+                    "fanPowerCoefficient2": 0.30850535,
+                    "fanPowerCoefficient3": -0.54137364,
+                    "fanPowerCoefficient4": 0.87198823,
+                    "fanPowerCoefficient5": 0.0
+                }
+            },
+            "servers": {
+                "cpuServer": {
+                    "ratedPower": 1000,
+                    "ratedCpuPower": 1000,
+                    "ratedFanPower": 0,
+                    "ratedAirflow": 0
+                }
+            },
+            "chillers": {
+                "typical chiller": {
+                    "electricInputToCoolingOutputRatioFunctionOfTemperatureCurve": [
+                        0.47449676,
+                        -0.08900207,
+                        0.00214058,
+                        0.06906117,
+                        -0.00112497,
+                        0.00060898
+                    ]
+                }
+            },
+            "pumps": {
+                "chw pump": {
+                    "designPowerConsumption": 152000,
+                    "motorEfficiency": 0.9,
+                    "designEletricPowerPerUnitFlowRate": 233545.64756
+                },
+                "condenser water pump": {
+                    "designPowerConsumption": 170000,
+                    "motorEfficiency": 0.9,
+                    "designEletricPowerPerUnitFlowRate": 345794.3925
+                }
+            },
+            "coolingTowers": {
+                "YorkCalcUserDefined": {
+                    "designFanPower": "25000"
+                }
+            }
+        },
+        "controlModels": {
+            "acus": {
+                "crac": {
+                    "controlType": "Temperature",
+                    "supplyAirTemperatureSetpoint": 18
+                }
+            },
+            "pumps": {
+                "chw pump": {
+                    "controlType": "Intermittent"
+                },
+                "condenser water pump": {
+                    "controlType": "Intermittent"
+                }
+            }
+        },
+        "computingModels": {
+            "servers": {
+                "cpuServer": {
+                    "cpuCapacity": 64,
+                    "memCapacity": 128,
+                    "diskCapacity": 1000
+                }
+            }
+        },
+        "heatGainModels": {
+            "ite": {
+                "ITE Model": {
+                    "airFlowCalculationMethod": "FlowFromSystem",
+                    "designPowerInputCalculationMethod": "Watts/Unit",
+                    "wattsPerZoneFloorArea": 0.0,
+                    "designPowerInputScheduleName": "ALWAYS ON",
+                    "cpuLoadingScheduleName": "",
+                    "cpuPowerInputFunctionOfLoadingAndAirTemperatureCurveModel": "DataCenterServerPowerFLoadTemp",
+                    "airFlowFunctionOfLoadingAndAirTemperatureCurveModel": "DataCenterServersAirflowFLoadTemp",
+                    "fanPowerInputFunctionOfFlowCurveModel": "DataCenterServersFanPowerFFlow",
+                    "recirculationFractionFunctionOfLoadingAndAirTemperatureCurveModel": "DataCenterRecirculationFLoadTemp",
+                    "electricPowerSupplyEfficiencyFunctionOfPartLoadRatioCurveModel": "UPSEfficiencyfPLR"
+                }
+            },
+            "light": {
+                "Light Model": {}
+            },
+            "people": {
+                "People Model": {}
+            },
+            "electricEquipment": {
+                "Electric Equipment Model": {}
+            }
+        },
+        "electricalModels": {
+            "pvPerformance": {
+                "equivalent one dioxide model": {
+                    "cellType": "CrystallineSilicon",
+                    "numberOfCellsInSeries": 36,
+                    "activeArea": 1.0,
+                    "transmittanceAbsorptanceProduct": 0.9,
+                    "semiconductorBandGap": 1.12,
+                    "shuntResistance": 1000000.0,
+                    "shortCircuitCurrent": 4.75,
+                    "openCircuitVoltage": 21.4,
+                    "referenceTemperature": 25.0,
+                    "referenceIrradiance": 1000.0,
+                    "moduleCurrentAtMaximumPower": 4.45,
+                    "moduleVoltageAtMaximumPower": 17.0,
+                    "temperatureCoefficientOfShortCircuitCurrent": 0.00065,
+                    "temperatureCoefficientOfOpenCircuitVoltage": -0.08,
+                    "nominalOperatingCellTemperatureTestAmbientAirTemperature": 25.0,
+                    "nominalOperatingCellTemperatureTestCellTemperature": 47.0,
+                    "nominalOperatingCellTemperatureTestInsolation": 800.0,
+                    "moduleHeatLossCoefficient": 30.0,
+                    "totalHeatCapacity": 50000.0
+                }
+            }
+        }
+    },
+    "geometry": {
+        "height": 4,
+        "plane": [
+            {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            {
+                "x": 50.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            {
+                "x": 50.0,
+                "y": 50.0,
+                "z": 0.0
+            },
+            {
+                "x": 0.0,
+                "y": 50.0,
+                "z": 0.0
+            }
+        ]
+    },
+    "inputs": {},
+    "constructions": {
+        "surface": {},
+        "zones": {
+            "zone": {
+                "geometry": {
+                    "height": 4,
+                    "plane": [
+                        {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                        },
+                        {
+                            "x": 50.0,
+                            "y": 0.0,
+                            "z": 0.0
+                        },
+                        {
+                            "x": 50.0,
+                            "y": 50.0,
+                            "z": 0.0
+                        },
+                        {
+                            "x": 0.0,
+                            "y": 50.0,
+                            "z": 0.0
+                        }
+                    ]
+                },
+                "constructions": {
+                    "acus": {
+                        "acu_1": {
+                            "uid": "ZONE1ACU1",
+                            "cooling": {
+                                "model": "crac"
+                            },
+                            "power": {
+                                "model": "crac"
+                            },
+                            "controller": {
+                                "model": "crac"
+                            }
+                        }
+                    },
+                    "servers": {
+                        "server_1": {
+                            "computing": {
+                                "model": "cpuServer"
+                            },
+                            "power": {
+                                "model": "cpuServer"
+                            },
+                            "cooling": {
+                                "model": "cpuServer"
+                            }
+                        },
+                        "server_2": {
+                            "computing": {
+                                "model": "cpuServer"
+                            },
+                            "power": {
+                                "model": "cpuServer"
+                            },
+                            "cooling": {
+                                "model": "cpuServer"
+                            }
+                        },
+                        "server_3": {
+                            "computing": {
+                                "model": "cpuServer"
+                            },
+                            "power": {
+                                "model": "cpuServer"
+                            },
+                            "cooling": {
+                                "model": "cpuServer"
+                            }
+                        },
+                        "server_4": {
+                            "computing": {
+                                "model": "cpuServer"
+                            },
+                            "power": {
+                                "model": "cpuServer"
+                            },
+                            "cooling": {
+                                "model": "cpuServer"
+                            }
+                        },
+                        "server_5": {
+                            "computing": {
+                                "model": "cpuServer"
+                            },
+                            "power": {
+                                "model": "cpuServer"
+                            },
+                            "cooling": {
+                                "model": "cpuServer"
+                            }
+                        },
+                        "server_6": {
+                            "computing": {
+                                "model": "cpuServer"
+                            },
+                            "power": {
+                                "model": "cpuServer"
+                            },
+                            "cooling": {
+                                "model": "cpuServer"
+                            }
+                        },
+                        "server_7": {
+                            "computing": {
+                                "model": "cpuServer"
+                            },
+                            "power": {
+                                "model": "cpuServer"
+                            },
+                            "cooling": {
+                                "model": "cpuServer"
+                            }
+                        },
+                        "server_8": {
+                            "computing": {
+                                "model": "cpuServer"
+                            },
+                            "power": {
+                                "model": "cpuServer"
+                            },
+                            "cooling": {
+                                "model": "cpuServer"
+                            }
+                        },
+                        "server_9": {
+                            "computing": {
+                                "model": "cpuServer"
+                            },
+                            "power": {
+                                "model": "cpuServer"
+                            },
+                            "cooling": {
+                                "model": "cpuServer"
+                            }
+                        },
+                        "server_10": {
+                            "computing": {
+                                "model": "cpuServer"
+                            },
+                            "power": {
+                                "model": "cpuServer"
+                            },
+                            "cooling": {
+                                "model": "cpuServer"
+                            }
+                        }
+                    },
+                    "surfaces": {
+                        "Wall001W": {
+                            "zoneName": "zone",
+                            "constructionName": "ext-walls"
+                        },
+                        "Wall002W": {
+                            "zoneName": "zone",
+                            "constructionName": "ext-walls"
+                        },
+                        "Wall003W": {
+                            "zoneName": "zone",
+                            "constructionName": "ext-walls"
+                        },
+                        "Wall004W": {
+                            "zoneName": "zone",
+                            "constructionName": "ext-walls"
+                        },
+                        "Floor": {
+                            "zoneName": "zone",
+                            "constructionName": "FLOOR",
+                            "type": "Floor"
+                        },
+                        "Roof": {
+                            "zoneName": "zone",
+                            "constructionName": "Roof",
+                            "type": "Roof",
+                            "viewFactorToGround": 0.0
+                        }
+                    },
+                    "heatGains": {
+                        "ites": {
+                            "ite_1": {
+                                "uid": "ZONE1ITE1",
+                                "zone": "zone",
+                                "numberOfUnits": 10,
+                                "wattsPerUnit": 1000,
+                                "supplyAirNodeName": "zone inlet node 1",
+                                "model": "ITE Model"
+                            }
+                        },
+                        "light": {
+                            "zone": "zone",
+                            "lightingPower": 287.0,
+                            "model": "Light Model"
+                        },
+                        "electricEquipment": {
+                            "zone": "zone",
+                            "model": "Electric Equipment Model"
+                        },
+                        "people": {
+                            "zone": "zone",
+                            "numberOfPeople": 80,
+                            "model": "People Model"
+                        }
+                    }
+                },
+                "thermostats": {
+                    "coolingSetpoint": 27
+                },
+                "sizing": {
+                    "sizingSystem": {
+                        "type": "Load",
+                        "zoneCoolingDesignSupplyAirTemperature": 18,
+                        "zoneCoolingDesignSupplyAirHumidityRatio": 0.0085,
+                        "zoneHeatingDesignSupplyAirHumidityRatio": 0.008,
+                        "zoneOrZonelistName": "Zone",
+                        "typeOfLoadToSizeOn": "Sensible"
+                    },
+                    "sizingZone": {
+                        "type": "NonCoincident",
+                        "zoneCoolingDesignSupplyAirTemperature": 18,
+                        "zoneCoolingDesignSupplyAirHumidityRatio": 0.0085,
+                        "zoneHeatingDesignSupplyAirHumidityRatio": 0.008,
+                        "zoneOrZonelistName": "Zone",
+                        "typeOfLoadToSizeOn": "Sensible"
+                    }
+                }
+            }
+        },
+        "plant": {
+            "chilledWaterLoops": {
+                "chilled water loop": {
+                    "supplyBranches": {
+                        "chilled water loop supply inlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "chilled water loop supply pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "inlet"
+                        },
+                        "chilled water supply branch 1": {
+                            "components": {
+                                "chillers": {
+                                    "chiller-1": {
+                                        "uid": "CHILLER1",
+                                        "cooling": {
+                                            "model": "typical chiller"
+                                        },
+                                        "power": {
+                                            "model": "typical chiller"
+                                        }
+                                    }
+                                },
+                                "pumps": {
+                                    "chiller-1 chilled water pump": {
+                                        "uid": "CHPUMP1",
+                                        "cooling": {
+                                            "model": "chw pump"
+                                        },
+                                        "power": {
+                                            "model": "chw pump"
+                                        },
+                                        "control": {
+                                            "model": "chw pump"
+                                        }
+                                    }
+                                }
+                            },
+                            "side": "middle"
+                        },
+                        "chilled water loop supply outlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "chilled water loop supply outlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "outlet"
+                        }
+                    },
+                    "demandBranches": {
+                        "chilled water loop demand inlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "chilled water loop demand inlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "inlet"
+                        },
+                        "chilled water demand branch": {
+                            "components": {
+                                "acu": {
+                                    "acu_1": {
+                                        "uid": "ZONE1ACU1"
+                                    }
+                                }
+                            },
+                            "side": "middle"
+                        },
+                        "chilled water loop demand outlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "chilled water loop demand outlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "outlet"
+                        }
+                    },
+                    "sizing": {
+                        "typeOfLoadToSizeOn": "Sensible",
+                        "loopType": "Cooling",
+                        "loopDesignTemperatureDifference": 10,
+                        "designLoopExitTemperature": 10
+                    },
+                    "meta": {
+                        "loadDistributionScheme": "SequentialLoad",
+                        "plantLoopDemandCalculationScheme": "SingleSetpoint",
+                        "setpointManager": false
+                    }
+                }
+            },
+            "condenserWaterLoops": {
+                "condenser water loop": {
+                    "supplyBranches": {
+                        "condenser water loop 1 supply inlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "condenser water loop 1 supply inlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "inlet"
+                        },
+                        "condenser water loop 1 supply branch": {
+                            "components": {
+                                "coolingTowers": {
+                                    "cooling tower-1": {
+                                        "uid": "TOWER1",
+                                        "cooling": {
+                                            "model": "YorkCalcUserDefined"
+                                        },
+                                        "power": {
+                                            "model": "YorkCalcUserDefined"
+                                        }
+                                    }
+                                },
+                                "pumps": {
+                                    "condenser water loop 1 supply pump": {
+                                        "uid": "PUMP1",
+                                        "cooling": {
+                                            "model": "chw pump"
+                                        },
+                                        "power": {
+                                            "model": "chw pump"
+                                        },
+                                        "control": {
+                                            "model": "chw pump"
+                                        }
+                                    }
+                                }
+                            },
+                            "side": "middle"
+                        },
+                        "condenser water loop 1 supply outlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "condenser water loop 1 supply outlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "outlet"
+                        }
+                    },
+                    "demandBranches": {
+                        "condenser water loop 1 demand inlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "condenser water loop 1 demand inlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "inlet"
+                        },
+                        "condenser water loop 1 demand branch": {
+                            "components": {
+                                "chillers": {
+                                    "chiller-1": {
+                                        "uid": "CHILLER1",
+                                        "cooling": {
+                                            "model": "typical chiller"
+                                        },
+                                        "power": {
+                                            "model": "typical chiller"
+                                        }
+                                    }
+                                }
+                            },
+                            "side": "middle"
+                        },
+                        "condenser water loop 1 demand outlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "condenser water loop 1 demand outlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "outlet"
+                        }
+                    },
+                    "sizing": {
+                        "typeOfLoadToSizeOn": "Sensible",
+                        "loopType": "Condenser",
+                        "loopDesignTemperatureDifference": 5.6,
+                        "designLoopExitTemperature": 25.6
+                    }
+                }
+            }
+        }
+    }
+}

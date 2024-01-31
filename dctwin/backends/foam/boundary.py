@@ -1,6 +1,11 @@
 import abc
 import numpy as np
-from dctwin.models import Room, ACU, Server
+
+from dclib.room import Room
+from dclib.cooling.room.facilities.acu import ACU
+from dclib.ite.servers.server import Server
+
+from dctwin.utils.const import rho_air, air_specific_heat
 
 
 class Boundary(abc.ABC):
@@ -16,9 +21,6 @@ class Boundary(abc.ABC):
         type            noSlip;
     }
     """
-
-    air_specific_heat = 1006
-    rho_air = 1.19
 
     @property
     @abc.abstractmethod
@@ -94,11 +96,13 @@ class ACUBoundary(Boundary):
     def __init__(self, acu_id: str, acu: ACU) -> None:
         self.acu_id = acu_id
         self.object = acu
-        self.supply_kelvin = round(acu.cooling.supply_air_temperature + 273.15, 2)
-        self.supply_air_volume_flow_rate = round(
-            acu.cooling.supply_air_volume_flow_rate, 6
+        self.supply_kelvin = round(
+            acu.cooling.operating.supply_air_temperature + 273.15, 2
         )
-        self.supply_air_mass_flow_rate = self.rho_air * self.supply_air_volume_flow_rate
+        self.supply_air_volume_flow_rate = round(
+            acu.cooling.operating.supply_air_volume_flow_rate, 6
+        )
+        self.supply_air_mass_flow_rate = rho_air * self.supply_air_volume_flow_rate
         self.cooling_capacity = round(acu.cooling.cooling_capacity, 6)  # unit: kW
 
     @property
@@ -127,7 +131,7 @@ class ACUBoundary(Boundary):
                     "{t_sink}{{acu_return_{self.acu_id}}} = weightAverage(T)"
                     "coolingCapacity = {self.cooling_capacity}"		
                     "supplyAirMassFlowRate = {self.supply_air_mass_flow_rate}"
-                    "t1 = {t_sink} - (coolingCapacity * 1000 / (supplyAirMassFlowRate * {self.air_specific_heat}))"
+                    "t1 = {t_sink} - (coolingCapacity * 1000 / (supplyAirMassFlowRate * {air_specific_heat}))"
                     "t2 = {self.supply_kelvin}"
                 );
             }}
@@ -171,7 +175,7 @@ class ServerBoundary(Boundary):
         self.object: Server = server
         self.input_power = server.power.input_power
         self.server_volume_flow_rate = round(server.volume_flow_rate, 6)
-        self.server_mass_flow_rate = self.rho_air * self.server_volume_flow_rate
+        self.server_mass_flow_rate = rho_air * self.server_volume_flow_rate
 
     @property
     def T(self) -> str:
@@ -179,7 +183,7 @@ class ServerBoundary(Boundary):
         if np.isclose(self.server_mass_flow_rate, 0):
             outlet = self.zero_gradient
         else:
-            value = f"{t_sink}+{self.input_power / (self.server_mass_flow_rate * self.air_specific_heat)}"
+            value = f"{t_sink}+{self.input_power / (self.server_mass_flow_rate * air_specific_heat)}"
             outlet = f"""
             {{
                 type            exprFixedValue;
