@@ -1,0 +1,39 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX-OS                                                  |
+|   o   O   o      | Version: v2.4.0                                           |
+|    o     o       | Web:     http://www.engys.com                            |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object decomposeParDict;
+}
+
+numberOfSubdomains {{ process_num }};
+method hierarchical;
+hierarchicalCoeffs
+{
+    {% if process_num == 64 %}
+    n (4 4 4);
+    {% elif process_num == 32 %}
+    n (4 4 2);
+    {% elif process_num == 16 %}
+    n (2 4 2);
+    {% elif process_num == 8 %}
+    n (2 2 2);
+    {% elif process_num == 4 %}
+    n (2 2 1);
+    {% elif process_num == 2 %}
+    n (2 1 1);
+    {% endif %}
+    delta 0.001;
+    order yxz;
+}
+
+distributed false;
+roots ();

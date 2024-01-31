@@ -12,12 +12,13 @@ from typing import Tuple, Dict
 
 from loguru import logger
 
+from dclib.room import Room
+
 from dctwin.backends.core import Backend
 from dctwin.backends.core_k8s import BackendK8s
 from dctwin.backends.foam.boundary import ACUBoundary, RoomBoundary, ServerBoundary
 
 from dctwin.backends.foam.utils import generate_control_dict, read_internal_field
-from dctwin.models import Room
 from dctwin.utils import template_env, config
 
 
@@ -73,7 +74,7 @@ class Builder:
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_dict)
         with open(Path(config.cfd.case_dir, f"0/{filename}"), "w") as f:
             f.write(
-                template_env.get_template(f"0/{filename}.j2").render(
+                template_env.get_template(f"foam/0/{filename}.j2").render(
                     init_temperature=24 + 273.15,
                     p_rgh=round(self.room_dz * 9.81, 10),
                     acu_boundaries=[

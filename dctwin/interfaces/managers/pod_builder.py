@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from loguru import logger
 
-from dctwin.models import Room
+from dclib.room import Room
 
 from .utils import (
     read_temperature_fields,

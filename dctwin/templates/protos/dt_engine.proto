@@ -30,8 +30,10 @@ message IDFXIScheduleConfig {
     ITE = 0; // the schedule is sent to an ElectricITEquipment (CPU schedule)
     ITEDeltaTSupply = 1;  // the schedule is sent to an ElectricITEquipment (deltaT supply)
     ITEDeltaTReturn = 2; // the schedule is sent to an ElectricITEquipment (deltaT return)
-    AirLoopHVAC = 3; // the schedule is sent to the AirLoopHVAC (Cooling Load Fraction Schedule, for multi-CRAC case only)
+    ATU = 3; // the schedule is sent to the AirLoopHVAC (Cooling Load Fraction Schedule, for multi-CRAC case only)
     Room = 4; // the schedule is set as the room temperature set point to enable zoom air temperature control
+    Fan = 5; // the schedule is sent to the Fan availability schedule
+    Coil = 6; // the schedule is sent to the Coil availability schedule
   }
   required float initial_value = 1;
   optional float lb = 2;
@@ -40,6 +42,9 @@ message IDFXIScheduleConfig {
   optional string scheduled_ite_equipment_name = 6;
   optional string scheduled_hvac_loop_name = 7;
   optional string scheduled_thermostat_setpoint_name = 8;
+  optional string scheduled_fan_name = 9;
+  optional string scheduled_coil_name = 10;
+  optional string scheduled_atu_name = 11;
 }
 
 message IDFXIActuatorConfig {
@@ -103,6 +108,7 @@ message EPlusActionConfig {
     IDFXIScheduleConfig schedule_config = 9;
   }
   optional NormalizeConfig normalize_config = 10;
+  optional string masking_variable_name = 11 [default = ""];
 }
 
 message EPlusObservationConfig {
@@ -209,7 +215,7 @@ message CFDEnvConfig {
 }
 
 // co-simulation env config
-message CoSimEnvConfig {
+message EplusCFDEnvConfig {
     required string idf2room_map = 1; // path of facility map file
     required CFDEnvConfig cfd = 2; // cfd config
     required EPlusEnvConfig eplus = 3; // energyplus config
@@ -221,7 +227,7 @@ message DTEngineConfig {
   optional LoggingConfig logging_config = 1;
   oneof EnvConfig {
     EPlusEnvConfig eplus_env_config = 2;
-    CoSimEnvConfig cosim_env_config = 3;
+    EplusCFDEnvConfig eplus_cfd_env_config = 3;
   }
   optional CFDEnvConfig cfd_config = 4;
 }

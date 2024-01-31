@@ -2,9 +2,11 @@ import os
 from pathlib import Path
 
 from loguru import logger
+
+from dclib.room import Room
+
 from dctwin.backends.core import Backend
 from dctwin.backends.core_k8s import BackendK8s
-from dctwin.models import Room
 from dctwin.utils import template_env, config
 
 
@@ -38,7 +40,7 @@ class SalomeBackendMixin:
         geometry_script = Path(config.cfd.geometry_dir, "geometry_script.py")
         geometry_description = Path(config.cfd.geometry_dir, "geometry.json")
         with open(geometry_description, "w") as f:
-            f.write(room.json())
+            f.write(room.model_dump_json())
         template = template_env.get_template("salome/geometry_script.py")
         with open(geometry_script, "w") as f:
             f.write(template.render())
