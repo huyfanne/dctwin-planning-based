@@ -6,7 +6,6 @@ ENV PYTHONUNBUFFERED=1 \
 RUN pip install poetry
 COPY . /opt/src
 WORKDIR /opt/src
-RUN sed -i '/^dclib/d' pyproject.toml
 RUN poetry build
 
 FROM python:3.10
