@@ -32,12 +32,11 @@ jobs:
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
-        env:
-          GIT_TOKEN: ${{ secrets.GIT_TOKEN_DCLIB }}
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
+          build-args: GIT_TOKEN=${{ secrets.GIT_TOKEN_DCLIB }}
           tags: |
             ghcr.io/cap-dcwiz/dctwin:${{ env.IMAGE_VERSION_LONG }}
             ghcr.io/cap-dcwiz/dctwin:${{ env.IMAGE_VERSION_SHORT }}
