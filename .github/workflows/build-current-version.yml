@@ -1,8 +1,9 @@
-name: version bump and build
+name: build-current-version
 on:
   push:
     branches:
       - main
+      - workflowfix
 
 jobs:
   build:
@@ -39,9 +40,8 @@ jobs:
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
-      env:
-        MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
       with:
         context: .
         push: true
         tags: ghcr.io/cap-dcwiz/dctwin:${{ steps.vars.outputs.version }}
+        build-args: GIT_TOKEN=${{ secrets.GIT_TOKEN_DCLIB }}
