@@ -314,7 +314,7 @@ class RackModel:
         box = util.make_box(self.size)
         group = util.group_by_faces(box, exclude=self.excluded_faces)
         self.rack_wall_mesh = util.mesh(group, 0.1, 2)
-        blanking_box = util.make_box({**self.size, "z": 0.044, "y": 0.1})
+        blanking_box = util.make_box({**self.size, "z": 0.042, "y": 0.1})
         blanking_box = util.group_by_faces(
             blanking_box, exclude=["rear", "bottom", "top", "left", "right"]
         )  # Remain only front face
@@ -335,11 +335,7 @@ class RackModel:
             self.mesh()
 
         meshes = []
-        if not self.first_slot_offset:
-            try:
-                slots.remove(1)
-            except ValueError:
-                pass
+
         for slot in slots:
             z = placement["z"]
             z += self.slot_height * (slot - 1)
