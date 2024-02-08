@@ -341,12 +341,13 @@ class RackModel:
         self.is_meshed = True
 
     def make(self, rack_id: str, placement: Dict, orientation: float) -> None:
+        meshes = []
         if self.is_meshed is False:
             self.mesh()
-        util.copy_mesh(
-            f"rack_wall_{rack_id}", self.rack_wall_mesh, placement, orientation
+        mesh = util.copy_mesh(
+            f"rack_wall_{rack_id}", self.rack_wall_mesh, placement, orientation, is_export=False
         )
-        meshes = []
+        meshes.append(mesh)
         slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height,0)
         if self.rack_bottom_blanking_box_mesh is not None:
             mesh = util.copy_mesh(
@@ -369,7 +370,7 @@ class RackModel:
         compound_mesh = smesh.Concatenate(
             [mesh.GetMesh() for mesh in meshes], 1, 1, 1e-05, False
         )
-        util.export_stl(compound_mesh, f"rack_panel_{rack_id}_top_and_bottom")
+        util.export_stl(compound_mesh, f"rack_wall_{rack_id}")
 
     def make_blanking(
         self, rack_id: str, placement: Dict, orientation: float, slots: list
@@ -381,7 +382,8 @@ class RackModel:
 
         slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height,0)
         for slot in slots:
-            z = placement["z"]
+            # 0.0015 is the gap between each slot, because 0.045 is full slot height and 0.042 is the actual height
+            z = placement["z"] + 0.0015
             z += self.slot_height * (slot - 1)
             z += self.first_slot_offset
             if slot_unit_and_actual_rack_height_difference > 0:
