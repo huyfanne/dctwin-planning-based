@@ -1,3 +1,4 @@
+from typing import Union, OrderedDict, List
 from google.protobuf import text_format
 from dctwin.utils.dt_engine_pb2 import DTEngineConfig
 from loguru import logger
@@ -142,6 +143,25 @@ class ConfigBuilder:
         self.model.eplus_env_config.env_params.last_episode_idx = last_episode_idx
 
     """Observation config making functions start here"""
+    def make_weather_observations(
+        self,
+        variable_names: Union[str, List[str]],
+        exposed: bool = True,
+        normalize_method: int = None,
+        lb: float = None,
+        ub: float = None
+    ):
+        for variable_name in variable_names:
+            self._make_observation(
+                exposed=exposed,
+                variable_name=variable_name.lower(),
+                key_value="Environment",
+                output_variable_name=variable_name,
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
 
     def make_pue_observations(
         self,
@@ -602,6 +622,48 @@ class ConfigBuilder:
                 normalize_method=normalize_method,
                 lb=lb,
                 ub=ub,
+            )
+
+    def make_hx_observations(
+        self,
+        exposed: bool = True,
+        normalize_method: int = None,
+        lb: float = None,
+        ub: float = None
+    ):
+        for hx_name, hx in self.device_key_map["heat_exchangers"].items():
+            # observe chiller cooling load
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{hx_name} cooling load".lower(),
+                key_value=hx["cooling load"].split(":")[0],
+                output_variable_name="Fluid Heat Exchanger Heat Transfer Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # observe chilled water supply temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{hx_name} chilled water supply temperature".lower(),
+                key_value=hx["chilled water supply temperature"].split(":")[0],
+                output_variable_name="System Node Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # observe condenser water supply temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{hx_name} condenser water supply temperature".lower(),
+                key_value=hx["condenser water supply temperature"].split(":")[0],
+                output_variable_name="System Node Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
             )
 
     def make_cooling_tower_observations(

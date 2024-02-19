@@ -231,6 +231,7 @@ class Eplus:
             | {"Whole Building"}
             | {"whole building"}
             | {"pv load center"}
+            | {"environment"}
         )
         it_equipment = self.epm.ElectricEquipment_ITE_AirCooled.select()
         supply_air_nodes = set()

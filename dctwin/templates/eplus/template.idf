@@ -898,9 +898,9 @@
     Fraction,                !- Schedule Type Limits Name
     Through: 12/31,          !- Field 1
     For: AllDays,            !- Field 2
-    Until: 7:00,0.05,        !- Field 3
-    Until: 18:00,1.0,        !- Field 5
-    Until: 24:00,0.05;       !- Field 7
+    Until: 7:00,0.00,        !- Field 3
+    Until: 18:00,0.00,        !- Field 5
+    Until: 24:00,0.00;       !- Field 7
 
 !  Coil:Cooling:DX:SingleSpeed,
 !    West DX Cooling Coil,    !- Name

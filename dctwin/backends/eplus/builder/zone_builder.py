@@ -396,7 +396,7 @@ class RoomBuilder:
         controller["Actuator_Node_Name"] = f"{oa['Name']} outside air inlet node"
         controller["Minimum_Outdoor_Air_Flow_Rate"] = "autosize"
         controller["Maximum_Outdoor_Air_Flow_Rate"] = "autosize"
-        controller["Economizer_Control_Type"] = "FixedDryBulb"
+        controller["Economizer_Control_Type"] = "NoEconomizer"
         controller["Economizer_Maximum_Limit_DryBulb_Temperature"] = 23
         controller["Economizer_Maximum_Limit_Dewpoint_Temperature"] = 13.5
         controller["Economizer_Minimum_Limit_DryBulb_Temperature"] = -20
@@ -684,9 +684,9 @@ class RoomBuilder:
                 room_name, config.constructions.acus, config.sizing.sizing_system
             )
             self._make_ites(room_name, config.constructions.heat_gains.ites)
-            # self._make_occupancy(room_name, config.constructions.heat_gains.people)
-            # self._make_lightning(room_name, config.constructions.heat_gains.light)
-            # self._make_electrical_equipment(room_name, config.constructions.heat_gains.electric_equipment)
+            self._make_occupancy(room_name, config.constructions.heat_gains.people)
+            self._make_lightning(room_name, config.constructions.heat_gains.light)
+            self._make_electrical_equipment(room_name, config.constructions.heat_gains.electric_equipment)
             self._make_zone_sizing(room_name, config.sizing.sizing_zone)
             self._make_zone_thermostat(
                 room_name, config.thermostats, config.constructions.acus

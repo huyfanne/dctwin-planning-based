@@ -92,6 +92,7 @@ class IDFBuilder:
             "acus": {},
             "chilled water pumps": {},
             "chillers": {},
+            "heat_exchangers": {},
             "condenser water pumps": {},
             "cooling towers": {},
         }
@@ -191,6 +192,20 @@ class IDFBuilder:
                 "condensing water supply temperature": f"{chiller_obj['Condenser_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "power": f"{chiller_obj['Name'].upper()}:Chiller Electricity Rate [W](TimeStep)",
                 "mass flow rate": f"{chiller_obj['Chilled_Water_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+            }
+        # create heat exchanger device key mapping
+        heat_exchanger_names = self.building.constructions.heat_exchangers
+        for heat_exchanger_name in heat_exchanger_names:
+            hx_obj = self.model.getobject(
+                key="HeatExchanger:FluidToFluid".upper(),
+                name=heat_exchanger_name
+            )
+            self.device_key_map["heat_exchangers"][heat_exchanger_name] = {
+                "cooling load": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Heat Transfer Rate [W](TimeStep)",
+                "chilled water supply temperature": f"{hx_obj['Loop_Supply_Side_Outlet_Node_Name'].upper()}:"
+                                                    f"System Node Temperature [C](TimeStep)",
+                "condenser water supply temperature": f"{hx_obj['Loop_Demand_Side_Inlet_Node_Name'].upper()}:"
+                                                      f"System Node Temperature [C](TimeStep)"
             }
         # create secondary chilled water pump device key mapping
         self.device_key_map["secondary chilled water pumps"] = {}

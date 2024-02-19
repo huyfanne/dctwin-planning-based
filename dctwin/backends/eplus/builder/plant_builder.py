@@ -17,6 +17,7 @@ from .utils import (
     make_plant_sizing,
     make_pump,
     get_cooling_coil,
+    make_heat_exchanger
 )
 
 
@@ -46,6 +47,7 @@ class PlantBuilder:
             "chillers": make_chiller,
             "pumps": make_pump,
             "acu": get_cooling_coil,
+            "heat_exchangers": make_heat_exchanger
         }
         branch = self.model.newidfobject("BRANCH", Name=branch_name)
         component_idx = 1
@@ -332,6 +334,27 @@ class PlantBuilder:
                     Schedule_Type_Limits_Name="Temperature",
                     Hourly_Value=chilled_water_loop.sizing.design_loop_exit_temperature,
                 )
+            for branch_name, branch in chilled_water_loop.supply_branches.items():
+                if branch.side == "middle":
+                    if branch.components.heat_exchangers is not None:
+                        for hx_name, hx in branch.components.heat_exchangers.items():
+                            obj = self.model.getobject(
+                                key="HeatExchanger:FluidToFluid".upper(),
+                                name=hx_name
+                            )
+                            obj["Heat_Exchanger_Setpoint_Node_Name"] = f"{loop_name} supply outlet node"
+                            # Override the attached chiller's chilled water supply inlet and outlet nodes with
+                            # the heat exchanger. It makes the heat exchanger to be connected to the chiller in
+                            # parallel. With such a connection topology, the hext exchanger can be activated to
+                            # provide free cooling when the condenser inlet water temperature is lower than the
+                            # chilled water return temperature.
+                            attached_chiller = self.model.getobject(
+                                key="Chiller:Electric:EIR".upper(),
+                                name=hx.cooling.chiller
+                            )
+                            obj["Component_Override_Loop_Supply_Side_Inlet_Node_Name"] =\
+                                attached_chiller["Chilled_Water_Inlet_Node_Name"]
+                            obj["Component_Override_Cooling_Control_Temperature_Mode"] = "LOOP"
 
     def _make_condenser_loops(self, condenser_loops: Dict[str, CondenserWaterLoops]):
         for loop_name, condenser_loop in condenser_loops.items():
@@ -343,18 +366,52 @@ class PlantBuilder:
                 type_="condenser",
             )
             make_plant_sizing(self.model, loop_name, condenser_loop.sizing)
-            # Add condenser loop exit temperature set point manager to control the condenser loop exit temperature
-            # according to the outdoor air temperature
-            self.model.newidfobject(
-                key="SetpointManager:FollowOutdoorAirTemperature".upper(),
-                Name=f"{loop_name} outdoor air temperature setpoint manager",
-                Control_Variable="Temperature",
-                Reference_Temperature_Type="OutdoorAirWetBulb",
-                Offset_Temperature_Difference=2.5,
-                Maximum_Setpoint_Temperature=32,
-                Minimum_Setpoint_Temperature=0,
-                Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node",
-            )
+            # Add condenser loop exit temperature set point manager to control the condenser loop exit temperature.
+            # Two types of set point managers are supported: scheduled and follow outdoor air temperature.
+            if condenser_loop.meta.setpoint_manager:
+                self.model.newidfobject(
+                    key="SetpointManager:Scheduled".upper(),
+                    Name=f"{loop_name} exit temperature setpoint manager",
+                    Control_Variable="Temperature",
+                    Schedule_Name=f"{loop_name} exit temperature setpoint",
+                    Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node"
+                )
+                self.model.newidfobject(
+                    key="Schedule:Constant".upper(),
+                    Name=f"{loop_name} exit temperature setpoint",
+                    Schedule_Type_Limits_Name="Temperature",
+                    Hourly_Value=condenser_loop.sizing.design_loop_exit_temperature
+                )
+            else:
+                self.model.newidfobject(
+                    key="SetpointManager:FollowOutdoorAirTemperature".upper(),
+                    Name=f"{loop_name} setpoint manager",
+                    Control_Variable="Temperature",
+                    Reference_Temperature_Type="OutdoorAirWetBulb",
+                    Offset_Temperature_Difference=0.0,
+                    Maximum_Setpoint_Temperature=35,
+                    Minimum_Setpoint_Temperature=5,
+                    Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node"
+                )
+            for branch_name, branch in condenser_loop.demand_branches.items():
+                if branch.side == "middle":
+                    if branch.components.heat_exchangers is not None:
+                        for hx_name, hx in branch.components.heat_exchangers.items():
+                            obj = self.model.getobject(
+                                key="HeatExchanger:FluidToFluid".upper(),
+                                name=hx_name
+                            )
+                            # Override the attached chiller's chilled water supply inlet and outlet nodes with
+                            # the heat exchanger. It makes the heat exchanger to be connected to the chiller in
+                            # parallel. With such a connection topology, the hext exchanger can be activated to
+                            # provide free cooling when the condenser inlet water temperature is lower than the
+                            # chilled water return temperature.
+                            attached_chiller = self.model.getobject(
+                                key="Chiller:Electric:EIR".upper(),
+                                name=hx.cooling.chiller
+                            )
+                            obj["Component_Override_Loop_Demand_Side_Inlet_Node_Name"] = \
+                                attached_chiller["Condenser_Inlet_Node_Name"]
 
     def make_plant(self, plant: Plant):
         """
