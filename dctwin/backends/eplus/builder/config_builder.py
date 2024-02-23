@@ -163,6 +163,49 @@ class ConfigBuilder:
                 ub=ub
             )
 
+    # make plant loop overall observations
+    def make_plant_loop_observations(
+        self,
+        exposed: bool = True,
+        normalize_method: int = None,
+        lb: float = None,
+        ub: float = None
+    ):
+        for chilled_water_loop_name, chilled_water_loop in self.buidling.constructions.plant.chilled_water_loops.items():
+            # observe chilled water loop supply side outlet temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{chilled_water_loop_name} supply side outlet temperature".lower(),
+                key_value=chilled_water_loop_name,
+                output_variable_name="Plant Supply Side Outlet Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # observe chilled water loop supply side inlet temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{chilled_water_loop_name} supply side inlet temperature".lower(),
+                key_value=chilled_water_loop_name,
+                output_variable_name="Plant Supply Side Inlet Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # observe chilled water loop supply side mass flow rate
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{chilled_water_loop_name} supply side mass flow rate".lower(),
+                key_value=chilled_water_loop_name,
+                output_variable_name="Plant Supply Side Inlet Mass Flow Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+
     def make_pue_observations(
         self,
         exposed: bool = True,
@@ -566,51 +609,83 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub,
+                ub=ub
+            )
+            # observe chiller evaporator mass flow rate
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{chiller_name} evaporator mass flow rate".lower(),
+                key_value=chiller["chilled water mass flow rate"].split(":")[0],
+                output_variable_name="Chiller Evaporator Mass Flow Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
             )
             # chilled water supply temperature
             self._make_observation(
                 exposed=exposed,
                 variable_name=f"{chiller_name} chilled water supply temperature".lower(),
                 key_value=chiller["chilled water supply temperature"].split(":")[0],
-                output_variable_name="System Node Temperature",
+                output_variable_name="Chiller Evaporator Outlet Temperature",
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub,
-            )
-            # condenser water supply temperature
-            self._make_observation(
-                exposed=exposed,
-                variable_name=f"{chiller_name} condenser water supply temperature".lower(),
-                key_value=chiller["condensing water supply temperature"].split(":")[0],
-                output_variable_name="System Node Temperature",
-                reporting_frequency="timestep",
-                normalize_method=normalize_method,
-                lb=lb,
-                ub=ub,
+                ub=ub
             )
             # chilled water return temperature
             self._make_observation(
                 exposed=exposed,
                 variable_name=f"{chiller_name} chilled water return temperature".lower(),
                 key_value=chiller["chilled water return temperature"].split(":")[0],
-                output_variable_name="System Node Temperature",
+                output_variable_name="Chiller Evaporator Inlet Temperature",
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub,
+                ub=ub
+            )
+            # chilled water mass flow rate
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{chiller_name} chilled water mass flow rate".lower(),
+                key_value=chiller["chilled water mass flow rate"].split(":")[0],
+                output_variable_name="Chiller Condenser Mass Flow Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # condenser water supply temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{chiller_name} condenser water supply temperature".lower(),
+                key_value=chiller["condenser water supply temperature"].split(":")[0],
+                output_variable_name="Chiller Condenser Inlet Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
             )
             # condenser water return temperature
             self._make_observation(
                 exposed=exposed,
                 variable_name=f"{chiller_name} condenser water return temperature".lower(),
-                key_value=chiller["condensing water return temperature"].split(":")[0],
-                output_variable_name="System Node Temperature",
+                key_value=chiller["condenser water return temperature"].split(":")[0],
+                output_variable_name="Chiller Condenser Outlet Temperature",
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub,
+                ub=ub
+            )
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{chiller_name} condenser water mass flow rate".lower(),
+                key_value=chiller["condenser water mass flow rate"].split(":")[0],
+                output_variable_name="Chiller Condenser Mass Flow Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
             )
             # observe chiller power consumption
             self._make_observation(
@@ -621,7 +696,7 @@ class ConfigBuilder:
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub,
+                ub=ub
             )
 
     def make_hx_observations(
@@ -632,7 +707,7 @@ class ConfigBuilder:
         ub: float = None
     ):
         for hx_name, hx in self.device_key_map["heat_exchangers"].items():
-            # observe chiller cooling load
+            # observe heat exchanger cooling load
             self._make_observation(
                 exposed=exposed,
                 variable_name=f"{hx_name} cooling load".lower(),
@@ -643,27 +718,56 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub
             )
-            # observe chilled water supply temperature
+            # observe heat exchanger supply side inlet/outlet temperature
             self._make_observation(
                 exposed=exposed,
                 variable_name=f"{hx_name} chilled water supply temperature".lower(),
                 key_value=hx["chilled water supply temperature"].split(":")[0],
-                output_variable_name="System Node Temperature",
+                output_variable_name="Fluid Heat Exchanger Loop Supply Side Outlet Temperature",
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
-                ub=ub
             )
-            # observe condenser water supply temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{hx_name} chilled water return temperature".lower(),
+                key_value=hx["chilled water return temperature"].split(":")[0],
+                output_variable_name="Fluid Heat Exchanger Loop Supply Side Inlet Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+            )
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{hx_name} chilled water mass flow rate".lower(),
+                key_value=hx["chilled water mass flow rate"].split(":")[0],
+                output_variable_name="Fluid Heat Exchanger Loop Supply Side Mass Flow Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method
+            )
+            # observe heat exchanger demand side inlet/outlet temperature
             self._make_observation(
                 exposed=exposed,
                 variable_name=f"{hx_name} condenser water supply temperature".lower(),
                 key_value=hx["condenser water supply temperature"].split(":")[0],
-                output_variable_name="System Node Temperature",
+                output_variable_name="Fluid Heat Exchanger Loop Demand Side Inlet Temperature",
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
-                lb=lb,
-                ub=ub
+            )
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{hx_name} condenser water return temperature".lower(),
+                key_value=hx["condenser water return temperature"].split(":")[0],
+                output_variable_name="Fluid Heat Exchanger Loop Demand Side Outlet Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+            )
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{hx_name} condenser water mass flow rate".lower(),
+                key_value=hx["condenser water mass flow rate"].split(":")[0],
+                output_variable_name="Fluid Heat Exchanger Loop Demand Side Mass Flow Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method
             )
 
     def make_cooling_tower_observations(

@@ -60,6 +60,7 @@ class Eplus:
     def __init__(self, epm: op.Epm, chw_loop_prefix: str = "CHW") -> None:
         self.epm = epm
         self.node_names = self._get_node_names()
+        self.plant_loop_names = self._get_plant_loop_names()
         self.branch_name = self._get_branch_names()
         self.component_names = self._get_component_names()
         self.zone_names = self._get_zone_names()
@@ -88,6 +89,16 @@ class Eplus:
 
     "-------------------------------------Internal IDF Parsing Function API--------------------------------------------"
 
+    def _get_plant_loop_names(self):
+        """
+        Get all plant loop names
+        """
+        plant_loops = self.epm.PlantLoop
+        plant_loop_names = set()
+        for plant_loop in plant_loops:
+            plant_loop_names.add(plant_loop.name)
+        return plant_loop_names
+    
     def _get_thermostat_setpoints_name(self):
         """
         Get the name for all Thermostat:DualSetpoints object name in EnergyPlus
@@ -228,6 +239,7 @@ class Eplus:
             self.node_names
             | self.component_names
             | self.zone_names
+            | self.plant_loop_names
             | {"Whole Building"}
             | {"whole building"}
             | {"pv load center"}
