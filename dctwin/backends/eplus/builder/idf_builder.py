@@ -140,8 +140,8 @@ class IDFBuilder:
             self.device_key_map["ites"][ite_name] = {
                 "inlet dry-bulb temperature": f"{ite_obj['Name'].upper()}:ITE Air Inlet Dry-Bulb Temperature [C](TimeStep)",
                 "inlet relative humidity": f"{ite_obj['Name'].upper()}:ITE Air Inlet Relative Humidity [%](TimeStep)",
-                "cpu power": f"{ite_obj['Name'].upper()}:ITE CPU Electricity Rate [%](TimeStep)",
-                "fan power": f"{ite_obj['Name'].upper()}:ITE Fan Electricity Rate [%](TimeStep)",
+                "cpu power": f"{ite_obj['Name'].upper()}:ITE CPU Electricity Rate [W](TimeStep)",
+                "fan power": f"{ite_obj['Name'].upper()}:ITE Fan Electricity Rate [W](TimeStep)",
                 "ups power": f"{ite_obj['Name'].upper()}:ITE UPS Electricity Rate [W](TimeStep)",
             }
         # create ACU device key mapping

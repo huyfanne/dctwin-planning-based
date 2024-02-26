@@ -941,6 +941,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         masking: bool = False,
+        device_values: dict = {},
     ):
         for acu_name, acu in self.device_key_map["acus"].items():
             masking_variable_name = (
@@ -953,11 +954,11 @@ class ConfigBuilder:
                 actuated_component_type=3,
                 actuated_component_control_type=3,
                 control_type=control_type,
-                default_unnormed_value=default_unnormed_value,
-                method=normalize_method,
-                lb=lb,
-                ub=ub,
-                masking_variable_name=masking_variable_name,
+                default_unnormed_value=device_values.get(acu_name, {}).get("default_unnormed_value", default_unnormed_value),
+                method=device_values.get(acu_name, {}).get("normalize_method", normalize_method),
+                lb=device_values.get(acu_name, {}).get("lb", lb),
+                ub=device_values.get(acu_name, {}).get("ub", ub),
+                masking_variable_name=device_values.get(acu_name, {}).get("masking_variable_name", masking_variable_name),
             )
 
     def make_acu_supply_air_flow_rate_actions(
@@ -968,6 +969,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         masking: bool = False,
+        device_values: dict = {},
     ):
         for acu_name, acu in self.device_key_map["acus"].items():
             masking_variable_name = (
@@ -979,12 +981,12 @@ class ConfigBuilder:
                 actuated_component_unique_name=f"{acu_name} fan".lower(),
                 actuated_component_type=0,
                 actuated_component_control_type=0,
-                control_type=control_type,
-                default_unnormed_value=default_unnormed_value,
-                method=normalize_method,
-                lb=lb,
-                ub=ub,
-                masking_variable_name=masking_variable_name,
+                control_type=device_values.get(acu_name, {}).get("control_type", control_type),
+                default_unnormed_value=device_values.get(acu_name, {}).get("default_unnormed_value", default_unnormed_value),
+                method=device_values.get(acu_name, {}).get("normalize_method", normalize_method),
+                lb=device_values.get(acu_name, {}).get("lb", lb),
+                ub=device_values.get(acu_name, {}).get("ub", ub),
+                masking_variable_name=device_values.get(acu_name, {}).get("masking_variable_name", masking_variable_name),
             )
 
     def make_chilled_water_loop_supply_temperature_actions(
@@ -994,6 +996,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         default_unnormed_value: float = None,
+        device_values: dict = {},
     ):
         for loop_name, loop in self.device_key_map["chilled water loops"].items():
             variable_name = f"{loop_name} supply temperature setpoint".lower()
@@ -1002,11 +1005,11 @@ class ConfigBuilder:
                 actuated_component_unique_name=f"{loop_name} supply outlet node",
                 actuated_component_type=1,
                 actuated_component_control_type=1,
-                control_type=control_type,
-                default_unnormed_value=default_unnormed_value,
-                method=normalize_method,
-                lb=lb,
-                ub=ub,
+                control_type=device_values.get(loop_name, {}).get("control_type", control_type),
+                default_unnormed_value=device_values.get(loop_name, {}).get("default_unnormed_value", default_unnormed_value),
+                method=device_values.get(loop_name, {}).get("normalize_method", normalize_method),
+                lb=device_values.get(loop_name, {}).get("lb", lb),
+                ub=device_values.get(loop_name, {}).get("ub", ub),
             )
 
     def make_condensed_water_loop_supply_temperature_actions(
@@ -1016,6 +1019,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         default_unnormed_value: float = None,
+        device_values: dict = {},
     ):
         for loop_name, loop in self.device_key_map["condenser water loops"].items():
             variable_name = f"{loop_name} supply temperature setpoint".lower()
@@ -1024,11 +1028,11 @@ class ConfigBuilder:
                 actuated_component_unique_name=f"{loop_name} supply outlet node",
                 actuated_component_type=1,
                 actuated_component_control_type=1,
-                control_type=control_type,
-                default_unnormed_value=default_unnormed_value,
-                method=normalize_method,
-                lb=lb,
-                ub=ub,
+                control_type=device_values.get(loop_name, {}).get("control_type", control_type),
+                default_unnormed_value=device_values.get(loop_name, {}).get("default_unnormed_value", default_unnormed_value),
+                method=device_values.get(loop_name, {}).get("normalize_method", normalize_method),
+                lb=device_values.get(loop_name, {}).get("lb", lb),
+                ub=device_values.get(loop_name, {}).get("ub", ub),
             )
 
     def make_chilled_water_supply_branch_on_off_actions_prescheduled(
@@ -1038,22 +1042,22 @@ class ConfigBuilder:
         lb: float = 0.0,
         ub: float = 1.0,
     ):
-        for index, (chiller_name, chiller) in enumerate(
-            self.device_key_map["chillers"].items()
-        ):
-            self._make_actions(
-                variable_name=f"chilled water supply branch {index+1} on off".lower(),
-                actuated_component_unique_name=f"chilled water supply branch {index+1}",
-                actuated_component_type=4,
-                actuated_component_control_type=4,
-                control_type=5,
-                method=normalize_method,
-                lb=lb,
-                ub=ub,
-                input_source=schedule_dir.joinpath(
-                    f"chilled water supply branch {index+1}.json"
-                ),
-            )
+        chilled_water_loops = self.building["constructions"]["plant"]["chilledWaterLoops"]
+        for chilled_water_loop_name, chilled_water_loop in chilled_water_loops.items():
+            for branch_name, branch in chilled_water_loop["supplyBranches"].items():
+                self._make_actions(
+                    variable_name=f"{branch_name} on off".lower(),
+                    actuated_component_unique_name=f"{branch_name}",
+                    actuated_component_type=4,
+                    actuated_component_control_type=4,
+                    control_type=5,
+                    method=normalize_method,
+                    lb=lb,
+                    ub=ub,
+                    input_source=schedule_dir.joinpath(
+                        f"{branch_name}.json"
+                    ),
+                ) if branch["side"] == "middle" else None
 
     def make_chilled_water_pump_flow_rates_actions_prescheduled(
         self,
@@ -1061,6 +1065,7 @@ class ConfigBuilder:
         normalize_method: int = 1,
         lb: float = 0.0,
         ub: float = 100.0,
+        device_values: dict = {},
     ):
         for pump_name, pump in self.device_key_map["chilled water pumps"].items():
             self._make_actions(
@@ -1069,9 +1074,9 @@ class ConfigBuilder:
                 actuated_component_type=2,
                 actuated_component_control_type=2,
                 control_type=5,
-                method=normalize_method,
-                lb=lb,
-                ub=ub,
+                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
+                lb=device_values.get(pump_name, {}).get("lb", lb),
+                ub=device_values.get(pump_name, {}).get("ub", ub),
                 input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
             )
 
@@ -1081,6 +1086,7 @@ class ConfigBuilder:
         normalize_method: int = 1,
         lb: float = 0.0,
         ub: float = 100.0,
+        device_values: dict = {},
     ):
         for pump_name, pump in self.device_key_map[
             "secondary chilled water pumps"
@@ -1091,9 +1097,9 @@ class ConfigBuilder:
                 actuated_component_type=2,
                 actuated_component_control_type=2,
                 control_type=5,
-                method=normalize_method,
-                lb=lb,
-                ub=ub,
+                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
+                lb=device_values.get(pump_name, {}).get("lb", lb),
+                ub=device_values.get(pump_name, {}).get("ub", ub),
                 input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
             )
 
@@ -1103,6 +1109,7 @@ class ConfigBuilder:
         normalize_method: int = 1,
         lb: float = 0.0,
         ub: float = 100.0,
+        device_values: dict = {},
     ):
         for pump_name, pump in self.device_key_map["condenser water pumps"].items():
             self._make_actions(
@@ -1111,9 +1118,9 @@ class ConfigBuilder:
                 actuated_component_type=2,
                 actuated_component_control_type=2,
                 control_type=5,
-                method=normalize_method,
-                lb=lb,
-                ub=ub,
+                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
+                lb=device_values.get(pump_name, {}).get("lb", lb),
+                ub=device_values.get(pump_name, {}).get("ub", ub),
                 input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
             )
 
@@ -1146,6 +1153,7 @@ class ConfigBuilder:
         initial_value: float = 1.0,
         lb: float = 0.0,
         ub: float = 1.0,
+        device_values: dict = {},
     ):
         for ite_name, ite in self.device_key_map["ites"].items():
             action = self.model.eplus_env_config.actions.add()
@@ -1156,9 +1164,10 @@ class ConfigBuilder:
             ).replace(
                 "\\", "/"
             )  # convert to unix style path
-            action.schedule_config.initial_value = initial_value
-            action.schedule_config.lb = lb
-            action.schedule_config.ub = ub
+            action.schedule_config.initial_value = device_values.get(ite_name, {})\
+                .get("initial_value", initial_value)
+            action.schedule_config.lb = device_values.get(ite_name, {}).get("lb", lb)
+            action.schedule_config.ub = device_values.get(ite_name, {}).get("ub", ub)
             action.schedule_config.schedule_type = 0
             action.schedule_config.scheduled_ite_equipment_name = f"{ite_name.lower()}"
 
