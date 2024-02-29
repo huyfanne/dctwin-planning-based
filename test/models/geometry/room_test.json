@@ -36,7 +36,7 @@
             },
             "racks": {
                 "rack_model_1": {
-                    "firstSlotOffset": 0,
+                    "firstSlotOffset": 0.1,
                     "size": {
                         "x": 0.6,
                         "y": 1.2,
@@ -160,8 +160,8 @@
             },
             "servers": {
                 "Pokemon": {
-                    "fanType": "Variable",
-                    "volumeFlowRateRatio": 0.00005
+                    "fanType": "Fixed",
+                    "volumeFlowRate": 0.02
                 },
                 "AliServer Thor01-12U": {
                     "fanType": "Fixed",
@@ -301,11 +301,11 @@
                         "y": 10.2,
                         "z": 0.0
                     },
-                    "orientation": 270,
+                    "orientation": -90,
                     "hasBlankingPanel": true
                 },
                 "constructions": {
-                "servers": {
+                    "servers": {
                         "A01_01": {
                             "geometry": {
                                 "model": "Pokemon",
@@ -315,16 +315,142 @@
                                 "model": "Pokemon"
                             }
                         },
-                     "A01_06": {
+                        "A01_06": {
                             "geometry": {
                                 "model": "Pokemon",
-                                "slotPosition": 10
+                                "slotPosition": 6
                             },
                             "cooling": {
                                 "model": "Pokemon"
                             }
+                        },
+                        "A01_11": {
+                            "geometry": {
+                                "model": "AliServer Thor01-12U",
+                                "slotPosition": 11
+                            },
+                            "cooling": {
+                                "model": "AliServer Thor01-12U"
+                            }
+                        },
+                        "A01_13": {
+                            "geometry": {
+                                "model": "AliServer Thor01-2U",
+                                "slotPosition": 13
+                            },
+                            "cooling": {
+                                "model": "AliServer Thor01-2U"
+                            }
+                        },
+                        "A01_15": {
+                            "geometry": {
+                                "model": "AliServer Thor01-2U",
+                                "slotPosition": 15
+                            },
+                            "cooling": {
+                                "model": "AliServer Thor01-2U"
+                            }
+                        },
+                        "A01_17": {
+                            "geometry": {
+                                "model": "AliServer Thor01-2U",
+                                "slotPosition": 17
+                            },
+                            "cooling": {
+                                "model": "AliServer Thor01-2U"
+                            }
+                        },
+                        "A01_19": {
+                            "geometry": {
+                                "model": "SA5212M4",
+                                "slotPosition": 19
+                            },
+                            "cooling": {
+                                "model": "SA5212M4"
+                            }
+                        },
+                        "A01_21": {
+                            "geometry": {
+                                "model": "SA5212M4",
+                                "slotPosition": 21
+                            },
+                            "cooling": {
+                                "model": "SA5212M4"
+                            }
+                        },
+                        "A01_23": {
+                            "geometry": {
+                                "model": "AliServer Thor01-2U",
+                                "slotPosition": 23
+                            },
+                            "cooling": {
+                                "model": "AliServer Thor01-2U"
+                            }
+                        },
+                        "A01_25": {
+                            "geometry": {
+                                "model": "AliServer Thor01-2U",
+                                "slotPosition": 25
+                            },
+                            "cooling": {
+                                "model": "AliServer Thor01-2U"
+                            }
+                        },
+                        "A01_27": {
+                            "geometry": {
+                                "model": "K800G3-10G",
+                                "slotPosition": 27
+                            },
+                            "cooling": {
+                                "model": "K800G3-10G"
+                            }
+                        },
+                        "A01_29": {
+                            "geometry": {
+                                "model": "AliServer Thor01-2U",
+                                "slotPosition": 29
+                            },
+                            "cooling": {
+                                "model": "AliServer Thor01-2U"
+                            }
+                        },
+                        "A01_31": {
+                            "geometry": {
+                                "model": "AliServer Thor01-2U",
+                                "slotPosition": 31
+                            },
+                            "cooling": {
+                                "model": "AliServer Thor01-2U"
+                            }
+                        },
+                        "A01_33": {
+                            "geometry": {
+                                "model": "AliServer Thor01-2U",
+                                "slotPosition": 33
+                            },
+                            "cooling": {
+                                "model": "AliServer Thor01-2U"
+                            }
+                        },
+                        "A01_35": {
+                            "geometry": {
+                                "model": "SA5212M4",
+                                "slotPosition": 35
+                            },
+                            "cooling": {
+                                "model": "SA5212M4"
+                            }
+                        },
+                        "A01_37": {
+                            "geometry": {
+                                "model": "K800G3-10G",
+                                "slotPosition": 37
+                            },
+                            "cooling": {
+                                "model": "K800G3-10G"
+                            }
                         }
-                }
+                    }
                 }
             }
         },
