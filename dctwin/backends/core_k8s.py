@@ -31,9 +31,9 @@ class BackendK8s(BaseBackend):
         self.namespace = k8s_config.get("k8s_namespace", "default")
         self.worker_name = k8s_config.get("worker_name", "default-worker")
         self.k8s_taint = k8s_config.get("k8s_taint", "")
-        self.cfd_resources = json.loads(
+        self.k8s_resources = json.loads(
             k8s_config.get(
-                "cfd_resources",
+                "k8s_resources",
                 json.dumps(
                     {"cpu": "16000m", "memory": "4Gi", "ephemeral-storage": "1000Mi"}
                 ),
@@ -57,7 +57,7 @@ class BackendK8s(BaseBackend):
             working_dir = self.volume_data_dir
         namespace = self.namespace
         worker_name = self.worker_name
-        cfd_resources = self.cfd_resources
+        k8s_resources = self.k8s_resources
         job_uuid = str(uuid.uuid4())
         image = self.docker_image
         is_local_k8s = dctwin_config._environ.get("is_local_k8s", "False") == "True"
@@ -92,7 +92,7 @@ class BackendK8s(BaseBackend):
                 start=True,
                 env_vars=environment,
                 namespace=namespace,
-                resources=cfd_resources,
+                resources=k8s_resources,
                 is_local_k8s=is_local_k8s,
                 local_volume_path=DEFAULT_LOCAL_VOLUME_PATH,
                 k8s_taint=k8s_taint,
