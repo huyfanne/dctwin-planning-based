@@ -355,6 +355,7 @@ def make_heat_exchanger(
     """
     if kwargs["type_"] == "chilled" and kwargs["side"] == "supply":
         obj = model.newidfobject("HeatExchanger:FluidToFluid".upper(), Name=hx.uid.lower())
+        obj["Availability_Schedule_Name"] = "ALWAYS ON"
         obj = fill_inlet_outlet(
             branch_component_idx=branch_component_idx,
             obj=obj,

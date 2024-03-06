@@ -34,6 +34,7 @@ message IDFXIScheduleConfig {
     Room = 4; // the schedule is set as the room temperature set point to enable zoom air temperature control
     Fan = 5; // the schedule is sent to the Fan availability schedule
     Coil = 6; // the schedule is sent to the Coil availability schedule
+    HX = 7; // the schedule is sent to the HeatExchanger availability schedule
   }
   required float initial_value = 1;
   optional float lb = 2;
@@ -45,6 +46,7 @@ message IDFXIScheduleConfig {
   optional string scheduled_fan_name = 9;
   optional string scheduled_coil_name = 10;
   optional string scheduled_atu_name = 11;
+  optional string scheduled_hx_name = 12;
 }
 
 message IDFXIActuatorConfig {

@@ -399,7 +399,7 @@ class RoomBuilder:
         controller["Economizer_Control_Type"] = "NoEconomizer"
         controller["Economizer_Maximum_Limit_DryBulb_Temperature"] = 23
         controller["Economizer_Maximum_Limit_Dewpoint_Temperature"] = 13.5
-        controller["Economizer_Minimum_Limit_DryBulb_Temperature"] = -20
+        controller["Economizer_Minimum_Limit_DryBulb_Temperature"] = -30
         controller["Lockout_Type"] = "NoLockout"
         controller["Minimum_Limit_Type"] = "FixedMinimum"
         controller["Minimum_Outdoor_Air_Schedule_Name"] = "OAFractionSched"

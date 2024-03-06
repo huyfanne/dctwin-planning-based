@@ -520,6 +520,13 @@ class Eplus:
             ).one()
             atu.availability_schedule_name = config.variable_name
 
+        def _set_hx_availability_schedule() -> None:
+            hx_name = schedule_config.scheduled_hx_name
+            hx = self.epm.HeatExchanger_FluidToFluid.select(
+                lambda x: x.name == hx_name.lower()
+            ).one()
+            hx.availability_schedule_name = config.variable_name
+
         func_dict = {
             "ITE": _set_cpu_load_schedule,
             "ITEDeltaTSupply": _set_delta_temp_supply_schedule,
@@ -528,6 +535,7 @@ class Eplus:
             "Fan": _set_fan_availability_schedule,
             "Coil": _set_coil_availability_schedule,
             "ATU": _set_atu_availability_schedule,
+            "HX": _set_hx_availability_schedule,
         }
 
         name = config.variable_name
