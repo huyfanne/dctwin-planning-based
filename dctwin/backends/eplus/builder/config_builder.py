@@ -967,7 +967,7 @@ class ConfigBuilder:
                 actuated_component_unique_name=f"{acu_name} air loop supply air temperature schedule".lower(),
                 actuated_component_type=3,
                 actuated_component_control_type=3,
-                control_type=control_type,
+                control_type=device_values.get(acu_name, {}).get("control_type", control_type),
                 default_unnormed_value=device_values.get(acu_name, {}).get("default_unnormed_value", default_unnormed_value),
                 method=device_values.get(acu_name, {}).get("normalize_method", normalize_method),
                 lb=device_values.get(acu_name, {}).get("lb", lb),
