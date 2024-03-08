@@ -973,7 +973,7 @@ class ConfigBuilder:
                 lb=device_values.get(acu_name, {}).get("lb", lb),
                 ub=device_values.get(acu_name, {}).get("ub", ub),
                 masking_variable_name=device_values.get(acu_name, {}).get("masking_variable_name", masking_variable_name),
-            )
+            ) if device_values.get(acu_name, {}).get("disable", False) is False else None
 
     def make_acu_supply_air_flow_rate_actions(
         self,
@@ -1001,7 +1001,7 @@ class ConfigBuilder:
                 lb=device_values.get(acu_name, {}).get("lb", lb),
                 ub=device_values.get(acu_name, {}).get("ub", ub),
                 masking_variable_name=device_values.get(acu_name, {}).get("masking_variable_name", masking_variable_name),
-            )
+            ) if device_values.get(acu_name, {}).get("disable", False) is False else None
 
     def make_chilled_water_loop_supply_temperature_actions(
         self,
@@ -1024,7 +1024,7 @@ class ConfigBuilder:
                 method=device_values.get(loop_name, {}).get("normalize_method", normalize_method),
                 lb=device_values.get(loop_name, {}).get("lb", lb),
                 ub=device_values.get(loop_name, {}).get("ub", ub),
-            )
+            ) if device_values.get(loop_name, {}).get("disable", False) is False else None
 
     def make_condensed_water_loop_supply_temperature_actions(
         self,
@@ -1047,7 +1047,7 @@ class ConfigBuilder:
                 method=device_values.get(loop_name, {}).get("normalize_method", normalize_method),
                 lb=device_values.get(loop_name, {}).get("lb", lb),
                 ub=device_values.get(loop_name, {}).get("ub", ub),
-            )
+            ) if device_values.get(loop_name, {}).get("disable", False) is False else None
 
     def make_chilled_water_pump_flow_rates_actions(
         self,
@@ -1069,7 +1069,7 @@ class ConfigBuilder:
                 method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
                 lb=device_values.get(pump_name, {}).get("lb", lb),
                 ub=device_values.get(pump_name, {}).get("ub", ub),
-            )
+            ) if device_values.get(pump_name, {}).get("disable", False) is False else None
 
     def make_secondary_chilled_water_pump_flow_rates_actions(
         self,
@@ -1091,7 +1091,7 @@ class ConfigBuilder:
                 method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
                 lb=device_values.get(pump_name, {}).get("lb", lb),
                 ub=device_values.get(pump_name, {}).get("ub", ub),
-            )
+            ) if device_values.get(pump_name, {}).get("disable", False) is False else None
 
     def make_condenser_water_pump_flow_rates_actions(
         self,
@@ -1113,7 +1113,7 @@ class ConfigBuilder:
                 method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
                 lb=device_values.get(pump_name, {}).get("lb", lb),
                 ub=device_values.get(pump_name, {}).get("ub", ub),
-            )
+            ) if device_values.get(pump_name, {}).get("disable", False) is False else None
 
     def make_chilled_water_supply_branch_on_off_actions_prescheduled(
         self,
@@ -1158,7 +1158,7 @@ class ConfigBuilder:
                 lb=device_values.get(pump_name, {}).get("lb", lb),
                 ub=device_values.get(pump_name, {}).get("ub", ub),
                 input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
-            )
+            ) if device_values.get(pump_name, {}).get("disable", False) is False else None
 
     def make_secondary_chilled_water_pump_flow_rates_actions_prescheduled(
         self,
@@ -1181,7 +1181,7 @@ class ConfigBuilder:
                 lb=device_values.get(pump_name, {}).get("lb", lb),
                 ub=device_values.get(pump_name, {}).get("ub", ub),
                 input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
-            )
+            ) if device_values.get(pump_name, {}).get("disable", False) is False else None
 
     def make_condenser_water_pump_flow_rates_actions_prescheduled(
         self,
@@ -1202,7 +1202,7 @@ class ConfigBuilder:
                 lb=device_values.get(pump_name, {}).get("lb", lb),
                 ub=device_values.get(pump_name, {}).get("ub", ub),
                 input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
-            )
+            ) if device_values.get(pump_name, {}).get("disable", False) is False else None
 
     def make_acu_on_off_schedules(
         self,

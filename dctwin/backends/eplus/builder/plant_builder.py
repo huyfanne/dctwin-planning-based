@@ -418,8 +418,8 @@ class PlantBuilder:
                                 Reference_Node_Name=f"{loop_name} supply outlet node",
                                 Reference_Temperature_Type="NodeDryBulb",
                                 Offset_Temperature_Difference=0.0,
-                                Maximum_Limit_Setpoint_Temperature=50,
-                                Minimum_Limit_Setpoint_Temperature=12,
+                                Maximum_Limit_Setpoint_Temperature=chilled_water_loop.meta.maximum_setpoint_temperature,
+                                Minimum_Limit_Setpoint_Temperature=chilled_water_loop.meta.minimum_setpoint_temperature,
                                 Setpoint_Node_or_NodeList_Name=obj["Heat_Exchanger_Setpoint_Node_Name"]
                             )
 
