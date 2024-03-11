@@ -10,39 +10,39 @@ eplus_env_config {
   }
   actions {
     control_type: PRE_SCHEDULED
-    input_source: "data/schedule/workloads/zone1ite1.json"
-    variable_name: "zone1ite1 cpu loading schedule"
+    input_source: "data/schedule/workloads/ite_1.json"
+    variable_name: "ite_1 cpu loading schedule"
     schedule_config {
       initial_value: 1.0
       lb: 0.0
       ub: 1.0
       schedule_type: ITE
-      scheduled_ite_equipment_name: "zone1ite1"
+      scheduled_ite_equipment_name: "ite_1"
     }
   }
   actions {
     control_type: AGENT_CONTROLLED
     variable_name: "chilled_water_loop_supply_temperature_setpoint"
     actuator_config {
-      actuated_component_unique_name: "chilled water loop supply outlet node"
-      actuated_component_type: System_Node_Setpoint
-      actuated_component_control_type: Temperature_Setpoint
-    }
-  }
-  actions {
-    control_type: AGENT_CONTROLLED
-    variable_name: "zone1acu1_supply_air_temperature_setpoint"
-    actuator_config {
-      actuated_component_unique_name: "zone1acu1 air loop supply air temperature schedule"
+      actuated_component_unique_name: "chilled water loop exit temperature setpoint schedule"
       actuated_component_type: Schedule_Constant
       actuated_component_control_type: Schedule_Value
     }
   }
   actions {
     control_type: AGENT_CONTROLLED
-    variable_name: "zone1acu1_supply_air_mass_flow_rate"
+    variable_name: "acu_1_supply_air_temperature_setpoint"
     actuator_config {
-      actuated_component_unique_name: "zone1acu1 fan"
+      actuated_component_unique_name: "acu_1 air loop supply air temperature schedule"
+      actuated_component_type: Schedule_Constant
+      actuated_component_control_type: Schedule_Value
+    }
+  }
+  actions {
+    control_type: AGENT_CONTROLLED
+    variable_name: "acu_1_supply_air_mass_flow_rate"
+    actuator_config {
+      actuated_component_unique_name: "acu_1 fan"
       actuated_component_type: Fan
       actuated_component_control_type: Fan_Air_Mass_Flow_Rate
     }
@@ -85,43 +85,43 @@ eplus_env_config {
   }
   observations {
     exposed: false
-    variable_name: "zone1acu1 fan power consumption"
+    variable_name: "acu_1 fan power consumption"
     output_variable_config {
-      key_value: "ZONE1ACU1 FAN"
+      key_value: "ACU_1 FAN"
       variable_name: "Fan Electricity Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "zone1acu1 fan air mass flow rate"
+    variable_name: "acu_1 fan air mass flow rate"
     output_variable_config {
-      key_value: "ZONE1ACU1 AIR LOOP SUPPLY OUTLET NODE"
+      key_value: "ACU_1 AIR LOOP SUPPLY OUTLET NODE"
       variable_name: "System Node Mass Flow Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "zone1acu1 fan outlet air temperature"
+    variable_name: "acu_1 fan outlet air temperature"
     output_variable_config {
-      key_value: "ZONE1ACU1 AIR LOOP SUPPLY OUTLET NODE"
+      key_value: "ACU_1 AIR LOOP SUPPLY OUTLET NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "zone1acu1 fan inlet air temperature"
+    variable_name: "acu_1 fan inlet air temperature"
     output_variable_config {
-      key_value: "ZONE1ACU1 COOLING COIL AIR OUTLET NODE"
+      key_value: "ACU_1 COOLING COIL AIR OUTLET NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "zone1acu1 cooling coil inlet air temperature"
+    variable_name: "acu_1 cooling coil inlet air temperature"
     output_variable_config {
       key_value: "ACU_1 OUTDOOR AIR SYSTEM MIXED AIR NODE"
       variable_name: "System Node Temperature"
@@ -130,7 +130,7 @@ eplus_env_config {
   }
   observations {
     exposed: false
-    variable_name: "zone1acu1 cooling coil air mass flow rate"
+    variable_name: "acu_1 cooling coil air mass flow rate"
     output_variable_config {
       key_value: "ACU_1 OUTDOOR AIR SYSTEM MIXED AIR NODE"
       variable_name: "System Node Mass Flow Rate"
@@ -139,162 +139,198 @@ eplus_env_config {
   }
   observations {
     exposed: false
-    variable_name: "zone1acu1 cooling coil outlet air temperature"
+    variable_name: "acu_1 cooling coil outlet air temperature"
     output_variable_config {
-      key_value: "ZONE1ACU1 COOLING COIL AIR OUTLET NODE"
+      key_value: "ACU_1 COOLING COIL AIR OUTLET NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "zone1acu1 cooling coil inlet water temperature"
+    variable_name: "acu_1 cooling coil inlet water temperature"
     output_variable_config {
-      key_value: "ZONE1ACU1 WATER INLET NODE"
+      key_value: "ACU_1 WATER INLET NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "zone1acu1 cooling coil water mass flow rate"
+    variable_name: "acu_1 cooling coil water mass flow rate"
     output_variable_config {
-      key_value: "ZONE1ACU1 WATER INLET NODE"
+      key_value: "ACU_1 WATER INLET NODE"
       variable_name: "System Node Mass Flow Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "chpump1 mass flow rate"
+    variable_name: "acu_1 cooling coil cooling load"
     output_variable_config {
-      key_value: "CHPUMP1 OUTLET NODE"
+      key_value: "ACU_1 COOLING COIL"
+      variable_name: "Cooling Coil Sensible Cooling Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chiller-1 chilled water pump mass flow rate"
+    output_variable_config {
+      key_value: "CHILLER-1 CHILLED WATER PUMP OUTLET NODE"
       variable_name: "System Node Mass Flow Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "chpump1 power consumption"
+    variable_name: "chiller-1 chilled water pump power consumption"
     output_variable_config {
-      key_value: "CHPUMP1"
+      key_value: "CHILLER-1 CHILLED WATER PUMP"
       variable_name: "Pump Electricity Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "pump1 mass flow rate"
+    variable_name: "condenser water loop 1 supply pump mass flow rate"
     output_variable_config {
-      key_value: "PUMP1 OUTLET NODE"
+      key_value: "CONDENSER WATER LOOP 1 SUPPLY PUMP OUTLET NODE"
       variable_name: "System Node Mass Flow Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "pump1 power consumption"
+    variable_name: "condenser water loop 1 supply pump power consumption"
     output_variable_config {
-      key_value: "PUMP1"
+      key_value: "CONDENSER WATER LOOP 1 SUPPLY PUMP"
       variable_name: "Pump Electricity Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "chiller1 cooling load"
+    variable_name: "chiller-1 cooling load"
     output_variable_config {
-      key_value: "CHILLER1"
+      key_value: "CHILLER-1"
       variable_name: "Chiller Evaporator Cooling Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "chiller1 chilled water supply temperature"
+    variable_name: "chiller-1 evaporator mass flow rate"
     output_variable_config {
-      key_value: "CHILLER1 CHILLED WATER OUTLET NODE"
-      variable_name: "System Node Temperature"
+      key_value: "CHILLER-1"
+      variable_name: "Chiller Evaporator Mass Flow Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "chiller1 condenser water supply temperature"
+    variable_name: "chiller-1 chilled water supply temperature"
     output_variable_config {
-      key_value: "CHILLER1 CONDENSER WATER INLET NODE"
-      variable_name: "System Node Temperature"
+      key_value: "CHILLER-1"
+      variable_name: "Chiller Evaporator Outlet Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "chiller1 chilled water return temperature"
+    variable_name: "chiller-1 chilled water return temperature"
     output_variable_config {
-      key_value: "CHILLER1 CHILLED WATER INLET NODE"
-      variable_name: "System Node Temperature"
+      key_value: "CHILLER-1"
+      variable_name: "Chiller Evaporator Inlet Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "chiller1 condenser water return temperature"
+    variable_name: "chiller-1 chilled water mass flow rate"
     output_variable_config {
-      key_value: "CHILLER1 CONDENSER WATER OUTLET NODE"
-      variable_name: "System Node Temperature"
+      key_value: "CHILLER-1"
+      variable_name: "Chiller Condenser Mass Flow Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "chiller1 power consumption"
+    variable_name: "chiller-1 condenser water supply temperature"
     output_variable_config {
-      key_value: "CHILLER1"
+      key_value: "CHILLER-1"
+      variable_name: "Chiller Condenser Inlet Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chiller-1 condenser water return temperature"
+    output_variable_config {
+      key_value: "CHILLER-1"
+      variable_name: "Chiller Condenser Outlet Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chiller-1 condenser water mass flow rate"
+    output_variable_config {
+      key_value: "CHILLER-1"
+      variable_name: "Chiller Condenser Mass Flow Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "chiller-1 power consumption"
+    output_variable_config {
+      key_value: "CHILLER-1"
       variable_name: "Chiller Electricity Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "tower1 return water temperature"
+    variable_name: "cooling tower-1 return water temperature"
     output_variable_config {
-      key_value: "PUMP1 OUTLET NODE"
+      key_value: "CONDENSER WATER LOOP 1 SUPPLY PUMP OUTLET NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "tower1 water mass flow rate"
+    variable_name: "cooling tower-1 water mass flow rate"
     output_variable_config {
-      key_value: "PUMP1 OUTLET NODE"
+      key_value: "CONDENSER WATER LOOP 1 SUPPLY PUMP OUTLET NODE"
       variable_name: "System Node Mass Flow Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "tower1 supply water temperature"
+    variable_name: "cooling tower-1 supply water temperature"
     output_variable_config {
-      key_value: "TOWER1 OUTLET NODE"
+      key_value: "COOLING TOWER-1 OUTLET NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "tower1 air flow rate ratio"
+    variable_name: "cooling tower-1 air flow rate ratio"
     output_variable_config {
-      key_value: "TOWER1"
+      key_value: "COOLING TOWER-1"
       variable_name: "Cooling Tower Air Flow Rate Ratio"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "tower1 fan power consumption"
+    variable_name: "cooling tower-1 fan power consumption"
     output_variable_config {
-      key_value: "TOWER1"
+      key_value: "COOLING TOWER-1"
       variable_name: "Cooling Tower Fan Electricity Rate"
       reporting_frequency: "timestep"
     }
@@ -319,22 +355,22 @@ eplus_env_config {
   }
   observations {
     exposed: false
-    variable_name: "zone1ite1 inlet dry-bulb temperature"
+    variable_name: "ite_1 inlet dry-bulb temperature"
     output_variable_config {
-      key_value: "ZONE1ITE1"
+      key_value: "ITE_1"
       variable_name: "ITE Air Inlet Dry-Bulb Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "zone1ite1 inlet relative humidity"
+    variable_name: "ite_1 inlet relative humidity"
     output_variable_config {
-      key_value: "ZONE1ITE1"
+      key_value: "ITE_1"
       variable_name: "ITE Air Inlet Relative Humidity"
       reporting_frequency: "timestep"
     }
   }
-  host: "localhost"
+  host: "host.docker.internal"
   network: "host"
 }

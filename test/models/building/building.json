@@ -343,15 +343,6 @@
                     "recirculationFractionFunctionOfLoadingAndAirTemperatureCurveModel": "DataCenterRecirculationFLoadTemp",
                     "electricPowerSupplyEfficiencyFunctionOfPartLoadRatioCurveModel": "UPSEfficiencyfPLR"
                 }
-            },
-            "light": {
-                "Light Model": {}
-            },
-            "people": {
-                "People Model": {}
-            },
-            "electricEquipment": {
-                "Electric Equipment Model": {}
             }
         },
         "electricalModels": {
@@ -438,7 +429,6 @@
                 "constructions": {
                     "acus": {
                         "acu_1": {
-                            "uid": "ZONE1ACU1",
                             "cooling": {
                                 "model": "crac"
                             },
@@ -594,27 +584,12 @@
                     "heatGains": {
                         "ites": {
                             "ite_1": {
-                                "uid": "ZONE1ITE1",
                                 "zone": "zone",
                                 "numberOfUnits": 10,
                                 "wattsPerUnit": 1000,
                                 "supplyAirNodeName": "zone inlet node 1",
                                 "model": "ITE Model"
                             }
-                        },
-                        "light": {
-                            "zone": "zone",
-                            "lightingPower": 287.0,
-                            "model": "Light Model"
-                        },
-                        "electricEquipment": {
-                            "zone": "zone",
-                            "model": "Electric Equipment Model"
-                        },
-                        "people": {
-                            "zone": "zone",
-                            "numberOfPeople": 80,
-                            "model": "People Model"
                         }
                     }
                 },
@@ -659,7 +634,6 @@
                             "components": {
                                 "chillers": {
                                     "chiller-1": {
-                                        "uid": "CHILLER1",
                                         "cooling": {
                                             "model": "typical chiller"
                                         },
@@ -670,7 +644,6 @@
                                 },
                                 "pumps": {
                                     "chiller-1 chilled water pump": {
-                                        "uid": "CHPUMP1",
                                         "cooling": {
                                             "model": "chw pump"
                                         },
@@ -711,7 +684,6 @@
                             "components": {
                                 "acu": {
                                     "acu_1": {
-                                        "uid": "ZONE1ACU1"
                                     }
                                 }
                             },
@@ -737,7 +709,7 @@
                     "meta": {
                         "loadDistributionScheme": "SequentialLoad",
                         "plantLoopDemandCalculationScheme": "SingleSetpoint",
-                        "setpointManager": false
+                        "setpointManager": true
                     }
                 }
             },
@@ -758,7 +730,6 @@
                             "components": {
                                 "coolingTowers": {
                                     "cooling tower-1": {
-                                        "uid": "TOWER1",
                                         "cooling": {
                                             "model": "YorkCalcUserDefined"
                                         },
@@ -769,7 +740,6 @@
                                 },
                                 "pumps": {
                                     "condenser water loop 1 supply pump": {
-                                        "uid": "PUMP1",
                                         "cooling": {
                                             "model": "chw pump"
                                         },
@@ -810,7 +780,6 @@
                             "components": {
                                 "chillers": {
                                     "chiller-1": {
-                                        "uid": "CHILLER1",
                                         "cooling": {
                                             "model": "typical chiller"
                                         },

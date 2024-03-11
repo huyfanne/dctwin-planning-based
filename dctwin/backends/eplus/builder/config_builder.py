@@ -514,6 +514,17 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub,
             ) if variable_names is None or "water mass flow rate" in variable_names else None
+            # observe cooling load
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{acu_name} cooling coil cooling load".lower(),
+                key_value=acu["cooling coil"]["cooling load"].split(":")[0],
+                output_variable_name="Cooling Coil Sensible Cooling Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "cooling load" in variable_names else None
 
     def make_pump_observations(
         self,

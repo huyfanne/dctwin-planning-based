@@ -2187,10 +2187,6 @@
   Output:Variable,*,Chiller Part Load Ratio,timestep;
   Output:Variable,*,Chiller COP,timestep;
 
-  !-   =========== Coil: output
-
-  Output:Variable,*,Cooling Coil Sensible Cooling Rate,timestep;
-
   !-   ===========  PUE: Output
 
   Output:Variable,*,Power Utilization Effectiveness,timestep;

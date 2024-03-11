@@ -167,6 +167,7 @@ class IDFBuilder:
                 "outlet air temperature": f"{coil_obj['Air_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "inlet water temperature": f"{coil_obj['Water_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "water mass flow rate": f"{coil_obj['Water_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "cooling load": f"{coil_obj['Name'].upper()}:Cooling Coil Sensible Cooling Rate [W](TimeStep)",
             }
         # create chilled water pump device key mapping
         pump_names = self.building.constructions.chilled_water_pumps

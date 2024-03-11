@@ -23,64 +23,68 @@
         }
     },
     "ites": {
-        "ZONE1ITE1": {
-            "inlet dry-bulb temperature": "ZONE1ITE1:ITE Air Inlet Dry-Bulb Temperature [C](TimeStep)",
-            "inlet relative humidity": "ZONE1ITE1:ITE Air Inlet Relative Humidity [%](TimeStep)",
-            "cpu power": "ZONE1ITE1:ITE CPU Electricity Rate [%](TimeStep)",
-            "fan power": "ZONE1ITE1:ITE Fan Electricity Rate [%](TimeStep)",
-            "ups power": "ZONE1ITE1:ITE UPS Electricity Rate [W](TimeStep)"
+        "ite_1": {
+            "inlet dry-bulb temperature": "ITE_1:ITE Air Inlet Dry-Bulb Temperature [C](TimeStep)",
+            "inlet relative humidity": "ITE_1:ITE Air Inlet Relative Humidity [%](TimeStep)",
+            "cpu power": "ITE_1:ITE CPU Electricity Rate [W](TimeStep)",
+            "fan power": "ITE_1:ITE Fan Electricity Rate [W](TimeStep)",
+            "ups power": "ITE_1:ITE UPS Electricity Rate [W](TimeStep)"
         }
     },
     "acus": {
-        "ZONE1ACU1": {
+        "acu_1": {
             "fan": {
-                "air mass flow rate": "ZONE1ACU1 AIR LOOP SUPPLY OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
-                "outlet air temperature": "ZONE1ACU1 AIR LOOP SUPPLY OUTLET NODE:System Node Temperature [C](TimeStep)",
-                "power": "ZONE1ACU1 FAN:Fan Electricity Rate [W](TimeStep)",
-                "inlet air temperature": "ZONE1ACU1 COOLING COIL AIR OUTLET NODE:System Node Temperature [C](TimeStep)",
-                "outlet air relative humidity": "ZONE1ACU1 AIR LOOP SUPPLY OUTLET NODE:System Node Relative Humidity [%](TimeStep)",
-                "inlet air relative humidity": "ZONE1ACU1 COOLING COIL AIR OUTLET NODE:System Node Relative Humidity [%](TimeStep)"
+                "air mass flow rate": "ACU_1 AIR LOOP SUPPLY OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "outlet air temperature": "ACU_1 AIR LOOP SUPPLY OUTLET NODE:System Node Temperature [C](TimeStep)",
+                "power": "ACU_1 FAN:Fan Electricity Rate [W](TimeStep)",
+                "inlet air temperature": "ACU_1 COOLING COIL AIR OUTLET NODE:System Node Temperature [C](TimeStep)",
+                "outlet air relative humidity": "ACU_1 AIR LOOP SUPPLY OUTLET NODE:System Node Relative Humidity [%](TimeStep)",
+                "inlet air relative humidity": "ACU_1 COOLING COIL AIR OUTLET NODE:System Node Relative Humidity [%](TimeStep)"
             },
             "cooling coil": {
                 "inlet air temperature": "ACU_1 OUTDOOR AIR SYSTEM MIXED AIR NODE:System Node Temperature [C](TimeStep)",
                 "air mass flow rate": "ACU_1 OUTDOOR AIR SYSTEM MIXED AIR NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
-                "outlet air temperature": "ZONE1ACU1 COOLING COIL AIR OUTLET NODE:System Node Temperature [C](TimeStep)",
-                "inlet water temperature": "ZONE1ACU1 WATER INLET NODE:System Node Temperature [C](TimeStep)",
-                "water mass flow rate": "ZONE1ACU1 WATER INLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)"
+                "outlet air temperature": "ACU_1 COOLING COIL AIR OUTLET NODE:System Node Temperature [C](TimeStep)",
+                "inlet water temperature": "ACU_1 WATER INLET NODE:System Node Temperature [C](TimeStep)",
+                "water mass flow rate": "ACU_1 WATER INLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "cooling load": "ACU_1 COOLING COIL:Cooling Coil Sensible Cooling Rate [W](TimeStep)"
             }
         }
     },
     "chilled water pumps": {
-        "CHPUMP1": {
-            "mass flow rate": "CHPUMP1 OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
-            "power": "CHPUMP1:Pump Electricity Rate [W](TimeStep)"
+        "chiller-1 chilled water pump": {
+            "mass flow rate": "CHILLER-1 CHILLED WATER PUMP OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+            "power": "CHILLER-1 CHILLED WATER PUMP:Pump Electricity Rate [W](TimeStep)"
         }
     },
     "chillers": {
-        "CHILLER1": {
-            "cooling load": "CHILLER1:Chiller Evaporator Cooling Rate [W](TimeStep)",
-            "chilled water supply temperature": "CHILLER1 CHILLED WATER OUTLET NODE:System Node Temperature [C](TimeStep)",
-            "chilled water return temperature": "CHILLER1 CHILLED WATER INLET NODE:System Node Temperature [C](TimeStep)",
-            "condensing water return temperature": "CHILLER1 CONDENSER WATER OUTLET NODE:System Node Temperature [C](TimeStep)",
-            "condensing water supply temperature": "CHILLER1 CONDENSER WATER INLET NODE:System Node Temperature [C](TimeStep)",
-            "power": "CHILLER1:Chiller Electricity Rate [W](TimeStep)",
-            "mass flow rate": "CHILLER1 CHILLED WATER OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)"
+        "chiller-1": {
+            "cooling load": "CHILLER-1:Chiller Evaporator Cooling Rate [W](TimeStep)",
+            "chilled water supply temperature": "CHILLER-1:Chiller Evaporator Outlet Temperature [C](TimeStep)",
+            "chilled water return temperature": "CHILLER-1:Chiller Evaporator Inlet Temperature [C](TimeStep)",
+            "chilled water mass flow rate": "CHILLER-1:Chiller Evaporator Mass Flow Rate [kg/s](TimeStep)",
+            "condenser water return temperature": "CHILLER-1:Chiller Condenser Outlet Temperature [C](TimeStep)",
+            "condenser water supply temperature": "CHILLER-1:Chiller Condenser Inlet Temperature [C](TimeStep)",
+            "condenser water mass flow rate": "CHILLER-1:Chiller Condenser Mass Flow Rate [kg/s](TimeStep)",
+            "power": "CHILLER-1:Chiller Electricity Rate [W](TimeStep)",
+            "mass flow rate": "CHILLER-1 CHILLED WATER OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)"
         }
     },
+    "heat_exchangers": {},
     "condenser water pumps": {
-        "PUMP1": {
-            "mass flow rate": "PUMP1 OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
-            "power": "PUMP1:Pump Electricity Rate [W](TimeStep)"
+        "condenser water loop 1 supply pump": {
+            "mass flow rate": "CONDENSER WATER LOOP 1 SUPPLY PUMP OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+            "power": "CONDENSER WATER LOOP 1 SUPPLY PUMP:Pump Electricity Rate [W](TimeStep)"
         }
     },
     "cooling towers": {
-        "TOWER1": {
-            "return water temperature": "PUMP1 OUTLET NODE:System Node Temperature [C](TimeStep)",
-            "water mass flow rate": "PUMP1 OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
-            "supply water temperature": "TOWER1 OUTLET NODE:System Node Temperature [C](TimeStep)",
-            "air flow rate ratio": "TOWER1:Cooling Tower Air Flow Rate Ratio [](TimeStep)",
+        "cooling tower-1": {
+            "return water temperature": "CONDENSER WATER LOOP 1 SUPPLY PUMP OUTLET NODE:System Node Temperature [C](TimeStep)",
+            "water mass flow rate": "CONDENSER WATER LOOP 1 SUPPLY PUMP OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+            "supply water temperature": "COOLING TOWER-1 OUTLET NODE:System Node Temperature [C](TimeStep)",
+            "air flow rate ratio": "COOLING TOWER-1:Cooling Tower Air Flow Rate Ratio [](TimeStep)",
             "outside air wetbulb temperature": "Environment:Site Outdoor Air Wetbulb Temperature [C](TimeStep)",
-            "power": "TOWER1:Cooling Tower Fan Electricity Rate [W](TimeStep)"
+            "power": "COOLING TOWER-1:Cooling Tower Fan Electricity Rate [W](TimeStep)"
         }
     },
     "secondary chilled water pumps": {}
