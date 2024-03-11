@@ -1036,6 +1036,7 @@ class ConfigBuilder:
         ub: float = None,
         default_unnormed_value: float = None,
         device_values: dict = {},
+        disable: bool = False,
     ):
         for loop_name, loop in self.device_key_map["condenser water loops"].items():
             self._make_actions(
