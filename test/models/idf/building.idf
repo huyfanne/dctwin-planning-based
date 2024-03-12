@@ -499,10 +499,10 @@ BUILDINGSURFACE:DETAILED,
     0.0,                      !- Vertex 2 Xcoordinate
     0.0,                      !- Vertex 2 Ycoordinate
     0.0,                      !- Vertex 2 Zcoordinate
-    100.0,                    !- Vertex 3 Xcoordinate
+    50.0,                     !- Vertex 3 Xcoordinate
     0.0,                      !- Vertex 3 Ycoordinate
     0.0,                      !- Vertex 3 Zcoordinate
-    100.0,                    !- Vertex 4 Xcoordinate
+    50.0,                     !- Vertex 4 Xcoordinate
     0.0,                      !- Vertex 4 Ycoordinate
     4.0;                      !- Vertex 4 Zcoordinate
 
@@ -517,17 +517,17 @@ BUILDINGSURFACE:DETAILED,
     WindExposed,              !- Wind Exposure
     autocalculate,            !- View Factor to Ground
     4,                        !- Number of Vertices
-    100.0,                    !- Vertex 1 Xcoordinate
+    50.0,                     !- Vertex 1 Xcoordinate
     0.0,                      !- Vertex 1 Ycoordinate
     4.0,                      !- Vertex 1 Zcoordinate
-    100.0,                    !- Vertex 2 Xcoordinate
+    50.0,                     !- Vertex 2 Xcoordinate
     0.0,                      !- Vertex 2 Ycoordinate
     0.0,                      !- Vertex 2 Zcoordinate
-    100.0,                    !- Vertex 3 Xcoordinate
-    100.0,                    !- Vertex 3 Ycoordinate
+    50.0,                     !- Vertex 3 Xcoordinate
+    50.0,                     !- Vertex 3 Ycoordinate
     0.0,                      !- Vertex 3 Zcoordinate
-    100.0,                    !- Vertex 4 Xcoordinate
-    100.0,                    !- Vertex 4 Ycoordinate
+    50.0,                     !- Vertex 4 Xcoordinate
+    50.0,                     !- Vertex 4 Ycoordinate
     4.0;                      !- Vertex 4 Zcoordinate
 
 BUILDINGSURFACE:DETAILED,
@@ -541,17 +541,17 @@ BUILDINGSURFACE:DETAILED,
     WindExposed,              !- Wind Exposure
     autocalculate,            !- View Factor to Ground
     4,                        !- Number of Vertices
-    100.0,                    !- Vertex 1 Xcoordinate
-    100.0,                    !- Vertex 1 Ycoordinate
+    50.0,                     !- Vertex 1 Xcoordinate
+    50.0,                     !- Vertex 1 Ycoordinate
     4.0,                      !- Vertex 1 Zcoordinate
-    100.0,                    !- Vertex 2 Xcoordinate
-    100.0,                    !- Vertex 2 Ycoordinate
+    50.0,                     !- Vertex 2 Xcoordinate
+    50.0,                     !- Vertex 2 Ycoordinate
     0.0,                      !- Vertex 2 Zcoordinate
     0.0,                      !- Vertex 3 Xcoordinate
-    100.0,                    !- Vertex 3 Ycoordinate
+    50.0,                     !- Vertex 3 Ycoordinate
     0.0,                      !- Vertex 3 Zcoordinate
     0.0,                      !- Vertex 4 Xcoordinate
-    100.0,                    !- Vertex 4 Ycoordinate
+    50.0,                     !- Vertex 4 Ycoordinate
     4.0;                      !- Vertex 4 Zcoordinate
 
 BUILDINGSURFACE:DETAILED,
@@ -566,10 +566,10 @@ BUILDINGSURFACE:DETAILED,
     autocalculate,            !- View Factor to Ground
     4,                        !- Number of Vertices
     0.0,                      !- Vertex 1 Xcoordinate
-    100.0,                    !- Vertex 1 Ycoordinate
+    50.0,                     !- Vertex 1 Ycoordinate
     4.0,                      !- Vertex 1 Zcoordinate
     0.0,                      !- Vertex 2 Xcoordinate
-    100.0,                    !- Vertex 2 Ycoordinate
+    50.0,                     !- Vertex 2 Ycoordinate
     0.0,                      !- Vertex 2 Zcoordinate
     0.0,                      !- Vertex 3 Xcoordinate
     0.0,                      !- Vertex 3 Ycoordinate
@@ -589,17 +589,17 @@ BUILDINGSURFACE:DETAILED,
     NoWind,                   !- Wind Exposure
     autocalculate,            !- View Factor to Ground
     4,                        !- Number of Vertices
-    100.0,                    !- Vertex 1 Xcoordinate
-    100.0,                    !- Vertex 1 Ycoordinate
+    50.0,                     !- Vertex 1 Xcoordinate
+    50.0,                     !- Vertex 1 Ycoordinate
     0.0,                      !- Vertex 1 Zcoordinate
-    100.0,                    !- Vertex 2 Xcoordinate
+    50.0,                     !- Vertex 2 Xcoordinate
     0.0,                      !- Vertex 2 Ycoordinate
     0.0,                      !- Vertex 2 Zcoordinate
     0.0,                      !- Vertex 3 Xcoordinate
     0.0,                      !- Vertex 3 Ycoordinate
     0.0,                      !- Vertex 3 Zcoordinate
     0.0,                      !- Vertex 4 Xcoordinate
-    100.0,                    !- Vertex 4 Ycoordinate
+    50.0,                     !- Vertex 4 Ycoordinate
     0.0;                      !- Vertex 4 Zcoordinate
 
 BUILDINGSURFACE:DETAILED,
@@ -616,14 +616,14 @@ BUILDINGSURFACE:DETAILED,
     0.0,                      !- Vertex 1 Xcoordinate
     0.0,                      !- Vertex 1 Ycoordinate
     4.0,                      !- Vertex 1 Zcoordinate
-    100.0,                    !- Vertex 2 Xcoordinate
+    50.0,                     !- Vertex 2 Xcoordinate
     0.0,                      !- Vertex 2 Ycoordinate
     4.0,                      !- Vertex 2 Zcoordinate
-    100.0,                    !- Vertex 3 Xcoordinate
-    100.0,                    !- Vertex 3 Ycoordinate
+    50.0,                     !- Vertex 3 Xcoordinate
+    50.0,                     !- Vertex 3 Ycoordinate
     4.0,                      !- Vertex 3 Zcoordinate
     0.0,                      !- Vertex 4 Xcoordinate
-    100.0,                    !- Vertex 4 Ycoordinate
+    50.0,                     !- Vertex 4 Ycoordinate
     4.0;                      !- Vertex 4 Zcoordinate
 
 ELECTRICEQUIPMENT:ITE:AIRCOOLED,
