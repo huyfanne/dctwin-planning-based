@@ -34,7 +34,7 @@ jobs:
 
       - name: Install dependencies with Poetry
         env:
-          MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
+          MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN }}
         run: |
           git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
           poetry install
@@ -71,7 +71,7 @@ jobs:
 
       - name: Install dependencies with Poetry
         env:
-          MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
+          MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN }}
         run: |
           git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
           poetry install
@@ -103,12 +103,11 @@ jobs:
 
       - name: Pull Docker images
         run: |
-          docker pull ghcr.io/cap-dcwiz/openfoam-v1912-centos72:latest
-          docker pull ghcr.io/cap-dcwiz/salome-9-debian10:latest
+          docker pull ghcr.io/cap-dcwiz/energyplus-9-5-0:latest
 
       - name: Install dependencies with Poetry
         env:
-          MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN_DCLIB }}
+          MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN }}
         run: |
           git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
           poetry install

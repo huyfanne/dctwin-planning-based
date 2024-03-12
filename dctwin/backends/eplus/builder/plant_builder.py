@@ -17,6 +17,7 @@ from .utils import (
     make_plant_sizing,
     make_pump,
     get_cooling_coil,
+    make_heat_exchanger
 )
 
 
@@ -46,31 +47,100 @@ class PlantBuilder:
             "chillers": make_chiller,
             "pumps": make_pump,
             "acu": get_cooling_coil,
+            "heat_exchangers": make_heat_exchanger
         }
         branch = self.model.newidfobject("BRANCH", Name=branch_name)
         component_idx = 1
-        for component_type, components in branch_definition.components:
-            if components is not None:
-                for component_name, component in components.items():
-                    eplus_obj = component_making_functions[component_type](
-                        self.model,
-                        branch,
-                        component_idx,
-                        component,
-                        type_=type_,
-                        side=side,
-                        loop=loop,
-                    )
-                    branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
-                    if component_type == "acu":
-                        branch[
-                            f"Component_{component_idx}_Name"
-                        ] = f"{component.uid.lower()} cooling coil"
-                    else:
-                        branch[
-                            f"Component_{component_idx}_Name"
-                        ] = component.uid.lower()
-                    component_idx += 1
+        # add pipe
+        if branch_definition.components.pipes is not None:
+            for pipe_name, pipe in branch_definition.components.pipes.items():
+                eplus_obj = make_pipe(
+                    self.model,
+                    branch,
+                    component_idx,
+                    pipe,
+                    type_=type_,
+                    side=side,
+                    loop=loop,
+                )
+                branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
+                branch[f"Component_{component_idx}_Name"] = pipe_name
+                component_idx += 1
+        # add pump
+        if branch_definition.components.pumps is not None:
+            for pump_name, pump in branch_definition.components.pumps.items():
+                eplus_obj = make_pump(
+                    self.model,
+                    branch,
+                    component_idx,
+                    pump,
+                    type_=type_,
+                    side=side,
+                    loop=loop,
+                )
+                branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
+                branch[f"Component_{component_idx}_Name"] = pump_name
+                component_idx += 1
+        # add heat exchangers
+        if branch_definition.components.heat_exchangers is not None:
+            for hx_name, hx in branch_definition.components.heat_exchangers.items():
+                eplus_obj = make_heat_exchanger(
+                    self.model,
+                    branch,
+                    component_idx,
+                    hx,
+                    type_=type_,
+                    side=side,
+                    loop=loop,
+                )
+                branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
+                branch[f"Component_{component_idx}_Name"] = hx_name
+                component_idx += 1
+        # add chillers
+        if branch_definition.components.chillers is not None:
+            for chiller_name, chiller in branch_definition.components.chillers.items():
+                eplus_obj = make_chiller(
+                    self.model,
+                    branch,
+                    component_idx,
+                    chiller,
+                    type_=type_,
+                    side=side,
+                    loop=loop,
+                )
+                branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
+                branch[f"Component_{component_idx}_Name"] = chiller_name
+                component_idx += 1
+        # add cooling towers
+        if branch_definition.components.cooling_towers is not None:
+            for cooling_tower_name, cooling_tower in branch_definition.components.cooling_towers.items():
+                eplus_obj = make_cooling_tower(
+                    self.model,
+                    branch,
+                    component_idx,
+                    cooling_tower,
+                    type_=type_,
+                    side=side,
+                    loop=loop,
+                )
+                branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
+                branch[f"Component_{component_idx}_Name"] = cooling_tower_name
+                component_idx += 1
+        # set cooling coil branch
+        if branch_definition.components.acu is not None:
+            for acu_name, acu in branch_definition.components.acu.items():
+                eplus_obj = get_cooling_coil(
+                    self.model,
+                    branch,
+                    component_idx,
+                    acu,
+                    type_=type_,
+                    side=side,
+                    loop=loop,
+                )
+                branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
+                branch[f"Component_{component_idx}_Name"] = f"{acu_name} cooling coil"
+                component_idx += 1
         return branch
 
     def _make_branches(
@@ -332,6 +402,26 @@ class PlantBuilder:
                     Schedule_Type_Limits_Name="Temperature",
                     Hourly_Value=chilled_water_loop.sizing.design_loop_exit_temperature,
                 )
+            for branch_name, branch in chilled_water_loop.supply_branches.items():
+                if branch.side == "middle":
+                    if branch.components.heat_exchangers is not None:
+                        for hx_name, hx in branch.components.heat_exchangers.items():
+                            obj = self.model.getobject(
+                                key="HeatExchanger:FluidToFluid".upper(),
+                                name=hx_name
+                            )
+                            obj["Heat_Exchanger_Setpoint_Node_Name"] = obj["Loop_Supply_Side_Outlet_Node_Name"]
+                            self.model.newidfobject(
+                                key="SetpointManager:FollowSystemNodeTemperature".upper(),
+                                Name=f"{obj['Name']} setpoint manager",
+                                Control_Variable="Temperature",
+                                Reference_Node_Name=f"{loop_name} supply outlet node",
+                                Reference_Temperature_Type="NodeDryBulb",
+                                Offset_Temperature_Difference=0.0,
+                                Maximum_Limit_Setpoint_Temperature=chilled_water_loop.meta.maximum_setpoint_temperature,
+                                Minimum_Limit_Setpoint_Temperature=chilled_water_loop.meta.minimum_setpoint_temperature,
+                                Setpoint_Node_or_NodeList_Name=obj["Heat_Exchanger_Setpoint_Node_Name"]
+                            )
 
     def _make_condenser_loops(self, condenser_loops: Dict[str, CondenserWaterLoops]):
         for loop_name, condenser_loop in condenser_loops.items():
@@ -343,18 +433,52 @@ class PlantBuilder:
                 type_="condenser",
             )
             make_plant_sizing(self.model, loop_name, condenser_loop.sizing)
-            # Add condenser loop exit temperature set point manager to control the condenser loop exit temperature
-            # according to the outdoor air temperature
-            self.model.newidfobject(
-                key="SetpointManager:FollowOutdoorAirTemperature".upper(),
-                Name=f"{loop_name} outdoor air temperature setpoint manager",
-                Control_Variable="Temperature",
-                Reference_Temperature_Type="OutdoorAirWetBulb",
-                Offset_Temperature_Difference=2.5,
-                Maximum_Setpoint_Temperature=32,
-                Minimum_Setpoint_Temperature=0,
-                Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node",
-            )
+            # Add condenser loop exit temperature set point manager to control the condenser loop exit temperature.
+            # Two types of set point managers are supported: scheduled and follow outdoor air temperature.
+            if condenser_loop.meta.setpoint_manager:
+                self.model.newidfobject(
+                    key="SetpointManager:Scheduled".upper(),
+                    Name=f"{loop_name} exit temperature setpoint manager",
+                    Control_Variable="Temperature",
+                    Schedule_Name=f"{loop_name} exit temperature setpoint",
+                    Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node"
+                )
+                self.model.newidfobject(
+                    key="Schedule:Constant".upper(),
+                    Name=f"{loop_name} exit temperature setpoint",
+                    Schedule_Type_Limits_Name="Temperature",
+                    Hourly_Value=condenser_loop.sizing.design_loop_exit_temperature
+                )
+            else:
+                self.model.newidfobject(
+                    key="SetpointManager:FollowOutdoorAirTemperature".upper(),
+                    Name=f"{loop_name} setpoint manager",
+                    Control_Variable="Temperature",
+                    Reference_Temperature_Type="OutdoorAirWetBulb",
+                    Offset_Temperature_Difference=condenser_loop.meta.offset_temperature_difference,
+                    Maximum_Setpoint_Temperature=condenser_loop.meta.maximum_setpoint_temperature,
+                    Minimum_Setpoint_Temperature=condenser_loop.meta.minimum_setpoint_temperature,
+                    Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node"
+                )
+            # for branch_name, branch in condenser_loop.demand_branches.items():
+            #     if branch.side == "middle":
+            #         if branch.components.heat_exchangers is not None:
+            #             for hx_name, hx in branch.components.heat_exchangers.items():
+            #                 obj = self.model.getobject(
+            #                     key="HeatExchanger:FluidToFluid".upper(),
+            #                     name=hx_name
+            #                 )
+            #                 # Override the attached chiller's chilled water supply inlet and outlet nodes with
+            #                 # the heat exchanger. It makes the heat exchanger to be connected to the chiller in
+            #                 # parallel. With such a connection topology, the hext exchanger can be activated to
+            #                 # provide free cooling when the condenser inlet water temperature is lower than the
+            #                 # chilled water return temperature.
+            #                 attached_chiller = self.model.getobject(
+            #                     key="Chiller:Electric:EIR".upper(),
+            #                     name=hx.cooling.chiller
+            #                 )
+            #                 obj["Component_Override_Loop_Demand_Side_Inlet_Node_Name"] = \
+            #                     attached_chiller["Condenser_Inlet_Node_Name"]
 
     def make_plant(self, plant: Plant):
         """

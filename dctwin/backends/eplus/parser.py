@@ -60,6 +60,7 @@ class Eplus:
     def __init__(self, epm: op.Epm, chw_loop_prefix: str = "CHW") -> None:
         self.epm = epm
         self.node_names = self._get_node_names()
+        self.plant_loop_names = self._get_plant_loop_names()
         self.branch_name = self._get_branch_names()
         self.component_names = self._get_component_names()
         self.zone_names = self._get_zone_names()
@@ -88,6 +89,16 @@ class Eplus:
 
     "-------------------------------------Internal IDF Parsing Function API--------------------------------------------"
 
+    def _get_plant_loop_names(self):
+        """
+        Get all plant loop names
+        """
+        plant_loops = self.epm.PlantLoop
+        plant_loop_names = set()
+        for plant_loop in plant_loops:
+            plant_loop_names.add(plant_loop.name)
+        return plant_loop_names
+    
     def _get_thermostat_setpoints_name(self):
         """
         Get the name for all Thermostat:DualSetpoints object name in EnergyPlus
@@ -228,9 +239,11 @@ class Eplus:
             self.node_names
             | self.component_names
             | self.zone_names
+            | self.plant_loop_names
             | {"Whole Building"}
             | {"whole building"}
             | {"pv load center"}
+            | {"environment"}
         )
         it_equipment = self.epm.ElectricEquipment_ITE_AirCooled.select()
         supply_air_nodes = set()
@@ -507,6 +520,13 @@ class Eplus:
             ).one()
             atu.availability_schedule_name = config.variable_name
 
+        def _set_hx_availability_schedule() -> None:
+            hx_name = schedule_config.scheduled_hx_name
+            hx = self.epm.HeatExchanger_FluidToFluid.select(
+                lambda x: x.name == hx_name.lower()
+            ).one()
+            hx.availability_schedule_name = config.variable_name
+
         func_dict = {
             "ITE": _set_cpu_load_schedule,
             "ITEDeltaTSupply": _set_delta_temp_supply_schedule,
@@ -515,6 +535,7 @@ class Eplus:
             "Fan": _set_fan_availability_schedule,
             "Coil": _set_coil_availability_schedule,
             "ATU": _set_atu_availability_schedule,
+            "HX": _set_hx_availability_schedule,
         }
 
         name = config.variable_name
