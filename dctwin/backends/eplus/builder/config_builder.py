@@ -503,6 +503,17 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub,
             ) if variable_names is None or "inlet water temperature" in variable_names else None
+            # observe outlet water temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{acu_name} cooling coil outlet water temperature".lower(),
+                key_value=acu["cooling coil"]["outlet water temperature"].split(":")[0],
+                output_variable_name="System Node Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "outlet water temperature" in variable_names else None
             # observe inlet water mass flow rate
             self._make_observation(
                 exposed=exposed,
