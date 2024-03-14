@@ -4,13 +4,19 @@ import numpy as np
 from CoolProp.CoolProp import PropsSI
 from loguru import logger
 
-from dctwin.backends.liquid.utils import reynolds_number, nusselt_number, friction_factor
+from .utils import reynolds_number, nusselt_number, friction_factor
 
 
 class HeatExchanger:
-
+    """
+    Implementation of a liquid-to-liquid heat exchanger model based on NTU-effectiveness numerical heat transfer
+    theory. The heat exchanger is a cross-flow heat exchanger with a single pass on both the hot and cold sides.
+    A root-fining solver is implemented to determine the chilled water mass flow rate given the outlet temperature
+    setpoint. The forward only simulation mode is also supported by simply providing the chilled water mass flow rate.
+    """
     def __init__(
         self,
+        cdu_uid: str,
         tube_diameter: float,
         tube_length: float,
         tube_wall_thickness: float,
@@ -20,7 +26,11 @@ class HeatExchanger:
         transverse_pitch: float,
         tube_roughness: float,
         thermal_conductivity: float,
+        tol: float = 1e-3,
+        max_iter: int = 100
     ):
+        # geometry parameters
+        self.cdu_uid = cdu_uid
         self.tube_diameter = tube_diameter
         self.tube_length = tube_length
         self.tube_wall_thickness = tube_wall_thickness
@@ -31,8 +41,17 @@ class HeatExchanger:
         self.tube_roughness = tube_roughness
         self.thermal_conductivity = thermal_conductivity
         self.H_he = num_transverse * transverse_pitch + 2 * tube_diameter
+        # solver parameters
+        self.tol = tol
+        self.max_iter = max_iter
 
-    def NTUHE(self, heat_capacity_flow_rate_inside, heat_capacity_flow_rate_outside, U_total, area_heat_exchanger):
+    def _cal_heat_transfer_efficiency(
+        self,
+        heat_capacity_flow_rate_inside,
+        heat_capacity_flow_rate_outside,
+        U_total,
+        area_heat_exchanger
+    ):
         if heat_capacity_flow_rate_inside < heat_capacity_flow_rate_outside:
             heat_capacity_flow_rate_ratio = heat_capacity_flow_rate_inside / heat_capacity_flow_rate_outside
             heat_capacity_flow_rate_min = heat_capacity_flow_rate_inside
@@ -53,7 +72,7 @@ class HeatExchanger:
             Nusselt_number = 4.01
         else:
             Nusselt_number = (
-                (fr / 8) * (Reynolds_number - 1000) * Prandtl_number / (1 + 12.7 * (fr / 8) ** 0.5 * (Prandtl_number ** (2 / 3) - 1))
+                (fr/8) * (Reynolds_number - 1000) * Prandtl_number / (1+12.7*(fr/8)**0.5 * (Prandtl_number**(2/3) - 1))
             )
         return fr, Nusselt_number
 
@@ -133,7 +152,12 @@ class HeatExchanger:
         inner_stream_capacity = inner_mass_flow_rate * Cp_i
         outer_stream_capacity = outer_mass_flow_rate * Cp_o
         min_stream_capacity = min(inner_stream_capacity, outer_stream_capacity)
-        eff, NTU = self.NTUHE(inner_stream_capacity, outer_stream_capacity, U, A_he)
+        eff, NTU = self._cal_heat_transfer_efficiency(
+            heat_capacity_flow_rate_inside=inner_stream_capacity,
+            heat_capacity_flow_rate_outside=outer_stream_capacity,
+            U_total=U,
+            area_heat_exchanger=A_he
+        )
         Q_max = abs(min_stream_capacity * (outer_inlet_temperature - inner_inlet_temperature))
         heat_transfer_rate = eff * Q_max
         outer_outlet_temperature = outer_inlet_temperature - heat_transfer_rate / outer_stream_capacity
@@ -176,7 +200,7 @@ class HeatExchanger:
                 outer_inlet_temperature=outer_inlet_temperature,
                 outer_mass_flow_rate=outer_mass_flow_rate,
             )
-            for iteration in range(1, 50 + 1):
+            for iteration in range(1, self.max_iter + 1):
                 if outer_outlet_temperature > outer_outlet_temperature_sp:
                     m_water_min = m_water
                 else:
@@ -188,11 +212,12 @@ class HeatExchanger:
                     outer_inlet_temperature=outer_inlet_temperature,
                     outer_mass_flow_rate=outer_mass_flow_rate,
                 )
-                if abs(outer_outlet_temperature - outer_outlet_temperature_sp) < 1e-3:
+                if abs(outer_outlet_temperature - outer_outlet_temperature_sp) < self.tol:
                     break
-                if iteration == 100:
-                    print(
-                        f"{self}: root finding failed at iteration {iteration}.")
+                if iteration == self.max_iter:
+                    logger.warning(
+                        f"{self.cdu_uid}'s heat exchanger root finding cannot find root at iteration {iteration}."
+                    )
             return inner_outlet_temperature, outer_outlet_temperature, m_water, info
         elif inner_mass_flow_rate is not None:
             inner_outlet_temperature, outer_outlet_temperature, info = self.forward(
@@ -206,35 +231,3 @@ class HeatExchanger:
             raise ValueError(
                 "For heat exchangers, either outer outlet temperature setpoint"
                 " or chilled water mass flow rate should be provided.")
-
-
-
-if __name__ == "__main__":
-    hx = HeatExchanger(
-        tube_diameter=0.02,
-        tube_length=1,
-        tube_wall_thickness=0.001,
-        num_row=20,
-        num_transverse=20,
-        transverse_pitch=0.03,
-        row_pitch=0.03,
-        tube_roughness=1e-6,
-        thermal_conductivity=400,
-    )
-    supplyT = []
-    for inner_mass_flow_rate in np.linspace(0.01, 0.5, 100):
-        inner_outlet_temperature, outer_outlet_temperature, hx_info = hx.sim(
-            inner_inlet_temperature=20,
-            inner_mass_flow_rate=inner_mass_flow_rate,
-            outer_inlet_temperature=35,
-            outer_mass_flow_rate=0.5,
-        )
-        supplyT.append(outer_outlet_temperature)
-        print(f"eff = {hx_info['eff']:.2f}, NTU = {hx_info['NTU']:.2f}")
-    import matplotlib.pyplot as plt
-    plt.figure(dpi=300)
-    plt.plot(np.linspace(0.01, 0.5, 100), supplyT)
-    plt.xlabel("Mass flow rate (kg/s)")
-    plt.ylabel("temperature (°C)")
-    plt.title("Cooling Water Supply temperature vs Chilled Water Mass Flow Rate")
-    plt.show()
