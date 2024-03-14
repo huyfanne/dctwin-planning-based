@@ -92,6 +92,7 @@ class IDFBuilder:
             "acus": {},
             "chilled water pumps": {},
             "chillers": {},
+            "heat_exchangers": {},
             "condenser water pumps": {},
             "cooling towers": {},
         }
@@ -139,8 +140,8 @@ class IDFBuilder:
             self.device_key_map["ites"][ite_name] = {
                 "inlet dry-bulb temperature": f"{ite_obj['Name'].upper()}:ITE Air Inlet Dry-Bulb Temperature [C](TimeStep)",
                 "inlet relative humidity": f"{ite_obj['Name'].upper()}:ITE Air Inlet Relative Humidity [%](TimeStep)",
-                "cpu power": f"{ite_obj['Name'].upper()}:ITE CPU Electricity Rate [%](TimeStep)",
-                "fan power": f"{ite_obj['Name'].upper()}:ITE Fan Electricity Rate [%](TimeStep)",
+                "cpu power": f"{ite_obj['Name'].upper()}:ITE CPU Electricity Rate [W](TimeStep)",
+                "fan power": f"{ite_obj['Name'].upper()}:ITE Fan Electricity Rate [W](TimeStep)",
                 "ups power": f"{ite_obj['Name'].upper()}:ITE UPS Electricity Rate [W](TimeStep)",
             }
         # create ACU device key mapping
@@ -166,6 +167,7 @@ class IDFBuilder:
                 "outlet air temperature": f"{coil_obj['Air_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "inlet water temperature": f"{coil_obj['Water_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "water mass flow rate": f"{coil_obj['Water_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "cooling load": f"{coil_obj['Name'].upper()}:Cooling Coil Sensible Cooling Rate [W](TimeStep)",
             }
         # create chilled water pump device key mapping
         pump_names = self.building.constructions.chilled_water_pumps
@@ -185,12 +187,30 @@ class IDFBuilder:
             )
             self.device_key_map["chillers"][chiller_name] = {
                 "cooling load": f"{chiller_obj['Name'].upper()}:Chiller Evaporator Cooling Rate [W](TimeStep)",
-                "chilled water supply temperature": f"{chiller_obj['Chilled_Water_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "chilled water return temperature": f"{chiller_obj['Chilled_Water_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "condensing water return temperature": f"{chiller_obj['Condenser_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "condensing water supply temperature": f"{chiller_obj['Condenser_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "chilled water supply temperature": f"{chiller_obj['Name'].upper()}:Chiller Evaporator Outlet Temperature [C](TimeStep)",
+                "chilled water return temperature": f"{chiller_obj['Name'].upper()}:Chiller Evaporator Inlet Temperature [C](TimeStep)",
+                "chilled water mass flow rate": f"{chiller_obj['Name'].upper()}:Chiller Evaporator Mass Flow Rate [kg/s](TimeStep)",
+                "condenser water return temperature": f"{chiller_obj['Name'].upper()}:Chiller Condenser Outlet Temperature [C](TimeStep)",
+                "condenser water supply temperature": f"{chiller_obj['Name'].upper()}:Chiller Condenser Inlet Temperature [C](TimeStep)",
+                "condenser water mass flow rate": f"{chiller_obj['Name'].upper()}:Chiller Condenser Mass Flow Rate [kg/s](TimeStep)",
                 "power": f"{chiller_obj['Name'].upper()}:Chiller Electricity Rate [W](TimeStep)",
                 "mass flow rate": f"{chiller_obj['Chilled_Water_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+            }
+        # create heat exchanger device key mapping
+        heat_exchanger_names = self.building.constructions.heat_exchangers
+        for heat_exchanger_name in heat_exchanger_names:
+            hx_obj = self.model.getobject(
+                key="HeatExchanger:FluidToFluid".upper(),
+                name=heat_exchanger_name
+            )
+            self.device_key_map["heat_exchangers"][heat_exchanger_name] = {
+                "cooling load": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Heat Transfer Rate [W](TimeStep)",
+                "chilled water supply temperature": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Supply Side Outlet Temperature [C](TimeStep)",
+                "chilled water return temperature": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Supply Side Inlet Temperature [C](TimeStep)",
+                "chilled water mass flow rate": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Supply Side Mass Flow Rate [kg/s](TimeStep)",
+                "condenser water supply temperature": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Demand Side Outlet Temperature [C](TimeStep)",
+                "condenser water return temperature": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Demand Side Inlet Temperature [C](TimeStep)",
+                "condenser water mass flow rate": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Demand Side Mass Flow Rate [kg/s](TimeStep)",
             }
         # create secondary chilled water pump device key mapping
         self.device_key_map["secondary chilled water pumps"] = {}

@@ -25,7 +25,7 @@ class PODBuilder:
     """
     A class method to build POD model from the CFD simulation data
 
-    :param room: Room object model (see dctwin.models.room)
+    :param room: Room object model (see dclib.room)
     :param num_modes: number of POD modes to be used to reconstruct the temperature field
     :param max_iter: maximum number of iterations for the training process of the GP model
     :param tol: tolerance for the training process of the GP model
