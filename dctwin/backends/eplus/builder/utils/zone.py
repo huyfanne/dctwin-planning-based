@@ -86,7 +86,7 @@ def make_cooling_coil(
     :param branch:
     :param branch_component_idx:
     :param cooling_coil_name:
-    :param cooling_coil:
+    :param acu: ACU object that this cooling coil belongs to
     :param kwargs:
     :return:
     """
@@ -142,7 +142,7 @@ def make_fan(
     :param branch:
     :param branch_component_idx:
     :param fan_name:
-    :param fan:
+    :param acu: ACU object that this fan belongs to
     :param kwargs:
     :return:
     """
@@ -186,7 +186,8 @@ def make_oa_equipment_list(model: IDF, oa_name: str, air_loop: EpBunch):
     """
     Make an outdoor air equipment list and its components in the model.
     :param model:
-    :param oa_name:
+    :param oa_name: outdoor air system name
+    :param air_loop: air loop object
     :return:
     """
     obj = model.newidfobject(
@@ -221,9 +222,8 @@ def make_oa_system(
     :param model:
     :param branch:
     :param branch_component_idx:
-    :param oa_name:
-    :param oa_system:
-    :param kwargs:
+    :param oa: ACUOutdoorAir object
+    :param air_loop: air loop object
     :return:
     """
     obj = model.newidfobject(
