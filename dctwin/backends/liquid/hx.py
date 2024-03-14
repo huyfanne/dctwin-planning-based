@@ -13,6 +13,8 @@ class HeatExchanger:
     theory. The heat exchanger is a cross-flow heat exchanger with a single pass on both the hot and cold sides.
     A root-fining solver is implemented to determine the chilled water mass flow rate given the outlet temperature
     setpoint. The forward only simulation mode is also supported by simply providing the chilled water mass flow rate.
+
+    Reference: Incropera, Frank P., et al. Fundamentals of heat and mass transfer. Vol. 6. New York: Wiley, 1996.
     """
     def __init__(
         self,
@@ -162,7 +164,7 @@ class HeatExchanger:
         heat_transfer_rate = eff * Q_max
         outer_outlet_temperature = outer_inlet_temperature - heat_transfer_rate / outer_stream_capacity
         inner_outlet_temperature = (
-            inner_inlet_temperature + (heat_transfer_rate + friction_power) / inner_stream_capacity
+            inner_inlet_temperature + (heat_transfer_rate) / inner_stream_capacity
         )
         if friction_power / heat_transfer_rate > 0.1:
             logger.warning(
@@ -186,48 +188,12 @@ class HeatExchanger:
         inner_inlet_temperature: float | np.ndarray,
         outer_inlet_temperature: float | np.ndarray,
         outer_mass_flow_rate: float | np.ndarray,
-        outer_outlet_temperature_sp: float | np.ndarray = None,
         inner_mass_flow_rate: float | np.ndarray = None,
     ):
-        if outer_outlet_temperature_sp is not None:
-            # bi-section loop to determine the chilled water mass flow rate
-            m_water_min = 0
-            m_water_max = outer_mass_flow_rate * 5
-            m_water = (m_water_min + m_water_max) / 2
-            inner_outlet_temperature, outer_outlet_temperature, info = self.forward(
-                inner_inlet_temperature=inner_inlet_temperature,
-                inner_mass_flow_rate=m_water,
-                outer_inlet_temperature=outer_inlet_temperature,
-                outer_mass_flow_rate=outer_mass_flow_rate,
-            )
-            for iteration in range(1, self.max_iter + 1):
-                if outer_outlet_temperature > outer_outlet_temperature_sp:
-                    m_water_min = m_water
-                else:
-                    m_water_max = m_water
-                m_water = (m_water_min + m_water_max) / 2
-                inner_outlet_temperature, outer_outlet_temperature, info = self.forward(
-                    inner_inlet_temperature=inner_inlet_temperature,
-                    inner_mass_flow_rate=m_water,
-                    outer_inlet_temperature=outer_inlet_temperature,
-                    outer_mass_flow_rate=outer_mass_flow_rate,
-                )
-                if abs(outer_outlet_temperature - outer_outlet_temperature_sp) < self.tol:
-                    break
-                if iteration == self.max_iter:
-                    logger.warning(
-                        f"{self.cdu_uid}'s heat exchanger root finding cannot find root at iteration {iteration}."
-                    )
-            return inner_outlet_temperature, outer_outlet_temperature, m_water, info
-        elif inner_mass_flow_rate is not None:
-            inner_outlet_temperature, outer_outlet_temperature, info = self.forward(
-                inner_inlet_temperature=inner_inlet_temperature,
-                inner_mass_flow_rate=inner_mass_flow_rate,
-                outer_inlet_temperature=outer_inlet_temperature,
-                outer_mass_flow_rate=outer_mass_flow_rate,
-            )
-            return inner_outlet_temperature, outer_outlet_temperature, inner_mass_flow_rate, info
-        else:
-            raise ValueError(
-                "For heat exchangers, either outer outlet temperature setpoint"
-                " or chilled water mass flow rate should be provided.")
+        inner_outlet_temperature, outer_outlet_temperature, info = self.forward(
+            inner_inlet_temperature=inner_inlet_temperature,
+            inner_mass_flow_rate=inner_mass_flow_rate,
+            outer_inlet_temperature=outer_inlet_temperature,
+            outer_mass_flow_rate=outer_mass_flow_rate,
+        )
+        return inner_outlet_temperature, outer_outlet_temperature, inner_mass_flow_rate, info
