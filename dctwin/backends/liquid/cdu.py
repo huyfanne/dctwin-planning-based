@@ -180,8 +180,9 @@ class CoolantDistributionUnit:
         self,
         cooling_water_return_temperature: float | np.ndarray,
         cooling_water_mass_flow_rate: float | np.ndarray,
+        cooling_water_supply_temperature_sp: float | np.ndarray,
         chilled_water_supply_temperature: float | np.ndarray,
-        chilled_water_mass_flow_rate: float | np.ndarray,
+
     ):
         """
         Simulate the heat exchanger performance according to the inner and outer fluid properties.
@@ -193,10 +194,10 @@ class CoolantDistributionUnit:
         transfer rate (W) and heat transfer coefficient (W/m2K)
         """
         return self.heat_exchanger.sim(
-            inner_inlet_temperature=chilled_water_supply_temperature,
-            inner_mass_flow_rate=chilled_water_mass_flow_rate,
             outer_inlet_temperature=cooling_water_return_temperature,
             outer_mass_flow_rate=cooling_water_mass_flow_rate,
+            inner_inlet_temperature=chilled_water_supply_temperature,
+            outer_outlet_temperature_sp=cooling_water_supply_temperature_sp
         )
 
     def _sim_server_pipes(
@@ -339,8 +340,7 @@ class CoolantDistributionUnit:
         server_mass_flow_rates: dict,
         server_liquid_cooling_percentages: dict,
         cooling_water_supply_temperature: float | np.ndarray,
-        chilled_water_supply_temperature: float | np.ndarray,
-        chilled_water_mass_flow_rate: float | np.ndarray,
+        chilled_water_supply_temperature: float | np.ndarray
     ):
         total_friction_power, cdu_return_temperature = self._sim_pipes(
             inlet_temperature=cooling_water_supply_temperature,
@@ -356,7 +356,7 @@ class CoolantDistributionUnit:
                 cooling_water_return_temperature=cdu_return_temperature,
                 cooling_water_mass_flow_rate=sum(server_mass_flow_rates.values()),
                 chilled_water_supply_temperature=chilled_water_supply_temperature,
-                chilled_water_mass_flow_rate=chilled_water_mass_flow_rate,
+                cooling_water_supply_temperature_sp=cooling_water_supply_temperature,
             )
         return (
             cdu_electrical_power,
