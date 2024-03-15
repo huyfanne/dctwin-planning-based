@@ -185,15 +185,45 @@ class HeatExchanger:
 
     def sim(
         self,
-        inner_inlet_temperature: float | np.ndarray,
         outer_inlet_temperature: float | np.ndarray,
         outer_mass_flow_rate: float | np.ndarray,
-        inner_mass_flow_rate: float | np.ndarray = None,
+        inner_inlet_temperature: float | np.ndarray,
+        outer_outlet_temperature_sp: float | np.ndarray = None,
     ):
-        inner_outlet_temperature, outer_outlet_temperature, info = self.forward(
+        # bi-section loop to determine the chilled water mass flow rate
+        m_water_min = 0
+        m_water_max = outer_mass_flow_rate * 5
+        m_water = (m_water_min + m_water_max) / 2
+        (
+            inner_outlet_temperature,
+            outer_outlet_temperature,
+            hx_info
+        ) = self.forward(
             inner_inlet_temperature=inner_inlet_temperature,
-            inner_mass_flow_rate=inner_mass_flow_rate,
+            inner_mass_flow_rate=m_water,
             outer_inlet_temperature=outer_inlet_temperature,
-            outer_mass_flow_rate=outer_mass_flow_rate,
+            outer_mass_flow_rate=outer_mass_flow_rate
         )
-        return inner_outlet_temperature, outer_outlet_temperature, inner_mass_flow_rate, info
+        for iteration in range(1, self.max_iter + 1):
+            if outer_outlet_temperature > outer_outlet_temperature_sp:
+                m_water_min = m_water
+            else:
+                m_water_max = m_water
+            m_water = (m_water_min + m_water_max) / 2
+            (
+                inner_outlet_temperature,
+                outer_outlet_temperature,
+                hx_info
+            ) = self.forward(
+                inner_inlet_temperature=inner_inlet_temperature,
+                inner_mass_flow_rate=m_water,
+                outer_inlet_temperature=outer_inlet_temperature,
+                outer_mass_flow_rate=outer_mass_flow_rate
+            )
+            if abs(outer_outlet_temperature - outer_outlet_temperature_sp) < self.tol:
+                break
+            if iteration == self.max_iter:
+                logger.warning(
+                    f"{self.cdu_uid}'s heat exchanger root finding cannot find root at iteration {iteration}."
+                )
+        return inner_outlet_temperature, outer_outlet_temperature, m_water, hx_info

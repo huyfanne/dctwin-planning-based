@@ -2,7 +2,6 @@ from typing import Dict
 from CoolProp.CoolProp import PropsSI
 
 from dclib import Room
-from loguru import logger
 
 from .cdu import CoolantDistributionUnit
 
@@ -30,9 +29,6 @@ class LiquidCoolingManager:
         self.tol = 1e-2
         self.max_iter = 50
 
-        # set the initial cooling water supply temperature
-        self.cooling_water_supply_temperature = {cdu_name: 25 for cdu_name in self.cdus.keys()}
-
     def _make_cdus(self) -> dict[str, CoolantDistributionUnit]:
         """
         Create the CDU instances according to the room configuration.
@@ -54,7 +50,6 @@ class LiquidCoolingManager:
         server_mass_flow_rates = {}
         server_liquid_cooling_percentages = {}
         cooling_water_supply_temperature_sp = self.room.inputs.cdus[cdu_name].cooling_water_supply_temperature_sp
-        cooling_water_supply_temperature = self.cooling_water_supply_temperature
         chilled_water_supply_temperature = self.room.inputs.cdus[cdu_name].chilled_water_supply_temperature
         chilled_water_mass_flow_rate = None
         for rack_name in self.room.constructions.cdus[cdu_name].meta.racks:
@@ -69,7 +64,6 @@ class LiquidCoolingManager:
             server_powers,
             server_mass_flow_rates,
             server_liquid_cooling_percentages,
-            cooling_water_supply_temperature,
             cooling_water_supply_temperature_sp,
             chilled_water_supply_temperature,
             chilled_water_mass_flow_rate,
@@ -82,7 +76,6 @@ class LiquidCoolingManager:
         server_liquid_cooling_percentages: Dict[str, float],
         cooling_water_supply_temperature_sps: Dict[str, float],
         chilled_water_supply_temperatures: Dict[str, float],
-        chilled_water_mass_flow_rates: Dict[str, float | None] = None,
     ):
         cdu_electrical_powers = {}
         cdu_chilled_water_return_temperatures = {}
@@ -103,88 +96,22 @@ class LiquidCoolingManager:
                     current_server_liquid_cooling_percentages[server_name] = \
                         server_liquid_cooling_percentages[server_name]
             # simulate the CDU
-            cooling_water_supply_temperature_sp = cooling_water_supply_temperature_sps[cdu_name]
+            cooling_water_supply_temperature = cooling_water_supply_temperature_sps[cdu_name]
             chilled_water_supply_temperature = chilled_water_supply_temperatures[cdu_name]
-            chilled_water_mass_flow_rate = chilled_water_mass_flow_rates[cdu_name]
-            if chilled_water_mass_flow_rate is None and cooling_water_supply_temperature_sp is not None:
-                # bi-section loop to determine the chilled water mass flow rate
-                cooling_water_supply_temperature = cooling_water_supply_temperature_sp + 1
-                m_water_min = 0
-                m_water_max = sum(current_server_mass_flow_rates.values())
-                m_water = (m_water_min + m_water_max) / 2
-                (
-                    cdu_electrical_power,
-                    chilled_water_return_temperature,
-                    cooling_water_supply_temperature,
-                    cdu_return_temperature,
-                    chilled_water_mass_flow_rate,
-                    hx_info
-                ) = cdu.sim(
-                    server_powers=current_server_powers,
-                    server_mass_flow_rates=current_server_mass_flow_rates,
-                    server_liquid_cooling_percentages=current_server_liquid_cooling_percentages,
-                    chilled_water_supply_temperature=chilled_water_supply_temperature,
-                    cooling_water_supply_temperature=cooling_water_supply_temperature,
-                    chilled_water_mass_flow_rate=m_water,
-                )
-                # print(
-                #     f"iteration: 0, T_sup: {cooling_water_supply_temperature:.2f}, "
-                #     f"T_ret: {cdu_return_temperature:.2f}, M_sup: {sum(current_server_mass_flow_rates.values()):.2f}, Q={sum(current_server_powers.values()):.2f},"
-                #     f" m_water: {m_water:.5f}, m_water_min: {m_water_min:.5f}, m_water_max: {m_water_max:.5f}")
-                for iteration in range(1, self.max_iter + 1):
-                    if cooling_water_supply_temperature > cooling_water_supply_temperature_sp:
-                        m_water_min = m_water
-                    else:
-                        m_water_max = m_water
-                    m_water = (m_water_min + m_water_max) / 2
-                    (
-                        cdu_electrical_power,
-                        chilled_water_return_temperature,
-                        cooling_water_supply_temperature,
-                        cdu_return_temperature,
-                        chilled_water_mass_flow_rate,
-                        hx_info
-                    ) = cdu.sim(
-                        server_powers=current_server_powers,
-                        server_mass_flow_rates=current_server_mass_flow_rates,
-                        server_liquid_cooling_percentages=current_server_liquid_cooling_percentages,
-                        chilled_water_supply_temperature=chilled_water_supply_temperature,
-                        cooling_water_supply_temperature=cooling_water_supply_temperature,
-                        chilled_water_mass_flow_rate=m_water,
-                    )
-                    # print(
-                    #     f"iteration: {iteration}, T_sup: {cooling_water_supply_temperature:.2f}, "
-                    #     f"T_ret: {cdu_return_temperature:.2f}, M_sup: {sum(current_server_mass_flow_rates.values()):.2f}, Q={sum(current_server_powers.values()):.2f},"
-                    #     f" m_water: {m_water:.5f}, m_water_min: {m_water_min:.5f}, m_water_max: {m_water_max:.5f}")
-                    if abs(cooling_water_supply_temperature - cooling_water_supply_temperature_sp) < self.tol:
-                        break
-                    if iteration == self.max_iter:
-                        logger.warning(
-                            f"{cdu_name}'s heat exchanger root finding cannot find root at iteration {iteration}."
-                        )
-            elif chilled_water_mass_flow_rate is not None:
-                cooling_water_supply_temperature = self.cooling_water_supply_temperature[cdu_name]
-                (
-                    cdu_electrical_power,
-                    chilled_water_return_temperature,
-                    cooling_water_supply_temperature,
-                    cdu_return_temperature,
-                    chilled_water_mass_flow_rate,
-                    hx_info
-                ) = cdu.sim(
-                    server_powers=server_powers,
-                    server_mass_flow_rates=server_mass_flow_rates,
-                    server_liquid_cooling_percentages=server_liquid_cooling_percentages,
-                    chilled_water_supply_temperature=chilled_water_supply_temperature,
-                    cooling_water_supply_temperature=cooling_water_supply_temperature,
-                    chilled_water_mass_flow_rate=chilled_water_mass_flow_rate,
-                )
-            else:
-                raise ValueError(
-                    "For heat exchangers, either outer outlet temperature setpoint"
-                    " or chilled water mass flow rate should be provided.")
-            # update cooling water supply temperature
-            self.cooling_water_supply_temperature[cdu_name] = cooling_water_supply_temperature
+            (
+                cdu_electrical_power,
+                chilled_water_return_temperature,
+                cooling_water_supply_temperature,
+                cdu_return_temperature,
+                chilled_water_mass_flow_rate,
+                hx_info
+            ) = cdu.sim(
+                server_powers=current_server_powers,
+                server_mass_flow_rates=current_server_mass_flow_rates,
+                server_liquid_cooling_percentages=current_server_liquid_cooling_percentages,
+                cooling_water_supply_temperature=cooling_water_supply_temperature,
+                chilled_water_supply_temperature=chilled_water_supply_temperature,
+            )
             # update cdu simulation results
             cdu_electrical_powers[cdu_name] = cdu_electrical_power
             cdu_chilled_water_return_temperatures[cdu_name] = chilled_water_return_temperature

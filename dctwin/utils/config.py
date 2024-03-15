@@ -100,8 +100,20 @@ class CFDConfig:
             raise PODConfigError(f"invalid pod directory: {self.pod_dir}")
 
 
+class CDUConfig:
+
+    def __init__(self, base_config) -> None:
+        self.base_config: Config = base_config
+        self.case_dir: Path = Path(os.environ.get("CFD_CASE_DIR", ""))
+
+        self.file_handler: TextIO = TextIO()
+        self.log_handler: csv.DictWriter = csv.DictWriter(
+            self.file_handler, fieldnames=["time", "mode", "value"]
+        )
+
+
 class EplusCFDConfig:
-    """Co-simulation configuration"""
+    """Co-simulation of E+ and CFD configuration"""
 
     def __init__(self, base_config) -> None:
         self.base_config: Config = base_config
@@ -113,6 +125,16 @@ class EplusCFDConfig:
     def check_map_file(self) -> None:
         if not self.idf2room_map.exists():
             raise EplusConfigError(f"invalid map file: {self.idf2room_map}")
+
+
+class EplusCDUConfig:
+    """Co-simulation of E+ and liquid cooling CDU configuration"""
+
+    def __init__(self, base_config) -> None:
+        self.base_config: Config = base_config
+        self.timestamp: datetime.datetime = os.environ.get(
+            "TIME_STEP", datetime.datetime.now()
+        )  # time step to sync CFD and Eplus
 
 
 class Config:
@@ -134,7 +156,9 @@ class Config:
 
         self.eplus = EplusConfig(self)
         self.cfd = CFDConfig(self)
+        self.cdu = CDUConfig(self)
         self.eplus_cfd = EplusCFDConfig(self)
+        self.eplus_cdu = EplusCDUConfig(self)
 
     def set_log_dir(self, log_dir: typing.Union[str, Path]) -> None:
         self.LOG_DIR = Path(log_dir)
