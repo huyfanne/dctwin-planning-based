@@ -189,7 +189,7 @@ class CoolantDistributionUnit:
         :param cooling_water_return_temperature: the temperature of return cooling water from server racks (C)
         :param cooling_water_mass_flow_rate: the mass flow rate of return cooling water from server racks (kg/s)
         :param chilled_water_supply_temperature: the temperature of supply chilled water to server racks (C)
-        :param chilled_water_mass_flow_rate: the mass flow rate of supply chilled water to server racks (kg/s)
+        :param cooling_water_supply_temperature_sp: the set point of supply cooling water to server racks (C)
         :return: the outlet temperature of the inner and outer side of the heat exchanger (C) as well as the heat
         transfer rate (W) and heat transfer coefficient (W/m2K)
         """
@@ -211,6 +211,7 @@ class CoolantDistributionUnit:
         """
         Simulate the server friction power due to the liquid cooling pipes installed in the chips.
         """
+        chip_power = power * liquid_percentage / self.cpu_number_per_server  # W
         mass_flow_rate_chip = mass_flow_rate / self.cpu_number_per_server  # kg/s
         # straight part
         chip_straight_part_friction_power = self.server_pipes[f"{server_name} straight"].sim(mass_flow_rate_chip)
@@ -223,7 +224,10 @@ class CoolantDistributionUnit:
         # server total power
         server_friction_power = chip_total_friction_power * self.cpu_number_per_server
         liquid_outlet_temperature = inlet_temperature + power*liquid_percentage / (self.liquid_capacity*mass_flow_rate)
-        return server_friction_power, liquid_outlet_temperature
+        # empirical formula for the maximum temperature of the CPU based on chip-level CFD simulation
+        cpu_max_temperature =\
+            1.04 * inlet_temperature + 1.44 * chip_power * 0.0016 / (mass_flow_rate_chip * self.liquid_capacity)
+        return server_friction_power, liquid_outlet_temperature, cpu_max_temperature
 
     def _sim_rack_pipes(
         self,
@@ -247,14 +251,14 @@ class CoolantDistributionUnit:
             total_mass_flow_rate = 0
             outlet_temperature_times_mass_flow_rate = 0
             for server in rack.constructions.servers.values():
-                server_friction_power, outlet_temperature_server = self._sim_server_pipes(
+                server_friction_power, outlet_temperature_server, max_temperature = self._sim_server_pipes(
                     inlet_temperature=inlet_temperature,
                     power=server_powers[server.uid],
                     liquid_percentage=server_liquid_cooling_percentages[server.uid],
                     server_name=server.uid,
                     mass_flow_rate=server_mass_flow_rates[server.uid]
                 )
-                outlet_temperature_times_mass_flow_rate += outlet_temperature_server * server_mass_flow_rates[server.uid]
+                outlet_temperature_times_mass_flow_rate += outlet_temperature_server*server_mass_flow_rates[server.uid]
                 total_mass_flow_rate += server_mass_flow_rates[server.uid]
                 total_server_friction_power += server_friction_power
                 total_electrical_power += server_powers[server.uid]

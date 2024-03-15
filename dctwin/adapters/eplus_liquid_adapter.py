@@ -166,7 +166,7 @@ class EplusLiquidAdapter:
             cdu_cooling_water_supply_temperature_sps,
             cdu_chilled_water_supply_temperatures,
         ) = self._map_cdu_inputs_fn(self, parsed_actions)
-        # run CFD/POD simulation
+        # run CDU simulation
         cdu_sim_results = {}
         for manager_name, manager in self.liquid_managers.items():
             (
