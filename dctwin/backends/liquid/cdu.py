@@ -109,13 +109,14 @@ class CoolantDistributionUnit:
         num_turning: int = 3
     ):
         # constant properties
-        self.liquid_capacity = PropsSI('D', 'P', 101325, 'Q', 0, "water")
+        self.liquid_capacity = PropsSI('C', 'P', 101325, 'Q', 0, "water")
         self.cpu_number_per_server = cpu_number_per_server
         self.num_turning = num_turning
         # variable properties
         self.config = cdu
         self.racks = racks
         self.heat_exchanger = HeatExchanger(
+            cdu_uid=cdu.uid,
             tube_diameter=cdu.constructions.heat_exchanger.geometry.tube_diameter,
             tube_length=cdu.constructions.heat_exchanger.geometry.tube_length,
             tube_wall_thickness=cdu.constructions.heat_exchanger.geometry.tube_wall_thickness,
@@ -180,8 +181,7 @@ class CoolantDistributionUnit:
         cooling_water_return_temperature: float | np.ndarray,
         cooling_water_mass_flow_rate: float | np.ndarray,
         chilled_water_supply_temperature: float | np.ndarray,
-        chilled_water_mass_flow_rate: float | np.ndarray = None,
-        cooling_water_supply_temperature_sp: float | np.ndarray = None
+        chilled_water_mass_flow_rate: float | np.ndarray,
     ):
         """
         Simulate the heat exchanger performance according to the inner and outer fluid properties.
@@ -197,7 +197,6 @@ class CoolantDistributionUnit:
             inner_mass_flow_rate=chilled_water_mass_flow_rate,
             outer_inlet_temperature=cooling_water_return_temperature,
             outer_mass_flow_rate=cooling_water_mass_flow_rate,
-            outer_outlet_temperature_sp=cooling_water_supply_temperature_sp
         )
 
     def _sim_server_pipes(
@@ -341,14 +340,8 @@ class CoolantDistributionUnit:
         server_liquid_cooling_percentages: dict,
         cooling_water_supply_temperature: float | np.ndarray,
         chilled_water_supply_temperature: float | np.ndarray,
-        chilled_water_mass_flow_rate: float | np.ndarray = None,
-        cooling_water_supply_temperature_sp: float | np.ndarray = None
+        chilled_water_mass_flow_rate: float | np.ndarray,
     ):
-        if chilled_water_mass_flow_rate is None and cooling_water_supply_temperature_sp is None:
-            raise ValueError(
-                "For the CDU simulation, either chilled water mass flow rate or cooling water supply "
-                "setpoint temperature should be provided."
-            )
         total_friction_power, cdu_return_temperature = self._sim_pipes(
             inlet_temperature=cooling_water_supply_temperature,
             server_powers=server_powers,
@@ -364,8 +357,7 @@ class CoolantDistributionUnit:
                 cooling_water_mass_flow_rate=sum(server_mass_flow_rates.values()),
                 chilled_water_supply_temperature=chilled_water_supply_temperature,
                 chilled_water_mass_flow_rate=chilled_water_mass_flow_rate,
-                cooling_water_supply_temperature_sp=cooling_water_supply_temperature_sp
-        )
+            )
         return (
             cdu_electrical_power,
             chilled_water_return_temperature,
