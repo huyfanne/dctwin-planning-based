@@ -23,6 +23,8 @@ from .dt_engine_pb2 import (
     SimulationTimeConfig,
     NormalizeConfig,
     CFDObservationConfig,
+    EplusCDUEnvConfig,
+    CDUEnvConfig,
 )
 
 __all__ = [
@@ -44,4 +46,6 @@ __all__ = [
     "SimulationTimeConfig",
     "NormalizeConfig",
     "CFDObservationConfig",
+    "EplusCDUEnvConfig",
+    "CDUEnvConfig",
 ]

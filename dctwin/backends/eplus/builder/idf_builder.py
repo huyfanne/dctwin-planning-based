@@ -166,7 +166,6 @@ class IDFBuilder:
                 "air mass flow rate": f"{coil_obj['Air_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
                 "outlet air temperature": f"{coil_obj['Air_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "inlet water temperature": f"{coil_obj['Water_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "outlet water temperature": f"{coil_obj['Water_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "water mass flow rate": f"{coil_obj['Water_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
                 "cooling load": f"{coil_obj['Name'].upper()}:Cooling Coil Sensible Cooling Rate [W](TimeStep)",
             }

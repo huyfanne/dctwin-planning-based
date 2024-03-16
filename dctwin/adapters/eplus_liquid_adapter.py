@@ -29,6 +29,8 @@ class EplusLiquidAdapter:
     def _init_room_liquid_cooling_managers(self) -> None:
         self.liquid_managers = {}
         for room_name, room in self.building.constructions.zones.items():
+            if room.constructions.cdus is None: # skip if the room does not have CDUs
+                continue
             self.liquid_managers[room_name] = LiquidCoolingManager(
                 room=room,
             )
@@ -195,6 +197,7 @@ class EplusLiquidAdapter:
         self._post_processing(
             cdu_sim_results=cdu_sim_results
         )
+        ## TODO remove cdu actions
         # reformat action dictionary to numpy array that can be accepted by Eplus
         send_actions = []
         for value in parsed_actions.values():
@@ -203,5 +206,6 @@ class EplusLiquidAdapter:
         self.eplus_manager.send_action(send_actions)
 
     def receive_status(self) -> Tuple[Union[List[float], None], bool]:
-        eplus_obs, done = self.eplus_manager.receive_status()
+        ## TODO add cdu observation
+        eplus_obs, done = self.eplus_manager.receive_status() 
         return eplus_obs, done

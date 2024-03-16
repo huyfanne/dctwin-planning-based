@@ -267,7 +267,10 @@ message DTEngineConfig {
   optional LoggingConfig logging_config = 1;
   oneof EnvConfig {
     EPlusEnvConfig eplus_env_config = 2;
-    EplusCFDEnvConfig eplus_cfd_env_config = 3;
+    CDUEnvConfig cdu_env_config = 3;
+    EplusCFDEnvConfig eplus_cfd_env_config = 4;
+    EplusCDUEnvConfig eplus_cdu_env_config = 5;
   }
-  optional CFDEnvConfig cfd_config = 4;
+  optional CFDEnvConfig cfd_config = 6;
+
 }

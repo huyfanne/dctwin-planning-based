@@ -10,8 +10,9 @@ from typing import (
     Dict,
 )
 
+from dclib.building import Building
 from dctwin.adapters import EplusLiquidAdapter
-from dctwin.utils import EPlusEnvConfig
+from dctwin.utils import CDUEnvConfig
 
 from .eplus_env import EPlusEnv
 from .ds import Observation
@@ -23,7 +24,8 @@ class EplusCDUEnv(EPlusEnv):
 
     def __init__(
         self,
-        config: EPlusEnvConfig,
+        config: CDUEnvConfig,
+        building: Building,
         map_cdu_inputs_fn: Callable,
         reward_fn: Optional[Callable] = None,
         schedule_fn: Optional[Callable] = None,
@@ -38,9 +40,9 @@ class EplusCDUEnv(EPlusEnv):
             **kwargs,
         )
         self.cdu_config = config.cdu
-        self._set_eplus_cfd_environ()
+        # self._set_eplus_cfd_environ()
         self.eplus_cdu_manager = EplusLiquidAdapter(
-            building=kwargs["building"],
+            building=building,
             eplus_backend=self.eplus_backend,
             map_cdu_inputs_fn=map_cdu_inputs_fn
         )

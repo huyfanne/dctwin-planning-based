@@ -1,6 +1,6 @@
 from .registraion import make_env
 from dctwin import adapters, backends, interfaces, templates, utils
-from dctwin.backends import IDFBuilder, ConfigBuilder
+from dctwin.backends import IDFBuilder, ConfigBuilder, CDUConfigBuilder
 
 __version__ = "1.1.2"
 
@@ -13,4 +13,5 @@ __all__ = [
     "make_env",
     "IDFBuilder",
     "ConfigBuilder",
+    "CDUConfigBuilder",
 ]

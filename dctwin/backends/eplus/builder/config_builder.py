@@ -1359,3 +1359,6 @@ class ConfigBuilder:
     def save(self, path: Path = Path("configs/eplus.prototxt")):
         with open(path, "w") as f:
             f.write(text_format.MessageToString(self.model))
+
+    def get_model(self):
+        return self.model
