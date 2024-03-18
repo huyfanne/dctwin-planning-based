@@ -81,53 +81,52 @@ class CDUConfigBuilder:
         normalize_method: int = None,
         lb: float = None,
         ub: float = None,
-        variable_names: Union[str, List[str]] = None
     ):
         for zone_name, zone in self.building.constructions.zones.items():
             if zone.constructions.cdus is not None:
                 for cdu_name, cdu in zone.constructions.cdus.items():
                     self._make_observation(
                         exposed=exposed,
-                        variable_name=f"{cdu.uid} chilled water supply temperature".lower(),
-                        normalize_method=normalize_method,
-                        lb=lb,
-                        ub=ub,
-                    ) if variable_names is None or "chilled water supply temperature" in variable_names else None
-                    self._make_observation(
-                        exposed=exposed,
-                        variable_name=f"{cdu.uid} chilled water return temperature".lower(),
-                        normalize_method=normalize_method,
-                        lb=lb,
-                        ub=ub,
-                    ) if variable_names is None or "chilled water return temperature" in variable_names else None
-                    self._make_observation(
-                        exposed=exposed,
                         variable_name=f"{cdu.uid} cooling water supply temperature".lower(),
                         normalize_method=normalize_method,
                         lb=lb,
                         ub=ub,
-                    ) if variable_names is None or "cooling water supply temperature" in variable_names else None
+                    )
                     self._make_observation(
                         exposed=exposed,
                         variable_name=f"{cdu.uid} cooling water return temperature".lower(),
                         normalize_method=normalize_method,
                         lb=lb,
                         ub=ub,
-                    ) if variable_names is None or "cooling water return temperature" in variable_names else None
+                    )
+                    self._make_observation(
+                        exposed=exposed,
+                        variable_name=f"{cdu.uid} chilled water supply temperature".lower(),
+                        normalize_method=normalize_method,
+                        lb=lb,
+                        ub=ub,
+                    )
+                    self._make_observation(
+                        exposed=exposed,
+                        variable_name=f"{cdu.uid} chilled water return temperature".lower(),
+                        normalize_method=normalize_method,
+                        lb=lb,
+                        ub=ub,
+                    )
                     self._make_observation(
                         exposed=exposed,
                         variable_name=f"{cdu.uid} chilled water mass flow rate".lower(),
                         normalize_method=normalize_method,
                         lb=lb,
                         ub=ub,
-                    ) if variable_names is None or "chilled water mass flow rate" in variable_names else None
+                    )
                     self._make_observation(
                         exposed=exposed,
                         variable_name=f"{cdu.uid} electrical power".lower(),
                         normalize_method=normalize_method,
                         lb=lb,
                         ub=ub,
-                    ) if variable_names is None or "electrical power" in variable_names else None
+                    )
 
     """Action config making functions start here"""
 

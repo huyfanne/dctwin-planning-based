@@ -29,7 +29,7 @@ class HeatExchanger:
         tube_roughness: float,
         thermal_conductivity: float,
         tol: float = 1e-3,
-        max_iter: int = 100
+        max_iter: int = 100 
     ):
         # geometry parameters
         self.cdu_uid = cdu_uid

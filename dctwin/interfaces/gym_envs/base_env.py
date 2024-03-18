@@ -241,8 +241,9 @@ class BaseEnv(gym.Env):
                     exit(-1)
                 value = raw_action[ra_ptr]
                 if (
-                    a.masking_variable_name != ""
-                    and self.inspect_current_observation(a.masking_variable_name) == -1
+                    hasattr(a, "masking_variable_name") and
+                    a.masking_variable_name != "" and
+                    self.inspect_current_observation(a.masking_variable_name) == -1
                 ):  # masking using observation
                     a.set_mask(True)
                 else:

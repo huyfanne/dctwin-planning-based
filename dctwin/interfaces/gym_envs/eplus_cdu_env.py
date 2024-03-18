@@ -15,7 +15,7 @@ from dctwin.adapters import EplusLiquidAdapter
 from dctwin.utils import CDUEnvConfig
 
 from .eplus_env import EPlusEnv
-from .ds import Observation
+from .ds import Observation, Action, ActionControlType
 
 
 class EplusCDUEnv(EPlusEnv):
@@ -40,6 +40,7 @@ class EplusCDUEnv(EPlusEnv):
             **kwargs,
         )
         self.cdu_config = config.cdu
+        self.eplus_config = config.eplus
         # self._set_eplus_cfd_environ()
         self.eplus_cdu_manager = EplusLiquidAdapter(
             building=building,
@@ -48,6 +49,7 @@ class EplusCDUEnv(EPlusEnv):
         )
         # more additional observation can be added if more simulators are introduced in the future
         self._set_cdu_observations()
+        self._set_cdu_actions()
 
     def _set_cdu_observations(self) -> None:
         """Append the observations for co-simulation of CDUs and E+"""
@@ -60,6 +62,20 @@ class EplusCDUEnv(EPlusEnv):
             self._use_unnormed_obs,
             lambda o: o.exposed,
             debug_tag="observation",
+        )
+
+    def _set_cdu_actions(self) -> None:
+        """Append the actions for co-simulation of CDUs and E+"""
+        self._use_unnormed_act = self.cdu_config.use_unnormed_act
+        self._actions += [
+            Action(config=ac) for ac in self.cdu_config.actions
+        ]
+        self.action_space = self._get_space(
+            source=self._actions,
+            use_unnormed_value=self._use_unnormed_act,
+            count_criteria=lambda a: a.control_type
+            == ActionControlType.AGENT_CONTROLLED,
+            debug_tag="action",
         )
 
     def _get_actions_to_sent(self) -> Dict[str, List]:
@@ -80,6 +96,9 @@ class EplusCDUEnv(EPlusEnv):
     def _run_simulation(
         self, parsed_actions: Dict
     ) -> Tuple[Union[List[float], None], bool]:
-        self.eplus_cdu_manager.send_action(parsed_actions)
+        self.eplus_cdu_manager.send_action(
+            parsed_actions, 
+            num_eplus_actions=len(self.eplus_config.actions),
+        )
         obs, done = self.eplus_cdu_manager.receive_status()
         return obs, done

@@ -135,7 +135,6 @@ message CDUActionConfig {
     AGENT_CONTROLLED = 2;
   }
   optional ControlType control_type = 2 [default = AGENT_CONTROLLED];
-  // unless absolute path specified, input_source are considered under the `data/` folder
   required string variable_name = 5;
   oneof value {
     double default_normed_value = 6;
