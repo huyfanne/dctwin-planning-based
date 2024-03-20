@@ -86,46 +86,41 @@ class EplusLiquidAdapter:
         log_to_csv: bool = True,
     ):
         self.cdu_obs = []
-        # store simulation results to the building model
-        for manager_name, manager in self.liquid_managers.items():
-            for cdu_name, cdu in manager.cdus.items():
-                cdu.config.cooling.operating.supply_side_supply_temperature = cdu_sim_results[manager_name][
-                    "cdu_cooling_water_supply_temperatures"
-                ][cdu_name]
-                self.cdu_obs.append(cdu.config.cooling.operating.supply_side_supply_temperature)
-
-                cdu.config.cooling.operating.supply_side_return_temperature = cdu_sim_results[manager_name][
-                    "cdu_cooling_water_return_temperatures"
-                ][cdu_name]
-                self.cdu_obs.append(cdu.config.cooling.operating.supply_side_return_temperature)
-
-                cdu.config.cooling.operating.demand_side_supply_temperature = cdu_sim_results[manager_name][
-                    "cdu_chilled_water_supply_temperatures"
-                ][cdu_name]
-                self.cdu_obs.append(cdu.config.cooling.operating.demand_side_supply_temperature)
-
-                cdu.config.cooling.operating.demand_side_return_temperature = cdu_sim_results[manager_name][
-                    "cdu_chilled_water_return_temperatures"
-                ][cdu_name]
-                self.cdu_obs.append(cdu.config.cooling.operating.demand_side_return_temperature)
-
-                cdu.config.cooling.operating.demand_side_mass_flow_rate = cdu_sim_results[manager_name][
-                    "cdu_chilled_water_mass_flow_rates"
-                ][cdu_name]
-                self.cdu_obs.append(cdu.config.cooling.operating.demand_side_mass_flow_rate)
-
-                cdu.config.constructions.pump.power.operating.pump_power = cdu_sim_results[manager_name][
-                    "cdu_electrical_powers"
-                ][cdu_name]
-                self.cdu_obs.append(cdu.config.constructions.pump.power.operating.pump_power)
-        # log CDU simulation results
+        
         cdu_log_dict = {}
         cdu_log_dict.update({"timestamp": config.eplus_cdu.timestamp})
         total_cdu_power = 0
         total_cdu_chilled_water_flow_rate = 0
         total_cdu_cooling_water_flow_rate = 0
+
         for manager_name, manager in self.liquid_managers.items():
             for cdu_name, cdu in manager.cdus.items():
+                # store simulation results to the building model
+                cdu.config.cooling.operating.supply_side_supply_temperature = cdu_sim_results[manager_name][
+                    "cdu_cooling_water_supply_temperatures"
+                ][cdu_name]
+
+                cdu.config.cooling.operating.supply_side_return_temperature = cdu_sim_results[manager_name][
+                    "cdu_cooling_water_return_temperatures"
+                ][cdu_name]
+
+                cdu.config.cooling.operating.demand_side_supply_temperature = cdu_sim_results[manager_name][
+                    "cdu_chilled_water_supply_temperatures"
+                ][cdu_name]
+
+                cdu.config.cooling.operating.demand_side_return_temperature = cdu_sim_results[manager_name][
+                    "cdu_chilled_water_return_temperatures"
+                ][cdu_name]
+
+                cdu.config.cooling.operating.demand_side_mass_flow_rate = cdu_sim_results[manager_name][
+                    "cdu_chilled_water_mass_flow_rates"
+                ][cdu_name]
+
+                cdu.config.constructions.pump.power.operating.pump_power = cdu_sim_results[manager_name][
+                    "cdu_electrical_powers"
+                ][cdu_name]
+
+                # log CDU simulation results
                 cdu_log_dict.update(
                     {f"{cdu_name} Cooling Water Supply T (C)": round(
                         cdu.config.cooling.operating.supply_side_supply_temperature, 3)
@@ -159,6 +154,14 @@ class EplusLiquidAdapter:
                 cdu_log_dict.update({f"{cdu_name} Electricity Demand Rate (W)": round(
                     cdu.config.constructions.pump.power.operating.pump_power, 3)}
                 )
+                # cdu observations
+                self.cdu_obs.append(cdu.config.cooling.operating.supply_side_supply_temperature)
+                self.cdu_obs.append(cdu.config.cooling.operating.supply_side_return_temperature)
+                self.cdu_obs.append(cdu.config.cooling.operating.demand_side_supply_temperature)
+                self.cdu_obs.append(cdu.config.cooling.operating.demand_side_return_temperature)
+                self.cdu_obs.append(cdu.config.cooling.operating.demand_side_mass_flow_rate)
+                self.cdu_obs.append(cdu.config.constructions.pump.power.operating.pump_power)
+
                 # update total CDU power, cooling water mass flow rate and chilled water mass flow rate
                 total_cdu_power += cdu.config.constructions.pump.power.operating.pump_power
                 total_cdu_chilled_water_flow_rate += cdu.config.cooling.operating.demand_side_mass_flow_rate
@@ -167,6 +170,11 @@ class EplusLiquidAdapter:
         cdu_log_dict.update({"Total CDU Power (W)": round(total_cdu_power, 3)})
         cdu_log_dict.update({"Total CDU Cooling Water M (kg/s)": round(total_cdu_cooling_water_flow_rate, 3)})
         cdu_log_dict.update({"Total CDU Chilled Water M (kg/s)": round(total_cdu_chilled_water_flow_rate, 3)})
+
+        # cdu observations aggregated
+        self.cdu_obs.append(total_cdu_power)
+        self.cdu_obs.append(total_cdu_cooling_water_flow_rate)
+        self.cdu_obs.append(total_cdu_chilled_water_flow_rate)
 
         if log_to_csv:
             config.cdu.log_handler.writerow(cdu_log_dict)

@@ -127,6 +127,28 @@ class CDUConfigBuilder:
                         lb=lb,
                         ub=ub,
                     )
+        # aggregated
+        self._make_observation(
+            exposed=exposed,
+            variable_name="Total CDU Power".lower(),
+            normalize_method=normalize_method,
+            lb=lb,
+            ub=ub,
+        )
+        self._make_observation(
+            exposed=exposed,
+            variable_name="Total CDU Cooling Water Flow Rate".lower(),
+            normalize_method=normalize_method,
+            lb=lb,
+            ub=ub,
+        )
+        self._make_observation(
+            exposed=exposed,
+            variable_name="Total CDU Chilled Water Flow Rate".lower(),
+            normalize_method=normalize_method,
+            lb=lb,
+            ub=ub,
+        )
 
     """Action config making functions start here"""
 
