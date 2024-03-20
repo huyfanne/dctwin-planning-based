@@ -355,18 +355,20 @@ class CoolantDistributionUnit:
         cdu_electrical_power = self._sim_pump(
             friction_power=total_friction_power
         )
-        chilled_water_return_temperature, cooling_water_supply_temperature, chilled_water_mass_flow_rate, hx_info =\
-            self._sim_hx(
-                cooling_water_return_temperature=cdu_return_temperature,
-                cooling_water_mass_flow_rate=sum(server_mass_flow_rates.values()),
-                chilled_water_supply_temperature=chilled_water_supply_temperature,
-                cooling_water_supply_temperature_sp=cooling_water_supply_temperature,
-            )
+        chilled_water_return_temperature, cooling_water_supply_temperature, \
+            chilled_water_mass_flow_rate, cooling_water_mass_flow_rate, hx_info =\
+                self._sim_hx(
+                    cooling_water_return_temperature=cdu_return_temperature,
+                    cooling_water_mass_flow_rate=sum(server_mass_flow_rates.values()),
+                    chilled_water_supply_temperature=chilled_water_supply_temperature,
+                    cooling_water_supply_temperature_sp=cooling_water_supply_temperature,
+                )
         return (
             cdu_electrical_power,
             chilled_water_return_temperature,
             cooling_water_supply_temperature,
             cdu_return_temperature,
             chilled_water_mass_flow_rate,
+            cooling_water_mass_flow_rate,
             hx_info
         )

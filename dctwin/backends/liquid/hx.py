@@ -226,4 +226,4 @@ class HeatExchanger:
                 logger.warning(
                     f"{self.cdu_uid}'s heat exchanger root finding cannot find root at iteration {iteration}."
                 )
-        return inner_outlet_temperature, outer_outlet_temperature, m_water, hx_info
+        return inner_outlet_temperature, outer_outlet_temperature, m_water, outer_mass_flow_rate,  hx_info

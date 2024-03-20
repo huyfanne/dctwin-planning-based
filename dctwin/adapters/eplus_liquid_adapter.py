@@ -104,6 +104,10 @@ class EplusLiquidAdapter:
                     "cdu_cooling_water_return_temperatures"
                 ][cdu_name]
 
+                cdu.config.cooling.operating.supply_side_mass_flow_rate = cdu_sim_results[manager_name][
+                    "cdu_cooling_water_mass_flow_rates"
+                ][cdu_name]
+
                 cdu.config.cooling.operating.demand_side_supply_temperature = cdu_sim_results[manager_name][
                     "cdu_chilled_water_supply_temperatures"
                 ][cdu_name]
@@ -196,6 +200,7 @@ class EplusLiquidAdapter:
                 cdu_cooling_water_supply_temperatures,
                 cdu_cooling_water_return_temperatures,
                 cdu_chilled_water_mass_flow_rates,
+                cdu_cooling_water_mass_flow_rates,
                 cdu_hx_infos
             ) = manager.run()
             cdu_sim_results[manager_name] = {
@@ -204,6 +209,7 @@ class EplusLiquidAdapter:
                 "cdu_chilled_water_return_temperatures": cdu_chilled_water_return_temperatures,
                 "cdu_cooling_water_supply_temperatures": cdu_cooling_water_supply_temperatures,
                 "cdu_cooling_water_return_temperatures": cdu_cooling_water_return_temperatures,
+                "cdu_cooling_water_mass_flow_rates": cdu_cooling_water_mass_flow_rates,
                 "cdu_chilled_water_mass_flow_rates": cdu_chilled_water_mass_flow_rates,
                 "cdu_hx_infos": cdu_hx_infos,
             }
@@ -231,6 +237,7 @@ class EplusLiquidAdapter:
                 cdu_cooling_water_supply_temperatures,
                 cdu_cooling_water_return_temperatures,
                 cdu_chilled_water_mass_flow_rates,
+                cdu_cooling_water_mass_flow_rates,
                 cdu_hx_infos
             ) = manager.sim(
                 server_powers=server_powers_act,
@@ -246,6 +253,7 @@ class EplusLiquidAdapter:
                 "cdu_cooling_water_supply_temperatures": cdu_cooling_water_supply_temperatures,
                 "cdu_cooling_water_return_temperatures": cdu_cooling_water_return_temperatures,
                 "cdu_chilled_water_mass_flow_rates": cdu_chilled_water_mass_flow_rates,
+                "cdu_cooling_water_mass_flow_rates": cdu_cooling_water_mass_flow_rates,
                 "cdu_hx_infos": cdu_hx_infos,
             }
         # post-processing CFD/POD simulation result to obtain return temperature
