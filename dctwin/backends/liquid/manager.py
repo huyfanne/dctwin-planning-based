@@ -60,7 +60,7 @@ class LiquidCoolingManager:
                 server_powers[server_name] = \
                     self.inputs.servers[server_name].input_power
                 server_mass_flow_rates[server_name] = \
-                    self.inputs.servers[server_name].liquid_mass_flow_rate * 1000
+                    self.inputs.servers[server_name].liquid_mass_flow_rate
                 server_liquid_cooling_percentages[server_name] = \
                     self.inputs.servers[server_name].liquid_percentage
         return (
