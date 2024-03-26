@@ -217,6 +217,16 @@ class ConfigBuilder:
     ):
         self._make_observation(
             exposed=exposed,
+            variable_name="hvac power",
+            key_value="Whole Building",
+            output_variable_name="Facility Total HVAC Electricity Demand Rate",
+            reporting_frequency="timestep",
+            normalize_method=normalize_method,
+            lb=lb,
+            ub=ub,
+        ) if variable_names is None or "hvac power" in variable_names else None
+        self._make_observation(
+            exposed=exposed,
             variable_name="total power",
             key_value="Whole Building",
             output_variable_name="Facility Total Electricity Demand Rate",
@@ -503,6 +513,17 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub,
             ) if variable_names is None or "inlet water temperature" in variable_names else None
+            # observe outlet water temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{acu_name} cooling coil outlet water temperature".lower(),
+                key_value=acu["cooling coil"]["outlet water temperature"].split(":")[0],
+                output_variable_name="System Node Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "outlet water temperature" in variable_names else None
             # observe inlet water mass flow rate
             self._make_observation(
                 exposed=exposed,
@@ -1348,3 +1369,6 @@ class ConfigBuilder:
     def save(self, path: Path = Path("configs/eplus.prototxt")):
         with open(path, "w") as f:
             f.write(text_format.MessageToString(self.model))
+
+    def get_model(self):
+        return self.model

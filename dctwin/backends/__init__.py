@@ -9,6 +9,7 @@ from dctwin.backends.foam import (
     TransientSolverBackend,
     TransientSolverBackendK8s,
 )
+from dctwin.backends.liquid import LiquidCoolingManager, CDUConfigBuilder
 from dctwin.backends.eplus import IDFBuilder, ConfigBuilder
 
 __all__ = [
@@ -24,6 +25,8 @@ __all__ = [
     "SteadySolverBackendK8s",
     "TransientSolverBackend",
     "TransientSolverBackendK8s",
+    "LiquidCoolingManager",
     "IDFBuilder",
     "ConfigBuilder",
+    "CDUConfigBuilder",
 ]
