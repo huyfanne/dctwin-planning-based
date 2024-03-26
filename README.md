@@ -94,9 +94,9 @@ To run simulations in a local Kubernetes cluster, you can use k3d, which is a li
 4. Run the simulation:
 
     ```bash
-    WORKER_NAME="test" K8S_NAMESPACE="default" CFD_RESOURCES="{\"cpu\": \"2000m\", \"memory\": \"4Gi\", \"ephemeral-storage\": \"1000Mi\"}" poetry run python test/test_cfd_k8s.py
+    WORKER_NAME="test" K8S_NAMESPACE="default" K8S_RESOURCES="{\"cpu\": \"2000m\", \"memory\": \"4Gi\", \"ephemeral-storage\": \"1000Mi\"}" poetry run python test/test_cfd_k8s.py
     ```
 
-    This command runs the simulation in the Kubernetes cluster. You can adjust the `WORKER_NAME`, `K8S_NAMESPACE`, and `CFD_RESOURCES` environment variables as needed.
+    This command runs the simulation in the Kubernetes cluster. You can adjust the `WORKER_NAME`, `K8S_NAMESPACE`, and `K8S_RESOURCES` environment variables as needed.
 
 Please refer to the *tutorials* folder for more examples on how to use DCTwin to build simulation models and run simulations.
