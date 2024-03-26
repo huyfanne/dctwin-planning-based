@@ -217,6 +217,16 @@ class ConfigBuilder:
     ):
         self._make_observation(
             exposed=exposed,
+            variable_name="hvac power",
+            key_value="Whole Building",
+            output_variable_name="Facility Total HVAC Electricity Demand Rate",
+            reporting_frequency="timestep",
+            normalize_method=normalize_method,
+            lb=lb,
+            ub=ub,
+        ) if variable_names is None or "hvac power" in variable_names else None
+        self._make_observation(
+            exposed=exposed,
             variable_name="total power",
             key_value="Whole Building",
             output_variable_name="Facility Total Electricity Demand Rate",

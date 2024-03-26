@@ -137,7 +137,7 @@ class EplusLiquidAdapter:
                 )
                 cdu_log_dict.update(
                     {f"{cdu_name} Cooling Water Return T (C)": round(
-                        cdu.config.cooling.operating.demand_side_return_temperature, 3)
+                        cdu.config.cooling.operating.supply_side_return_temperature, 3)
                     }
                 )
                 cdu_log_dict.update(
