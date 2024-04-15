@@ -337,6 +337,7 @@ def make_chiller(
         raise ValueError("Invalid chiller type or side")
     return obj
 
+
 def make_heat_exchanger(
     model: IDF,
     branch: EpBunch,
@@ -392,6 +393,7 @@ def make_heat_exchanger(
     else:
         raise ValueError("Invalid chiller type or side")
     return obj
+
 
 def make_cooling_tower(
     model: IDF,

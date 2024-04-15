@@ -90,6 +90,7 @@ class IDFBuilder:
             "zones": {},
             "ites": {},
             "acus": {},
+            "dehumidifiers": {},
             "chilled water pumps": {},
             "chillers": {},
             "heat_exchangers": {},
@@ -132,7 +133,7 @@ class IDFBuilder:
                 "ite power": f"{zone_obj['Name'].upper()}:Zone ITE CPU Electricity Rate [W](TimeStep)",
             }
         # create ITE device key mapping
-        for ite_name in self.building.constructions.ites:
+        for ite_name in self.building.constructions.ite_keys:
             self.device_key_map["ites"][ite_name] = {}
             ite_obj = self.model.getobject(
                 key="ElectricEquipment:ITE:AirCooled".upper(), name=f"{ite_name}"
@@ -145,7 +146,7 @@ class IDFBuilder:
                 "ups power": f"{ite_obj['Name'].upper()}:ITE UPS Electricity Rate [W](TimeStep)",
             }
         # create ACU device key mapping
-        for acu_name in self.building.constructions.acus:
+        for acu_name in self.building.constructions.acu_keys:
             self.device_key_map["acus"][acu_name] = {}
             fan_obj = self.model.getobject(
                 key="Fan:VariableVolume".upper(), name=f"{acu_name} fan"
@@ -169,8 +170,22 @@ class IDFBuilder:
                 "water mass flow rate": f"{coil_obj['Water_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
                 "cooling load": f"{coil_obj['Name'].upper()}:Cooling Coil Sensible Cooling Rate [W](TimeStep)",
             }
+        for dehumidifier_name in self.building.constructions.dehumidifier_keys:
+            self.device_key_map["dehumidifiers"][dehumidifier_name] = {}
+            dehumidifier_obj = self.model.getobject(
+                key="ZoneHVAC:Dehumidifier:DX".upper(), name=f"{dehumidifier_name}"
+            )
+            self.device_key_map["dehumidifiers"][dehumidifier_name] = {
+                "inlet air temperature": f"{dehumidifier_obj['Air_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "inlet air relative humidity": f"{dehumidifier_obj['Air_Inlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
+                "outlet air temperature": f"{dehumidifier_obj['Air_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "outlet air relative humidity": f"{dehumidifier_obj['Air_Outlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
+                "air mass flow rate": f"{dehumidifier_obj['Air_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "removed water mass flow rate": f"{dehumidifier_obj['Name'].upper()}:Zone Dehumidifier Removed Water Mass Flow Rate [kg/s](TimeStep)",
+                "power": f"{dehumidifier_obj['Name'].upper()}:Zone Dehumidifier Electricity Rate [W](TimeStep)",
+            }
         # create chilled water pump device key mapping
-        pump_names = self.building.constructions.chilled_water_pumps
+        pump_names = self.building.constructions.chilled_water_pump_keys
         for pump_name in pump_names:
             pump_obj = self.model.getobject(
                 key="Pump:VariableSpeed".upper(), name=pump_name
@@ -180,7 +195,7 @@ class IDFBuilder:
                 "power": f"{pump_obj['Name'].upper()}:Pump Electricity Rate [W](TimeStep)",
             }
         # create chiller device key mapping
-        chiller_names = self.building.constructions.chillers
+        chiller_names = self.building.constructions.chiller_keys
         for chiller_name in chiller_names:
             chiller_obj = self.model.getobject(
                 key="Chiller:Electric:EIR".upper(), name=chiller_name
@@ -197,7 +212,7 @@ class IDFBuilder:
                 "mass flow rate": f"{chiller_obj['Chilled_Water_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
             }
         # create heat exchanger device key mapping
-        heat_exchanger_names = self.building.constructions.heat_exchangers
+        heat_exchanger_names = self.building.constructions.heat_exchanger_keys
         for heat_exchanger_name in heat_exchanger_names:
             hx_obj = self.model.getobject(
                 key="HeatExchanger:FluidToFluid".upper(),
@@ -214,7 +229,7 @@ class IDFBuilder:
             }
         # create secondary chilled water pump device key mapping
         self.device_key_map["secondary chilled water pumps"] = {}
-        pump_names = self.building.constructions.secondary_chilled_water_pumps
+        pump_names = self.building.constructions.secondary_chilled_water_pump_keys
         for pump_name in pump_names:
             pump_obj = self.model.getobject(
                 key="Pump:VariableSpeed".upper(), name=pump_name
@@ -224,7 +239,7 @@ class IDFBuilder:
                 "power": f"{pump_obj['Name'].upper()}:Pump Electricity Rate [W](TimeStep)",
             }
         # create condenser water pump device key mapping
-        pump_names = self.building.constructions.condenser_water_pumps
+        pump_names = self.building.constructions.chilled_water_pump_keys
         for pump_name in pump_names:
             pump_obj = self.model.getobject(
                 key="Pump:VariableSpeed".upper(), name=pump_name
@@ -234,7 +249,7 @@ class IDFBuilder:
                 "power": f"{pump_obj['Name'].upper()}:Pump Electricity Rate [W](TimeStep)",
             }
         # create cooling tower device key mapping
-        tower_names = self.building.constructions.cooling_towers
+        tower_names = self.building.constructions.cooling_tower_keys
         for tower_name in tower_names:
             tower_obj = self.model.getobject(
                 key="CoolingTower:VariableSpeed".upper(), name=tower_name

@@ -2025,6 +2025,12 @@
     Temperature;             !- Unit Type
 
   ScheduleTypeLimits,
+    Relative Humidity,                !- Name
+    0,                       !- Lower Limit Value
+    100,                     !- Upper Limit Value
+    CONTINUOUS;              !- Numeric Type
+
+  ScheduleTypeLimits,
     Fraction,                !- Name
     0.0,                     !- Lower Limit Value
     1.0,                     !- Upper Limit Value

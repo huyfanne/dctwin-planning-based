@@ -459,7 +459,7 @@ class ConfigBuilder:
         variable_names: Union[str, List[str]] = None
     ):
         for acu_name, acu in self.device_key_map["acus"].items():
-            # observe inlet air temperautre
+            # observe inlet air temperature
             self._make_observation(
                 exposed=exposed,
                 variable_name=f"{acu_name} cooling coil inlet air temperature".lower(),
@@ -525,6 +525,71 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub,
             ) if variable_names is None or "cooling load" in variable_names else None
+
+    def make_dehumidifier_observations(
+        self,
+        exposed: bool = True,
+        normalize_method: int = None,
+        lb: float = None,
+        ub: float = None,
+        variable_names: Union[str, List[str]] = None
+    ):
+        for dehumidifier_name, dehumidifier in self.device_key_map["dehumidifiers"].items():
+            # observe inlet air temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{dehumidifier_name} inlet air temperature".lower(),
+                key_value=dehumidifier["inlet air temperature"].split(":")[0],
+                output_variable_name="System Node Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "inlet air temperature" in variable_names else None
+            # observe outlet air temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{dehumidifier_name} outlet air temperature".lower(),
+                key_value=dehumidifier["outlet air temperature"].split(":")[0],
+                output_variable_name="System Node Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "outlet air temperature" in variable_names else None
+            # observe air mass flow rate
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{dehumidifier_name} air mass flow rate".lower(),
+                key_value=dehumidifier["air mass flow rate"].split(":")[0],
+                output_variable_name="System Node Mass Flow Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "air mass flow rate" in variable_names else None
+            # observe removed water mass flow rate
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{dehumidifier_name} removed water mass flow rate".lower(),
+                key_value=dehumidifier["removed water mass flow rate"].split(":")[0],
+                output_variable_name="Zone Dehumidifier Removed Water Mass Flow Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "removed water mass flow rate" in variable_names else None
+            # observe dehumidifier power consumption
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{dehumidifier_name} power consumption".lower(),
+                key_value=dehumidifier["power"].split(":")[0],
+                output_variable_name="Zone Dehumidifier Electricity Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "power" in variable_names else None
 
     def make_pump_observations(
         self,

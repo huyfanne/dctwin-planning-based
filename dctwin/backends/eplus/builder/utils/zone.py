@@ -13,13 +13,17 @@ from dclib.room import RoomGeometry
 from .utlis import fill_info, fill_inlet_outlet
 
 
-def make_system_sizing(model: IDF, air_loop_name: str, sizing_system: SizingSystem):
+def make_system_sizing(
+    model: IDF,
+    air_loop_name: str,
+    sizing_system: SizingSystem,
+) -> None:
     """
     Make the system sizing object in the model.
     :param model:
     :param air_loop_name:
     :param sizing_system:
-    :return:
+    :return: None
     """
     obj = model.newidfobject("Sizing:System".upper())
     obj["AirLoop_Name"] = air_loop_name
@@ -42,7 +46,7 @@ def make_duct(
     duct_name: str,
     duct: Duct,
     **kwargs,
-):
+) -> EpBunch:
     """
     Make the duct object in the model. Now only support adiabatic duct.
     :param model:
@@ -51,7 +55,7 @@ def make_duct(
     :param duct_name:
     :param duct:
     :param kwargs:
-    :return:
+    :return: EpBunch
     """
     obj = model.newidfobject("Duct".upper(), Name=duct_name)
     obj = fill_inlet_outlet(
@@ -88,7 +92,7 @@ def make_cooling_coil(
     :param cooling_coil_name:
     :param acu: ACU object that this cooling coil belongs to
     :param kwargs:
-    :return:
+    :return: EpBunch
     """
     obj = model.newidfobject("coil:cooling:water".upper(), Name=cooling_coil_name)
     obj["Availability_Schedule_Name"] = f"Always On".upper()
@@ -182,7 +186,11 @@ def make_fan(
     return obj
 
 
-def make_oa_equipment_list(model: IDF, oa_name: str, air_loop: EpBunch):
+def make_oa_equipment_list(
+    model: IDF,
+    oa_name: str,
+    air_loop: EpBunch
+) -> EpBunch:
     """
     Make an outdoor air equipment list and its components in the model.
     :param model:
@@ -216,7 +224,7 @@ def make_oa_system(
     branch: EpBunch,
     oa: ACUOutdoorAir,
     air_loop: EpBunch = None,
-):
+) -> EpBunch:
     """
     Make an outdoor air system in the model.
     :param model:
@@ -264,7 +272,7 @@ def make_surfaces(
     model: IDF,
     geometry_config: RoomGeometry | Geometry,
     surfaces_config: Dict[str, Surface],
-):
+) -> None:
 
     planes = geometry_config.plane
     height = geometry_config.height

@@ -5,8 +5,10 @@ from eppy.modeleditor import IDF
 
 from dclib.ite.composite import ITE
 from dclib.electrical.room.electrical_device import ElectricEquipment, Light, People
-from dclib.room import Room, Thermostats
+from dclib.room import Room, Thermostats, Humidistats, RoomStateControl
 from dclib.cooling.room.facilities.acu import ACU, ACUOutdoorAir
+from dclib.cooling.room.facilities.dehumidifier import Dehumidifier
+
 from dclib.cooling.room.sizing import SizingZone, SizingSystem
 
 from .utils import (
@@ -19,16 +21,16 @@ from .utils import (
 
 
 class RoomBuilder:
-    def __init__(self, model: IDF):
+    def __init__(self, model: IDF) -> None:
         self.model = model
 
-    def _make_room(self, room: Room):
+    def _make_room(self, room: Room) -> None:
         zone = self.model.newidfobject(key="Zone".upper())
         zone["Name"] = room.uid.lower()
         zone["Part_of_Total_Floor_Area"] = ""
         make_surfaces(self.model, room.geometry, room.constructions.surfaces)
 
-    def _make_ites(self, zone_name: str, ites: OrderedDict[str, ITE]):
+    def _make_ites(self, zone_name: str, ites: OrderedDict[str, ITE]) -> None:
         for ite_name, ite_config in ites.items():
             ite = self.model.newidfobject(key="ElectricEquipment:ITE:AirCooled".upper())
             ite["Name"] = ite_config.uid.lower()
@@ -222,14 +224,14 @@ class RoomBuilder:
                 Hourly_Value=1.0,
             )
 
-    def _make_occupancy(self, zone_name: str, config: People):
+    def _make_occupancy(self, zone_name: str, config: People) -> None:
         if config:
             occupancy = self.model.newidfobject(key="People".upper())
             occupancy["Name"] = config.name
             occupancy["Zone_or_ZoneList_Name"] = zone_name
             occupancy["Number_of_People"] = config.number_of_people
 
-    def _make_electrical_equipment(self, zone_name: str, config: ElectricEquipment):
+    def _make_electrical_equipment(self, zone_name: str, config: ElectricEquipment) -> None:
         if config:
             electrical_equipment = self.model.newidfobject(
                 key="ElectricEquipment".upper()
@@ -237,14 +239,14 @@ class RoomBuilder:
             electrical_equipment["Name"] = config.name
             electrical_equipment["Zone_or_ZoneList_Name"] = zone_name
 
-    def _make_lightning(self, zone_name: str, config: Light):
+    def _make_lightning(self, zone_name: str, config: Light) -> None:
         if config:
             light = self.model.newidfobject(key="Lights".upper())
             light["Name"] = config.name
             light["Zone_or_ZoneList_Name"] = zone_name
             light["Lighting_Level"] = config.lighting_power
 
-    def _make_zone_sizing(self, zone_name: str, config: SizingZone):
+    def _make_zone_sizing(self, zone_name: str, config: SizingZone) -> None:
         sizing = self.model.newidfobject(key="Sizing:Zone".upper())
         sizing["Zone_or_ZoneList_Name"] = zone_name
         sizing[
@@ -321,51 +323,109 @@ class RoomBuilder:
             Outdoor_Air_Flow_Air_Changes_per_Hour=config.design_specification_outdoor_air_flow_air_changes_per_hour,
         )
 
-    def _make_zone_thermostat(
-        self, zone_name: str, config: Thermostats, acus: Dict[str, ACU]
-    ):
-        num_acu = len(acus)
-        if num_acu == 0:
-            return
-        thermostat = self.model.newidfobject(
-            key="ThermostatSetpoint:DualSetpoint".upper()
-        )
-        thermostat["Name"] = f"{zone_name} thermostat"
-        thermostat[
-            "Heating_Setpoint_Temperature_Schedule_Name"
-        ] = f"{zone_name} heating setpoint schedule"
-        thermostat[
-            "Cooling_Setpoint_Temperature_Schedule_Name"
-        ] = f"{zone_name} cooling setpoint schedule"
+    def _make_zone_control(
+        self,
+        zone_name: str,
+        control_states: RoomStateControl,
+        acus: Dict[str, ACU],
+        dehumidifiers: Dict[str, Dehumidifier],
+    ) -> None:
 
-        self.model.newidfobject(
-            key="ZoneControl:Thermostat".upper(),
-            Name=f"{zone_name} room temperature control",
-            Zone_or_ZoneList_Name=zone_name,
-            Control_Type_Schedule_Name=f"{zone_name} control type schedule",
-            Control_1_Object_Type="ThermostatSetpoint:DualSetpoint",
-            Control_1_Name=thermostat["Name"],
-        )
-        self.model.newidfobject(
-            key="Schedule:Constant".upper(),
-            Name=f"{zone_name} heating setpoint schedule",
-            Schedule_Type_Limits_Name="Temperature",
-            Hourly_Value=config.heating_setpoint,
-        )
-        self.model.newidfobject(
-            key="Schedule:Constant".upper(),
-            Name=f"{zone_name} cooling setpoint schedule",
-            Schedule_Type_Limits_Name="Temperature",
-            Hourly_Value=config.cooling_setpoint,
-        )
-        self.model.newidfobject(
-            key="Schedule:Constant".upper(),
-            Name=f"{zone_name} control type schedule",
-            Schedule_Type_Limits_Name="Any Number",
-            Hourly_Value=4,
-        )  # 4 means dual setpoint thermostat
+        def make_zone_thermostat(
+            model: IDF,
+            zone_name: str,
+            config: Thermostats,
+            acus: Dict[str, ACU],
+        ) -> None:
+            num_acu = len(acus)
+            if num_acu == 0:
+                return
+            thermostat = model.newidfobject(
+                key="ThermostatSetpoint:DualSetpoint".upper()
+            )
+            thermostat["Name"] = f"{zone_name} thermostat"
+            thermostat[
+                "Heating_Setpoint_Temperature_Schedule_Name"
+            ] = f"{zone_name} heating setpoint schedule"
+            thermostat[
+                "Cooling_Setpoint_Temperature_Schedule_Name"
+            ] = f"{zone_name} cooling setpoint schedule"
 
-    def _init_air_loop(self, loop_name: str, sizing: SizingSystem):
+            model.newidfobject(
+                key="ZoneControl:Thermostat".upper(),
+                Name=f"{zone_name} room temperature control",
+                Zone_or_ZoneList_Name=zone_name,
+                Control_Type_Schedule_Name=f"{zone_name} control type schedule",
+                Control_1_Object_Type="ThermostatSetpoint:DualSetpoint",
+                Control_1_Name=thermostat["Name"],
+            )
+            model.newidfobject(
+                key="Schedule:Constant".upper(),
+                Name=f"{zone_name} heating setpoint schedule",
+                Schedule_Type_Limits_Name="Temperature",
+                Hourly_Value=config.heating_setpoint,
+            )
+            model.newidfobject(
+                key="Schedule:Constant".upper(),
+                Name=f"{zone_name} cooling setpoint schedule",
+                Schedule_Type_Limits_Name="Temperature",
+                Hourly_Value=config.cooling_setpoint,
+            )
+            model.newidfobject(
+                key="Schedule:Constant".upper(),
+                Name=f"{zone_name} control type schedule",
+                Schedule_Type_Limits_Name="Any Number",
+                Hourly_Value=4,
+            )  # 4 means dual setpoint thermostat
+
+        def make_zone_humidistat(
+            model: IDF,
+            zone_name: str,
+            config: Humidistats,
+            dehumidifiers: Dict[str, Dehumidifier],
+        ) -> None:
+            num_dehumidifier = len(dehumidifiers)
+            if num_dehumidifier == 0:
+                return
+            model.newidfobject(
+                key="ZoneControl:Humidistat".upper(),
+                Name=f"{zone_name} room humidity control",
+                Zone_Name=zone_name,
+                Humidifying_Relative_Humidity_Setpoint_Schedule_Name=f"{zone_name} humidifying relative humidity setpoint schedule",
+                Dehumidifying_Relative_Humidity_Setpoint_Schedule_Name=f"{zone_name} dehumidifying relative humidity setpoint schedule",
+            )
+            model.newidfobject(
+                key="Schedule:Constant".upper(),
+                Name=f"{zone_name} humidifying relative humidity setpoint schedule",
+                Schedule_Type_Limits_Name="Relative Humidity",
+                Hourly_Value=config.humidifying_setpoint,
+            )
+            model.newidfobject(
+                key="Schedule:Constant".upper(),
+                Name=f"{zone_name} dehumidifying relative humidity setpoint schedule",
+                Schedule_Type_Limits_Name="Relative Humidity",
+                Hourly_Value=config.dehumidifying_setpoint,
+            )
+
+        make_zone_thermostat(
+            model=self.model,
+            zone_name=zone_name,
+            config=control_states.thermostats,
+            acus=acus
+        )
+
+        make_zone_humidistat(
+            model=self.model,
+            zone_name=zone_name,
+            config=control_states.humidistats,
+            dehumidifiers=dehumidifiers,
+        )
+
+    def _init_air_loop(
+        self,
+        loop_name: str,
+        sizing: SizingSystem,
+    ) -> EpBunch:
         # create air loop object
         air_loop = self.model.newidfobject("AirLoopHVAC".upper(), Name=loop_name)
         air_loop["Design_Supply_Air_Flow_Rate"] = sizing.design_supply_air_flow_rate
@@ -379,7 +439,7 @@ class RoomBuilder:
 
         return air_loop
 
-    def _make_oa_controller(self, oa, air_loop):
+    def _make_oa_controller(self, oa: EpBunch, air_loop: EpBunch) -> EpBunch:
         controller_list = self.model.newidfobject(
             "AirLoopHVAC:ControllerList".upper(),
             Name=f"{oa['Name']} controllers",
@@ -405,90 +465,22 @@ class RoomBuilder:
         controller["Minimum_Outdoor_Air_Schedule_Name"] = "OAFractionSched"
         return controller
 
-    def _make_zone_hvac(self, zone_name: str, acus: Dict[str, ACU]) -> None:
-        """
-        Build the ZoneHVAC objects for a thermal zone
-        :param zone_name:
-        :param num_acu:
-        :return:
-        """
-        num_acu = len(acus)
-        if num_acu == 0:
-            return
-        self.model.newidfobject(
-            key="ZoneHVAC:EquipmentConnections".upper(),
-            Zone_Name=zone_name,
-            Zone_Conditioning_Equipment_List_Name=f"{zone_name} equipment list",
-            Zone_Air_Inlet_Node_or_NodeList_Name=f"{zone_name} inlets",
-            Zone_Air_Node_Name=f"{zone_name} air node",
-            Zone_Return_Air_Node_or_NodeList_Name=f"{zone_name} returns",
-        )
-        zone_inlets = self.model.newidfobject(
-            key="NodeList".upper(),
-            Name=f"{zone_name} inlets",
-        )
-        for i in range(num_acu):
-            zone_inlets[f"Node_{i + 1}_Name"] = f"{zone_name} inlet node {i + 1}"
-        zone_returns = self.model.newidfobject(
-            key="NodeList".upper(),
-            Name=f"{zone_name} returns",
-        )
-        for i in range(num_acu):
-            zone_returns[f"Node_{i + 1}_Name"] = f"{zone_name} return node {i + 1}"
-        zone_equipment_list = self.model.newidfobject(
-            key="ZoneHVAC:EquipmentList".upper(),
-            Name=f"{zone_name} equipment list",
-            Load_Distribution_Scheme="UniformLoad",
-        )
-        for i in range(num_acu):
-            zone_equipment_list[
-                f"Zone_Equipment_{i + 1}_Object_Type"
-            ] = "ZoneHVAC:AirDistributionUnit"
-            zone_equipment_list[
-                f"Zone_Equipment_{i + 1}_Name"
-            ] = f"{zone_name} air distribution unit {i + 1}"
-            zone_equipment_list[f"Zone_Equipment_{i + 1}_Cooling_Sequence"] = i + 1
-            zone_equipment_list[
-                f"Zone_Equipment_{i + 1}_Heating_or_NoLoad_Sequence"
-            ] = (i + 1)
-            zone_equipment_list[
-                f"Zone_Equipment_{i + 1}_Sequential_Cooling_Fraction_Schedule_Name"
-            ] = ""
-            zone_equipment_list[
-                f"Zone_Equipment_{i + 1}_Sequential_Heating_Fraction_Schedule_Name"
-            ] = ""
-        for i in range(num_acu):
-            self.model.newidfobject(
-                key="ZoneHVAC:AirDistributionUnit".upper(),
-                Name=f"{zone_name} air distribution unit {i + 1}",
-                Air_Distribution_Unit_Outlet_Node_Name=f"{zone_name} inlet node {i + 1}",
-                Air_Terminal_Object_Type="AirTerminal:SingleDuct:VAV:NoReheat",
-                Air_Terminal_Name=f"{zone_name} air terminal unit {i + 1}",
-            )
-            self.model.newidfobject(
-                key="AirTerminal:SingleDuct:VAV:NoReheat".upper(),
-                Name=f"{zone_name} air terminal unit {i + 1}",
-                Availability_Schedule_Name="Always On".upper(),
-                Air_Outlet_Node_Name=f"{zone_name} inlet node {i + 1}",
-                Air_Inlet_Node_Name=f"{zone_name} air terminal unit {i + 1} inlet node",
-                Maximum_Air_Flow_Rate="autosize",
-                Zone_Minimum_Air_Flow_Input_Method="Constant",
-                Constant_Minimum_Air_Flow_Fraction=0.0,
-            )
-
     def _make_outdoor_air_system_and_controller(
         self,
         branch: EpBunch,
         oa: ACUOutdoorAir,
         air_loop: EpBunch,
-    ):
+    ) -> None:
         oa_eplus = make_oa_system(
             model=self.model,
             branch=branch,
             oa=oa,
             air_loop=air_loop,
         )
-        self._make_oa_controller(oa_eplus, air_loop)
+        self._make_oa_controller(
+            oa=oa_eplus,
+            air_loop=air_loop
+        )
         self.model.newidfobject(
             "SetpointManager:MixedAir".upper(),
             Name=f"{oa_eplus['Name']} mixed air manager",
@@ -499,7 +491,220 @@ class RoomBuilder:
             Setpoint_Node_or_NodeList_Name=f"{oa_eplus['Name']} mixed air node",
         )
 
-    def _make_acus(self, zone_name: str, acus: Dict[str, ACU], sizing: SizingSystem):
+    def _make_zone_hvac_equipment(
+        self,
+        zone_name: str,
+        acus: Dict[str, ACU],
+        dehumidifiers: Dict[str, Dehumidifier],
+    ) -> None:
+        """
+        Build the ZoneHVAC equipment for a thermal zone
+        Please refer to the EnergyPlus documentation for more information about the ZoneHVAC Equipment:
+        https://bigladdersoftware.com/epx/docs/9-5/input-output-reference/group-zone-equipment.html#zonehvacequipmentlist
+        :param zone_name:
+        :param acus: a dictionary of ACU objects
+        :param dehumidifiers: a dictionary of dehumidifier objects
+        :return: None
+        """
+        def make_equipment_connections(
+            model: IDF,
+            zone_name: str,
+            num_acu: int,
+            num_dehumidifier: int,
+        ) -> None:
+            model.newidfobject(
+                key="ZoneHVAC:EquipmentConnections".upper(),
+                Zone_Name=zone_name,
+                Zone_Conditioning_Equipment_List_Name=f"{zone_name} equipment list",
+                Zone_Air_Inlet_Node_or_NodeList_Name=f"{zone_name} inlets",
+                Zone_Air_Exhaust_Node_or_NodeList_Name=f"{zone_name} exhausts" if num_dehumidifier != 0 else "",
+                Zone_Air_Node_Name=f"{zone_name} air node",
+                Zone_Return_Air_Node_or_NodeList_Name=f"{zone_name} returns",
+            )
+            # create the zone inlet, return, and exhaust nodes
+            zone_inlets = model.newidfobject(
+                key="NodeList".upper(),
+                Name=f"{zone_name} inlets",
+            )
+            zone_returns = model.newidfobject(
+                key="NodeList".upper(),
+                Name=f"{zone_name} returns",
+            )
+
+            if num_dehumidifier != 0:
+                zone_exhausts = model.newidfobject(
+                    key="NodeList".upper(),
+                    Name=f"{zone_name} exhausts",
+                )
+
+            for i in range(num_acu):
+                zone_inlets[f"Node_{i + 1}_Name"] = f"{zone_name} inlet node {i + 1}"
+                zone_returns[f"Node_{i + 1}_Name"] = f"{zone_name} return node {i + 1}"
+
+            for i in range(num_dehumidifier):
+                zone_inlets[f"Node_{i + 1 + num_acu}_Name"] = f"{zone_name} dehumidifier outlet node {i + 1}"
+                zone_exhausts[f"Node_{i + 1}_Name"] = f"{zone_name} dehumidifier inlet node {i + 1}"
+
+        def make_air_distribution_units(
+            model: IDF,
+            zone_name: str,
+            zone_equipment_list: EpBunch,
+            num_acu: int,
+        ) -> None:
+            for i in range(num_acu):
+                zone_equipment_list[
+                    f"Zone_Equipment_{i + 1}_Object_Type"
+                ] = "ZoneHVAC:AirDistributionUnit"
+                zone_equipment_list[
+                    f"Zone_Equipment_{i + 1}_Name"
+                ] = f"{zone_name} air distribution unit {i + 1}"
+                zone_equipment_list[f"Zone_Equipment_{i + 1}_Cooling_Sequence"] = i + 1
+                zone_equipment_list[
+                    f"Zone_Equipment_{i + 1}_Heating_or_NoLoad_Sequence"
+                ] = (i + 1)
+                zone_equipment_list[
+                    f"Zone_Equipment_{i + 1}_Sequential_Cooling_Fraction_Schedule_Name"
+                ] = ""
+                zone_equipment_list[
+                    f"Zone_Equipment_{i + 1}_Sequential_Heating_Fraction_Schedule_Name"
+                ] = ""
+                model.newidfobject(
+                    key="ZoneHVAC:AirDistributionUnit".upper(),
+                    Name=f"{zone_name} air distribution unit {i + 1}",
+                    Air_Distribution_Unit_Outlet_Node_Name=f"{zone_name} inlet node {i + 1}",
+                    Air_Terminal_Object_Type="AirTerminal:SingleDuct:VAV:NoReheat",
+                    Air_Terminal_Name=f"{zone_name} air terminal unit {i + 1}",
+                )
+                model.newidfobject(
+                    key="AirTerminal:SingleDuct:VAV:NoReheat".upper(),
+                    Name=f"{zone_name} air terminal unit {i + 1}",
+                    Availability_Schedule_Name="Always On".upper(),
+                    Air_Outlet_Node_Name=f"{zone_name} inlet node {i + 1}",
+                    Air_Inlet_Node_Name=f"{zone_name} air terminal unit {i + 1} inlet node",
+                    Maximum_Air_Flow_Rate="autosize",
+                    Zone_Minimum_Air_Flow_Input_Method="Constant",
+                    Constant_Minimum_Air_Flow_Fraction=0.0,
+                )
+
+        def make_dehumidifiers(
+            model: IDF,
+            zone_name: str,
+            zone_equipment_list: EpBunch,
+            dehumidifiers: Dict[str, Dehumidifier],
+            num_acu: int,
+        ) -> None:
+            # dehumidifiers
+            for i, (dehumidifier_key, dehumidifier) in enumerate(dehumidifiers.items()):
+                zone_equipment_list[
+                    f"Zone_Equipment_{i + 1 + num_acu}_Object_Type"
+                ] = "ZoneHVAC:Dehumidifier:DX"
+                zone_equipment_list[
+                    f"Zone_Equipment_{i + 1 + num_acu}_Name"
+                ] = f"{dehumidifier_key}"
+                zone_equipment_list[f"Zone_Equipment_{i + 1 + num_acu}_Cooling_Sequence"] = i + 1 + num_acu
+                zone_equipment_list[
+                    f"Zone_Equipment_{i + 1 + num_acu}_Heating_or_NoLoad_Sequence"
+                ] = (i + 1 + num_acu)
+                zone_equipment_list[
+                    f"Zone_Equipment_{i + 1 + num_acu}_Sequential_Cooling_Fraction_Schedule_Name"
+                ] = ""
+                zone_equipment_list[
+                    f"Zone_Equipment_{i + 1 + num_acu}_Sequential_Heating_Fraction_Schedule_Name"
+                ] = ""
+                obj = model.newidfobject(
+                    key="ZoneHVAC:Dehumidifier:DX".upper(),
+                    Name=f"{dehumidifier_key}",
+                    Availability_Schedule_Name="Always On".upper(),
+                    Air_Inlet_Node_Name=f"{zone_name} dehumidifier inlet node {i + 1}",
+                    Air_Outlet_Node_Name=f"{zone_name} dehumidifier outlet node {i + 1}",
+                    Rated_Water_Removal=dehumidifier.cooling.rated_water_removal,
+                    Rated_Air_Flow_Rate=dehumidifier.cooling.rated_air_flow_rate,
+                    Rated_Energy_Factor=dehumidifier.power.rated_energy_factor,
+                    Minimum_DryBulb_Temperature_for_Dehumidifier_Operation=dehumidifier.cooling.minimum_dry_bulb_temperature,
+                    Maximum_DryBulb_Temperature_for_Dehumidifier_Operation=dehumidifier.cooling.maximum_dry_bulb_temperature,
+                    OffCycle_Parasitic_Electric_Load=dehumidifier.power.off_cycle_parasitic_electric_load,
+                )
+                obj["Water_Removal_Curve_Name"] = f"{dehumidifier_key} water removal curve"
+                model.newidfobject(
+                    key="Curve:Biquadratic".upper(),
+                    Name=obj["Water_Removal_Curve_Name"],
+                    Coefficient1_Constant=dehumidifier.cooling.water_removal_curve[0],
+                    Coefficient2_x=dehumidifier.cooling.water_removal_curve[1],
+                    Coefficient3_x2=dehumidifier.cooling.water_removal_curve[2],
+                    Coefficient4_y=dehumidifier.cooling.water_removal_curve[3],
+                    Coefficient5_y2=dehumidifier.cooling.water_removal_curve[4],
+                    Coefficient6_xy=dehumidifier.cooling.water_removal_curve[5],
+                    Minimum_Value_of_x=10,
+                    Maximum_Value_of_x=60,
+                    Minimum_Value_of_y=0,
+                    Maximum_Value_of_y=100,
+                )
+                obj["Energy_Factor_Curve_Name"] = f"{dehumidifier_key} energy factor curve"
+                model.newidfobject(
+                    key="Curve:Biquadratic".upper(),
+                    Name=obj["Energy_Factor_Curve_Name"],
+                    Coefficient1_Constant=dehumidifier.power.energy_factor_curve[0],
+                    Coefficient2_x=dehumidifier.power.energy_factor_curve[1],
+                    Coefficient3_x2=dehumidifier.power.energy_factor_curve[2],
+                    Coefficient4_y=dehumidifier.power.energy_factor_curve[3],
+                    Coefficient5_y2=dehumidifier.power.energy_factor_curve[4],
+                    Coefficient6_xy=dehumidifier.power.energy_factor_curve[5],
+                    Minimum_Value_of_x=10,
+                    Maximum_Value_of_x=60,
+                    Minimum_Value_of_y=0,
+                    Maximum_Value_of_y=100,
+                )
+                obj["Part_Load_Fraction_Correlation_Curve_Name"] = f"{dehumidifier_key} part load ratio curve"
+                model.newidfobject(
+                    key="Curve:Quadratic".upper(),
+                    Name=obj["Part_Load_Fraction_Correlation_Curve_Name"],
+                    Coefficient1_Constant=dehumidifier.power.part_load_fraction_correlation_curve[0],
+                    Coefficient2_x=dehumidifier.power.part_load_fraction_correlation_curve[1],
+                    Coefficient3_x2=dehumidifier.power.part_load_fraction_correlation_curve[2],
+                    Minimum_Value_of_x=0,
+                    Maximum_Value_of_x=1,
+                )
+
+        if len(acus) == 0:
+            return
+
+        # step 1: create the zone equipment connections
+        make_equipment_connections(self.model, zone_name, len(acus), len(dehumidifiers))
+        # step 2: create the zone equipment object
+        zone_equipment_list = self.model.newidfobject(
+            key="ZoneHVAC:EquipmentList".upper(),
+            Name=f"{zone_name} equipment list",
+            Load_Distribution_Scheme="UniformLoad",
+        )
+        # step 2.1 make air distribution units
+        make_air_distribution_units(
+            model=self.model,
+            zone_name=zone_name,
+            zone_equipment_list=zone_equipment_list,
+            num_acu=len(acus),
+        ) if acus is not None else None
+        # step 2.2 make dehumidifiers
+        make_dehumidifiers(
+            model=self.model,
+            zone_name=zone_name,
+            zone_equipment_list=zone_equipment_list,
+            dehumidifiers=dehumidifiers,
+            num_acu=len(acus),
+        ) if dehumidifiers is not None else None
+
+    def _make_zone_hvac_airloops(
+        self,
+        zone_name: str,
+        acus: Dict[str, ACU],
+        sizing: SizingSystem,
+    ) -> None:
+        """ Create the air loops for the zone HVAC system
+        Please refer to the EnergyPlus documentation for more information about the AirLoopHVAC object:
+        https://bigladdersoftware.com/epx/docs/9-5/input-output-reference/group-air-distribution.html#airloophvac
+        :param zone_name: the name of the zone
+        :param acus: a dictionary of ACU objects
+        :param sizing: the SizingSystem object
+        """
         for idx, (acu_name, acu) in enumerate(acus.items()):
             loop_name = f"{acu.uid.lower()} air loop"
             air_loop = self._init_air_loop(loop_name, sizing)
@@ -518,9 +723,9 @@ class RoomBuilder:
                     oa=acu.cooling.oa,
                     air_loop=air_loop,
                 )
-            # create cooling coil
+            # make cooling coil
             branch_component_idx = 2 if acu.cooling.oa is not None else 1
-            coil = make_cooling_coil(
+            _ = make_cooling_coil(
                 model=self.model,
                 branch=branch,
                 branch_component_idx=branch_component_idx,
@@ -535,7 +740,7 @@ class RoomBuilder:
             branch[
                 f"Component_{branch_component_idx}_Name"
             ] = f"{acu.uid.lower()} cooling coil"
-            # create coil controller
+            # make coil controller
             controller_list = self.model.newidfobject(
                 "AirLoopHVAC:ControllerList".upper(),
                 Name=f"{acu.uid.lower()} controllers",
@@ -673,21 +878,55 @@ class RoomBuilder:
                         Hourly_Value=acu.controller.supply_air_minimum_humidity_ratio_setpoint,
                     )
 
-    def _make_hvac(self, zone_name: str, acus: Dict[str, ACU], sizing: SizingSystem):
-        self._make_zone_hvac(zone_name, acus)
-        self._make_acus(zone_name, acus, sizing)
+    def _make_hvac(
+        self,
+        zone_name: str,
+        acus: Dict[str, ACU],
+        dehumidifiers: Dict[str, Dehumidifier],
+        sizing: SizingSystem,
+    ) -> None:
+        """
+        The HVAC system (air side) mainly consists of two parts:
+        (1) zone equipment
+        https://bigladdersoftware.com/epx/docs/9-5/input-output-reference/group-zone-equipment.html#zonehvacequipmentlist
+        (2) airloops system
+        https://bigladdersoftware.com/epx/docs/9-5/input-output-reference/group-air-distribution.html#airloophvac
+        """
+        self._make_zone_hvac_equipment(zone_name=zone_name, acus=acus, dehumidifiers=dehumidifiers)
+        self._make_zone_hvac_airloops(zone_name=zone_name, acus=acus, sizing=sizing)
 
-    def make_rooms(self, rooms: Dict[str, Room]):
+    def make_rooms(self, rooms: Dict[str, Room]) -> None:
         for room_name, config in rooms.items():
-            self._make_room(config)
+            self._make_room(room=config)
             self._make_hvac(
-                room_name, config.constructions.acus, config.sizing.sizing_system
+                zone_name=room_name,
+                acus=config.constructions.acus,
+                dehumidifiers=config.constructions.dehumidifiers,
+                sizing=config.sizing.sizing_system,
             )
-            self._make_ites(room_name, config.constructions.heat_gains.ites)
-            self._make_occupancy(room_name, config.constructions.heat_gains.people)
-            self._make_lightning(room_name, config.constructions.heat_gains.light)
-            self._make_electrical_equipment(room_name, config.constructions.heat_gains.electric_equipment)
-            self._make_zone_sizing(room_name, config.sizing.sizing_zone)
-            self._make_zone_thermostat(
-                room_name, config.thermostats, config.constructions.acus
+            self._make_ites(
+                zone_name=room_name,
+                ites=config.constructions.heat_gains.ites
+            )
+            self._make_occupancy(
+                zone_name=room_name,
+                config=config.constructions.heat_gains.people
+            )
+            self._make_lightning(
+                zone_name=room_name,
+                config=config.constructions.heat_gains.light
+            )
+            self._make_electrical_equipment(
+                zone_name=room_name,
+                config=config.constructions.heat_gains.electric_equipment
+            )
+            self._make_zone_sizing(
+                zone_name=room_name,
+                config=config.sizing.sizing_zone
+            )
+            self._make_zone_control(
+                zone_name=room_name,
+                control_states=config.control_states,
+                acus = config.constructions.acus,
+                dehumidifiers = config.constructions.dehumidifiers,
             )
