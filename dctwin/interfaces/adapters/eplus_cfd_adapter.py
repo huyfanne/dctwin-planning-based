@@ -13,7 +13,7 @@ from dclib.room import Room
 
 from dctwin.utils import config
 from dctwin.interfaces.managers import CFDManager
-from dctwin.backends import EplusBackend
+from dctwin.third_parties import EplusBackend
 
 
 class EplusCFDAdapter:

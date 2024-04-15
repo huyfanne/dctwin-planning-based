@@ -6,9 +6,9 @@ from typing import Optional
 
 from dclib.room import Room
 
-from dctwin.backends.core import Backend
-from dctwin.backends.core_k8s import BackendK8s
-from dctwin.backends.foam.utils import (
+from dctwin.third_parties.core import Backend
+from dctwin.third_parties.core_k8s import BackendK8s
+from dctwin.third_parties.foam.utils import (
     init_foam,
     generate_block_dict,
     generate_snappy_dict,

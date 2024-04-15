@@ -1,7 +1,7 @@
-from dctwin.backends.eplus.core import EplusBackend, EplusBackendK8s
-from dctwin.backends.geometry.salome import SalomeBackend, SalomeBackendK8s
-from dctwin.backends.rom.pod import PODBackend, PODBackendK8s
-from dctwin.backends.foam import (
+from dctwin.third_parties.eplus.core import EplusBackend, EplusBackendK8s
+from dctwin.third_parties.geometry.salome import SalomeBackend, SalomeBackendK8s
+from dctwin.third_parties.rom.pod import PODBackend, PODBackendK8s
+from dctwin.third_parties.foam import (
     SnappyHexBackend,
     SnappyHexBackendK8s,
     SteadySolverBackend,
@@ -9,7 +9,7 @@ from dctwin.backends.foam import (
     TransientSolverBackend,
     TransientSolverBackendK8s,
 )
-from dctwin.backends.eplus import IDFBuilder, ConfigBuilder
+from dctwin.third_parties.eplus import IDFBuilder, ConfigBuilder
 
 __all__ = [
     "EplusBackend",

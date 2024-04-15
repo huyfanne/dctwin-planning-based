@@ -12,9 +12,9 @@ import xml.etree.ElementTree as ET
 from docker import DockerClient
 from loguru import logger
 from dctwin.utils import EPlusEnvConfig
-from dctwin.backends.eplus.utils import EPlusOutputFormatter
-from dctwin.backends.core import Backend
-from dctwin.backends.core_k8s import BackendK8s
+from dctwin.third_parties.eplus.utils import EPlusOutputFormatter
+from dctwin.third_parties.core import Backend
+from dctwin.third_parties.core_k8s import BackendK8s
 from dctwin.utils import config
 
 from .parser import Eplus

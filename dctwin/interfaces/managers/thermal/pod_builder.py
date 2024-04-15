@@ -18,7 +18,7 @@ from .utils import (
     read_boundary_conditions,
 )
 
-from dctwin.backends.rom.pod.models import BatchIndependentMultiTaskGPModel
+from dctwin.third_parties.rom.pod.models import BatchIndependentMultiTaskGPModel
 
 
 class PODBuilder:

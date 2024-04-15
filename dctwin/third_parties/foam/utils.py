@@ -43,11 +43,11 @@ def generate_control_dict(
     if steady is False:
         system_folder = "transient"
     shutil.copy(
-        Path(template_dir, f"foam/system/{system_folder}/fvSchemes"),
+        Path(template_dir, f"template/system/{system_folder}/fvSchemes"),
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
     shutil.copy(
-        Path(template_dir, f"foam/system/{system_folder}/fvSolution"),
+        Path(template_dir, f"template/system/{system_folder}/fvSolution"),
         Path(config.cfd.case_dir, "system/fvSolution"),
     )
     with open(Path(config.cfd.case_dir, "system/controlDict"), "w") as f:
@@ -80,14 +80,14 @@ def init_foam():
     Path(config.cfd.case_dir, "case.foam").touch(exist_ok=True)
 
     shutil.copy(
-        Path(template_dir, "foam/constant/g"), Path(config.cfd.case_dir, "constant/g")
+        Path(template_dir, "template/constant/g"), Path(config.cfd.case_dir, "constant/g")
     )
     shutil.copy(
-        Path(template_dir, "foam/constant/thermophysicalProperties"),
+        Path(template_dir, "template/constant/thermophysicalProperties"),
         Path(config.cfd.case_dir, "constant/thermophysicalProperties"),
     )
     shutil.copy(
-        Path(template_dir, "foam/constant/transportProperties"),
+        Path(template_dir, "template/constant/transportProperties"),
         Path(config.cfd.case_dir, "constant/transportProperties"),
     )
 
@@ -99,11 +99,11 @@ def init_foam():
         )
 
     shutil.copy(
-        Path(template_dir, "foam/system/steady/fvSchemes"),
+        Path(template_dir, "template/system/steady/fvSchemes"),
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
     shutil.copy(
-        Path(template_dir, "foam/system/steady/fvSolution"),
+        Path(template_dir, "template/system/steady/fvSolution"),
         Path(config.cfd.case_dir, "system/fvSolution"),
     )
 

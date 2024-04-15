@@ -8,7 +8,7 @@ from typing import (
 )
 from loguru import logger
 from pathlib import Path
-from dctwin.backends import EplusBackend, EplusBackendK8s
+from dctwin.third_parties import EplusBackend, EplusBackendK8s
 from dctwin.utils import config as eplus_env
 from dctwin.utils import EPlusEnvConfig
 

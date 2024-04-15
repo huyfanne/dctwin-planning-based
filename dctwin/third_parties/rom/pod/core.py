@@ -10,8 +10,8 @@ from cvxpylayers.torch import CvxpyLayer
 from dclib.room import Room
 
 
-from dctwin.backends.core import Backend
-from dctwin.backends.core_k8s import BackendK8s
+from dctwin.third_parties.core import Backend
+from dctwin.third_parties.core_k8s import BackendK8s
 from dctwin.utils import config
 
 from .models import BatchIndependentMultiTaskGPModel

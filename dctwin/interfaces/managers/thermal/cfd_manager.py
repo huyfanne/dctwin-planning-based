@@ -5,7 +5,7 @@ import docker
 import torch
 from loguru import logger
 
-from dctwin.backends import (
+from dctwin.third_parties import (
     SalomeBackend,
     SalomeBackendK8s,
     SnappyHexBackend,

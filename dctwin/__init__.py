@@ -1,14 +1,13 @@
 from .registraion import make_env
-from dctwin import adapters, backends, interfaces, templates, utils
-from dctwin.backends import IDFBuilder, ConfigBuilder
+from dctwin import third_parties, interfaces, models, utils
+from dctwin.third_parties import IDFBuilder, ConfigBuilder
 
 __version__ = "1.1.2"
 
 __all__ = [
-    "adapters",
-    "backends",
     "interfaces",
-    "templates",
+    "models",
+    "third_parties",
     "utils",
     "make_env",
     "IDFBuilder",
