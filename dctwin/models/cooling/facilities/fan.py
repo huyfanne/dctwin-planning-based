@@ -3,9 +3,9 @@ import torch.nn as nn
 
 from dclib.cooling.room.facilities.acu import ACU
 
-from dctwin.models.curves import CubicCurve
+from dcdyn.models.curves import CubicCurve
 
-from dctwin.data import Batch, Buffer
+from dcdyn.data import Batch, Buffer
 
 
 class FanModel(nn.Module):
@@ -56,7 +56,7 @@ class FanModel(nn.Module):
         )
 
     def forward(self, mass_flow_rate: torch.Tensor):
-        return self.power_curve(mass_flow_rate)
+        return self.power_curve.forward(mass_flow_rate)
 
     def learn(self):
         if self.learnable:
