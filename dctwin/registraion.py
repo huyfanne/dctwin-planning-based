@@ -3,14 +3,17 @@ from typing import Union, Callable
 from google.protobuf import json_format
 from dctwin.utils import read_engine_config
 from dctwin.interfaces import get_env_id, BaseEnv
-
+from dclib import Building
 
 def make_env(
     env_proto_config: str,
     reward_fn: Callable[[BaseEnv], float],
     schedule_fn: Callable = None,
     map_boundary_condition_fn: Callable = None,
+    map_cdu_inputs_fn: Callable = None,
+    building: Building = None,
     is_k8s: bool = False,
+    k8s_config: dict = None,
 ) -> Union[gym.Env, BaseEnv]:
     """The factory function to create the environment.
     :param env_proto_config: the path to the protobuf config file
@@ -36,12 +39,16 @@ def make_env(
     )
     if env_config_name == "eplus_cfd_env_config":
         env_params.update({"map_boundary_condition_fn": map_boundary_condition_fn})
+    if env_config_name == "eplus_cdu_env_config":
+        env_params.update({"map_cdu_inputs_fn": map_cdu_inputs_fn})
+        env_params.update({"building": building})
     env = gym.make(
         get_env_id(env_config_name),
         config=getattr(engine_config, env_config_name),
         reward_fn=reward_fn,
         schedule_fn=schedule_fn,
         is_k8s=is_k8s,
+        k8s_config=k8s_config,
         **env_params
     )
 

@@ -33,6 +33,7 @@ class EPlusEnv(BaseEnv):
         schedule_fn: Optional[Callable] = None,
         docker_client: docker.DockerClient = None,
         is_k8s: bool = False,
+        k8s_config: dict = None,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -48,6 +49,7 @@ class EPlusEnv(BaseEnv):
                 host=config.host,
                 network=config.network,
                 docker_client=docker_client,
+                k8s_config=k8s_config,
             )
         else:
             self.eplus_backend = EplusBackend(

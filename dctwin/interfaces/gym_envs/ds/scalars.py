@@ -139,14 +139,15 @@ class Action(ScalarDataItem):
                     self.schedule_idx = 0
             except Exception:
                 logger.exception("Failed to load input source!")
-        elif config.HasField("input_source"):
+        elif hasattr(config, "input_source") and config.HasField("input_source"):
             logger.warning(
                 f"{self.debug_name} is not pre_scheduled but input source was specified. "
                 f"The source will be ignored."
             )
         elif self.control_type == ActionControlType.AGENT_CONTROLLED:
-            self.masking_variable_name = config.masking_variable_name
-            self.mask = False
+            if hasattr(config, "masking_variable_name"):
+                self.masking_variable_name = config.masking_variable_name
+                self.mask = False
 
     @validator
     def __iter__(self):
