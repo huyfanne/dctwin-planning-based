@@ -17,8 +17,7 @@ from .utils import (
     read_temperature_fields,
     read_boundary_conditions,
 )
-
-from dctwin.third_parties.rom.pod.models import BatchIndependentMultiTaskGPModel
+from ....models.cooling.thermodyns.pod.models import BatchIndependentMultiTaskGPModel
 
 
 class PODBuilder:

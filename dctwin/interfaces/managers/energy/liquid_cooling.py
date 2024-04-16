@@ -4,7 +4,7 @@ from CoolProp.CoolProp import PropsSI
 from dclib import Room
 from dclib.data import Inputs
 
-from .cdu import CoolantDistributionUnit
+from dctwin.models.cooling.facilities.cdu import CDUModel
 
 
 class LiquidCoolingManager:
@@ -32,7 +32,7 @@ class LiquidCoolingManager:
         self.tol = 1e-2
         self.max_iter = 50
 
-    def _make_cdus(self) -> dict[str, CoolantDistributionUnit]:
+    def _make_cdus(self) -> dict[str, CDUModel]:
         """
         Create the CDU instances according to the room configuration.
         """
@@ -42,7 +42,7 @@ class LiquidCoolingManager:
             racks = {}
             for rack_name in cdu.meta.racks:
                 racks[rack_name] = self.room.constructions.racks[rack_name]
-            cdus[cdu_name] = CoolantDistributionUnit(
+            cdus[cdu_name] = CDUModel(
                 cdu=cdu,
                 racks=racks,
             )

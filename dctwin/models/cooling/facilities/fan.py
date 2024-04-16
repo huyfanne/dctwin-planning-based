@@ -65,5 +65,3 @@ class FanModel(nn.Module):
                 torch.tensor(batch.supply_air_mass_flow_rate, dtype=torch.float32),
                 torch.tensor(batch.fan_power)
             )
-        else:
-            pass

@@ -3,9 +3,8 @@ import torch.nn as nn
 
 from dclib.cooling.plant.facilities import Chiller
 
-from dcdyn.models.curves import QuadraticCurve, BiQuadraticCurve
-
-from dcdyn.data import Batch, Buffer
+from ...curves import QuadraticCurve, BiQuadraticCurve
+from ....data import Batch, Buffer
 
 
 class ChillerModel(nn.Module):
@@ -14,7 +13,7 @@ class ChillerModel(nn.Module):
     The power model is a quadratic function of the part load ratio which the parameters are learnable.
     """
     def __init__(
-        self, config: Chiller, key_mapping: dict, name: str = "chiller", learnable: bool = True
+        self, config: Chiller, key_mapping: dict, learnable: bool = True
     ):
         super(ChillerModel, self).__init__()
         self.config = config

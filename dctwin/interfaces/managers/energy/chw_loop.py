@@ -5,10 +5,11 @@ import torch.nn as nn
 from dclib.room import Room
 from dclib.cooling.plant.loops import ChilledWaterLoops
 
-from dcdyn.models.devices import ChillerModel, PumpModel, CoolingCoilModel
+from ....data.batch import Batch
+from ....models.cooling.facilities import HeatExchanger, ChillerModel, PumpModel
+from .ds import BranchData
+
 from dcdyn.utils.const import cp_water
-from dcdyn.data import Batch
-from dcdyn.models.loops.ds import BranchData
 
 
 class CHWLoopManager(nn.Module):
@@ -40,9 +41,20 @@ class CHWLoopManager(nn.Module):
                 chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name] = {
                     "side": supply_branch.side,
                 }
+                if supply_branch.components.heat_exchangers is not None:
+                    for heat_exchanger_name, heat_exchanger in supply_branch.components.heat_exchangers.items():
+                        chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["heat_exchanger"] = \
+                            HeatExchanger(
+                                config=heat_exchanger,
+                                key_mapping=self.device_key_mapping["heat exchangers"][heat_exchanger_name],
+                                internal_fluid_name="water",
+                                external_fluid_name="water"
+                            )
+                        self.add_module(
+                            f"{heat_exchanger.uid} heat exchanger",
+                            chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["heat_exchanger"]
+                        )
                 if supply_branch.components.chillers is not None:
-                    assert len(supply_branch.components.chillers) == 1, \
-                        "The number of chillers in each supply branch should be 1."
                     for chiller_name, chiller in supply_branch.components.chillers.items():
                         chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["chiller"] = ChillerModel(
                             config=chiller,
@@ -53,8 +65,6 @@ class CHWLoopManager(nn.Module):
                             chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["chiller"]
                         )
                 if supply_branch.components.pumps is not None:
-                    assert len(supply_branch.components.pumps) == 1, \
-                        "The number of pumps in each supply branch should be 1."
                     for pump_name, pump in supply_branch.components.pumps.items():
                         chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["pump"] = PumpModel(
                             config=pump,
@@ -69,8 +79,6 @@ class CHWLoopManager(nn.Module):
                     "side": demand_branch.side,
                 }
                 if demand_branch.components.pumps is not None:
-                    assert len(demand_branch.components.pumps) == 1, \
-                        "The number of pumps in each demand branch should be 1."
                     for pump_name, pump in demand_branch.components.pumps.items():
                         chw_loop_models[chw_loop_name]["demand_branches"][demand_branch_name]["pump"] = PumpModel(
                             config=pump,
@@ -82,15 +90,12 @@ class CHWLoopManager(nn.Module):
                         )
                 if demand_branch.components.acu is not None:
                     for acu_name, acu in demand_branch.components.acu.items():
-                        if acu_name in ["IMDC Level 2 acu-8", "IMDC Level 3 acu-20", "IMDC Level 4 acu-9"]:
-                            learnable = False
-                        else:
-                            learnable = True
                         chw_loop_models[chw_loop_name]["demand_branches"][demand_branch_name]["coil"] =\
-                            CoolingCoilModel(
+                            HeatExchanger(
                                 config=acu,
                                 key_mapping=self.device_key_mapping["acus"][acu_name]["cooling coil"],
-                                learnable=learnable
+                                internal_fluid_name="water",
+                                external_fluid_name="air"
                             )
                         self.add_module(
                             f"{acu.uid} cooling coil",
@@ -123,7 +128,6 @@ class CHWLoopManager(nn.Module):
                         outlet_temperature=control["supply_sp"],
                         outlet_mass_flow_rate=0,
                     )
-
         # Demand-side fluid property simulation of the chilled water loop
         total_demand_loop_m = 0
         weighted_return_temperature = 0
@@ -200,7 +204,7 @@ class CHWLoopManager(nn.Module):
                         outlet_mass_flow_rate=total_demand_loop_m,
                     )
 
-            # Supply-side fluid property simulation of the chilled water loop
+            # supply-side fluid property simulation of the chilled water loop
             for supply_branch_name, supply_branch in chilled_water_loop["supply_branches"].items():
                 if supply_branch["side"] == "inlet":
                     branch_fluid_properties["supply"][supply_branch_name] = BranchData(
@@ -224,7 +228,7 @@ class CHWLoopManager(nn.Module):
                         outlet_mass_flow_rate=total_demand_loop_m,
                     )
 
-            # Distribute cooling load to each chiller according to the uniform load schedule
+            # distribute cooling load to each chiller according to the uniform load schedule
             num_chiller = 0
             chiller_cooling_loads = {}
             for supply_branch_name, supply_branch in chilled_water_loop["supply_branches"].items():

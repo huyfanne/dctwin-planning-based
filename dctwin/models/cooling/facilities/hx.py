@@ -1,254 +1,8 @@
-# class CoolingCoilModel(nn.Module):
-#     """
-#     Implement the learnable cooling coil model. The model can take the supply air setpoint, chilled water setpoint,
-#     supply air flow rate and coil inlet air temperature as input and output the chilled water mass flow rate. The
-#     cooling coil model is a counter flow heat exchanger model. The coil U-factor model is a parametrized model.
-#     """
-#     def __init__(
-#         self, config: ACU, key_mapping: dict, learnable: bool = True
-#     ):
-#         super(CoolingCoilModel, self).__init__()
-#         self.config = config
-#         self.uid = config.uid
-#         self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-#         self.A = nn.Parameter(
-#             torch.distributions.uniform.Uniform(low=5000, high=100000).sample((1, 1)).to(self.device),
-#             requires_grad=learnable
-#         )
-#         self.B = nn.Parameter(
-#             torch.distributions.uniform.Uniform(low=5000, high=100000).sample((1, 1)).to(self.device),
-#             requires_grad=learnable
-#         )
-#         self.C = nn.Parameter(
-#             torch.distributions.uniform.Uniform(low=5000, high=100000).sample((1, 1)).to(self.device),
-#             requires_grad=learnable
-#         )
-#         self.learnable = learnable
-#         self.max_iter = 80000
-#         self.opt = torch.optim.Adam(self.parameters(), lr=1.)
-#         # define the replay buffer
-#         self.buffer = Buffer(size=100)
-#         self.key_mapping = key_mapping
-#
-#     def _eta_counter_flow(
-#         self,
-#         water_mass_flow_rate: torch.Tensor,
-#         air_mass_flow_rate: torch.Tensor
-#     ):
-#         """
-#         Calculate the effectiveness of counter flow heat exchanger. The calculation is based on the EnergyPlus document.
-#         In this equation, we use NTU-Effectiveness method to evaluate the thermal performance of a heat exchanger.
-#         The coil U-factor is modelled as a function of the air-side and water-side convective heat transfer coefficient.
-#         The convective heat transfer coefficient is modelled as a function of the air mass flow rate and water mass flow
-#         rate. 0.8 is the correction factor for the convective heat transfer coefficient.
-#
-#         :param water_mass_flow_rate: the water mass flow rate (kg/s)
-#         :param air_mass_flow_rate: the air mass flow rate (kg/s)
-#         :return: the effectiveness of the counter flow heat exchanger (dimensionless)
-#         """
-#         coil_ua = 1 / (1/(self.A * (air_mass_flow_rate**0.8)) + 1/(self.B * (water_mass_flow_rate**0.8)) + 1/self.C)
-#         min_stream_capacity = water_mass_flow_rate * cp_water
-#         max_stream_capacity = air_mass_flow_rate * cp_air
-#         # calculate the NTU number and the stream capacity ratio
-#         ntu = coil_ua / min_stream_capacity
-#         r = min_stream_capacity / max_stream_capacity
-#         # calculate the effectiveness of counter flow heat exchanger
-#         denorm = 1 - torch.exp(-ntu * (1 - r))
-#         norm = 1 - r * torch.exp(-ntu * (1 - r))
-#         res = denorm / (norm + 1e-9)  # add a small number to avoid numerical issue
-#         # calculate the residual
-#         return res.view(-1, 1)
-#
-#     def _loss(
-#         self,
-#         air_mass_flow_rate: torch.Tensor,
-#         water_mass_flow_rate: torch.Tensor,
-#         inlet_air_temperature: torch.Tensor,
-#         chilled_water_supply_temperature: torch.Tensor,
-#         outlet_air_temperature: torch.Tensor
-#     ):
-#         """
-#         Implement the physical loss function of the cooling coil. The loss function is the mean squared error between
-#         the estimated supply air temperature and the supply air setpoint. By using this loss function, we can learn the
-#         parameters in the cooling coil U-factor model that satisfies the air-side energy and heat balance.
-#         :param air_mass_flow_rate: the air mass flow rate (kg/s)
-#         :param water_mass_flow_rate: the water mass flow rate (kg/s)
-#         :param inlet_air_temperature: the inlet air temperature of the cooling coil (C)
-#         :param chilled_water_supply_temperature: the chilled water supply temperature (C)
-#         :param outlet_air_temperature: the outlet air temperature of the cooling coil (C)
-#         :return:
-#         """
-#         eta = self._eta_counter_flow(
-#             water_mass_flow_rate=water_mass_flow_rate,
-#             air_mass_flow_rate=air_mass_flow_rate,
-#         )
-#         estimated_outlet_air_temperature = (
-#             inlet_air_temperature - eta * cp_water * water_mass_flow_rate
-#             * (inlet_air_temperature - chilled_water_supply_temperature) / (cp_air * air_mass_flow_rate)
-#         )
-#         return nn.MSELoss()(estimated_outlet_air_temperature, outlet_air_temperature)
-#
-#     def _project_ws(self):
-#         """Make sure the A and B are positive according to their physical meaning."""
-#         self.A.data = torch.clamp(self.A.data, 0, torch.inf)
-#         self.B.data = torch.clamp(self.B.data, 0, torch.inf)
-#         self.C.data = torch.clamp(self.C.data, 0, torch.inf)
-#
-#     def _bisection(
-#         self,
-#         water_mass_flow_rate_min,
-#         water_mass_flow_rate_max,
-#         air_mass_flow_rate,
-#         inlet_air_temperature: torch.Tensor,
-#         chilled_water_supply_temperature: torch.Tensor,
-#         outlet_air_temperature: torch.Tensor,
-#         tol=1e-6,
-#         max_iter=500
-#     ):
-#         m_w_star = (water_mass_flow_rate_min + water_mass_flow_rate_max) / 2
-#         # evaluate the air outlet temperature based on the current water mass flow rate
-#         eta = self._eta_counter_flow(
-#             water_mass_flow_rate=m_w_star,
-#             air_mass_flow_rate=air_mass_flow_rate,
-#         )
-#         estimated_outlet_air_temperature = (
-#             inlet_air_temperature - eta * cp_water * m_w_star *
-#             (inlet_air_temperature - chilled_water_supply_temperature) / (cp_air * air_mass_flow_rate)
-#         )
-#         residual = estimated_outlet_air_temperature - outlet_air_temperature
-#         iteration = 1
-#         # bi-section main loop
-#         while torch.abs(residual) > tol and iteration < max_iter:
-#             if residual > 0:
-#                 water_mass_flow_rate_min = m_w_star
-#             else:
-#                 water_mass_flow_rate_max = m_w_star
-#             m_w_star = (water_mass_flow_rate_min + water_mass_flow_rate_max) / 2
-#             eta = self._eta_counter_flow(
-#                 water_mass_flow_rate=m_w_star,
-#                 air_mass_flow_rate=air_mass_flow_rate,
-#             )
-#             estimated_outlet_air_temperature = (
-#                 inlet_air_temperature - eta * cp_water * m_w_star
-#                 * (inlet_air_temperature - chilled_water_supply_temperature) / (cp_air * air_mass_flow_rate)
-#             )
-#             residual = estimated_outlet_air_temperature - outlet_air_temperature
-#             iteration += 1
-#         return m_w_star
-#
-#     def forward(
-#         self,
-#         supply_air_sp: torch.Tensor,
-#         supply_air_flow_rate: torch.Tensor,
-#         inlet_air_temperature: torch.Tensor,
-#         chw_sp: torch.Tensor
-#     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-#         """
-#         Calculate the chilled water mass flow rate based on the supply air setpoint, chilled water setpoint, supply
-#         air flow rate and coil inlet air temperature. The chilled water mass flow rate m_{w}^{*} is calculated by
-#         finding the root of the following air-side energy and heat balance equation:
-#
-#             m_{w}^{*} = f(m_a, m_w) = 0 <-> T_sp=T_{out}^{air}=T_{in}^{air}-\frac{eta(m_a, m_w)*Q_{max}(m_w)}{(Cp_a*m_a}
-#
-#         where Q_{max}(m_w) = Cp_w * m_w * (T_z - T_w) is the maximum heat transfer rate of the coil, Cp_w is the
-#         specific heat of water, T_w is the chilled water temperature, T_z is the zone temperature (which is also the
-#         inlet air temperature of the cooling coil).
-#
-#         :param supply_air_sp: the supply air setpoint temperature (C)
-#         :param supply_air_flow_rate: the supply air flow rate (kg/s)
-#         :param inlet_air_temperature: the inlet air temperature of the cooling coil (C)
-#         :param chw_sp: the chilled water setpoint temperature (C)
-#         :return: the chilled water mass flow rate that satisfies the air-side energy and heat balance (kg/s)
-#         """
-#         # calculate the minimum and maximum chilled water mass flow rate
-#         # with torch.no_grad():
-#         #     m_w_min = 1e-6 * torch.ones_like(supply_air_flow_rate)
-#         #     m_w_max = cp_air * supply_air_flow_rate / cp_water
-#         #     m_w_star = self._bisection(
-#         #         water_mass_flow_rate_min=m_w_min,
-#         #         water_mass_flow_rate_max=m_w_max,
-#         #         air_mass_flow_rate=supply_air_flow_rate,
-#         #         inlet_air_temperature=inlet_air_temperature,
-#         #         outlet_air_temperature=supply_air_sp,
-#         #         chilled_water_supply_temperature=chw_sp,
-#         #     )
-#         # calculate the effective heat transfer rate
-#         # eta = self._eta_counter_flow(
-#         #     water_mass_flow_rate=m_w_star,
-#         #     air_mass_flow_rate=supply_air_flow_rate,
-#         # )
-#         # calculate the required chilled water mass flow rate
-#         m_w_star = cp_air * supply_air_flow_rate / cp_water
-#         coil_cooling_rate = cp_air * supply_air_flow_rate * (inlet_air_temperature - supply_air_sp)
-#         outlet_air_temperature = inlet_air_temperature - coil_cooling_rate / (cp_air * supply_air_flow_rate)
-#         return m_w_star, coil_cooling_rate, outlet_air_temperature
-#
-#     def collect(self, data: dict):
-#         assert "inlet air temperature" in self.key_mapping.keys(), \
-#             "The \"inlet air temperature\" key is not provided."
-#         assert "outlet air temperature" in self.key_mapping.keys(), \
-#             "The \"outlet air temperature\" key is not provided."
-#         assert "air mass flow rate" in self.key_mapping.keys(), \
-#             "The \"air mass flow rate\" key is not provided."
-#         assert "water mass flow rate" in self.key_mapping.keys(), \
-#             "The \"water mass flow rate\" key is not provided."
-#         assert "inlet water temperature" in self.key_mapping.keys(), \
-#             "The \"inlet water temperature\" key is not provided."
-#         assert self.key_mapping["inlet air temperature"] in data.keys(), \
-#             f"{self.key_mapping['inlet air temperature']} is not included in the data dictionary."
-#         assert self.key_mapping["outlet air temperature"] in data.keys(), \
-#             f"{self.key_mapping['outlet air temperature']} is not included in the data dictionary."
-#         assert self.key_mapping["air mass flow rate"] in data.keys(), \
-#             f"{self.key_mapping['air mass flow rate']} is not included in the data dictionary."
-#         assert self.key_mapping["water mass flow rate"] in data.keys(), \
-#             f"{self.key_mapping['water mass flow rate']} is not included in the data dictionary."
-#         self.buffer.add(
-#             Batch(
-#                 cooling_coil_inlet_air_temperature=data[self.key_mapping["inlet air temperature"]],
-#                 cooling_coil_outlet_air_temperature=data[self.key_mapping["outlet air temperature"]],
-#                 cooling_coil_air_mass_flow_rate=data[self.key_mapping["air mass flow rate"]],
-#                 cooling_coil_water_mass_flow_rate=data[self.key_mapping["water mass flow rate"]],
-#                 cooling_coil_inlet_water_temperature=data[self.key_mapping["inlet water temperature"]],
-#             )
-#         )
-#
-#     def learn(self):
-#         if self.learnable:
-#             pbar = tqdm(range(self.max_iter))
-#             batch, _ = self.buffer.sample(batch_size=0)  # sample a batch of data from the replay buffer
-#             for _ in pbar:
-#                 self.train()
-#                 self.opt.zero_grad()
-#                 loss = self._loss(
-#                     inlet_air_temperature=torch.tensor(
-#                         batch.cooling_coil_inlet_air_temperature, dtype=torch.float32
-#                     ).view(-1, 1),
-#                     outlet_air_temperature=torch.tensor(
-#                         batch.cooling_coil_outlet_air_temperature, dtype=torch.float32
-#                     ).view(-1, 1),
-#                     air_mass_flow_rate=torch.tensor(
-#                         batch.cooling_coil_air_mass_flow_rate, dtype=torch.float32
-#                     ).view(-1, 1),
-#                     water_mass_flow_rate=torch.tensor(
-#                         batch.cooling_coil_water_mass_flow_rate, dtype=torch.float32
-#                     ).view(-1, 1),
-#                     chilled_water_supply_temperature=torch.tensor(
-#                         batch.cooling_coil_inlet_water_temperature, dtype=torch.float32
-#                     ).view(-1, 1),
-#                 )
-#                 loss.backward()
-#                 self.opt.step()
-#                 self._project_ws()  # project the parameters to the positive region to make them feasible
-#                 pbar.set_description(f"Loss: {loss.item():.4f}")
-#         else:
-#             pass
-
-
 from CoolProp.CoolProp import PropsSI
 import numpy as np
 import torch
 import torch.nn as nn
-from dclib.cooling.room.facilities import ACU
+from dclib.cooling.room.facilities import ACU, CDU
 
 from dcdyn.data import Batch, Buffer
 
@@ -257,15 +11,15 @@ from tqdm import tqdm
 from .utils.parameter_calc import NTUHE, nusseltCoefficient, nusseltNumberIn
 
 
-class CoolingCoilModel(nn.Module):
+class HeatExchanger(nn.Module):
 
     def __init__(
         self,
-        config: ACU,
-        key_mapping: dict,
-        learnable: bool = True,
-        internal_fluid_name: str = "water",
-        extern_fluid_name: str = "air",
+        config: ACU | CDU,
+        internal_fluid_name: str,
+        external_fluid_name: str,
+        key_mapping: dict = None,
+        learnable: bool = False,
         tube_diameter: float = 0.02,
         tube_length: float = 2.5,
         tube_thickness: float = 0.002,
@@ -285,7 +39,7 @@ class CoolingCoilModel(nn.Module):
         cooling coil. The model is based on the NTU-effectiveness heat exchanger model.
         :param key_mapping:
         :param internal_fluid_name:
-        :param extern_fluid_name:
+        :param external_fluid_name:
         :param tube_diameter:
         :param tube_length:
         :param tube_thickness:
@@ -297,17 +51,17 @@ class CoolingCoilModel(nn.Module):
         :param thermal_conductivity:
         """
         super().__init__()
+        key_mapping = None if key_mapping == {} else key_mapping
         self.config = config
         self.uid = config.uid
         self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-
         self.tube_diameter = nn.Parameter(
             torch.tensor(tube_diameter, dtype=torch.float32),
             requires_grad=False
         )
         self.tube_length = nn.Parameter(
             torch.tensor(tube_length, dtype=torch.float32),
-            requires_grad=True
+            requires_grad=learnable
         )
         self.tube_thickness = nn.Parameter(
             torch.tensor(tube_thickness, dtype=torch.float32),
@@ -315,11 +69,11 @@ class CoolingCoilModel(nn.Module):
         )
         self.num_row = nn.Parameter(
             torch.tensor(row_number, dtype=torch.float32),
-            requires_grad=True
+            requires_grad=learnable
         )
         self.num_transverse = nn.Parameter(
             torch.tensor(transverse_number, dtype=torch.float32),
-            requires_grad=True
+            requires_grad=learnable
         )
         self.row_pitch = nn.Parameter(
             torch.tensor(row_pitch, dtype=torch.float32),
@@ -340,7 +94,7 @@ class CoolingCoilModel(nn.Module):
         self.standard_atomos_pressure = 101325
 
         self.internal_fluid_name = internal_fluid_name
-        self.extern_fluid_name = extern_fluid_name
+        self.extern_fluid_name = external_fluid_name
 
         self.key_mapping = key_mapping
         self.buffer = Buffer(size=100)
@@ -504,7 +258,7 @@ class CoolingCoilModel(nn.Module):
 
         # correct the outside Nusselt number when the row number is less than 20
         Nu_o = self._correct_nusselt_number(Nu_o)
-        h_o = Nu_o * k_o / self.tube_diameter  # external fluid heat transfer coefficient
+        h_o = Nu_o * k_o / self.tube_diameter   # external fluid heat transfer coefficient
 
         f_o = 0.2  # external fluid friction factor
         dP_o = self.num_row * (rho_o * u_omax ** 2 / 2) * f_o  # external fluid pressure drop

@@ -6,8 +6,8 @@ import numpy as np
 from dclib import Building
 
 from dctwin.utils import config
-from dctwin.backends import LiquidCoolingManager
-from dctwin.backends import EplusBackend
+from ...third_parties.eplus import EplusBackend
+from ..managers.energy.liquid_cooling import LiquidCoolingManager
 
 
 class EplusLiquidAdapter:

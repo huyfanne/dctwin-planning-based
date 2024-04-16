@@ -5,7 +5,7 @@ from dclib.cooling.plant.facilities import Pump
 
 from dcdyn.models.curves import CubicCurve
 
-from dcdyn.data import Batch, Buffer
+from ....data import Batch, Buffer
 
 from dcdyn.utils.const import rho_water
 
@@ -87,3 +87,4 @@ class PumpModel(nn.Module):
             )
         else:
             pass
+

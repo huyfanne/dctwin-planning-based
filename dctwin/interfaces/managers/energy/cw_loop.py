@@ -38,8 +38,6 @@ class CWLoopManager(nn.Module):
                     "side": supply_branch.side,
                 }
                 if supply_branch.components.cooling_towers is not None:
-                    assert len(supply_branch.components.cooling_towers) == 1, \
-                        "The number of chillers in each supply branch should be 1."
                     for cooling_tower_name, cooling_tower in supply_branch.components.cooling_towers.items():
                         cw_loop_models[cw_loop_name]["supply_branches"][supply_branch_name]["cooling tower"] = \
                             CoolingTowerModel(
@@ -52,8 +50,6 @@ class CWLoopManager(nn.Module):
                             cw_loop_models[cw_loop_name]["supply_branches"][supply_branch_name]["cooling tower"]
                         )
                 if supply_branch.components.pumps is not None:
-                    assert len(supply_branch.components.pumps) == 1, \
-                        "The number of pumps in each supply branch should be 1."
                     for pump_name, pump in supply_branch.components.pumps.items():
                         cw_loop_models[cw_loop_name]["supply_branches"][supply_branch_name]["pump"] = PumpModel(
                             config=pump,
@@ -69,8 +65,6 @@ class CWLoopManager(nn.Module):
                     "side": demand_branch.side,
                 }
                 if demand_branch.components.pumps is not None:
-                    assert len(demand_branch.components.pumps) == 1, \
-                        "The number of pumps in each demand branch should be 1."
                     for pump_name, pump in demand_branch.components.pumps.items():
                         cw_loop_models[cw_loop_name]["demand_branches"][demand_branch_name]["pump"] = PumpModel(
                             config=pump,
@@ -82,8 +76,6 @@ class CWLoopManager(nn.Module):
                             cw_loop_models[cw_loop_name]["demand_branches"][demand_branch_name]["pump"]
                         )
                 if demand_branch.components.chillers is not None:
-                    assert len(demand_branch.components.chillers) == 1, \
-                        "The number of pumps in each demand branch should be 1."
                     for chiller_name, chiller in demand_branch.components.chillers.items():
                         cw_loop_models[cw_loop_name]["demand_branches"][demand_branch_name]["chiller"] = ChillerModel(
                             config=chiller,
@@ -122,7 +114,6 @@ class CWLoopManager(nn.Module):
                         outlet_temperature=plant_control_inputs[condensing_water_loop_name]["supply_sp"],
                         outlet_mass_flow_rate=0,
                     )
-
         # Demand-side fluid property simulation of the chilled water loop
         total_demand_loop_m = 0
         num_middle_branches = 0

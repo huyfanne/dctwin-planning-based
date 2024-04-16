@@ -11,7 +11,7 @@ from typing import (
 )
 
 from dclib.building import Building
-from dctwin.adapters import EplusLiquidAdapter
+from dctwin.interfaces.adapters import EplusLiquidAdapter
 from dctwin.utils import CDUEnvConfig
 
 from .eplus_env import EPlusEnv

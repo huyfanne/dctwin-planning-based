@@ -5,7 +5,7 @@ import torch.nn as nn
 
 from dclib.ite.composite import ITE
 
-from dcdyn.models.curves import BiQuadraticCurve, QuadraticCurve
+from dctwin.models.curves import BiQuadraticCurve, QuadraticCurve
 
 
 class ITEModel(nn.Module):
@@ -26,19 +26,27 @@ class ITEModel(nn.Module):
             requires_grad=learnable
         )
         self.cpu_power_curve = BiQuadraticCurve(
-            init_params=torch.tensor(config.cpu_power_input_function_of_loading_and_air_temperature_curve, dtype=torch.float32),
+            init_params=torch.tensor(
+                config.cpu_power_input_function_of_loading_and_air_temperature_curve, dtype=torch.float32
+            ),
             requires_grad=learnable
         )
         self.recirculation_fraction_curve = BiQuadraticCurve(
-            init_params=torch.tensor(config.recirculation_fraction_function_of_loading_and_air_temperature_curve, dtype=torch.float32),
+            init_params=torch.tensor(
+                config.recirculation_fraction_function_of_loading_and_air_temperature_curve, dtype=torch.float32
+            ),
             requires_grad=learnable
         )
         self.electric_power_supply_efficiency_curve = QuadraticCurve(
-            init_params=torch.tensor(config.electric_power_supply_efficiency_function_of_part_load_ratio_curve, dtype=torch.float32),
+            init_params=torch.tensor(
+                config.electric_power_supply_efficiency_function_of_part_load_ratio_curve, dtype=torch.float32
+            ),
             requires_grad=learnable
         )
         self.air_flow_curve = BiQuadraticCurve(
-            init_params=torch.tensor(config.air_flow_function_of_loading_and_air_temperature_curve, dtype=torch.float32),
+            init_params=torch.tensor(
+                config.air_flow_function_of_loading_and_air_temperature_curve, dtype=torch.float32
+            ),
             requires_grad=learnable
         )
 

@@ -1,5 +1,5 @@
 from dctwin.third_parties.eplus.core import EplusBackend, EplusBackendK8s
-from dctwin.third_parties.geometry.salome import SalomeBackend, SalomeBackendK8s
+from dctwin.third_parties.salome import SalomeBackend, SalomeBackendK8s
 from dctwin.third_parties.rom.pod import PODBackend, PODBackendK8s
 from dctwin.third_parties.foam import (
     SnappyHexBackend,

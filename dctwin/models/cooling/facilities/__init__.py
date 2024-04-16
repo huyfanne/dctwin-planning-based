@@ -1,13 +1,13 @@
-from .coil import CoolingCoilModel
+from .hx import HeatExchanger
 from .chiller import ChillerModel
 from .pump import PumpModel
 from .fan import FanModel
-from .ite import ITEModel
+from dctwin.models.heat_gains.ite import ITEModel
 from .cooling_tower import CoolingTowerModel
 
 __all__ = [
     "ChillerModel",
-    "CoolingCoilModel",
+    "HeatExchanger",
     "PumpModel",
     "FanModel",
     "ITEModel",
