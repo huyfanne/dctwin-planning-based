@@ -313,6 +313,12 @@ ScheduleTypeLimits,
     Temperature;              !- Unit Type
 
 ScheduleTypeLimits,
+    Relative Humidity,        !- Name
+    0,                        !- Lower Limit Value
+    100,                      !- Upper Limit Value
+    CONTINUOUS;               !- Numeric Type
+
+ScheduleTypeLimits,
     Fraction,                 !- Name
     0,                        !- Lower Limit Value
     1,                        !- Upper Limit Value
@@ -375,6 +381,16 @@ SCHEDULE:CONSTANT,
     zone control type schedule,    !- Name
     Any Number,               !- Schedule Type Limits Name
     4;                        !- Hourly Value
+
+SCHEDULE:CONSTANT,
+    zone humidifying relative humidity setpoint schedule,    !- Name
+    Relative Humidity,        !- Schedule Type Limits Name
+    40;                       !- Hourly Value
+
+SCHEDULE:CONSTANT,
+    zone dehumidifying relative humidity setpoint schedule,    !- Name
+    Relative Humidity,        !- Schedule Type Limits Name
+    60;                       !- Hourly Value
 
 SCHEDULE:CONSTANT,
     chilled water loop exit temperature setpoint schedule,    !- Name
@@ -750,6 +766,12 @@ SIZING:PLANT,
     1,                        !- Zone Timesteps in Averaging Window
     None;                     !- Coincident Sizing Factor Mode
 
+ZONECONTROL:HUMIDISTAT,
+    zone room humidity control,    !- Name
+    zone,                     !- Zone Name
+    zone humidifying relative humidity setpoint schedule,    !- Humidifying Relative Humidity Setpoint Schedule Name
+    zone dehumidifying relative humidity setpoint schedule;    !- Dehumidifying Relative Humidity Setpoint Schedule Name
+
 ZONECONTROL:THERMOSTAT,
     zone room temperature control,    !- Name
     zone,                     !- Zone or ZoneList Name
@@ -768,6 +790,21 @@ THERMOSTATSETPOINT:DUALSETPOINT,
     zone thermostat,          !- Name
     zone heating setpoint schedule,    !- Heating Setpoint Temperature Schedule Name
     zone cooling setpoint schedule;    !- Cooling Setpoint Temperature Schedule Name
+
+ZONEHVAC:DEHUMIDIFIER:DX,
+    zone1dehumidifier1,       !- Name
+    ALWAYS ON,                !- Availability Schedule Name
+    zone dehumidifier inlet node 1,    !- Air Inlet Node Name
+    zone dehumidifier outlet node 1,    !- Air Outlet Node Name
+    50.16,                    !- Rated Water Removal
+    3.412,                    !- Rated Energy Factor
+    0.12036,                  !- Rated Air Flow Rate
+    zone1dehumidifier1 water removal curve,    !- Water Removal Curve Name
+    zone1dehumidifier1 energy factor curve,    !- Energy Factor Curve Name
+    zone1dehumidifier1 part load ratio curve,    !- Part Load Fraction Correlation Curve Name
+    10,                       !- Minimum DryBulb Temperature for Dehumidifier Operation
+    32,                       !- Maximum DryBulb Temperature for Dehumidifier Operation
+    0;                        !- OffCycle Parasitic Electric Load
 
 AIRTERMINAL:SINGLEDUCT:VAV:NOREHEAT,
     zone air terminal unit 1,    !- Name
@@ -795,13 +832,19 @@ ZONEHVAC:EQUIPMENTLIST,
     1,                        !- Zone Equipment 1 Cooling Sequence
     1,                        !- Zone Equipment 1 Heating or NoLoad Sequence
     ,                         !- Zone Equipment 1 Sequential Cooling Fraction Schedule Name
-    ;                         !- Zone Equipment 1 Sequential Heating Fraction Schedule Name
+    ,                         !- Zone Equipment 1 Sequential Heating Fraction Schedule Name
+    ZoneHVAC:Dehumidifier:DX,    !- Zone Equipment 2 Object Type
+    zone1dehumidifier1,       !- Zone Equipment 2 Name
+    2,                        !- Zone Equipment 2 Cooling Sequence
+    2,                        !- Zone Equipment 2 Heating or NoLoad Sequence
+    ,                         !- Zone Equipment 2 Sequential Cooling Fraction Schedule Name
+    ;                         !- Zone Equipment 2 Sequential Heating Fraction Schedule Name
 
 ZONEHVAC:EQUIPMENTCONNECTIONS,
     zone,                     !- Zone Name
     zone equipment list,      !- Zone Conditioning Equipment List Name
     zone inlets,              !- Zone Air Inlet Node or NodeList Name
-    ,                         !- Zone Air Exhaust Node or NodeList Name
+    zone exhausts,            !- Zone Air Exhaust Node or NodeList Name
     zone air node,            !- Zone Air Node Name
     zone returns;             !- Zone Return Air Node or NodeList Name
 
@@ -1164,11 +1207,16 @@ CONNECTORLIST,
 
 NODELIST,
     zone inlets,              !- Name
-    zone inlet node 1;        !- Node 1 Name
+    zone inlet node 1,        !- Node 1 Name
+    zone dehumidifier outlet node 1;    !- Node 2 Name
 
 NODELIST,
     zone returns,             !- Name
     zone return node 1;       !- Node 1 Name
+
+NODELIST,
+    zone exhausts,            !- Name
+    zone dehumidifier inlet node 1;    !- Node 1 Name
 
 NODELIST,
     acu_1 outdoor air system outside air inlet nodes,    !- Name
@@ -1413,7 +1461,7 @@ PLANTLOOP,
     SingleSetpoint,           !- Plant Loop Demand Calculation Scheme
     None,                     !- Common Pipe Simulation
     None,                     !- Pressure Simulation Type
-    2;                        !- Loop Circulation Time
+    0;                        !- Loop Circulation Time
 
 PLANTLOOP,
     condenser water loop,     !- Name
@@ -1439,7 +1487,7 @@ PLANTLOOP,
     SingleSetpoint,           !- Plant Loop Demand Calculation Scheme
     None,                     !- Common Pipe Simulation
     None,                     !- Pressure Simulation Type
-    2;                        !- Loop Circulation Time
+    0;                        !- Loop Circulation Time
 
 PLANTEQUIPMENTLIST,
     chilled water loop equipment list,    !- Name
@@ -1582,6 +1630,18 @@ SETPOINTMANAGER:MIXEDAIR,
     7.2;                      !- Minimum Temperature at Cooling Coil Outlet Node
 
 CURVE:QUADRATIC,
+    zone1dehumidifier1 part load ratio curve,    !- Name
+    1,                        !- Coefficient1 Constant
+    0,                        !- Coefficient2 x
+    0,                        !- Coefficient3 x2
+    0,                        !- Minimum Value of x
+    1,                        !- Maximum Value of x
+    ,                         !- Minimum Curve Output
+    ,                         !- Maximum Curve Output
+    Dimensionless,            !- Input Unit Type for X
+    Dimensionless;            !- Output Unit Type
+
+CURVE:QUADRATIC,
     ite_1 fan power input function of flow curve,    !- Name
     0,                        !- Coefficient1 Constant
     1,                        !- Coefficient2 x
@@ -1628,6 +1688,42 @@ CURVE:CUBIC,
     ,                         !- Minimum Curve Output
     ,                         !- Maximum Curve Output
     Dimensionless,            !- Input Unit Type for X
+    Dimensionless;            !- Output Unit Type
+
+CURVE:BIQUADRATIC,
+    zone1dehumidifier1 water removal curve,    !- Name
+    1,                        !- Coefficient1 Constant
+    0,                        !- Coefficient2 x
+    0,                        !- Coefficient3 x2
+    0,                        !- Coefficient4 y
+    0,                        !- Coefficient5 y2
+    0,                        !- Coefficient6 xy
+    10,                       !- Minimum Value of x
+    60,                       !- Maximum Value of x
+    0,                        !- Minimum Value of y
+    100,                      !- Maximum Value of y
+    ,                         !- Minimum Curve Output
+    ,                         !- Maximum Curve Output
+    Dimensionless,            !- Input Unit Type for X
+    Dimensionless,            !- Input Unit Type for Y
+    Dimensionless;            !- Output Unit Type
+
+CURVE:BIQUADRATIC,
+    zone1dehumidifier1 energy factor curve,    !- Name
+    1,                        !- Coefficient1 Constant
+    0,                        !- Coefficient2 x
+    0,                        !- Coefficient3 x2
+    0,                        !- Coefficient4 y
+    0,                        !- Coefficient5 y2
+    0,                        !- Coefficient6 xy
+    10,                       !- Minimum Value of x
+    60,                       !- Maximum Value of x
+    0,                        !- Minimum Value of y
+    100,                      !- Maximum Value of y
+    ,                         !- Minimum Curve Output
+    ,                         !- Maximum Curve Output
+    Dimensionless,            !- Input Unit Type for X
+    Dimensionless,            !- Input Unit Type for Y
     Dimensionless;            !- Output Unit Type
 
 CURVE:BIQUADRATIC,

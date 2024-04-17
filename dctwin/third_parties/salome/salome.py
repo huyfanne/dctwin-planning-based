@@ -41,7 +41,7 @@ class SalomeBackendMixin:
         geometry_description = Path(config.cfd.geometry_dir, "geometry.json")
         with open(geometry_description, "w") as f:
             f.write(room.model_dump_json())
-        template = template_env.get_template("salome/geometry_script.py")
+        template = template_env.get_template("salome/template/geometry_script.py")
         with open(geometry_script, "w") as f:
             f.write(template.render())
         self._clean_files = [geometry_script, geometry_description]

@@ -157,6 +157,15 @@ eplus_env_config {
   }
   observations {
     exposed: false
+    variable_name: "acu_1 cooling coil outlet water temperature"
+    output_variable_config {
+      key_value: "ACU_1 WATER OUTLET NODE"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
     variable_name: "acu_1 cooling coil water mass flow rate"
     output_variable_config {
       key_value: "ACU_1 WATER INLET NODE"
@@ -368,6 +377,51 @@ eplus_env_config {
     output_variable_config {
       key_value: "ITE_1"
       variable_name: "ITE Air Inlet Relative Humidity"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1dehumidifier1 inlet air temperature"
+    output_variable_config {
+      key_value: "ZONE DEHUMIDIFIER INLET NODE 1"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1dehumidifier1 outlet air temperature"
+    output_variable_config {
+      key_value: "ZONE DEHUMIDIFIER OUTLET NODE 1"
+      variable_name: "System Node Temperature"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1dehumidifier1 air mass flow rate"
+    output_variable_config {
+      key_value: "ZONE DEHUMIDIFIER INLET NODE 1"
+      variable_name: "System Node Mass Flow Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1dehumidifier1 removed water mass flow rate"
+    output_variable_config {
+      key_value: "ZONE1DEHUMIDIFIER1"
+      variable_name: "Zone Dehumidifier Removed Water Mass Flow Rate"
+      reporting_frequency: "timestep"
+    }
+  }
+  observations {
+    exposed: false
+    variable_name: "zone1dehumidifier1 power consumption"
+    output_variable_config {
+      key_value: "ZONE1DEHUMIDIFIER1"
+      variable_name: "Zone Dehumidifier Electricity Rate"
       reporting_frequency: "timestep"
     }
   }

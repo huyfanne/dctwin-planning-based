@@ -18,14 +18,12 @@ class IDFBuilder:
 
     idd_path = (
         Path(__file__)
-        .parent.parent.parent.parent.joinpath("templates")
-        .joinpath("eplus")
+        .parent.parent.joinpath("template")
         .joinpath("V9-5-0-Energy+.idd")
     )
     template_idf_path = (
         Path(__file__)
-        .parent.parent.parent.parent.joinpath("templates")
-        .joinpath("eplus")
+        .parent.parent.joinpath("template")
         .joinpath("template.idf")
     )
 
@@ -96,6 +94,7 @@ class IDFBuilder:
             "heat_exchangers": {},
             "condenser water pumps": {},
             "cooling towers": {},
+            "secondary chilled water pumps": {},
         }
         # create chilled water loop device key mapping
         chilled_water_loop_names = self.building.constructions.plant.chilled_water_loops
@@ -229,7 +228,6 @@ class IDFBuilder:
                 "condenser water mass flow rate": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Demand Side Mass Flow Rate [kg/s](TimeStep)",
             }
         # create secondary chilled water pump device key mapping
-        self.device_key_map["secondary chilled water pumps"] = {}
         pump_names = self.building.constructions.secondary_chilled_water_pump_keys
         for pump_name in pump_names:
             pump_obj = self.model.getobject(
@@ -240,7 +238,7 @@ class IDFBuilder:
                 "power": f"{pump_obj['Name'].upper()}:Pump Electricity Rate [W](TimeStep)",
             }
         # create condenser water pump device key mapping
-        pump_names = self.building.constructions.chilled_water_pump_keys
+        pump_names = self.building.constructions.condenser_water_pump_keys
         for pump_name in pump_names:
             pump_obj = self.model.getobject(
                 key="Pump:VariableSpeed".upper(), name=pump_name
