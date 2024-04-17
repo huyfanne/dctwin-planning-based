@@ -1461,7 +1461,7 @@ PLANTLOOP,
     SingleSetpoint,           !- Plant Loop Demand Calculation Scheme
     None,                     !- Common Pipe Simulation
     None,                     !- Pressure Simulation Type
-    2;                        !- Loop Circulation Time
+    0;                        !- Loop Circulation Time
 
 PLANTLOOP,
     condenser water loop,     !- Name
@@ -1487,7 +1487,7 @@ PLANTLOOP,
     SingleSetpoint,           !- Plant Loop Demand Calculation Scheme
     None,                     !- Common Pipe Simulation
     None,                     !- Pressure Simulation Type
-    2;                        !- Loop Circulation Time
+    0;                        !- Loop Circulation Time
 
 PLANTEQUIPMENTLIST,
     chilled water loop equipment list,    !- Name
