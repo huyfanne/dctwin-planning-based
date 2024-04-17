@@ -6,8 +6,7 @@ from dclib.cooling.plant.facilities import Pump
 from dcdyn.models.curves import CubicCurve
 
 from ....data import Batch, Buffer
-
-from dcdyn.utils.const import rho_water
+from ....utils.const import rho_water
 
 
 class PumpModel(nn.Module):
