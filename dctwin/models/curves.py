@@ -78,7 +78,6 @@ class QuadraticCurve(Curve):
         x: torch.Tensor,
         y: torch.Tensor,
     ) -> None:
-        assert self.learnable, "The parameters are not learnable."
         coefs = curve_fit(
             lambda x, a, b, c: a + b * x + c * x**2,
             x.view(-1).detach().numpy(), y.view(-1).detach().numpy()
@@ -91,13 +90,11 @@ class BiQuadraticCurve(Curve):
     BiQuadratic curve in the form of:
     y = a + bx + cx^2 + dy + ey^2 + fxy
     """
-
     def __init__(
         self,
         init_params: torch.Tensor,
         requires_grad: bool = True,
     ) -> None:
-
         assert len(init_params) == 6, "BiQuadraticCurve should take 6 parameters."
         super().__init__(init_params=init_params, requires_grad=requires_grad)
 
@@ -153,7 +150,6 @@ class CubicCurve(Curve):
         x: torch.Tensor,
         y: torch.Tensor,
     ) -> None:
-        assert self.learnable, "The parameters are not learnable."
         coefs = curve_fit(
             lambda x, a, b, c, d: a * (x**3) + b * (x**2) + c * x + d,
             x.view(-1).detach().numpy(), y.view(-1).detach().numpy()

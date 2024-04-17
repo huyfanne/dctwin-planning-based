@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 import torch
 import torch.nn as nn
@@ -103,11 +103,13 @@ class CHWLoopManager(nn.Module):
                         )
         return chw_loop_models
 
+    def _distribute_heat_load(self, heat_loads: Batch, num_acus: int) -> Dict:
+        return {acu_name: heat_loads / num_acus for acu_name in self.models}
+
     def _sim(
         self,
         plant_control_inputs: Batch,
-        zone_control_inputs: Batch,
-        air_loop_simulation_results: Batch,
+        acu_simulation_results: Batch,
     ):
         # cooling coil property
         acu_property = {}
@@ -117,6 +119,8 @@ class CHWLoopManager(nn.Module):
             supply={},
             demand={},
         )
+        acu_simulation_results["sensible_heat_transfer_rate"] = Batch()
+        acu_simulation_results["water_mass_flow_rate"] = Batch()
         # Set loop exiting temperature according to the control inputs
         for chilled_water_loop_name, chilled_water_loop in self.models.items():
             control = plant_control_inputs[chilled_water_loop_name]
@@ -141,16 +145,14 @@ class CHWLoopManager(nn.Module):
                 if demand_branch["side"] == "middle":
                     coil_model = demand_branch["coil"]
                     # first locate the cooling coil, identifying its ACU and the zone that hosts the ACU
-                    supply_air_sp = zone_control_inputs[coil_model.uid].supply_air_temperature
-                    supply_air_flow_rate = zone_control_inputs[coil_model.uid].supply_air_mass_flow_rate
-                    inlet_air_temperature = air_loop_simulation_results.acu_property.return_air_temperatures[
-                        coil_model.uid
-                    ]
+                    supply_air_flow_rate = acu_simulation_results.air_mass_flow_rates[coil_model.uid]
                     # simulate the required chilled water mass flow rate of the cooling coil
                     if torch.isclose(supply_air_flow_rate, torch.tensor(0.0)):
                         water_mass_flow_rate = torch.tensor(0.0)
                         heat_transfer_rate = torch.tensor(0.0)
                     else:
+                        supply_air_sp = acu_simulation_results.supply_air_sps[coil_model.uid]
+                        inlet_air_temperature = acu_simulation_results.return_air_temperatures[coil_model.uid]
                         water_mass_flow_rate, heat_transfer_rate, supply_air_temperature = coil_model.solve(
                             T_air_in=inlet_air_temperature,
                             m_air=supply_air_flow_rate,
@@ -158,10 +160,8 @@ class CHWLoopManager(nn.Module):
                             T_air_out_sp=supply_air_sp
                         )
                     # record the cooling coil property
-                    acu_property[coil_model.uid] = Batch(
-                        sensible_heat_transfer_rate=heat_transfer_rate,
-                        water_mass_flow_rate=water_mass_flow_rate,
-                    )
+                    acu_simulation_results.sensible_heat_transfer_rate[coil_model.uid] = heat_transfer_rate
+                    acu_simulation_results.water_mass_flow_rate[coil_model.uid] = water_mass_flow_rate
                     # simulate the return temperature of a cooling coil
                     if torch.isclose(water_mass_flow_rate, torch.tensor(0.0)):
                         return_temp = chw_sp
@@ -181,7 +181,7 @@ class CHWLoopManager(nn.Module):
                     num_middle_branches += 1
                     # the cooling load that should be met by the chiller plant is equal to IT power and CRAH power
                     total_cooling_load += (
-                        heat_transfer_rate + air_loop_simulation_results.acu_property.fan_powers[coil_model.uid]
+                        heat_transfer_rate + acu_simulation_results.fan_powers[coil_model.uid]
                     )
 
             # calculate average return temperature
@@ -318,21 +318,19 @@ class CHWLoopManager(nn.Module):
 
     def forward(
         self,
-        zone_control_inputs: Batch,
         plant_control_inputs: Batch,
-        air_loop_simulation_results: Batch,
+        acu_simulation_results: Batch,
     ) -> Batch:
         """
         Simulate the building with the learned models and the given control signals (acts)
         :return:
         """
-        acu_property, chilled_water_pump_property, chiller_property = self._sim(
-            zone_control_inputs=zone_control_inputs,
+        acu_simulation_results, chilled_water_pump_property, chiller_property = self._sim(
             plant_control_inputs=plant_control_inputs,
-            air_loop_simulation_results=air_loop_simulation_results,
+            acu_simulation_results=acu_simulation_results,
         )
         return Batch(
-            acu_property=acu_property,
+            acu_simulation_results=acu_simulation_results,
             chilled_water_pump_property=chilled_water_pump_property,
             chiller_property=chiller_property,
         )

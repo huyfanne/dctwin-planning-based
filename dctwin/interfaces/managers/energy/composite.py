@@ -206,10 +206,9 @@ class PIDTManager(nn.Module):
             heat_loads=zone_heat_loads.ite_heat_loads,
             acu_controls=acts.zones
         )
-        chw_loop_simulation_results = self.chw_loop_manager(
-            zone_control_inputs=acts.zones,
+        chw_loop_simulation_results = self.chw_loop_manager.forward(
             plant_control_inputs=acts.plants,
-            air_loop_simulation_results=air_loop_simulation_results
+            acu_simulation_results=air_loop_simulation_results.acu_property
         )
         cw_loop_simulation_results = self.cw_loop_manager(
             plant_control_inputs=acts.plants,
