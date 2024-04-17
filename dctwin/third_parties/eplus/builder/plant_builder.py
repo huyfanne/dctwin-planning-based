@@ -180,6 +180,7 @@ class PlantBuilder:
         plant_loop[
             "Loop_Temperature_Setpoint_Node_Name"
         ] = f"{loop_name} supply outlet node"
+        plant_loop["Loop_Circulation_Time"] = 0
         plant_loop["Load_Distribution_Scheme"] = meta.load_distribution_scheme
         plant_loop[
             "Plant_Loop_Demand_Calculation_Scheme"
