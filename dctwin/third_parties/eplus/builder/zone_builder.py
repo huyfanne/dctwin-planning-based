@@ -227,25 +227,59 @@ class RoomBuilder:
     def _make_occupancy(self, zone_name: str, config: People) -> None:
         if config:
             occupancy = self.model.newidfobject(key="People".upper())
-            occupancy["Name"] = config.name
+            occupancy["Name"] = config.uid.lower()
             occupancy["Zone_or_ZoneList_Name"] = zone_name
+            occupancy["Number_of_People_Schedule_Name"] = "Always On".upper()
+            occupancy["Number_of_People_Calculation_Method"] = config.number_of_people_calculation_method
             occupancy["Number_of_People"] = config.number_of_people
+            occupancy["People_per_Zone_Floor_Area"] = config.people_per_zone_floor_area
+            occupancy["Zone_Floor_Area_per_Person"] = config.zone_floor_area_per_person
+            occupancy["Fraction_Radiant"] = config.fraction_radiant
+            occupancy["Sensible_Heat_Fraction"] = config.sensible_heat_fraction
+            occupancy["Activity_Level_Schedule_Name"] = "Always On".upper()
+            occupancy["Carbon_Dioxide_Generation_Rate"] = config.carbon_dioxide_generation_rate
+            occupancy["Enable_ASHRAE_55_Comfort_Warnings"] = config.enable_ashrae_55_comfort_warnings
+            occupancy["Mean_Radiant_Temperature_Calculation_Type"] = config.mean_radiant_temperature_calculation_type
+            occupancy["Surface_NameAngle_Factor_List_Name"] = config.surface_name_angle_factor_list_name
+            occupancy["Work_Efficiency_Schedule_Name"] = config.work_efficiency_schedule_name
+            occupancy["Clothing_Insulation_Calculation_Method"] = config.clothing_insulation_calculation_method
 
     def _make_electrical_equipment(self, zone_name: str, config: ElectricEquipment) -> None:
         if config:
             electrical_equipment = self.model.newidfobject(
                 key="ElectricEquipment".upper()
             )
-            electrical_equipment["Name"] = config.name
+            electrical_equipment["Name"] = config.uid.lower()
             electrical_equipment["Zone_or_ZoneList_Name"] = zone_name
+            electrical_equipment["Schedule_Name"] = "Always On".upper()
+            electrical_equipment["Design_Level_Calculation_Method"] = config.design_level_calculation_method
+            electrical_equipment["Design_Level"] = config.design_level
+            electrical_equipment["Watts_per_Zone_Floor_Area"] = config.watts_per_zone_floor_area
+            electrical_equipment["Watts_per_Person"] = config.watts_per_person
+            electrical_equipment["Fraction_Latent"] = config.fraction_latent
+            electrical_equipment["Fraction_Radiant"] = config.fraction_radiant
+            electrical_equipment["Fraction_Lost"] = config.fraction_lost
+            electrical_equipment["EndUse_Subcategory"] = config.end_use_subcategory
 
     def _make_lightning(self, zone_name: str, config: Light) -> None:
         if config:
             light = self.model.newidfobject(key="Lights".upper())
-            light["Name"] = config.name
+            light["Name"] = config.uid.lower()
             light["Zone_or_ZoneList_Name"] = zone_name
             light["Lighting_Level"] = config.lighting_power
-
+            light["Schedule_Name"] = "Always On".upper()
+            light["Design_Level_Calculation_Method"] = config.design_level_calculation_method
+            light["Lighting_Level"] = config.lighting_power
+            light["Watts_per_Zone_Floor_Area"] = config.watts_per_zone_floor_area
+            light["Watts_per_Person"] = config.watts_per_person
+            light["Fraction_Radiant"] = config.fraction_radiant
+            light["Fraction_Visible"] = config.fraction_visible
+            light["Fraction_Replaceable"] = config.fraction_replaceable
+            light["EndUse_Subcategory"] = config.end_use_subcategory
+            light["Return_Air_Fraction_Calculated_from_Plenum_Temperature"] = config.return_air_fraction_calculated_from_plenum_temperature
+            light["Return_Air_Fraction_Function_of_Plenum_Temperature_Coefficient_1"] = config.return_air_fraction_function_of_plenum_temperature_coefficient_1
+            light["Return_Air_Fraction_Function_of_Plenum_Temperature_Coefficient_2"] = config.return_air_fraction_function_of_plenum_temperature_coefficient_2
+            
     def _make_zone_sizing(self, zone_name: str, config: SizingZone) -> None:
         sizing = self.model.newidfobject(key="Sizing:Zone".upper())
         sizing["Zone_or_ZoneList_Name"] = zone_name
@@ -384,7 +418,7 @@ class RoomBuilder:
             config: Humidistats,
             dehumidifiers: Dict[str, Dehumidifier],
         ) -> None:
-            num_dehumidifier = len(dehumidifiers)
+            num_dehumidifier = len(dehumidifiers) if dehumidifiers else 0
             if num_dehumidifier == 0:
                 return
             model.newidfobject(
@@ -600,7 +634,7 @@ class RoomBuilder:
                 ] = "ZoneHVAC:Dehumidifier:DX"
                 zone_equipment_list[
                     f"Zone_Equipment_{i + 1 + num_acu}_Name"
-                ] = f"{dehumidifier_key}"
+                ] = f"{dehumidifier.uid.lower()}"
                 zone_equipment_list[f"Zone_Equipment_{i + 1 + num_acu}_Cooling_Sequence"] = i + 1 + num_acu
                 zone_equipment_list[
                     f"Zone_Equipment_{i + 1 + num_acu}_Heating_or_NoLoad_Sequence"
@@ -613,7 +647,7 @@ class RoomBuilder:
                 ] = ""
                 obj = model.newidfobject(
                     key="ZoneHVAC:Dehumidifier:DX".upper(),
-                    Name=f"{dehumidifier_key}",
+                    Name=f"{dehumidifier.uid.lower()}",
                     Availability_Schedule_Name="Always On".upper(),
                     Air_Inlet_Node_Name=f"{zone_name} dehumidifier inlet node {i + 1}",
                     Air_Outlet_Node_Name=f"{zone_name} dehumidifier outlet node {i + 1}",
@@ -624,7 +658,7 @@ class RoomBuilder:
                     Maximum_DryBulb_Temperature_for_Dehumidifier_Operation=dehumidifier.cooling.maximum_dry_bulb_temperature,
                     OffCycle_Parasitic_Electric_Load=dehumidifier.power.off_cycle_parasitic_electric_load,
                 )
-                obj["Water_Removal_Curve_Name"] = f"{dehumidifier_key} water removal curve"
+                obj["Water_Removal_Curve_Name"] = f"{dehumidifier.uid.lower()} water removal curve"
                 model.newidfobject(
                     key="Curve:Biquadratic".upper(),
                     Name=obj["Water_Removal_Curve_Name"],
@@ -639,7 +673,7 @@ class RoomBuilder:
                     Minimum_Value_of_y=0,
                     Maximum_Value_of_y=100,
                 )
-                obj["Energy_Factor_Curve_Name"] = f"{dehumidifier_key} energy factor curve"
+                obj["Energy_Factor_Curve_Name"] = f"{dehumidifier.uid.lower()} energy factor curve"
                 model.newidfobject(
                     key="Curve:Biquadratic".upper(),
                     Name=obj["Energy_Factor_Curve_Name"],
@@ -654,7 +688,7 @@ class RoomBuilder:
                     Minimum_Value_of_y=0,
                     Maximum_Value_of_y=100,
                 )
-                obj["Part_Load_Fraction_Correlation_Curve_Name"] = f"{dehumidifier_key} part load ratio curve"
+                obj["Part_Load_Fraction_Correlation_Curve_Name"] = f"{dehumidifier.uid.lower()} part load ratio curve"
                 model.newidfobject(
                     key="Curve:Quadratic".upper(),
                     Name=obj["Part_Load_Fraction_Correlation_Curve_Name"],
@@ -667,9 +701,11 @@ class RoomBuilder:
 
         if len(acus) == 0:
             return
+        num_acus = len(acus) 
+        num_dehumidifiers = len(dehumidifiers) if dehumidifiers is not None else 0
 
         # step 1: create the zone equipment connections
-        make_equipment_connections(self.model, zone_name, len(acus), len(dehumidifiers))
+        make_equipment_connections(self.model, zone_name, num_acus, num_dehumidifiers)
         # step 2: create the zone equipment object
         zone_equipment_list = self.model.newidfobject(
             key="ZoneHVAC:EquipmentList".upper(),

@@ -43,17 +43,17 @@ def generate_control_dict(
     if steady is False:
         system_folder = "transient"
     shutil.copy(
-        Path(template_dir, f"template/system/{system_folder}/fvSchemes"),
+        Path(template_dir, f"foam/template/system/{system_folder}/fvSchemes"),
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
     shutil.copy(
-        Path(template_dir, f"template/system/{system_folder}/fvSolution"),
+        Path(template_dir, f"foam/template/system/{system_folder}/fvSolution"),
         Path(config.cfd.case_dir, "system/fvSolution"),
     )
     with open(Path(config.cfd.case_dir, "system/controlDict"), "w") as f:
         f.write(
             template_env.get_template(
-                f"foam/system/{system_folder}/controlDict.j2"
+                f"foam/template/system/{system_folder}/controlDict.j2"
             ).render(
                 delta_t=delta_t,
                 write_interval=write_interval,
@@ -67,7 +67,7 @@ def generate_control_dict(
             process_num = 64
         with open(Path(config.cfd.case_dir, "system/decomposeParDict"), "w") as f:
             f.write(
-                template_env.get_template("foam/system/decomposeParDict.j2").render(
+                template_env.get_template("foam/template/system/decomposeParDict.j2").render(
                     process_num=process_num
                 )
             )
@@ -80,30 +80,30 @@ def init_foam():
     Path(config.cfd.case_dir, "case.foam").touch(exist_ok=True)
 
     shutil.copy(
-        Path(template_dir, "template/constant/g"), Path(config.cfd.case_dir, "constant/g")
+        Path(template_dir, "foam/template/constant/g"), Path(config.cfd.case_dir, "constant/g")
     )
     shutil.copy(
-        Path(template_dir, "template/constant/thermophysicalProperties"),
+        Path(template_dir, "foam/template/constant/thermophysicalProperties"),
         Path(config.cfd.case_dir, "constant/thermophysicalProperties"),
     )
     shutil.copy(
-        Path(template_dir, "template/constant/transportProperties"),
+        Path(template_dir, "foam/template/constant/transportProperties"),
         Path(config.cfd.case_dir, "constant/transportProperties"),
     )
 
     with open(Path(config.cfd.case_dir, "constant/turbulenceProperties"), "w") as f:
         f.write(
-            template_env.get_template("foam/constant/turbulenceProperties.j2").render(
+            template_env.get_template("foam/template/constant/turbulenceProperties.j2").render(
                 turbulence=("on" if config.cfd.SOLVER_TURBULENCE else "off")
             )
         )
 
     shutil.copy(
-        Path(template_dir, "template/system/steady/fvSchemes"),
+        Path(template_dir, "foam/template/system/steady/fvSchemes"),
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
     shutil.copy(
-        Path(template_dir, "template/system/steady/fvSolution"),
+        Path(template_dir, "foam/template/system/steady/fvSolution"),
         Path(config.cfd.case_dir, "system/fvSolution"),
     )
 
@@ -142,7 +142,7 @@ def generate_block_dict(room: Room) -> None:
     v_max.y += 0.1
     v_max.z += 0.1
 
-    template = template_env.get_template("foam/mesh/blockMeshDict.j2")
+    template = template_env.get_template("foam/template/mesh/blockMeshDict.j2")
     with open(Path(config.cfd.case_dir, "system/blockMeshDict"), "w") as f:
         f.write(
             template.render(
@@ -233,7 +233,7 @@ def generate_snappy_dict(
     assert len(mesh_list) == len(files)
     with open(Path(config.cfd.case_dir, "system/surfaceFeatureExtractDict"), "w") as f:
         f.write(
-            template_env.get_template("foam/mesh/surfaceFeatureExtractDict.j2").render(
+            template_env.get_template("foam/template/mesh/surfaceFeatureExtractDict.j2").render(
                 files=files
             )
         )
@@ -246,13 +246,13 @@ def generate_snappy_dict(
     )
     with open(Path(config.cfd.case_dir, "system/snappyHexMeshDict"), "w") as f:
         f.write(
-            template_env.get_template("foam/mesh/snappyHexMeshDict.j2").render(
+            template_env.get_template("foam/template/mesh/snappyHexMeshDict.j2").render(
                 mesh_list=mesh_list, location=location
             )
         )
     with open(Path(config.cfd.case_dir, "system/createPatchDict"), "w") as f:
         f.write(
-            template_env.get_template("foam/mesh/createPatchDict.j2").render(
+            template_env.get_template("foam/template/mesh/createPatchDict.j2").render(
                 baffle_faces=baffle_faces
             )
         )
@@ -260,7 +260,7 @@ def generate_snappy_dict(
         process_num = 2 ** int(math.log(process_num, 2))
         with open(Path(config.cfd.case_dir, "system/decomposeParDict"), "w") as f:
             f.write(
-                template_env.get_template("foam/system/decomposeParDict.j2").render(
+                template_env.get_template("foam/template/system/decomposeParDict.j2").render(
                     process_num=process_num
                 )
             )
@@ -268,13 +268,13 @@ def generate_snappy_dict(
     if len(perforated_openings) > 0:
         with open(Path(config.cfd.case_dir, "system/fvOptions"), "w") as f:
             f.write(
-                template_env.get_template(f"foam/system/steady/fvOptions.j2").render(
+                template_env.get_template(f"foam/template/system/steady/fvOptions.j2").render(
                     perforated_openings=perforated_openings,
                 )
             )
         with open(Path(config.cfd.case_dir, "system/topoSetDict"), "w") as f:
             f.write(
-                template_env.get_template(f"foam/system/steady/topoSetDict.j2").render(
+                template_env.get_template(f"foam/template/system/steady/topoSetDict.j2").render(
                     perforated_openings=perforated_openings,
                     min_floor_height=room.constructions.raised_floor.geometry.height
                     - 0.05,

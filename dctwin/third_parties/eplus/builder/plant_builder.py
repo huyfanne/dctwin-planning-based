@@ -64,7 +64,7 @@ class PlantBuilder:
                     loop=loop,
                 )
                 branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
-                branch[f"Component_{component_idx}_Name"] = pipe_name
+                branch[f"Component_{component_idx}_Name"] = pipe.uid.lower()
                 component_idx += 1
         # add pump
         if branch_definition.components.pumps is not None:
@@ -79,7 +79,7 @@ class PlantBuilder:
                     loop=loop,
                 )
                 branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
-                branch[f"Component_{component_idx}_Name"] = pump_name
+                branch[f"Component_{component_idx}_Name"] = pump.uid.lower()
                 component_idx += 1
         # add heat exchangers
         if branch_definition.components.heat_exchangers is not None:
@@ -94,7 +94,7 @@ class PlantBuilder:
                     loop=loop,
                 )
                 branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
-                branch[f"Component_{component_idx}_Name"] = hx_name
+                branch[f"Component_{component_idx}_Name"] = hx.uid.lower()
                 component_idx += 1
         # add chillers
         if branch_definition.components.chillers is not None:
@@ -109,7 +109,7 @@ class PlantBuilder:
                     loop=loop,
                 )
                 branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
-                branch[f"Component_{component_idx}_Name"] = chiller_name
+                branch[f"Component_{component_idx}_Name"] = chiller.uid.lower()
                 component_idx += 1
         # add cooling towers
         if branch_definition.components.cooling_towers is not None:
@@ -124,7 +124,7 @@ class PlantBuilder:
                     loop=loop,
                 )
                 branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
-                branch[f"Component_{component_idx}_Name"] = cooling_tower_name
+                branch[f"Component_{component_idx}_Name"] = cooling_tower.uid.lower()
                 component_idx += 1
         # set cooling coil branch
         if branch_definition.components.acu is not None:
@@ -139,7 +139,7 @@ class PlantBuilder:
                     loop=loop,
                 )
                 branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
-                branch[f"Component_{component_idx}_Name"] = f"{acu_name} cooling coil"
+                branch[f"Component_{component_idx}_Name"] = f"{acu.uid.lower()} cooling coil"
                 component_idx += 1
         return branch
 

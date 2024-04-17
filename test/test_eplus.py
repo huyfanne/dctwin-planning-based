@@ -42,6 +42,7 @@ if __name__ == "__main__":
     config.make_cooling_tower_observations(exposed=False)
     config.make_zone_observations(exposed=False)
     config.make_ite_observations(exposed=False)
+    config.make_dehumidifier_observations(exposed=False)
     config.save(path="configs/test_eplus.prototxt")
 
     # Run simulation

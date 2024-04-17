@@ -5,6 +5,46 @@
     },
     "models": {
         "curveModels": {
+            "DXDehumidifierWaterRemovalCurve": {
+                "type": "Biquadratic",
+                "coefficients": [
+                    -2.72487866408,
+                    0.100711983591,
+                    -0.000990538285,
+                    0.050053043874,
+                    -0.000203629282,
+                    -0.000341750531
+                ],
+                "minX": 21.0,
+                "maxX": 32.22,
+                "minY": 30,
+                "maxY": 90
+            },
+            "DXDehumidifierEnergyFactorCurve": {
+                "type": "Biquadratic",
+                "coefficients": [
+                    -2.388319068955,
+                    0.093047739452,
+                    -0.001369700327,
+                    0.066533716758,
+                    -0.000343198063,
+                    -0.000562490295
+                ],
+                "minX": 21.0,
+                "maxX": 32.22,
+                "minY": 30,
+                "maxY": 90
+            },
+            "DXDehumidifierPartLoadFractionCorrelationCurve": {
+                "type": "Quadratic",
+                "coefficients": [
+                    0.95,
+                    0.05,
+                    0.0
+                ],
+                "minX": 0.0,
+                "maxX": 1.0
+            },
             "DataCenterServerPowerFLoadTemp": {
                 "type": "Biquadratic",
                 "coefficients": [
@@ -217,6 +257,13 @@
                     "pressureRise": 500
                 }
             },
+            "dehumidifiers": {
+                "dehumidifier:DX": {
+                    "ratedWaterRemoval": 50.16,
+                    "ratedAirFlowRate": 0.12036,
+                    "waterRemovalCurveName": "DXDehumidifierWaterRemovalCurve"
+                }
+            },
             "chillers": {
                 "typical chiller": {
                     "referenceCapacity": 1600000.0,
@@ -264,6 +311,13 @@
                     "fanPowerCoefficient3": -0.54137364,
                     "fanPowerCoefficient4": 0.87198823,
                     "fanPowerCoefficient5": 0.0
+                }
+            },
+            "dehumidifiers": {
+                "dehumidifier:DX": {
+                    "ratedEnergyFactor": 3.412,
+                    "energyFactorCurveName": "DXDehumidifierEnergyFactorCurve",
+                    "partLoadFractionCorrelationCurveName": "DXDehumidifierPartLoadFractionCorrelationCurve"
                 }
             },
             "servers": {
@@ -440,6 +494,17 @@
                             }
                         }
                     },
+                    "dehumidifiers": {
+                        "dehumidifier_1": {
+                            "uid": "ZONE1DEHUMIDIFIER1",
+                            "cooling": {
+                                "model": "dehumidifier:DX"
+                            },
+                            "power": {
+                                "model": "dehumidifier:DX"
+                            }
+                        }
+                    },
                     "servers": {
                         "server_1": {
                             "computing": {
@@ -593,8 +658,13 @@
                         }
                     }
                 },
-                "thermostats": {
-                    "coolingSetpoint": 27
+                "controlStates": {
+                    "thermostats": {
+                        "coolingSetpoint": 27
+                    },
+                    "humidistats": {
+                        "humidifyingSetpoint": 40
+                    }
                 },
                 "sizing": {
                     "sizingSystem": {
@@ -683,8 +753,7 @@
                         "chilled water demand branch": {
                             "components": {
                                 "acu": {
-                                    "acu_1": {
-                                    }
+                                    "acu_1": {}
                                 }
                             },
                             "side": "middle"
@@ -708,8 +777,7 @@
                     },
                     "meta": {
                         "loadDistributionScheme": "SequentialLoad",
-                        "plantLoopDemandCalculationScheme": "SingleSetpoint",
-                        "setpointManager": true
+                        "plantLoopDemandCalculationScheme": "SingleSetpoint"
                     }
                 }
             },

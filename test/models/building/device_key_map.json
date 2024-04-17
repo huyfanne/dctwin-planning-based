@@ -46,9 +46,21 @@
                 "air mass flow rate": "ACU_1 OUTDOOR AIR SYSTEM MIXED AIR NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
                 "outlet air temperature": "ACU_1 COOLING COIL AIR OUTLET NODE:System Node Temperature [C](TimeStep)",
                 "inlet water temperature": "ACU_1 WATER INLET NODE:System Node Temperature [C](TimeStep)",
+                "outlet water temperature": "ACU_1 WATER OUTLET NODE:System Node Temperature [C](TimeStep)",
                 "water mass flow rate": "ACU_1 WATER INLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
                 "cooling load": "ACU_1 COOLING COIL:Cooling Coil Sensible Cooling Rate [W](TimeStep)"
             }
+        }
+    },
+    "dehumidifiers": {
+        "ZONE1DEHUMIDIFIER1": {
+            "inlet air temperature": "ZONE DEHUMIDIFIER INLET NODE 1:System Node Temperature [C](TimeStep)",
+            "inlet air relative humidity": "ZONE DEHUMIDIFIER INLET NODE 1:System Node Relative Humidity [%](TimeStep)",
+            "outlet air temperature": "ZONE DEHUMIDIFIER OUTLET NODE 1:System Node Temperature [C](TimeStep)",
+            "outlet air relative humidity": "ZONE DEHUMIDIFIER OUTLET NODE 1:System Node Relative Humidity [%](TimeStep)",
+            "air mass flow rate": "ZONE DEHUMIDIFIER INLET NODE 1:System Node Mass Flow Rate [kg/s](TimeStep)",
+            "removed water mass flow rate": "ZONE1DEHUMIDIFIER1:Zone Dehumidifier Removed Water Mass Flow Rate [kg/s](TimeStep)",
+            "power": "ZONE1DEHUMIDIFIER1:Zone Dehumidifier Electricity Rate [W](TimeStep)"
         }
     },
     "chilled water pumps": {
