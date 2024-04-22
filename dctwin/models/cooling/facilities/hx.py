@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from dclib.cooling.room.facilities import ACU, CDU
 
-from dcdyn.data import Batch, Buffer
+from dctwin.data import Batch, Buffer
 
 from tqdm import tqdm
 

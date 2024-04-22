@@ -5,7 +5,7 @@ import torch.nn as nn
 from dclib.room import Room
 
 from dctwin.models.heat_gains.ite import ITEModel
-from dcdyn.data import Batch
+from dctwin.data import Batch
 
 
 class HeatLoadManager(nn.Module):

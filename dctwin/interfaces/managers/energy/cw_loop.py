@@ -4,10 +4,10 @@ import torch
 import torch.nn as nn
 from dclib.cooling.plant.loops import CondenserWaterLoops
 
-from dcdyn.models.devices import ChillerModel, PumpModel, CoolingTowerModel
-from dcdyn.utils.const import cp_water, rho_water
-from dcdyn.data import Batch
-from dcdyn.models.loops.ds import BranchData
+from dctwin.models.cooling.facilities import ChillerModel, PumpModel, CoolingTowerModel
+from dctwin.utils.const import water_specific_heat, rho_water
+from dctwin.data import Batch
+from .ds import BranchData
 
 
 class CWLoopManager(nn.Module):
@@ -133,7 +133,7 @@ class CWLoopManager(nn.Module):
                     )
                     total_cooling_load += clg_load
                     total_demand_loop_m += mass_flow_rate
-                    return_temperature += (sp + clg_load / (mass_flow_rate * cp_water)) * mass_flow_rate
+                    return_temperature += (sp + clg_load / (mass_flow_rate * water_specific_heat)) * mass_flow_rate
                     num_middle_branches += 1
             return_temperature /= total_demand_loop_m  # average out over all demand branches w.r.t. branch flow rate
 

@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from dclib.cooling.plant.facilities import CoolingTower
 
-from dcdyn.data import Batch, Buffer
+from dctwin.data import Batch, Buffer
 
 
 class CoolingTowerModel(nn.Module):

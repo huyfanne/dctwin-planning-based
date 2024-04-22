@@ -3,8 +3,8 @@ import torch.nn as nn
 
 from dclib.cooling.plant.facilities import Chiller
 
-from ...curves import QuadraticCurve, BiQuadraticCurve
-from ....data import Batch, Buffer
+from dctwin.models.curves import QuadraticCurve, BiQuadraticCurve
+from dctwin.data import Batch, Buffer
 
 
 class ChillerModel(nn.Module):

@@ -5,11 +5,11 @@ import torch.nn as nn
 from dclib.room import Room
 from dclib.cooling.plant.loops import ChilledWaterLoops
 
-from ....data.batch import Batch
-from ....models.cooling.facilities import HeatExchanger, ChillerModel, PumpModel
+from dctwin.data.batch import Batch
+from dctwin.models.cooling.facilities import HeatExchanger, ChillerModel, PumpModel
 from .ds import BranchData
 
-from dcdyn.utils.const import cp_water
+from dctwin.utils.const import water_specific_heat
 
 
 class CHWLoopManager(nn.Module):
@@ -167,7 +167,7 @@ class CHWLoopManager(nn.Module):
                         return_temp = chw_sp
                     else:
                         return_temp = chw_sp + heat_transfer_rate / (
-                            water_mass_flow_rate * cp_water
+                            water_mass_flow_rate * water_specific_heat
                         )
                     branch_fluid_properties["demand"][demand_branch_name] = BranchData(
                         inlet_temperature=chw_sp,
@@ -185,7 +185,7 @@ class CHWLoopManager(nn.Module):
                     )
 
             # calculate average return temperature
-            average_return_temperature = chw_sp + total_cooling_load / (cp_water * total_demand_loop_m)
+            average_return_temperature = chw_sp + total_cooling_load / (water_specific_heat * total_demand_loop_m)
 
             # after we simulate the cooling coil branches, we simulate the inlet and outlet branches
             for demand_branch_name, demand_branch in chilled_water_loop["demand_branches"].items():

@@ -3,10 +3,10 @@ import torch.nn as nn
 
 from dclib.cooling.plant.facilities import Pump
 
-from dcdyn.models.curves import CubicCurve
+from dctwin.models.curves import CubicCurve
 
-from ....data import Batch, Buffer
-from ....utils.const import rho_water
+from dctwin.data import Batch, Buffer
+from dctwin.utils.const import rho_water
 
 
 class PumpModel(nn.Module):

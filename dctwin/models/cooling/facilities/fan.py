@@ -3,8 +3,8 @@ import torch.nn as nn
 
 from dclib.cooling.room.facilities.acu import ACU
 
-from ....models.curves import CubicCurve
-from ....data import Batch, Buffer
+from dctwin.models.curves import CubicCurve
+from dctwin.data import Batch, Buffer
 
 
 class FanModel(nn.Module):

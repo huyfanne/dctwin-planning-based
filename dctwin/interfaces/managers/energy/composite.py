@@ -7,8 +7,8 @@ from .air_loop import AirLoopManager
 from .chw_loop import CHWLoopManager
 from .cw_loop import CWLoopManager
 
-from ....data import Batch
-from ....models.heat_gains import HeatLoadManager
+from dctwin.data import Batch
+from dctwin.models.heat_gains import HeatLoadManager
 
 
 class PIDTManager(nn.Module):
