@@ -172,7 +172,7 @@ class ConfigBuilder:
         ub: float = None,
         variable_names: Union[str, List[str]] = None
     ):
-        for chilled_water_loop_name, chilled_water_loop in self.buidling.constructions.plant.chilled_water_loops.items():
+        for chilled_water_loop_name, chilled_water_loop in self.building.constructions.plant.chilled_water_loops.items():
             # observe chilled water loop supply side outlet temperature
             self._make_observation(
                 exposed=exposed,
