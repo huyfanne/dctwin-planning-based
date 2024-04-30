@@ -371,6 +371,6 @@ eplus_env_config {
       reporting_frequency: "timestep"
     }
   }
-  host: "host.docker.internal"
+  host: "localhost"
   network: "host"
 }

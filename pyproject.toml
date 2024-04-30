@@ -28,6 +28,9 @@ kubernetes = "^27.2.0"
 eppy = "^0.5.63"
 dclib = {git = "https://github.com/cap-dcwiz/dclib.git"}
 sh = "^2.0.6"
+psutil = "5.9.8"
+vtk = "9.3.0"
+mayavi = "4.8.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"

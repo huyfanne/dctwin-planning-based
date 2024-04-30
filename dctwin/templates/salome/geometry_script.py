@@ -130,8 +130,8 @@ class SalomeUtil:
         mesh_obj = smesh.Mesh(obj)
         netgen_1d_2d = mesh_obj.Triangle(algo=smeshBuilder.NETGEN_1D2D)
         netgen_2d_parameters_1 = netgen_1d_2d.Parameters()
-        netgen_2d_parameters_1.SetMaxSize(min_size)
-        netgen_2d_parameters_1.SetMinSize(max_size)
+        netgen_2d_parameters_1.SetMaxSize(max_size)
+        netgen_2d_parameters_1.SetMinSize(min_size)
         netgen_2d_parameters_1.SetSecondOrder(0)
         netgen_2d_parameters_1.SetOptimize(1)
         netgen_2d_parameters_1.SetFineness(2)
@@ -182,7 +182,7 @@ class SalomeUtil:
             print("Exception", e)
 
 
-util = SalomeUtil()
+util = SalomeUtil(skip_pre_mesh=SKIP_PRE_MESH)
 
 
 class ACUModel:
@@ -216,9 +216,9 @@ class ACUModel:
 
         group, supply_face = self.make_sub_face(box, group, self.supply_data)
         group, return_face = self.make_sub_face(box, group, self.return_data)
-        self.supply_mesh = util.mesh(supply_face, 0.1, 5)
-        self.return_mesh = util.mesh(return_face, 0.1, 5)
-        self.wall_mesh = util.mesh(group, 0.1, 5)
+        self.supply_mesh = util.mesh(supply_face, 0.5, 1)
+        self.return_mesh = util.mesh(return_face, 0.5, 1)
+        self.wall_mesh = util.mesh(group, 0.5, 1)
         self.is_meshed = True
 
     def make_acu(self, acu_id: str, placement: Dict, orientation: float) -> None:
@@ -268,9 +268,9 @@ class ServerModel:
             outlet_face = util.sub_face(box, "rear")
         else:
             wall, outlet_face = self.make_sub_face(box, wall, self.outlet_face)
-        self.wall_mesh = util.mesh(wall, 0.1, 0.6)
-        self.inlet_mesh = util.mesh(inlet_face, 0.1, 0.6)
-        self.outlet_mesh = util.mesh(outlet_face, 0.1, 0.6)
+        self.wall_mesh = util.mesh(wall, 0.05, 0.1)
+        self.inlet_mesh = util.mesh(inlet_face, 0.05, 0.1)
+        self.outlet_mesh = util.mesh(outlet_face, 0.05, 0.1)
         self.is_meshed = True
 
     def make(self, server_id: str, placement: Dict, orientation: float) -> None:
@@ -317,14 +317,14 @@ class RackModel:
     def mesh(self) -> None:
         box = util.make_box(self.size)
         group = util.group_by_faces(box, exclude=self.excluded_faces)
-        self.rack_wall_mesh = util.mesh(group, 0.1, 2)
-        blanking_box = util.make_box({**self.size, "z": 0.042, "y": 0.1})
+        self.rack_wall_mesh = util.mesh(group, 0.1, 0.5)
+        blanking_box = util.make_box({**self.size, "z": 0.045, "y": 0.1})
         blanking_box = util.group_by_faces(
             blanking_box, exclude=["rear", "bottom", "top", "left", "right"]
         )  # Remain only front face
-        self.rack_blanking_mesh = util.mesh(blanking_box, 0.05, 1)
+        self.rack_blanking_mesh = util.mesh(blanking_box, 0.1, 0.5)
 
-        slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height,0)
+        slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height, 0)
         if slot_unit_and_actual_rack_height_difference > 0.001:
             blanking_height = slot_unit_and_actual_rack_height_difference / 2
             rack_top_blanking_box = util.make_box({**self.size, "z": blanking_height, "y": 0.1})
@@ -335,8 +335,8 @@ class RackModel:
             rack_bottom_blanking_box = util.group_by_faces(
                 rack_bottom_blanking_box, exclude=["rear", "bottom", "top", "left", "right"]
             )
-            self.rack_top_blanking_box_mesh = util.mesh(rack_top_blanking_box, 0.05, 1)
-            self.rack_bottom_blanking_box_mesh = util.mesh(rack_bottom_blanking_box, 0.05, 1)
+            self.rack_top_blanking_box_mesh = util.mesh(rack_top_blanking_box, 0.05, 0.1)
+            self.rack_bottom_blanking_box_mesh = util.mesh(rack_bottom_blanking_box, 0.05, 0.1)
 
         self.is_meshed = True
 
@@ -348,7 +348,7 @@ class RackModel:
             f"rack_wall_{rack_id}", self.rack_wall_mesh, placement, orientation, is_export=False
         )
         meshes.append(mesh)
-        slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height,0)
+        slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height, 0)
         if self.rack_bottom_blanking_box_mesh is not None:
             mesh = util.copy_mesh(
                 f"rack_panel_{rack_id}_bottom",
@@ -380,10 +380,11 @@ class RackModel:
 
         meshes = []
 
-        slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height,0)
+        slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height, 0)
         for slot in slots:
             # 0.0015 is the gap between each slot, because 0.045 is full slot height and 0.042 is the actual height
-            z = placement["z"] + 0.0015
+            # z = placement["z"] + 0.0015
+            z = placement["z"]
             z += self.slot_height * (slot - 1)
             z += self.first_slot_offset
             if slot_unit_and_actual_rack_height_difference > 0:
@@ -557,7 +558,7 @@ class Builder:
                     move_box_input,
                 )
                 group = util.group_by_faces(geometry_box)
-                mesh_obj = util.mesh(group, 1, 4)
+                mesh_obj = util.mesh(group, 0.1, 0.5)
                 util.export_stl(
                     mesh_obj,
                     f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}",
@@ -573,7 +574,7 @@ class Builder:
                         exclude_faces.append(face)
                 group = util.group_by_faces(geometry_box, exclude=exclude_faces)
                 util.export_stl(
-                    util.mesh(group, 0.5, 2),
+                    util.mesh(group, 0.1, 0.5),
                     f"box_{box['geometry']['model']}_{boxes_types_index[box['geometry']['model']]}",
                 )
 
@@ -663,7 +664,7 @@ class Builder:
             box = util.make_box(opening["size"], opening["location"])
             opening_faces.append(util.sub_face(box, "bottom"))
         floor_face = util.geom.MakeCutList(floor_face, opening_faces)
-        util.export_stl(util.mesh(floor_face, 0.5, 5), f"{name}")
+        util.export_stl(util.mesh(floor_face, 0.5, 0.2), f"{name}")
 
     def make_room(self, geometry_models: Dict) -> None:
         oz = geompy.MakeVectorDXDYDZ(0, 0, 1)
@@ -679,7 +680,7 @@ class Builder:
         # Setup raised floor
         box = util.move_placement(prism, {"x": 0, "y": 0, "z": 0})
         box_faces = util.group_by_faces(box)
-        util.export_stl(util.mesh(box_faces, 2, 6), f"room_wall_1")
+        util.export_stl(util.mesh(box_faces, 1000, 2000), f"room_wall_1")
         # Make objects in the room (e.g., ceiling, raised floor, rack, etc.)
         raised_floor = room["constructions"].get("raised_floor", None)
         false_ceiling = room["constructions"].get("false_ceiling", None)
