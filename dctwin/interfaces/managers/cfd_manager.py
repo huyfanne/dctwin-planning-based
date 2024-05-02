@@ -300,7 +300,7 @@ class CFDManager:
 
     @staticmethod
     def _scale_server_flow_rate(
-            boundary_conditions: Dict, acu2server_flow_ratio: float = 0.8
+            boundary_conditions: Dict, acu2server_flow_ratio: float = 0.8, expert_mode: bool = False
     ) -> Dict:
         """
         scale total server flow rate as a ratio of total supply air flow rate
@@ -337,8 +337,9 @@ class CFDManager:
 
         logger.info(f"sum acu flow rate after scaling: {sum_acu_volume_flow_rate_after}")
         logger.info(f"sum server flow rate after scaling: {sum_server_volume_flow_rate_after}")
-        logger.info("please check the flow rates. Wait for 5 seconds...")
-        time.sleep(5)
+        if expert_mode:
+            logger.info("please check the flow rates. Wait for 5 seconds...")
+            time.sleep(5)
 
         return boundary_conditions
 
@@ -480,6 +481,7 @@ class CFDManager:
             boundary_conditions = self._scale_server_flow_rate(
                 boundary_conditions=boundary_conditions,
                 acu2server_flow_ratio=self.acu2server_flow_ratio,
+                expert_mode=expert_mode
             )
 
         if self.pod_backend is not None and not self.run_cfd:

@@ -69,8 +69,8 @@ eplus_cfd_env_config {
     eplus: {
         model_file: "models/idf/cosim_test.idf"
         weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
+        host: "host.docker.internal"
         network: "host"
-        host: "localhost"
 
         return_temp_lb: 25.0
         return_temp_ub: 40.0
