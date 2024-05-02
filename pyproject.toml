@@ -26,7 +26,7 @@ docker = "^6.1.2"
 scipy = "1.10.1"
 kubernetes = "^27.2.0"
 eppy = "^0.5.63"
-dclib = {git = "https://github.com/cap-dcwiz/dclib.git", tag="v1.2.0"}
+dclib = {git = "https://github.com/cap-dcwiz/dclib.git", tag="v1.2.1"}
 sh = "^2.0.6"
 psutil = "5.9.8"
 vtk = "9.3.0"
