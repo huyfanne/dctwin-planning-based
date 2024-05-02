@@ -42,7 +42,7 @@ class Builder:
         self.server_dict = server_dict
         self.last_state_case = last_state_case
         try:
-            self.sealed = self.room.meta["sealed"]
+            self.sealed = self.room.constructions.check_sealed
         except KeyError:
             logger.error("Error: there is no -sealed- in the JSON -meta-, please refer the example in -tutorials- "
                          "and add it...")

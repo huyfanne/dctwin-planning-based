@@ -1,8 +1,7 @@
 {
     "meta": {
         "name": "mini_alibaba_mixed",
-        "version": "1.0",
-        "sealed": false
+        "version": "1.0"
     },
     "models": {
         "geometryModels": {

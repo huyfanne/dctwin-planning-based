@@ -1,8 +1,7 @@
 {
     "meta": {
         "name": "test_room",
-        "version": "1.0",
-        "sealed": false
+        "version": "1.0"
     },
     "models": {
         "geometryModels": {

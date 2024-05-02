@@ -1,7 +1,6 @@
 {
     "meta": {
-        "name": "TDC",
-        "sealed": false
+        "name": "TDC"
     },
     "models": {
         "geometryModels": {

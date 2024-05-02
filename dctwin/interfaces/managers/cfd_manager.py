@@ -80,7 +80,7 @@ class CFDManager:
             docker_client: docker.DockerClient = None,
             is_k8s: bool = False,
             k8s_config: Dict = {},
-            scale_server_flow_rate: bool = True,
+            scale_server_flow_rate: bool = False,
             acu2server_flow_ratio: float = 1.0,
     ) -> None:
         if not is_k8s:
@@ -476,7 +476,7 @@ class CFDManager:
             self.update_boundary_conditions(**boundary_conditions)
             boundary_conditions = self.format_boundary_conditions
 
-        if self.scale_server_flow_rate and self.room.meta['sealed']:
+        if self.scale_server_flow_rate or self.room.constructions.check_sealed:
             boundary_conditions = self._scale_server_flow_rate(
                 boundary_conditions=boundary_conditions,
                 acu2server_flow_ratio=self.acu2server_flow_ratio,
