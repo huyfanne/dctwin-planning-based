@@ -41,24 +41,43 @@ class Builder:
                 server_dict[server_key] = server
         self.server_dict = server_dict
         self.last_state_case = last_state_case
+        try:
+            self.sealed = self.room.constructions.check_sealed
+        except KeyError:
+            logger.error("Error: there is no -sealed- in the JSON -meta-, please refer the example in -tutorials- "
+                         "and add it...")
+            exit(-1)
 
     def run(self) -> None:
-        self.render("alphat")
-        self.render("epsilon")
-        self.render("nut")
-        self.render("k")
-        self.render("p")
-        self.render("p_rgh")
+        self.render("alphat", "alphat")
+        self.render("epsilon", "epsilon")
+        self.render("nut", "nut")
+        self.render("k", "k")
+        self.render("p", "p")
+
+        if self.sealed:
+            self.render("p_rgh_pressure", "p_rgh")
+        else:
+            self.render("p_rgh", "p_rgh")
+
         if self.last_state_case is not None:
             self.render(
-                "T", "".join(read_internal_field(Path(self.last_state_case, "T")))
+                "T", "T", "".join(read_internal_field(Path(self.last_state_case, "T")))
             )
-            self.render(
-                "U", "".join(read_internal_field(Path(self.last_state_case, "U")))
-            )
+            if self.sealed:
+                self.render(
+                    "U_pressure", "U", "".join(read_internal_field(Path(self.last_state_case, "U")))
+                )
+            else:
+                self.render(
+                    "U", "U", "".join(read_internal_field(Path(self.last_state_case, "U")))
+                )
         else:
-            self.render("T")
-            self.render("U")
+            self.render("T", "T")
+            if self.sealed:
+                self.render("U_pressure", "U")
+            else:
+                self.render("U", "U")
 
     @classmethod
     def get_k_and_epsilon(cls, obj_dict: Dict) -> Tuple[float, float]:
@@ -69,19 +88,19 @@ class Builder:
         obj = min(_obj_list, key=lambda x: x.k)
         return obj.k, obj.epsilon
 
-    def render(self, filename, internal_field=None) -> None:
+    def render(self, source_filename, write_filename, internal_field=None) -> None:
         acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_dict)
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_dict)
-        with open(Path(config.cfd.case_dir, f"0/{filename}"), "w") as f:
+        with open(Path(config.cfd.case_dir, f"0/{write_filename}"), "w") as f:
             f.write(
-                template_env.get_template(f"foam/0/{filename}.j2").render(
+                template_env.get_template(f"foam/0/{source_filename}.j2").render(
                     init_temperature=24 + 273.15,
                     p_rgh=round(self.room_dz * 9.81, 10),
                     acu_boundaries=[
-                        ACUBoundary(key, acu) for key, acu in self.acu_dict.items()
+                        ACUBoundary(key, acu, self.sealed) for key, acu in self.acu_dict.items()
                     ],
                     server_boundaries=[
-                        ServerBoundary(key, server)
+                        ServerBoundary(key, server, self.sealed)
                         for key, server in self.server_dict.items()
                     ],
                     room_boundary=RoomBoundary(self.room),
