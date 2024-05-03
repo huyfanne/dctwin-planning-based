@@ -9,7 +9,7 @@ from dctwin.third_parties.foam import (
     TransientSolverBackend,
     TransientSolverBackendK8s,
 )
-from dctwin.third_parties.eplus import IDFBuilder, ConfigBuilder
+from dctwin.third_parties.eplus import IDFBuilder, ConfigBuilder, CDUConfigBuilder
 
 __all__ = [
     "EplusBackend",
@@ -26,4 +26,5 @@ __all__ = [
     "TransientSolverBackendK8s",
     "IDFBuilder",
     "ConfigBuilder",
+    "CDUConfigBuilder",
 ]
