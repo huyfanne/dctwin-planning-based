@@ -55,6 +55,11 @@ class CFDManager:
     :param field_config: field configuration for meshing
     :param pod_method: POD method, can be GP, Flux, or GP-Flux
     :param docker_client: docker client
+    :param is_k8s: whether to use k8s for simulation
+    :param k8s_config: k8s configuration
+    :param scale_server_flow_rate: whether to scale server flow rate
+    :param acu2server_flow_ratio: ratio of acu supply air flow rate to total server flow rate
+    :param is_gpu: whether to use GPU for simulation
     """
 
     def __init__(
@@ -73,6 +78,7 @@ class CFDManager:
         k8s_config: Dict = {},
         scale_server_flow_rate: bool = False,
         acu2server_flow_ratio: float = 0.8,
+        is_gpu: bool = False,
     ) -> None:
         if not is_k8s:
             self.docker_client = docker_client if docker_client else docker.from_env()
@@ -101,6 +107,7 @@ class CFDManager:
         self.k8s_config = k8s_config
         self.scale_server_flow_rate = scale_server_flow_rate
         self.acu2server_flow_ratio = acu2server_flow_ratio
+        self.is_gpu = is_gpu
 
         self.last_state_case = None
         self.object_mesh_index = read_object_mesh_index(room=self.room)
@@ -136,13 +143,13 @@ class CFDManager:
                     process_num=self.solve_process
                 )
         else:
-            self.geometry_backend = SalomeBackend(self.docker_client)
+            self.geometry_backend = SalomeBackend(self.docker_client, is_gpu=self.is_gpu)
             self.mesh_backend = SnappyHexBackend(
-                self.docker_client, process_num=self.mesh_process
+                self.docker_client, process_num=self.mesh_process, is_gpu=self.is_gpu
             )
             if self.steady:
                 self.solver_backend = SteadySolverBackend(
-                    self.docker_client, process_num=self.solve_process
+                    self.docker_client, process_num=self.solve_process, is_gpu=self.is_gpu
                 )
                 # use reduced-order simulation if POD mode is provided
                 if not self.run_cfd and self.pod_method is not None:
