@@ -686,7 +686,9 @@ class RoomBuilder:
             self._make_ites(room_name, config.constructions.heat_gains.ites)
             self._make_occupancy(room_name, config.constructions.heat_gains.people)
             self._make_lightning(room_name, config.constructions.heat_gains.light)
-            self._make_electrical_equipment(room_name, config.constructions.heat_gains.electric_equipment)
+            self._make_electrical_equipment(
+                room_name, config.constructions.heat_gains.electric_equipment
+            )
             self._make_zone_sizing(room_name, config.sizing.sizing_zone)
             self._make_zone_thermostat(
                 room_name, config.thermostats, config.constructions.acus
