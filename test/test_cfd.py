@@ -2,7 +2,7 @@ from dclib import Room
 from dctwin.interfaces import CFDManager
 from dctwin.utils import config
 
-room = Room.load("models/geometry/acs_level_5_test_v2.json")
+room = Room.load("models/geometry/room_test.json")
 config.PRESERVE_FOAM_LOG = True
 
 iterations = 50
