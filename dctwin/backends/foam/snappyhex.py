@@ -44,7 +44,8 @@ class SnappyHexBackendMixin:
                     f"{topo_set_command}"
                     "createPatch -overwrite && "
                     "rm -rf /data/constant/triSurface/*.eMesh && "
-                    "rm -rf /data/processor*"
+                    "rm -rf /data/processor* &&"
+                    "checkMesh -allGeometry -allTopology"
                 ),
             ]
             # command=["bash", "-c", f"sleep infinity"]
