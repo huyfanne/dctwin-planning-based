@@ -442,6 +442,24 @@ class CFDManager:
             if not valid_flag:
                 logger.error(f"No application '{application_name}'. Please stop debugging and install...")
                 sys.exit()
+        elif system == "Darwin":
+            try:
+                # Applications folder path
+                apps_folder = "/Applications"
+                app_found = False
+                for file in os.listdir(apps_folder):
+                    # Check if the file name contains the partial field
+                    if application_name.lower() in file.lower() and file.endswith('.app'):
+                        app_path = os.path.join(apps_folder, data_path)
+                        # Open the application
+                        subprocess.run(['open', app_path])
+                        print(f"Opened application: {file}")
+                        app_found = True
+                        break
+                if not app_found:
+                    print(f"No application containing \"{application_name}\" found")
+            except Exception as e:
+                print("An error occurred:", e)
 
     def run(
             self,
