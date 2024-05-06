@@ -10,8 +10,8 @@ from cvxpylayers.torch import CvxpyLayer
 from dclib.room import Room
 
 
-from dctwin.third_parties.core import Backend
-from dctwin.third_parties.core_k8s import K8sBackend
+from dctwin.third_parties.docker_backend import DockerBackend
+from dctwin.third_parties.k8s_backend import K8sBackend
 from dctwin.utils import config
 
 from .models import BatchIndependentMultiTaskGPModel
@@ -530,7 +530,7 @@ class PODBackendMixin:
         return reconstruct
 
 
-class PODBackend(PODBackendMixin, Backend):
+class PODDockerBackend(PODBackendMixin, DockerBackend):
     pass
 
 

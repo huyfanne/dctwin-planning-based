@@ -10,10 +10,10 @@ $Q$ is the sensible heat load
 """
 
 
-from .pod import PODBackend, PODK8SBackend, PODBackendMixin
+from .pod import PODDockerBackend, PODK8SBackend, PODBackendMixin
 
 __all__ = [
-    "PODBackend",
+    "PODDockerBackend",
     "PODK8SBackend",
     "PODBackendMixin",
 ]

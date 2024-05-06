@@ -1,7 +1,7 @@
-from .core import PODBackend, PODK8SBackend, PODBackendMixin
+from .core import PODDockerBackend, PODK8SBackend, PODBackendMixin
 
 __all__ = [
-    "PODBackend",
+    "PODDockerBackend",
     "PODK8SBackend",
     "PODBackendMixin",
 ]
