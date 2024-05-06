@@ -7,7 +7,7 @@ from dclib.cooling.plant.loops import CondenserWaterLoops
 from dctwin.models.cooling.facilities import ChillerModel, PumpModel, CoolingTowerModel
 from dctwin.utils.const import water_specific_heat, rho_water
 from dctwin.data import Batch
-from .ds import BranchData
+from dctwin.models.cooling.ds import BranchData
 
 
 class CWLoopManager(nn.Module):

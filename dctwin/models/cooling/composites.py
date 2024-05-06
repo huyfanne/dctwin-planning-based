@@ -3,9 +3,9 @@ from typing import Dict, Tuple
 import torch.nn as nn
 from dclib import Building
 
-from loops.air_loop import AirLoopManager
-from loops.chw_loop import CHWLoopManager
-from loops.cw_loop import CWLoopManager
+from dctwin.models.cooling.loops import AirLoopManager
+from dctwin.models.cooling.loops.chw_loop import CHWLoopManager
+from dctwin.models.cooling.loops.cw_loop import CWLoopManager
 
 from dctwin.data import Batch
 from dctwin.models.heat_gains import HeatLoadManager

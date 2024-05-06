@@ -7,7 +7,7 @@ from dclib.cooling.plant.loops import ChilledWaterLoops
 
 from dctwin.data.batch import Batch
 from dctwin.models.cooling.facilities import HeatExchanger, ChillerModel, PumpModel
-from .ds import BranchData
+from dctwin.models.cooling.ds import BranchData
 
 from dctwin.utils.const import water_specific_heat
 
