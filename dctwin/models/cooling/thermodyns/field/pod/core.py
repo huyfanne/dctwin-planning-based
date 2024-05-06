@@ -67,6 +67,7 @@ class PODBackendMixin:
         supply_air_volume_flow_rates: Dict,
         server_powers: Dict,
         server_volume_flow_rates: Dict,
+        supply_air_relative_humidities: Optional[Dict] = None,
         sensor_temperatures: Optional[Dict] = None,
     ) -> Dict[str, torch.Tensor]:
         """
@@ -508,6 +509,7 @@ class PODBackendMixin:
            i.e., boundary_conditions = {
             "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
             "server_powers": {}, "server_volume_flow_rates": {}
+            "supply_air_relative_humidities": {}, Optional
             }
         """
         assert self.modes is not None, "POD modes are not computed or loaded"

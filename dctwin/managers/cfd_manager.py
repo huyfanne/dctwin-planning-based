@@ -252,6 +252,7 @@ class CFDManager:
         self,
         supply_air_temperatures: Dict = None,
         supply_air_volume_flow_rates: Dict = None,
+        supply_air_relative_humidities: Dict = None,
         server_powers: Dict = None,
         server_volume_flow_rates: Dict = None,
     ) -> None:
@@ -261,12 +262,15 @@ class CFDManager:
         )
         self._update_server_boundaries(server_powers, server_volume_flow_rates)
 
+        # TODO: add support for dehumidifiers
+
     @property
     def format_boundary_conditions(self) -> Dict:
         """Format boundary conditions for ACUs and servers to be used in the API"""
         boundary_conditions = {
             "supply_air_temperatures": {},
             "supply_air_volume_flow_rates": {},
+            "supply_air_relative_humidities": {},
             "server_powers": {},
             "server_volume_flow_rates": {},
         }
@@ -286,6 +290,8 @@ class CFDManager:
                 boundary_conditions["server_volume_flow_rates"][
                     server_id
                 ] = server.volume_flow_rate
+
+        # TODO: add support for dehumidifiers
 
         return boundary_conditions
 
@@ -340,6 +346,7 @@ class CFDManager:
            i.e., boundary_conditions = {
             "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
             "server_powers": {}, "server_volume_flow_rates": {}
+            "supply_air_relative_humidities": {} # optional, only for dehumidifiers
             }
         :return: temperature fields (np.ndarray, torch.Tensor) or sensor measured results (Dict)
         """
