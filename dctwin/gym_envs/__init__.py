@@ -14,23 +14,15 @@ from gym.envs.registration import register
 from loguru import logger
 
 
-__all__ = [
-    "BaseEnv",
-    "EPlusEnv",
-    "EplusCFDEnv",
-    "EplusCDUEnv"
-]
-
-
 registry = dict(
-    eplus_env_config=("EplusEnv-v0", "dctwin.interfaces.gym_envs.eplus_env:EPlusEnv"),
+    eplus_env_config=("EplusEnv-v0", "dctwin.gym_envs.eplus_env:EPlusEnv"),
     eplus_cfd_env_config=(
         "EplusCFDEnv-v0",
-        "dctwin.interfaces.gym_envs.eplus_cfd_env:EplusCFDEnv",
+        "dctwin.gym_envs.eplus_cfd_env:EplusCFDEnv",
     ),
     eplus_cdu_env_config=(
         "EplusCDUEnv-v0",
-        "dctwin.interfaces.gym_envs.eplus_cdu_env:EplusCDUEnv",
+        "dctwin.gym_envs.eplus_cdu_env:EplusCDUEnv",
     ),
 )
 
@@ -54,5 +46,5 @@ __all__ = [
     "BaseEnv",
     "EPlusEnv",
     "EplusCFDEnv",
-    "EplusCDUEnv"
+    "EplusCDUEnv",
 ]
