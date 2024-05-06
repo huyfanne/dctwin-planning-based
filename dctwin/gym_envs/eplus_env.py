@@ -8,7 +8,7 @@ from typing import (
 )
 from loguru import logger
 from pathlib import Path
-from dctwin.third_parties import EplusBackend, EplusK8SBackend
+from dctwin.third_parties import EplusDockerBackend, EplusK8SBackend
 from dctwin.utils import config as eplus_env
 from dctwin.utils import EPlusEnvConfig
 
@@ -52,7 +52,7 @@ class EPlusEnv(BaseEnv):
                 k8s_config=k8s_config,
             )
         else:
-            self.eplus_backend = EplusBackend(
+            self.eplus_backend = EplusDockerBackend(
                 proto_config=config,
                 host=config.host,
                 network=config.network,
