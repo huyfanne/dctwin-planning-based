@@ -37,12 +37,6 @@ class PumpModel(nn.Module):
         self.key_mapping = key_mapping
 
     def collect(self, data: dict):
-        assert "mass flow rate" in self.key_mapping.keys(), "The \"mass flow rate\" key is not provided."
-        assert "power" in self.key_mapping.keys(), "The \"power\" key is not provided."
-        assert self.key_mapping["mass flow rate"] in data.keys(),\
-            f"{self.key_mapping['mass flow rate']} is not included in the data dictionary."
-        assert self.key_mapping["power"] in data.keys(),\
-            f"{self.key_mapping['power']} is not included in the data dictionary."
         self.buffer.add(
             Batch(
                 pump_mass_flow_rate=data[self.key_mapping["mass flow rate"]],
@@ -80,10 +74,13 @@ class PumpModel(nn.Module):
     def learn(self):
         if self.learnable:
             batch, _ = self.buffer.sample(batch_size=0)
-            self.power_curve.learn(
-                x=torch.tensor(batch.pump_mass_flow_rate, dtype=torch.float32),
-                y=torch.tensor(batch.pump_power, dtype=torch.float32)
-            )
-        else:
-            pass
-
+            mask = batch.pump_mass_flow_rate > 0
+            batch = batch[mask]
+            if len(batch) > 3:
+                self.power_curve.learn(
+                    x=torch.tensor(batch.pump_mass_flow_rate, dtype=torch.float32),
+                    y=torch.tensor(batch.pump_power, dtype=torch.float32)
+                )
+            else:
+                from loguru import logger
+                logger.warning(f"Insufficient data for learning the pump model of {self.uid}.")

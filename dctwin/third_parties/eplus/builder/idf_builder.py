@@ -76,7 +76,7 @@ class IDFBuilder:
     def _make_schedule(self) -> None:
         pass
 
-    def _make_elctric_load_centers(self) -> None:
+    def _make_electric_load_centers(self) -> None:
         self.electric_system_builder.make_electric_load_centers(
             self.building.constructions.electrical_load_centers
         )
@@ -95,6 +95,7 @@ class IDFBuilder:
             "condenser water pumps": {},
             "cooling towers": {},
             "secondary chilled water pumps": {},
+            "thermal storage tanks": {},
         }
         # create chilled water loop device key mapping
         chilled_water_loop_names = self.building.constructions.plant.chilled_water_loops
@@ -227,6 +228,24 @@ class IDFBuilder:
                 "condenser water return temperature": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Demand Side Inlet Temperature [C](TimeStep)",
                 "condenser water mass flow rate": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Demand Side Mass Flow Rate [kg/s](TimeStep)",
             }
+        # create thermal storage tank device key mapping
+        tank_names = self.building.constructions.thermal_storage_tank_keys
+        for tank_name in tank_names:
+            tank_obj = self.model.getobject(
+                key="ThermalStorage:ChilledWater:Mixed".upper(), name=tank_name
+            )
+            self.device_key_map["thermal storage tanks"][tank_name] = {
+                "tank temperature": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Tank Temperature [C](TimeStep)",
+                "use side mass flow rate": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Use Side Mass Flow Rate [kg/s](TimeStep)",
+                "use side inlet temperature": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Use Side Inlet Temperature [C](TimeStep)",
+                "use side outlet temperature": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Use Side Outlet Temperature [C](TimeStep)",
+                "use side heat transfer rate": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Use Side Heat Transfer Rate [W](TimeStep)",
+                "source side mass flow rate": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Source Side Mass Flow Rate [kg/s](TimeStep)",
+                "source side inlet temperature": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Source Side Inlet Temperature [C](TimeStep)",
+                "source side outlet temperature": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Source Side Outlet Temperature [C](TimeStep)",
+                "source side heat transfer rate": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Source Side Heat Transfer Rate [W](TimeStep)",
+            }
+
         # create secondary chilled water pump device key mapping
         pump_names = self.building.constructions.secondary_chilled_water_pump_keys
         for pump_name in pump_names:
@@ -291,7 +310,7 @@ class IDFBuilder:
         self._make_rooms()
         self._make_plant()
         self._make_schedule()
-        self._make_elctric_load_centers()
+        self._make_electric_load_centers()
 
     def save(
         self,

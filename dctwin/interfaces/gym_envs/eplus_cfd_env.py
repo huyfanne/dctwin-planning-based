@@ -28,8 +28,8 @@ class EplusCFDEnv(EPlusEnv):
     :param reward_fn: the callback reward function defined by the user
         We need the user to pass in a reward function
         Why? we tried to use a templated function with params, but turns out it's bad
-    :param schedule_fn: the callback facility schedule function defined by the user
-        e.g., the IT utilization schedule
+    :param schedule_fn: the callback facility workloads function defined by the user
+        e.g., the IT utilization workloads
     """
 
     def __init__(

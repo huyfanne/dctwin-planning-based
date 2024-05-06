@@ -182,7 +182,7 @@ class CWLoopManager(nn.Module):
                         outlet_temperature=sp,
                         outlet_mass_flow_rate=total_demand_loop_m,
                     )
-            # Distribute cooling load to each cooling tower according to the uniform load schedule
+            # Distribute cooling load to each cooling tower according to the uniform load workloads
             for supply_branch_name, supply_branch in condensing_water_loop["supply_branches"].items():
                 if "cooling tower" in supply_branch.keys():
                     ct_clg_loads[supply_branch["cooling tower"].uid] = (

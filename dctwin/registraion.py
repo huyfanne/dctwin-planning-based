@@ -19,7 +19,7 @@ def make_env(
     :param env_proto_config: the path to the protobuf config file
     :param reward_fn: the callback reward function defined by the user
         We need the user to pass in a reward function
-    :param schedule_fn: the callback facility schedule function defined by the user
+    :param schedule_fn: the callback facility workloads function defined by the user
     :param map_boundary_condition_fn: the callback function to map the boundary conditions
         defined by the user, this is only used for co-simulation
         e.g., the format of the boundary conditions should be consistent with the CFDManger

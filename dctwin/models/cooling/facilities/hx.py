@@ -2,6 +2,7 @@ from CoolProp.CoolProp import PropsSI
 import numpy as np
 import torch
 import torch.nn as nn
+from loguru import logger
 from dclib.cooling.room.facilities import ACU, CDU
 
 from dctwin.data import Batch, Buffer
@@ -19,7 +20,7 @@ class HeatExchanger(nn.Module):
         internal_fluid_name: str,
         external_fluid_name: str,
         key_mapping: dict = None,
-        learnable: bool = False,
+        learnable: bool = True,
         tube_diameter: float = 0.02,
         tube_length: float = 2.5,
         tube_thickness: float = 0.002,
@@ -191,33 +192,37 @@ class HeatExchanger(nn.Module):
 
     def learn(self):
         if self.learnable:
-            pbar = tqdm(range(self.max_learning_iter))
             batch, _ = self.buffer.sample(batch_size=0)  # sample all data from the buffer
-            self.train()
-            for _ in pbar:
-                self.opt.zero_grad()
-                _, T_air_out, _, _, _, _ = self.forward(
-                    T_air_in=torch.tensor(
-                        batch.cooling_coil_inlet_air_temperature, dtype=torch.float32
-                    ).view(-1, 1),
-                    m_air=torch.tensor(
-                        batch.cooling_coil_air_mass_flow_rate, dtype=torch.float32
-                    ).view(-1, 1),
-                    m_water=torch.tensor(
-                        batch.cooling_coil_water_mass_flow_rate, dtype=torch.float32
-                    ).view(-1, 1),
-                    T_water_in=torch.tensor(
-                        batch.cooling_coil_inlet_water_temperature, dtype=torch.float32
-                    ).view(-1, 1),
-                )
-                loss = nn.MSELoss()(
-                    T_air_out,
-                    torch.tensor(batch.cooling_coil_outlet_air_temperature, dtype=torch.float32).view(-1, 1)
-                )
-                loss.backward(retain_graph=True)
-                self.opt.step()
-                self._project_ws()  # project the parameters to the positive region to make them feasible
-                pbar.set_description(f"Loss: {loss.item():.4f}")
+            mask = batch.cooling_coil_air_mass_flow_rate > 0
+            batch = batch[mask]
+            if len(batch) > 10:
+                self.train()
+                logger.info(f"Start learning the heat exchanger model @ {self.uid}.")
+                pbar = tqdm(range(self.max_learning_iter))
+                for _ in pbar:
+                    self.opt.zero_grad()
+                    _, T_air_out, _, _, _, _ = self.forward(
+                        T_air_in=torch.tensor(
+                            batch.cooling_coil_inlet_air_temperature, dtype=torch.float32
+                        ).view(-1, 1),
+                        m_air=torch.tensor(
+                            batch.cooling_coil_air_mass_flow_rate, dtype=torch.float32
+                        ).view(-1, 1),
+                        m_water=torch.tensor(
+                            batch.cooling_coil_water_mass_flow_rate, dtype=torch.float32
+                        ).view(-1, 1),
+                        T_water_in=torch.tensor(
+                            batch.cooling_coil_inlet_water_temperature, dtype=torch.float32
+                        ).view(-1, 1),
+                    )
+                    loss = nn.MSELoss()(
+                        T_air_out,
+                        torch.tensor(batch.cooling_coil_outlet_air_temperature, dtype=torch.float32).view(-1, 1)
+                    )
+                    loss.backward(retain_graph=True)
+                    self.opt.step()
+                    self._project_ws()  # project the parameters to the positive region to make them feasible
+                    pbar.set_description(f"Loss: {loss.item():.4f}")
 
     def forward(
         self,

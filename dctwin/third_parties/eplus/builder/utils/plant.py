@@ -8,7 +8,7 @@ To add a new HVAC system component, you need to add a new make function here and
 from eppy.modeleditor import IDF
 from eppy.bunch_subclass import EpBunch
 
-from dclib.cooling.plant.facilities import Chiller, Pump, Pipe, CoolingTower, HeatExchanger
+from dclib.cooling.plant.facilities import Chiller, Pump, Pipe, CoolingTower, HeatExchanger, Tank
 from dclib.cooling.plant.loops import SizingPlant
 from dclib.cooling.room.facilities.acu import ACU
 
@@ -332,6 +332,68 @@ def make_chiller(
             name=f"{chiller.uid.lower()} condenser water",
             inlet_key_name="Condenser_Inlet_Node_Name",
             outlet_key_name="Condenser_Outlet_Node_Name",
+        )
+    else:
+        raise ValueError("Invalid chiller type or side")
+    return obj
+
+
+def make_thermal_storage_tank(
+    model: IDF,
+    branch: EpBunch,
+    branch_component_idx,
+    storage_tank: Tank,
+    **kwargs,
+):
+    """
+    Make the chiller object in the model. Now only support Electric:EIR chiller.
+    :param model:
+    :param branch:
+    :param branch_component_idx:
+    :param chiller:
+    :param kwargs:
+    :return:
+    """
+    if kwargs["type_"] == "secondary" and kwargs["side"] == "supply":
+        obj = model.newidfobject(
+            "thermalstorage:chilledwater:mixed".upper(), Name=storage_tank.uid.lower()
+        )
+        obj = fill_inlet_outlet(
+            branch_component_idx=branch_component_idx,
+            obj=obj,
+            branch=branch,
+            name=f"{storage_tank.uid.lower()} use side",
+            inlet_key_name="Use_Side_Inlet_Node_Name",
+            outlet_key_name="Use_Side_Outlet_Node_Name",
+        )
+        obj["Tank_Volume"] = storage_tank.cooling.tank_volume
+        obj["Setpoint_Temperature_Schedule_Name"] = ""
+        obj["Deadband_Temperature_Difference"] = storage_tank.cooling.deadband_temperature_difference
+        obj["Minimum_Temperature_Limit"] = storage_tank.cooling.minimum_temperature_limit
+        obj["Nominal_Cooling_Capacity"] = storage_tank.cooling.nominal_cooling_capacity
+        obj["Ambient_Temperature_Indicator"] = storage_tank.cooling.ambient_temperature_indicator
+        obj["Ambient_Temperature_Schedule_Name"] = storage_tank.control.ambient_temperature_schedule_name
+        obj["Ambient_Temperature_Zone_Name"] = storage_tank.cooling.ambient_temperature_zone_name
+        obj["Ambient_Temperature_Outdoor_Air_Node_Name"] =\
+            storage_tank.cooling.ambient_temperature_outdoor_air_node_name
+        obj["Heat_Gain_Coefficient_from_Ambient_Temperature"] =\
+            storage_tank.cooling.heat_gain_coefficient_from_ambient_temperature
+        obj["Use_Side_Heat_Transfer_Effectiveness"] = storage_tank.cooling.use_side_heat_transfer_effectiveness
+        obj["Use_Side_Availability_Schedule_Name"] = storage_tank.control.use_side_availability_schedule_name
+        obj["Use_Side_Design_Flow_Rate"] = storage_tank.cooling.use_side_design_flow_rate
+        obj["Source_Side_Heat_Transfer_Effectiveness"] = storage_tank.cooling.source_side_heat_transfer_effectiveness
+        obj["Source_Side_Availability_Schedule_Name"] = storage_tank.control.source_side_availability_schedule_name
+        obj["Source_Side_Design_Flow_Rate"] = storage_tank.cooling.source_side_design_flow_rate
+        obj["Tank_Recovery_Time"] = storage_tank.cooling.tank_recovery_time
+    elif kwargs["type_"] == "chilled" and kwargs["side"] == "demand":
+        obj = model.getobject("thermalstorage:chilledwater:mixed".upper(), storage_tank.uid.lower())
+        obj = fill_inlet_outlet(
+            branch_component_idx=branch_component_idx,
+            obj=obj,
+            branch=branch,
+            name=f"{storage_tank.uid.lower()} source side",
+            inlet_key_name="Source_Side_Inlet_Node_Name",
+            outlet_key_name="Source_Side_Outlet_Node_Name",
         )
     else:
         raise ValueError("Invalid chiller type or side")

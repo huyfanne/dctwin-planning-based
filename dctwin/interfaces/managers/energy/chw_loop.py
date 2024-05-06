@@ -228,7 +228,7 @@ class CHWLoopManager(nn.Module):
                         outlet_mass_flow_rate=total_demand_loop_m,
                     )
 
-            # distribute cooling load to each chiller according to the uniform load schedule
+            # distribute cooling load to each chiller according to the uniform load workloads
             num_chiller = 0
             chiller_cooling_loads = {}
             for supply_branch_name, supply_branch in chilled_water_loop["supply_branches"].items():
