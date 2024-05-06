@@ -13,7 +13,7 @@ from typing import (
 from pathlib import Path
 from dclib.room import Room
 
-from dctwin.interfaces.adapters import EplusCFDAdapter
+from dctwin.adapters import EplusCFDAdapter
 from dctwin.utils import EPlusEnvConfig
 from dctwin.utils import config as eplus_cfd_env
 

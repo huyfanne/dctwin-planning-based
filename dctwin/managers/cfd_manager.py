@@ -7,9 +7,9 @@ from loguru import logger
 
 from dctwin.third_parties import (
     SalomeBackend,
-    SalomeBackendK8s,
+    SalomeK8SBackend,
     SnappyHexBackend,
-    SnappyHexBackendK8s,
+    SnappyHexK8SBackend,
     SteadySolverBackend,
     SteadySolverBackendK8s,
     TransientSolverBackend,
@@ -76,8 +76,8 @@ class CFDManager:
     ) -> None:
         if not is_k8s:
             self.docker_client = docker_client if docker_client else docker.from_env()
-        self.geometry_backend: Optional[Union[SalomeBackend, SalomeBackendK8s]] = None
-        self.mesh_backend: Optional[Union[SnappyHexBackend, SnappyHexBackendK8s]] = None
+        self.geometry_backend: Optional[Union[SalomeBackend, SalomeK8SBackend]] = None
+        self.mesh_backend: Optional[Union[SnappyHexBackend, SnappyHexK8SBackend]] = None
         self.solver_backend: Union[
             None,
             TransientSolverBackend,
@@ -114,8 +114,8 @@ class CFDManager:
         reduced-order solver: POD
         """
         if self.isk8s:
-            self.geometry_backend = SalomeBackendK8s(k8s_config=self.k8s_config)
-            self.mesh_backend = SnappyHexBackendK8s(
+            self.geometry_backend = SalomeK8SBackend(k8s_config=self.k8s_config)
+            self.mesh_backend = SnappyHexK8SBackend(
                 process_num=self.mesh_process, k8s_config=self.k8s_config
             )
             if self.steady:

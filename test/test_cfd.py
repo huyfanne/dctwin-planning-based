@@ -1,5 +1,5 @@
 from dclib import Room
-from dctwin.interfaces import CFDManager
+from dctwin.managers import CFDManager
 from dctwin.utils import config
 
 room = Room.load("models/geometry/room_test.json")

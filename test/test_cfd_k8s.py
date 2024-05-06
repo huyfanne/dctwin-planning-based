@@ -1,4 +1,4 @@
-from dctwin.interfaces import CFDManager
+from dctwin.managers import CFDManager
 from dclib import Room
 from dctwin.utils import config
 

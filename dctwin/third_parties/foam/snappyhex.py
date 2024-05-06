@@ -7,7 +7,7 @@ from typing import Optional
 from dclib.room import Room
 
 from dctwin.third_parties.core import Backend
-from dctwin.third_parties.core_k8s import BackendK8s
+from dctwin.third_parties.core_k8s import K8sBackend
 from dctwin.third_parties.foam.utils import (
     init_foam,
     generate_block_dict,
@@ -113,5 +113,5 @@ class SnappyHexBackend(SnappyHexBackendMixin, Backend):
     pass
 
 
-class SnappyHexBackendK8s(SnappyHexBackendMixin, BackendK8s):
+class SnappyHexK8SBackend(SnappyHexBackendMixin, K8sBackend):
     pass

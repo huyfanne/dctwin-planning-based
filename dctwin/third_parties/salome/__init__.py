@@ -1,6 +1,6 @@
-from .salome import SalomeBackend, SalomeBackendK8s
+from .salome import SalomeBackend, SalomeK8SBackend
 
 __all__ = [
     "SalomeBackend",
-    "SalomeBackendK8s"
+    "SalomeK8SBackend"
 ]

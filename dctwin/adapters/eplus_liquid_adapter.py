@@ -6,8 +6,8 @@ import numpy as np
 from dclib import Building
 
 from dctwin.utils import config
-from ...third_parties.eplus import EplusBackend
-from ..managers.energy.liquid_cooling import LiquidCoolingManager
+from dctwin.third_parties.eplus import EplusBackend
+from dctwin.models.cooling.ensemble import LiquidCoolingEnsemble
 
 
 class EplusLiquidAdapter:
@@ -31,7 +31,7 @@ class EplusLiquidAdapter:
         for room_name, room in self.building.constructions.zones.items():
             if room.constructions.cdus is None: # skip if the room does not have CDUs
                 continue
-            self.liquid_managers[room_name] = LiquidCoolingManager(
+            self.liquid_managers[room_name] = LiquidCoolingEnsemble(
                 room=room,
                 inputs=self.building.inputs,
             )

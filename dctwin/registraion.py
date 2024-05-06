@@ -2,7 +2,7 @@ import gym
 from typing import Union, Callable
 from google.protobuf import json_format
 from dctwin.utils import read_engine_config
-from dctwin.interfaces import get_env_id, BaseEnv
+from dctwin.gym_envs import get_env_id, BaseEnv
 from dclib import Building
 
 def make_env(

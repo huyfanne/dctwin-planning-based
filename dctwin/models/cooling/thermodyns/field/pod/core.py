@@ -11,7 +11,7 @@ from dclib.room import Room
 
 
 from dctwin.third_parties.core import Backend
-from dctwin.third_parties.core_k8s import BackendK8s
+from dctwin.third_parties.core_k8s import K8sBackend
 from dctwin.utils import config
 
 from .models import BatchIndependentMultiTaskGPModel
@@ -534,5 +534,5 @@ class PODBackend(PODBackendMixin, Backend):
     pass
 
 
-class PODBackendK8s(PODBackendMixin, BackendK8s):
+class PODK8SBackend(PODBackendMixin, K8sBackend):
     pass

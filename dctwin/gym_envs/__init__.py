@@ -1,8 +1,25 @@
+"""
+This module contains the standard gym interfaces for AI interaction
+Please refer the gym interface at:
+
+    https://github.com/openai/gym
+"""
+
+from .base_env import BaseEnv
+from .eplus_env import EPlusEnv
+from .eplus_cfd_env import EplusCFDEnv
+from .eplus_cdu_env import EplusCDUEnv
+
 from gym.envs.registration import register
 from loguru import logger
 
-from .gym_envs import BaseEnv, EPlusEnv, EplusCFDEnv, EplusCFDEnv
-from .managers import CFDManager, PODBuilder
+
+__all__ = [
+    "BaseEnv",
+    "EPlusEnv",
+    "EplusCFDEnv",
+    "EplusCDUEnv"
+]
 
 
 registry = dict(
@@ -37,7 +54,5 @@ __all__ = [
     "BaseEnv",
     "EPlusEnv",
     "EplusCFDEnv",
-    "CFDManager",
-    "PODBuilder",
     "EplusCDUEnv"
 ]

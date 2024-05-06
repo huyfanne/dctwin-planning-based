@@ -2,8 +2,9 @@ from pathlib import Path
 import numpy as np
 
 from dclib import Building
-from dctwin import IDFBuilder, ConfigBuilder
+from dctwin.third_parties import IDFBuilder, ConfigBuilder
 from dctwin.registraion import make_env
+
 
 if __name__ == "__main__":
     # Build IDF file

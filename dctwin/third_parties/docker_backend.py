@@ -10,7 +10,7 @@ from dctwin.utils import config
 from dctwin.third_parties.base_core import BaseBackend
 
 
-class Backend(BaseBackend):
+class DockerBackend(BaseBackend):
     """
     Base class for DCTwin Backend. All backend should inherit this class.
     The Backend is to support the simulation of various simulators (EnergyPlus, OpenFoam, etc.) which is dockerized.

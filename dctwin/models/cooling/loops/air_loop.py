@@ -6,9 +6,9 @@ import torch.nn as nn
 
 from dclib.room import Room
 
-from ....models.cooling.facilities import FanModel
-from ....models.cooling.thermodyns import SteadyStateThermodynamics
-from ....data import Batch
+from dctwin.models.cooling.facilities import FanModel
+from dctwin.models.cooling.thermodyns import SteadyStateThermodynamics
+from dctwin.data import Batch
 
 
 class AirLoopManager(nn.Module):

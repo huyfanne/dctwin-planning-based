@@ -1,16 +1,13 @@
 from .registraion import make_env
-from dctwin import third_parties, interfaces, models, utils
-from dctwin.third_parties import IDFBuilder, ConfigBuilder, CDUConfigBuilder
+from dctwin import managers, third_parties, gym_envs, models, utils
 
-__version__ = "1.1.2"
+
+__version__ = "1.3.0"
 
 __all__ = [
-    "interfaces",
+    "managers",
     "models",
     "third_parties",
     "utils",
     "make_env",
-    "IDFBuilder",
-    "ConfigBuilder",
-    "CDUConfigBuilder",
 ]

@@ -14,7 +14,7 @@ from loguru import logger
 from dctwin.utils import EPlusEnvConfig
 from dctwin.third_parties.eplus.utils import EPlusOutputFormatter
 from dctwin.third_parties.core import Backend
-from dctwin.third_parties.core_k8s import BackendK8s
+from dctwin.third_parties.core_k8s import K8sBackend
 from dctwin.utils import config
 
 from .parser import Eplus
@@ -321,5 +321,5 @@ class EplusBackend(EplusBackendMixin, Backend):
     pass
 
 
-class EplusBackendK8s(EplusBackendMixin, BackendK8s):
+class EplusK8SBackend(EplusBackendMixin, K8sBackend):
     pass

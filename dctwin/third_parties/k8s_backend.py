@@ -1,8 +1,7 @@
 from pathlib import Path
-from typing import Union, Any
+from typing import Union
 import time
 import uuid
-import os
 import json
 
 from dctwin.utils import config as dctwin_config
@@ -187,7 +186,7 @@ def wait_for_job(
             time.sleep(1)
 
 
-class BackendK8s(BaseBackend):
+class K8sBackend(BaseBackend):
     def __init__(self, k8s_config=None, **kwargs) -> None:
         super().__init__(**kwargs)
         self.k8s_config = k8s_config
