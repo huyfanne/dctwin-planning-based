@@ -28,8 +28,8 @@ class BaseEnv(gym.Env):
     :param reward_fn: the callback reward function defined by the user
         We need the user to pass in a reward function
         Why? we tried to use a templated function with params, but turns out it's bad
-    :param schedule_fn: the callback facility schedule function defined by the user
-        e.g., the IT utilization schedule
+    :param schedule_fn: the callback facility workloads function defined by the user
+        e.g., the IT utilization workloads
     :param task_id: the identity of the current environment (defined for multi-task learning)
     :param num_constraints: the number of constraints in the environment (defined 0)
     """
@@ -308,7 +308,7 @@ class BaseEnv(gym.Env):
 
     def _get_customized_schedule_context(self) -> dict:
         """
-        get env status that could be used for the customer schedule function to work in dict form
+        get env status that could be used for the customer workloads function to work in dict form
         for example:
         {
             episode: self.episode,

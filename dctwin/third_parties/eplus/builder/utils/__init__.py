@@ -4,6 +4,7 @@ from .plant import (
     make_chiller,
     make_heat_exchanger,
     make_cooling_tower,
+    make_thermal_storage_tank,
     make_plant_sizing,
     get_cooling_coil,
 )
@@ -33,6 +34,7 @@ __all__ = [
     "make_chiller",
     "make_heat_exchanger",
     "make_cooling_tower",
+    "make_thermal_storage_tank",
     "make_plant_sizing",
     "make_cooling_coil",
     "fill_info",

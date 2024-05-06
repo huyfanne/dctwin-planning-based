@@ -10,7 +10,7 @@ from dctwin.models.curves import BiQuadraticCurve, QuadraticCurve
 
 class ITEModel(nn.Module):
     """
-    Implement the learnable ITE model. The model can take the CPU loading schedule and inlet air temperature as input
+    Implement the learnable ITE model. The model can take the CPU loading workloads and inlet air temperature as input
     and output the power consumption of the CPU, Fan and UPS.
     """
     def __init__(

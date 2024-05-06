@@ -2196,4 +2196,4 @@
   !-   ===========  PUE: Output
 
   Output:Variable,*,Power Utilization Effectiveness,timestep;
-  Output:Variable,*,Carbon Emissions,timestep;
+  ! Output:Variable,*,Carbon Emissions,timestep;

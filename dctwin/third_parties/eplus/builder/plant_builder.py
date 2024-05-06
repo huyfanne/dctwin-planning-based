@@ -1,10 +1,12 @@
 from typing import Dict
+from loguru import logger
 
 from eppy.modeleditor import IDF
 
 from dclib.cooling.plant.loops import (
     ChilledWaterLoops,
     CondenserWaterLoops,
+    SecondaryChilledWaterLoops,
     Branch,
     MetaPlant,
 )
@@ -14,6 +16,7 @@ from .utils import (
     make_chiller,
     make_pipe,
     make_cooling_tower,
+    make_thermal_storage_tank,
     make_plant_sizing,
     make_pump,
     get_cooling_coil,
@@ -41,14 +44,6 @@ class PlantBuilder:
         type_: str = "chilled",
         side: str = "supply",
     ):
-        component_making_functions = {
-            "pipes": make_pipe,
-            "cooling_towers": make_cooling_tower,
-            "chillers": make_chiller,
-            "pumps": make_pump,
-            "acu": get_cooling_coil,
-            "heat_exchangers": make_heat_exchanger
-        }
         branch = self.model.newidfobject("BRANCH", Name=branch_name)
         component_idx = 1
         # add pipe
@@ -65,6 +60,21 @@ class PlantBuilder:
                 )
                 branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
                 branch[f"Component_{component_idx}_Name"] = pipe.uid.lower()
+                component_idx += 1
+        # add thermal storage tanks
+        if branch_definition.components.tanks is not None:
+            for tank_name, tank in branch_definition.components.tanks.items():
+                eplus_obj = make_thermal_storage_tank(
+                    self.model,
+                    branch,
+                    component_idx,
+                    tank,
+                    type_=type_,
+                    side=side,
+                    loop=loop,
+                )
+                branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
+                branch[f"Component_{component_idx}_Name"] = tank.uid.lower()
                 component_idx += 1
         # add pump
         if branch_definition.components.pumps is not None:
@@ -284,6 +294,7 @@ class PlantBuilder:
         demand_loop_branches: Dict[str, Branch],
         type_: str = "chilled",
     ):
+        assert type_ in ["chilled", "condenser", "secondary"],  logger.info(f"Making {type_} water loop: {loop_name}")
         plant_loop = self._init_plant_loop(loop_name, meta)
 
         # make branches for all supply branches in the plant loop
@@ -357,6 +368,19 @@ class PlantBuilder:
                                 plant_equipment_list[
                                     f"Equipment_{idx}_Object_Type"
                                 ] = "Chiller:Electric:EIR"
+                                plant_equipment_list[
+                                    f"Equipment_{idx}_Name"
+                                ] = component.uid.lower()
+                                idx += 1
+        elif type_ == "secondary":
+            for branch_name, branch in supply_loop_branches.items():
+                if branch.side == "middle":
+                    for component_type, components in branch.components:
+                        if component_type == "tanks" and components is not None:
+                            for component_name, component in components.items():
+                                plant_equipment_list[
+                                    f"Equipment_{idx}_Object_Type"
+                                ] = "Thermalstorage:Chilledwater:Mixed"
                                 plant_equipment_list[
                                     f"Equipment_{idx}_Name"
                                 ] = component.uid.lower()
@@ -461,25 +485,43 @@ class PlantBuilder:
                     Minimum_Setpoint_Temperature=condenser_loop.meta.minimum_setpoint_temperature,
                     Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node"
                 )
-            # for branch_name, branch in condenser_loop.demand_branches.items():
-            #     if branch.side == "middle":
-            #         if branch.components.heat_exchangers is not None:
-            #             for hx_name, hx in branch.components.heat_exchangers.items():
-            #                 obj = self.model.getobject(
-            #                     key="HeatExchanger:FluidToFluid".upper(),
-            #                     name=hx_name
-            #                 )
-            #                 # Override the attached chiller's chilled water supply inlet and outlet nodes with
-            #                 # the heat exchanger. It makes the heat exchanger to be connected to the chiller in
-            #                 # parallel. With such a connection topology, the hext exchanger can be activated to
-            #                 # provide free cooling when the condenser inlet water temperature is lower than the
-            #                 # chilled water return temperature.
-            #                 attached_chiller = self.model.getobject(
-            #                     key="Chiller:Electric:EIR".upper(),
-            #                     name=hx.cooling.chiller
-            #                 )
-            #                 obj["Component_Override_Loop_Demand_Side_Inlet_Node_Name"] = \
-            #                     attached_chiller["Condenser_Inlet_Node_Name"]
+
+    def _make_secondary_loops(self, secondary_loops: Dict[str, SecondaryChilledWaterLoops]):
+        for loop_name, secondary_loop in secondary_loops.items():
+            self._make_plant_loop(
+                loop_name=loop_name,
+                meta=secondary_loop.meta,
+                supply_loop_branches=secondary_loop.supply_branches,
+                demand_loop_branches=secondary_loop.demand_branches,
+                type_="secondary",
+            )
+            make_plant_sizing(self.model, loop_name, secondary_loop.sizing)
+            # Add plant loop exit temperature set point manager to control the plant loop exit temperature as
+            # the design loop exit temperature
+            if secondary_loop.meta.setpoint_manager:
+                self.model.newidfobject(
+                    key="SetpointManager:Scheduled".upper(),
+                    Name=f"{loop_name} exit temperature setpoint manager",
+                    Control_Variable="Temperature",
+                    Schedule_Name=f"{loop_name} exit temperature setpoint schedule",
+                    Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node",
+                )
+                self.model.newidfobject(
+                    key="Schedule:Constant".upper(),
+                    Name=f"{loop_name} exit temperature setpoint schedule",
+                    Schedule_Type_Limits_Name="Temperature",
+                    Hourly_Value=secondary_loop.sizing.design_loop_exit_temperature,
+                )
+            for branch_name, branch in secondary_loop.supply_branches.items():
+                if branch.side == "middle":
+                    if branch.components.tanks is not None:
+                        for tank_name in branch.components.tanks:
+                            obj = self.model.getobject(
+                                key="THERMALSTORAGE:CHILLEDWATER:MIXED".upper(),
+                                name=tank_name
+                            )
+                            obj["Setpoint_Temperature_Schedule_Name"] =\
+                                f"{loop_name} exit temperature setpoint schedule"
 
     def make_plant(self, plant: Plant):
         """
@@ -489,5 +531,6 @@ class PlantBuilder:
         :return:
         """
         # build chiller plant system loops according to the configuration file
+        self._make_secondary_loops(plant.secondary_chilled_water_loops)
         self._make_chilled_water_loops(plant.chilled_water_loops)
         self._make_condenser_loops(plant.condenser_water_loops)

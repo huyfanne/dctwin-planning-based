@@ -60,7 +60,13 @@ class FanModel(nn.Module):
     def learn(self):
         if self.learnable:
             batch, _ = self.buffer.sample(batch_size=0)
-            self.power_curve.learn(
-                torch.tensor(batch.supply_air_mass_flow_rate, dtype=torch.float32),
-                torch.tensor(batch.fan_power)
-            )
+            mask = batch.supply_air_mass_flow_rate > 0
+            batch = batch[mask]
+            if len(batch) > 3:
+                self.power_curve.learn(
+                    torch.tensor(batch.supply_air_mass_flow_rate, dtype=torch.float32),
+                    torch.tensor(batch.fan_power)
+                )
+            else:
+                from loguru import logger
+                logger.warning(f"Insufficient data for learning the fan model of {self.uid}.")

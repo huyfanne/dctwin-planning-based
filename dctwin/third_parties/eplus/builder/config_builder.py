@@ -932,17 +932,6 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub,
             ) if variable_names is None or "air flow rate ratio" in variable_names else None
-            # # observe cooling tower outside air wetbulb temperature
-            # self._make_observation(
-            #     exposed=exposed,
-            #     variable_name=f"{cooling_tower_name} outside air wetbulb temperature".lower(),
-            #     key_value="Environment",
-            #     output_variable_name="Site Outdoor Air Wetbulb Temperature",
-            #     reporting_frequency="timestep",
-            #     normalize_method=normalize_method,
-            #     lb=lb,
-            #     ub=ub
-            # )
             # observe cooling tower fan power consumption
             self._make_observation(
                 exposed=exposed,
@@ -954,6 +943,114 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub,
             ) if variable_names is None or "power" in variable_names else None
+
+    def make_thermal_storage_observations(
+        self,
+        exposed: bool = True,
+        normalize_method: int = 1,
+        lb: float = 0.0,
+        ub: float = 1.0
+    ):
+        for storage_name, storage in self.device_key_map["thermal storage tanks"].items():
+            # observe thermal storage average temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{storage_name} temperature".lower(),
+                key_value=storage["tank temperature"].split(":")[0],
+                output_variable_name="Chilled Water Thermal Storage Tank Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # observe thermal storage tank use side mass flow rate
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{storage_name} use side mass flow rate".lower(),
+                key_value=storage["use side mass flow rate"].split(":")[0],
+                output_variable_name="Chilled Water Thermal Storage Use Side Mass Flow Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # observe thermal storage use side inlet temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{storage_name} use side inlet temperature".lower(),
+                key_value=storage["use side inlet temperature"].split(":")[0],
+                output_variable_name="Chilled Water Thermal Storage Use Side Inlet Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # observe thermal storage use side outlet temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{storage_name} use side outlet temperature".lower(),
+                key_value=storage["use side outlet temperature"].split(":")[0],
+                output_variable_name="Chilled Water Thermal Storage Use Side Outlet Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # observe thermal storage use side heat transfer rate
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{storage_name} use side heat transfer rate".lower(),
+                key_value=storage["use side heat transfer rate"].split(":")[0],
+                output_variable_name="Chilled Water Thermal Storage Use Side Heat Transfer Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # observe thermal storage source side mass flow rate
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{storage_name} source side mass flow rate".lower(),
+                key_value=storage["source side mass flow rate"].split(":")[0],
+                output_variable_name="Chilled Water Thermal Storage Source Side Mass Flow Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # observe thermal storage source side inlet temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{storage_name} source side inlet temperature".lower(),
+                key_value=storage["source side inlet temperature"].split(":")[0],
+                output_variable_name="Chilled Water Thermal Storage Source Side Inlet Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # observe thermal storage source side outlet temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{storage_name} source side outlet temperature".lower(),
+                key_value=storage["source side outlet temperature"].split(":")[0],
+                output_variable_name="Chilled Water Thermal Storage Source Side Outlet Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
+            # observe thermal storage source side heat transfer rate
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{storage_name} source side heat transfer rate".lower(),
+                key_value=storage["source side heat transfer rate"].split(":")[0],
+                output_variable_name="Chilled Water Thermal Storage Source Side Heat Transfer Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub
+            )
 
     def make_zone_observations(
         self,
@@ -1437,9 +1534,9 @@ class ConfigBuilder:
 
     def get_model(self):
         return self.model
-    
 
-    
+
+
 class CDUConfigBuilder:
     def __init__(
         self,
