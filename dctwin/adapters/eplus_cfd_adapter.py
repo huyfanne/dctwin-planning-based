@@ -12,7 +12,7 @@ import torch
 from dclib.room import Room
 
 from dctwin.utils import config
-from dctwin.third_parties.cfd_manager import CFDManager
+from dctwin.managers.cfd_manager import CFDManager
 from dctwin.third_parties import EplusBackend
 
 

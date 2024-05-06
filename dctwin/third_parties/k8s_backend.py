@@ -8,7 +8,7 @@ from dctwin.utils import config as dctwin_config
 from loguru import logger
 from kubernetes import config, client
 
-from dctwin.third_parties.base_core import BaseBackend
+from dctwin.third_parties.base_backend import BaseBackend
 
 
 # Constants

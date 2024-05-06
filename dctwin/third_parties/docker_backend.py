@@ -7,7 +7,7 @@ from docker import DockerClient, from_env
 from docker.errors import ContainerError, ImageNotFound
 
 from dctwin.utils import config
-from dctwin.third_parties.base_core import BaseBackend
+from dctwin.third_parties.base_backend import BaseBackend
 
 
 class DockerBackend(BaseBackend):

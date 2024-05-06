@@ -7,7 +7,7 @@ from dclib import Building
 
 from dctwin.utils import config
 from dctwin.third_parties.eplus import EplusBackend
-from dctwin.models.cooling.ensemble import LiquidCoolingEnsemble
+from dctwin.models.cooling.composites import LiquidCoolingComposite
 
 
 class EplusLiquidAdapter:

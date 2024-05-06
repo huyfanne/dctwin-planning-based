@@ -13,8 +13,8 @@ from docker import DockerClient
 from loguru import logger
 from dctwin.utils import EPlusEnvConfig
 from dctwin.third_parties.eplus.utils import EPlusOutputFormatter
-from dctwin.third_parties.core import Backend
-from dctwin.third_parties.core_k8s import K8sBackend
+from dctwin.third_parties.docker_backend import DockerBackend
+from dctwin.third_parties.k8s_backend import K8sBackend
 from dctwin.utils import config
 
 from .parser import Eplus
@@ -317,7 +317,7 @@ class EplusBackendMixin:
         logger.debug("EnergyPlus backend closed")
 
 
-class EplusBackend(EplusBackendMixin, Backend):
+class EplusDockerBackend(EplusBackendMixin, DockerBackend):
     pass
 
 

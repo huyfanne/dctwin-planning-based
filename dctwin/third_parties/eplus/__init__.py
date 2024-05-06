@@ -1,10 +1,11 @@
 from .builder import IDFBuilder, ConfigBuilder, CDUConfigBuilder
-from .core import EplusBackend
+from .core import EplusDockerBackend, EplusK8SBackend
 
 
 __all__ = [
     "IDFBuilder",
     "ConfigBuilder",
-    "EplusBackend",
     "CDUConfigBuilder",
+    "EplusDockerBackend",
+    "EplusK8SBackend",
 ]

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Union
+from typing import Union
 from pathlib import Path
 
 

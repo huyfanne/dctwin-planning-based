@@ -5,8 +5,8 @@ from loguru import logger
 
 from dclib.room import Room
 
-from dctwin.third_parties.core import Backend
-from dctwin.third_parties.core_k8s import K8sBackend
+from dctwin.third_parties.docker_backend import DockerBackend
+from dctwin.third_parties.k8s_backend import K8sBackend
 from dctwin.utils import template_env, config
 
 
@@ -75,7 +75,7 @@ class SalomeBackendMixin:
         logger.info("***** Geometry finished *****\n\n")
 
 
-class SalomeBackend(SalomeBackendMixin, Backend):
+class SalomeDockerBackend(SalomeBackendMixin, DockerBackend):
     pass
 
 

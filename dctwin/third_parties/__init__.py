@@ -1,27 +1,27 @@
-from dctwin.third_parties.eplus.core import EplusBackend, EplusK8SBackend
-from dctwin.third_parties.salome import SalomeBackend, SalomeK8SBackend
+from dctwin.third_parties.eplus.core import EplusDockerBackend, EplusK8SBackend
+from dctwin.third_parties.salome import SalomeDockerBackend, SalomeK8SBackend
 from dctwin.third_parties.foam import (
-    SnappyHexBackend,
     SnappyHexK8SBackend,
-    SteadySolverBackend,
-    SteadySolverBackendK8s,
-    TransientSolverBackend,
-    TransientSolverBackendK8s,
+    SnappyHexDockerBackend,
+    SteadySolverDockerBackend,
+    SteadySolverK8sBackend,
+    TransientSolverDockerBackend,
+    TransientSolverK8sBackend,
 )
 from dctwin.third_parties.eplus import IDFBuilder, ConfigBuilder, CDUConfigBuilder
 
 
 __all__ = [
-    "EplusBackend",
+    "EplusDockerBackend",
     "EplusK8SBackend",
-    "SalomeBackend",
+    "SnappyHexDockerBackend",
     "SalomeK8SBackend",
-    "SnappyHexBackend",
+    "SteadySolverDockerBackend",
     "SnappyHexK8SBackend",
-    "SteadySolverBackend",
-    "SteadySolverBackendK8s",
-    "TransientSolverBackend",
-    "TransientSolverBackendK8s",
+    "SteadySolverK8sBackend",
+    "SalomeDockerBackend",
+    "TransientSolverDockerBackend",
+    "TransientSolverK8sBackend",
     "IDFBuilder",
     "ConfigBuilder",
     "CDUConfigBuilder",

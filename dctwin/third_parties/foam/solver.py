@@ -14,8 +14,8 @@ from loguru import logger
 
 from dclib.room import Room
 
-from dctwin.third_parties.core import Backend
-from dctwin.third_parties.core_k8s import K8sBackend
+from dctwin.third_parties.docker_backend import DockerBackend
+from dctwin.third_parties.k8s_backend import K8sBackend
 from dctwin.third_parties.foam.boundary import ACUBoundary, RoomBoundary, ServerBoundary
 
 from dctwin.third_parties.foam.utils import generate_control_dict, read_internal_field
@@ -203,7 +203,7 @@ class SolverBackendMixin:
         return self.run_container(user=0, stream=stream, case_dir=case_dir)
 
 
-class SolverBackend(SolverBackendMixin, Backend):
+class SolverDockerBackend(SolverBackendMixin, DockerBackend):
     pass
 
 
@@ -211,7 +211,7 @@ class SolverK8SBackend(SolverBackendMixin, K8sBackend):
     pass
 
 
-class SteadySolverBackend(SolverBackend):
+class SteadySolverDockerBackend(SolverDockerBackend):
     solver = "buoyantBoussinesqSimpleFoam"
     write_interval = 100
     end_time = 500
@@ -233,7 +233,7 @@ class SteadySolverBackend(SolverBackend):
         )
 
 
-class TransientSolverBackend(SolverBackend):
+class TransientSolverDockerBackend(SolverDockerBackend):
     solver = "buoyantBoussinesqPimpleFoam"
     write_interval = 10
     end_time = 50
@@ -255,7 +255,7 @@ class TransientSolverBackend(SolverBackend):
         )
 
 
-class SteadySolverBackendK8s(SolverK8SBackend):
+class SteadySolverK8sBackend(SolverK8SBackend):
     solver = "buoyantBoussinesqSimpleFoam"
     write_interval = 100
     end_time = 500
@@ -277,7 +277,7 @@ class SteadySolverBackendK8s(SolverK8SBackend):
         )
 
 
-class TransientSolverBackendK8s(SolverK8SBackend):
+class TransientSolverK8sBackend(SolverK8SBackend):
     solver = "buoyantBoussinesqPimpleFoam"
     write_interval = 10
     end_time = 50

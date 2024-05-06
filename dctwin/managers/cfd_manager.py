@@ -6,17 +6,17 @@ import torch
 from loguru import logger
 
 from dctwin.third_parties import (
-    SalomeBackend,
+    SalomeDockerBackend,
     SalomeK8SBackend,
-    SnappyHexBackend,
+    SnappyHexDockerBackend,
     SnappyHexK8SBackend,
-    SteadySolverBackend,
-    SteadySolverBackendK8s,
-    TransientSolverBackend,
-    TransientSolverBackendK8s,
-    PODBackend,
-    PODBackendK8s,
+    SteadySolverK8sBackend,
+    SteadySolverDockerBackend,
+    TransientSolverK8sBackend,
+    TransientSolverDockerBackend,
 )
+
+from dctwin.models.cooling.thermodyns.field import PODK8SBackend, PODDockerBackend
 
 from .utils import (
     check_base_dir,
@@ -76,16 +76,16 @@ class CFDManager:
     ) -> None:
         if not is_k8s:
             self.docker_client = docker_client if docker_client else docker.from_env()
-        self.geometry_backend: Optional[Union[SalomeBackend, SalomeK8SBackend]] = None
-        self.mesh_backend: Optional[Union[SnappyHexBackend, SnappyHexK8SBackend]] = None
+        self.geometry_backend: Optional[Union[SalomeDockerBackend, SalomeK8SBackend]] = None
+        self.mesh_backend: Optional[Union[SnappyHexDockerBackend, SnappyHexK8SBackend]] = None
         self.solver_backend: Union[
             None,
-            TransientSolverBackend,
-            SteadySolverBackend,
-            TransientSolverBackendK8s,
-            SteadySolverBackendK8s,
+            SteadySolverK8sBackend,
+            SteadySolverDockerBackend,
+            TransientSolverK8sBackend,
+            TransientSolverDockerBackend,
         ] = None
-        self.pod_backend: Optional[Union[PODBackend, PODBackendK8s]] = None
+        self.pod_backend: Optional[Union[PODDockerBackend, PODK8SBackend]] = None
 
         self.room: Room = room
         self.steady = steady
@@ -119,7 +119,7 @@ class CFDManager:
                 process_num=self.mesh_process, k8s_config=self.k8s_config
             )
             if self.steady:
-                self.solver_backend = SteadySolverBackendK8s(
+                self.solver_backend = SteadySolverK8sBackend(
                     process_num=self.solve_process,
                     k8s_config=self.k8s_config,
                 )
@@ -128,20 +128,20 @@ class CFDManager:
                     assert (
                         self.object_mesh_index is not None
                     ), "object mesh index is required for POD simulation"
-                    self.pod_backend = PODBackendK8s.load(
+                    self.pod_backend = PODK8SBackend.load(
                         self.room, self.object_mesh_index
                     )
             else:
-                self.solver_backend = TransientSolverBackendK8s(
+                self.solver_backend = TransientSolverK8sBackend(
                     process_num=self.solve_process
                 )
         else:
-            self.geometry_backend = SalomeBackend(self.docker_client)
-            self.mesh_backend = SnappyHexBackend(
+            self.geometry_backend = SalomeDockerBackend(self.docker_client)
+            self.mesh_backend = SnappyHexDockerBackend(
                 self.docker_client, process_num=self.mesh_process
             )
             if self.steady:
-                self.solver_backend = SteadySolverBackend(
+                self.solver_backend = SteadySolverDockerBackend(
                     self.docker_client, process_num=self.solve_process
                 )
                 # use reduced-order simulation if POD mode is provided
@@ -149,11 +149,11 @@ class CFDManager:
                     assert (
                         self.object_mesh_index is not None
                     ), "object mesh index is required for POD simulation"
-                    self.pod_backend = PODBackend.load(
+                    self.pod_backend = PODDockerBackend.load(
                         self.room, self.object_mesh_index
                     )
             else:
-                self.solver_backend = TransientSolverBackend(
+                self.solver_backend = TransientSolverDockerBackend(
                     self.docker_client, process_num=self.solve_process
                 )
 
