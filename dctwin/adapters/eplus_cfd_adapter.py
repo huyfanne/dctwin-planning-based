@@ -13,7 +13,7 @@ from dclib.room import Room
 
 from dctwin.utils import config
 from dctwin.managers.cfd_manager import CFDManager
-from dctwin.third_parties import EplusBackend
+from dctwin.third_parties import EplusDockerBackend, EplusK8SBackend
 
 
 class EplusCFDAdapter:
@@ -37,7 +37,7 @@ class EplusCFDAdapter:
     def __init__(
         self,
         room: Room,
-        eplus_backend: EplusBackend,
+        eplus_backend: EplusDockerBackend | EplusK8SBackend,
         map_boundary_condition_fn: Callable,
         mesh_process: int = 8,
         solve_process: int = 8,
