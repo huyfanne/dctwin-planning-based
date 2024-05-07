@@ -305,10 +305,22 @@ class K8sJob:
             container_args["working_dir"] = self.working_dir_in_container
 
         tolerations = []
-        if self.k8s_taint != "":
+        if not self.is_k8s_azure_gpu_cluster and self.k8s_taint != "":
             key, value, effect = self.k8s_taint.split(":")
             toleration = client.V1Toleration(
                 effect=effect, key=key, operator="Equal", value=value
+            )
+            tolerations.append(toleration)
+        if self.is_k8s_azure_gpu_cluster and self.k8s_gpu_taint != "":
+            print("k8s_gpu_taint", self.k8s_gpu_taint)
+            key, value, effect = self.k8s_gpu_taint.split(":")
+            toleration = client.V1Toleration(
+                effect=effect, key=key, operator="Equal", value=value
+            )
+            tolerations.append(toleration)
+        if self.is_k8s_azure_gpu_cluster:
+            toleration = client.V1Toleration(
+                effect="NoSchedule", key="nvidia.com/gpu", operator="Exists", value=""
             )
             tolerations.append(toleration)
         tmpl_spec_args["tolerations"] = tolerations
@@ -387,10 +399,7 @@ class K8sJob:
             client.V1Toleration(key="CriticalAddonsOnly", operator="Exists"),
             client.V1Toleration(
                 key="nvidia.com/gpu", operator="Exists", effect="NoSchedule"
-            ),
-            client.V1Toleration(
-                key="sku", operator="Equal", value="gpu", effect="NoSchedule"
-            ),
+            )
         ]
         if self.k8s_gpu_taint != "":
             key, value, effect = self.k8s_gpu_taint.split(":")
