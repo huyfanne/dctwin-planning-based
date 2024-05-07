@@ -17,7 +17,7 @@ from .utils import (
     make_plant_sizing,
     make_pump,
     get_cooling_coil,
-    make_heat_exchanger
+    make_heat_exchanger,
 )
 
 
@@ -47,7 +47,7 @@ class PlantBuilder:
             "chillers": make_chiller,
             "pumps": make_pump,
             "acu": get_cooling_coil,
-            "heat_exchangers": make_heat_exchanger
+            "heat_exchangers": make_heat_exchanger,
         }
         branch = self.model.newidfobject("BRANCH", Name=branch_name)
         component_idx = 1
@@ -113,7 +113,10 @@ class PlantBuilder:
                 component_idx += 1
         # add cooling towers
         if branch_definition.components.cooling_towers is not None:
-            for cooling_tower_name, cooling_tower in branch_definition.components.cooling_towers.items():
+            for (
+                cooling_tower_name,
+                cooling_tower,
+            ) in branch_definition.components.cooling_towers.items():
                 eplus_obj = make_cooling_tower(
                     self.model,
                     branch,
@@ -407,10 +410,11 @@ class PlantBuilder:
                     if branch.components.heat_exchangers is not None:
                         for hx_name, hx in branch.components.heat_exchangers.items():
                             obj = self.model.getobject(
-                                key="HeatExchanger:FluidToFluid".upper(),
-                                name=hx_name
+                                key="HeatExchanger:FluidToFluid".upper(), name=hx_name
                             )
-                            obj["Heat_Exchanger_Setpoint_Node_Name"] = obj["Loop_Supply_Side_Outlet_Node_Name"]
+                            obj["Heat_Exchanger_Setpoint_Node_Name"] = obj[
+                                "Loop_Supply_Side_Outlet_Node_Name"
+                            ]
                             self.model.newidfobject(
                                 key="SetpointManager:FollowSystemNodeTemperature".upper(),
                                 Name=f"{obj['Name']} setpoint manager",
@@ -420,7 +424,9 @@ class PlantBuilder:
                                 Offset_Temperature_Difference=0.0,
                                 Maximum_Limit_Setpoint_Temperature=chilled_water_loop.meta.maximum_setpoint_temperature,
                                 Minimum_Limit_Setpoint_Temperature=chilled_water_loop.meta.minimum_setpoint_temperature,
-                                Setpoint_Node_or_NodeList_Name=obj["Heat_Exchanger_Setpoint_Node_Name"]
+                                Setpoint_Node_or_NodeList_Name=obj[
+                                    "Heat_Exchanger_Setpoint_Node_Name"
+                                ],
                             )
 
     def _make_condenser_loops(self, condenser_loops: Dict[str, CondenserWaterLoops]):
@@ -441,13 +447,13 @@ class PlantBuilder:
                     Name=f"{loop_name} exit temperature setpoint manager",
                     Control_Variable="Temperature",
                     Schedule_Name=f"{loop_name} exit temperature setpoint",
-                    Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node"
+                    Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node",
                 )
                 self.model.newidfobject(
                     key="Schedule:Constant".upper(),
                     Name=f"{loop_name} exit temperature setpoint",
                     Schedule_Type_Limits_Name="Temperature",
-                    Hourly_Value=condenser_loop.sizing.design_loop_exit_temperature
+                    Hourly_Value=condenser_loop.sizing.design_loop_exit_temperature,
                 )
             else:
                 self.model.newidfobject(
@@ -458,7 +464,7 @@ class PlantBuilder:
                     Offset_Temperature_Difference=condenser_loop.meta.offset_temperature_difference,
                     Maximum_Setpoint_Temperature=condenser_loop.meta.maximum_setpoint_temperature,
                     Minimum_Setpoint_Temperature=condenser_loop.meta.minimum_setpoint_temperature,
-                    Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node"
+                    Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node",
                 )
             # for branch_name, branch in condenser_loop.demand_branches.items():
             #     if branch.side == "middle":

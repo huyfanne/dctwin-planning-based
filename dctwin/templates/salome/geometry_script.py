@@ -325,15 +325,22 @@ class RackModel:
         self.rack_blanking_mesh = util.mesh(blanking_box, 0.1, 0.5)
 
         slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height, 0)
+
         if slot_unit_and_actual_rack_height_difference > 0.001:
             blanking_height = slot_unit_and_actual_rack_height_difference / 2
-            rack_top_blanking_box = util.make_box({**self.size, "z": blanking_height, "y": 0.1})
-            rack_bottom_blanking_box = util.make_box({**self.size, "z": blanking_height, "y": 0.1})
+            rack_top_blanking_box = util.make_box(
+                {**self.size, "z": blanking_height, "y": 0.1}
+            )
+            rack_bottom_blanking_box = util.make_box(
+                {**self.size, "z": blanking_height, "y": 0.1}
+            )
             rack_top_blanking_box = util.group_by_faces(
-                rack_top_blanking_box, exclude=["rear", "bottom", "top", "left", "right"]
+                rack_top_blanking_box,
+                exclude=["rear", "bottom", "top", "left", "right"],
             )
             rack_bottom_blanking_box = util.group_by_faces(
-                rack_bottom_blanking_box, exclude=["rear", "bottom", "top", "left", "right"]
+                rack_bottom_blanking_box,
+                exclude=["rear", "bottom", "top", "left", "right"],
             )
             self.rack_top_blanking_box_mesh = util.mesh(rack_top_blanking_box, 0.05, 0.1)
             self.rack_bottom_blanking_box_mesh = util.mesh(rack_bottom_blanking_box, 0.05, 0.1)
@@ -345,7 +352,11 @@ class RackModel:
         if self.is_meshed is False:
             self.mesh()
         mesh = util.copy_mesh(
-            f"rack_wall_{rack_id}", self.rack_wall_mesh, placement, orientation, is_export=False
+            f"rack_wall_{rack_id}",
+            self.rack_wall_mesh,
+            placement,
+            orientation,
+            is_export=False,
         )
         meshes.append(mesh)
         slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height, 0)
@@ -362,7 +373,13 @@ class RackModel:
             mesh = util.copy_mesh(
                 f"rack_panel_{rack_id}_top",
                 self.rack_top_blanking_box_mesh,
-                {**placement, "z": placement["z"] + self.first_slot_offset + slot_unit_and_actual_rack_height_difference/2 +self.max_slot * self.slot_height},
+                {
+                    **placement,
+                    "z": placement["z"]
+                    + self.first_slot_offset
+                    + slot_unit_and_actual_rack_height_difference / 2
+                    + self.max_slot * self.slot_height,
+                },
                 orientation,
                 is_export=False,
             )
@@ -388,7 +405,7 @@ class RackModel:
             z += self.slot_height * (slot - 1)
             z += self.first_slot_offset
             if slot_unit_and_actual_rack_height_difference > 0:
-                z += slot_unit_and_actual_rack_height_difference/2
+                z += slot_unit_and_actual_rack_height_difference / 2
             mesh = util.copy_mesh(
                 f"rack_panel_{rack_id}_{slot}",
                 self.rack_blanking_mesh,
@@ -620,7 +637,9 @@ class Builder:
             available_slots[slot] = True
         rack_max_slot = rack["geometry"]["slot"]
         rack_height = rack["geometry"]["size"]["z"]
-        slot_unit_and_actual_rack_height_difference = max(rack_height - rack_max_slot * self.slot_height, 0)
+        slot_unit_and_actual_rack_height_difference = max(
+            rack_height - rack_max_slot * self.slot_height, 0
+        )
 
         for server_key, server in rack["constructions"]["servers"].items():
             try:
@@ -639,7 +658,7 @@ class Builder:
             server_height = (
                 rack["geometry"]["location"]["z"]
                 + rack["geometry"]["first_slot_offset"]
-                + slot_unit_and_actual_rack_height_difference/2
+                + slot_unit_and_actual_rack_height_difference / 2
                 + self.slot_height * (server_starting_slot - 1)
             )
             server_model.make(

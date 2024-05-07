@@ -18,10 +18,12 @@ class K8sJob:
         "ephemeral-storage": "100Mi",
     }
     DEFAULT_VOLUME_MOUNT = {
-       "mount_path": "/tm-data",
+        "mount_path": "/tm-data",
         "sub_path": "",
     }
     DEFAULT_K8S_TAINT = ""
+    DEFAULT_IS_K8S_AZURE_GPU_CLUSTER = False
+    DEFAULT_K8S_GPU_TAINT = ""
 
     def __init__(
         self,
@@ -41,13 +43,16 @@ class K8sJob:
         env_vars={},
         worker_name=None,
         is_local_k8s=False,
-        local_volume_path=None, # The local path to the volume, must set if is_local_k8s is True
-        k8s_taint=DEFAULT_K8S_TAINT, # The taint for the job, e.g. "key:value
+        local_volume_path=None,  # The local path to the volume, must set if is_local_k8s is True
+        k8s_taint=DEFAULT_K8S_TAINT,  # The taint for the job, e.g. "key:value
+        is_k8s_azure_gpu_cluster=DEFAULT_IS_K8S_AZURE_GPU_CLUSTER,  # Whether the k8s cluster is an Azure GPU cluster
+        k8s_gpu_taint=DEFAULT_K8S_GPU_TAINT,  # The taint for the GPU node, e.g. "key:value:NoSchedule"
         volume_mount=DEFAULT_VOLUME_MOUNT,  # The volume mount for the job. If None, the default volume is used
         additional_params=None,  # Additional parameters for the job, e.g. ttl_seconds_after_finished
     ) -> None:
         self._core_api_ins = None
         self._batch_api_ins = None
+        self._apps_api_ins = None
 
         self.image = image
         self.command = command
@@ -63,6 +68,8 @@ class K8sJob:
         self.is_local_k8s = is_local_k8s
         self.local_volume_path = local_volume_path
         self.k8s_taint = k8s_taint
+        self.is_k8s_azure_gpu_cluster = is_k8s_azure_gpu_cluster
+        self.k8s_gpu_taint = k8s_gpu_taint
         self.volume_mount = volume_mount
         self.additional_params = self._parse_additional_params(
             self.DEFAULT_PARAMS | (additional_params or {})
@@ -125,6 +132,8 @@ class K8sJob:
         job = self._create_job_object()
         if self.need_service:
             self._create_service()
+        if self.is_k8s_azure_gpu_cluster:
+            self._create_gpu_plugin_daemonset()
         self._batch_api.create_namespaced_job(namespace=self.namespace, body=job)
 
     @property
@@ -179,6 +188,7 @@ class K8sJob:
                 time.sleep(1)
 
     def clean(self):
+        core_api = self._core_api
         batch_api = self._batch_api
         try:
             batch_api.delete_namespaced_job(
@@ -190,6 +200,12 @@ class K8sJob:
             )
         except Exception as e:
             logging.debug(f"Cannot delete job {self.full_name}: {str(e)}")
+        if self.need_service:
+            core_api.delete_namespaced_service(
+                name=self.service_name, namespace=self.namespace
+            )
+        if self.is_k8s_azure_gpu_cluster:
+            self._delete_gpu_plugin_daemonset()
 
         # wait for the job to be deleted
         while True:
@@ -218,6 +234,12 @@ class K8sJob:
         if not self._batch_api_ins:
             self._batch_api_ins = client.BatchV1Api()
         return self._batch_api_ins
+
+    @property
+    def _apps_api(self):
+        if not self._apps_api_ins:
+            self._apps_api_ins = client.AppsV1Api()
+        return self._apps_api_ins
 
     @property
     def full_name(self):
@@ -283,16 +305,30 @@ class K8sJob:
             container_args["working_dir"] = self.working_dir_in_container
 
         tolerations = []
-        if self.k8s_taint != "":
+        if not self.is_k8s_azure_gpu_cluster and self.k8s_taint != "":
             key, value, effect = self.k8s_taint.split(":")
             toleration = client.V1Toleration(
                 effect=effect, key=key, operator="Equal", value=value
             )
             tolerations.append(toleration)
+        if self.is_k8s_azure_gpu_cluster and self.k8s_gpu_taint != "":
+            print("k8s_gpu_taint", self.k8s_gpu_taint)
+            key, value, effect = self.k8s_gpu_taint.split(":")
+            toleration = client.V1Toleration(
+                effect=effect, key=key, operator="Equal", value=value
+            )
+            tolerations.append(toleration)
+        if self.is_k8s_azure_gpu_cluster:
+            toleration = client.V1Toleration(
+                effect="NoSchedule", key="nvidia.com/gpu", operator="Exists", value=""
+            )
+            tolerations.append(toleration)
         tmpl_spec_args["tolerations"] = tolerations
 
         if self.resources is not None:
-            final_resources = client.V1ResourceRequirements(requests=self.resources,limits=self.resources)
+            final_resources = client.V1ResourceRequirements(
+                requests=self.resources, limits=self.resources
+            )
             container_args["resources"] = final_resources
 
         if self.need_service:
@@ -354,6 +390,76 @@ class K8sJob:
                     ports=[client.V1ServicePort(port=p) for p in (self.ports or [80])],
                 ),
             ),
+        )
+
+    def _create_gpu_plugin_daemonset(self):
+        apps_api = self._apps_api
+
+        tolerations = [
+            client.V1Toleration(key="CriticalAddonsOnly", operator="Exists"),
+            client.V1Toleration(
+                key="nvidia.com/gpu", operator="Exists", effect="NoSchedule"
+            )
+        ]
+        if self.k8s_gpu_taint != "":
+            key, value, effect = self.k8s_gpu_taint.split(":")
+            toleration = client.V1Toleration(
+                effect=effect, key=key, operator="Equal", value=value
+            )
+            tolerations.append(toleration)
+
+        daemonset = client.V1DaemonSet(
+            api_version="apps/v1",
+            kind="DaemonSet",
+            metadata=client.V1ObjectMeta(
+                name="nvidia-device-plugin-daemonset",
+            ),
+            spec=client.V1DaemonSetSpec(
+                selector=client.V1LabelSelector(
+                    match_labels={"name": "nvidia-device-plugin-ds"}
+                ),
+                update_strategy=client.V1DaemonSetUpdateStrategy(type="RollingUpdate"),
+                template=client.V1PodTemplateSpec(
+                    metadata=client.V1ObjectMeta(
+                        annotations={"scheduler.alpha.kubernetes.io/critical-pod": ""},
+                        labels={"name": "nvidia-device-plugin-ds"},
+                    ),
+                    spec=client.V1PodSpec(
+                        tolerations=tolerations,
+                        containers=[
+                            client.V1Container(
+                                image="mcr.microsoft.com/oss/nvidia/k8s-device-plugin:v0.14.1",
+                                name="nvidia-device-plugin-ctr",
+                                security_context=client.V1SecurityContext(
+                                    allow_privilege_escalation=False,
+                                    capabilities=client.V1Capabilities(drop=["ALL"]),
+                                ),
+                                volume_mounts=[
+                                    client.V1VolumeMount(
+                                        name="device-plugin",
+                                        mount_path="/var/lib/kubelet/device-plugins",
+                                    )
+                                ],
+                            )
+                        ],
+                        volumes=[
+                            client.V1Volume(
+                                name="device-plugin",
+                                host_path=client.V1HostPathVolumeSource(
+                                    path="/var/lib/kubelet/device-plugins"
+                                ),
+                            )
+                        ],
+                    ),
+                ),
+            ),
+        )
+        apps_api.create_namespaced_daemon_set(self.namespace, daemonset)
+
+    def _delete_gpu_plugin_daemonset(self):
+        core_api = self._core_api
+        core_api.delete_namespaced_daemon_set(
+            name="nvidia-device-plugin-daemonset", namespace=self.namespace
         )
 
     def _get_job_pods(self, exclude_pods=()):

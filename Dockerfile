@@ -18,7 +18,7 @@ RUN --mount=type=secret,id=GITHUB_TOKEN \
     GITHUB_TOKEN=$(cat /run/secrets/GITHUB_TOKEN)  && echo "https://x-access-token:${GITHUB_TOKEN}@github.com" > ${HOME}/.git-credentials && \
     git config --global credential.helper store && \
     apt-get update && apt-get upgrade -y && \
-    apt-get install cmake build-essential pigz -y && \
+    apt-get install cmake build-essential pigz libgl1-mesa-glx -y && \
     pip install /opt/dist/*.whl && \
     apt-get purge build-essential cmake -y && \
     rm -rf /var/lib/apt/lists/* && \
