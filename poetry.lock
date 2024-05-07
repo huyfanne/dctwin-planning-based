@@ -589,8 +589,8 @@ pydantic = "^2.0.0"
 [package.source]
 type = "git"
 url = "https://github.com/cap-dcwiz/dclib.git"
-reference = "v1.4.0"
-resolved_reference = "8b263ce5e86e761658f0cd16e5cd43eafdc1fc56"
+reference = "1.4.0"
+resolved_reference = "67b319d4203a4c1ef8de2af9bc002980df583ea4"
 
 [[package]]
 name = "decorator"
@@ -3260,4 +3260,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "7f3da611dbe3e8b61b54c4c33226d28479d8da4308815188927b313943233bcd"
+content-hash = "e090fc115cb32b3aa3fbbd9f4322e1d2caef466b0d4f08684efddb25d22bb098"
