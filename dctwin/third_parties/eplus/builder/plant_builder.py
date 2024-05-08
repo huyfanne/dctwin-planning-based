@@ -531,6 +531,6 @@ class PlantBuilder:
         :return:
         """
         # build chiller plant system loops according to the configuration file
-        self._make_secondary_loops(plant.secondary_chilled_water_loops)
+        self._make_secondary_loops(plant.secondary_chilled_water_loops) if plant.secondary_chilled_water_loops else None
         self._make_chilled_water_loops(plant.chilled_water_loops)
         self._make_condenser_loops(plant.condenser_water_loops)
