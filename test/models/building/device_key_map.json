@@ -99,5 +99,6 @@
             "power": "COOLING TOWER-1:Cooling Tower Fan Electricity Rate [W](TimeStep)"
         }
     },
-    "secondary chilled water pumps": {}
+    "secondary chilled water pumps": {},
+    "thermal storage tanks": {}
 }

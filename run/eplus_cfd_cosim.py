@@ -1,6 +1,6 @@
 import numpy as np
 
-from dctwin.interfaces.gym_envs import EplusCFDEnv
+from dctwin.gym_envs import EplusCFDEnv
 from dctwin.utils import config as env_config
 from dctwin.utils import read_engine_config, setup_logging
 from dctwin.adapters import EplusCFDAdapter

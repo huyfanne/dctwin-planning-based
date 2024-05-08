@@ -1,4 +1,4 @@
-from dctwin.interfaces.adapters import EplusCFDAdapter
+from dctwin.adapters import EplusCFDAdapter
 from typing import Dict
 
 

@@ -487,6 +487,8 @@ class PlantBuilder:
                 )
 
     def _make_secondary_loops(self, secondary_loops: Dict[str, SecondaryChilledWaterLoops]):
+        if secondary_loops is None:
+            return
         for loop_name, secondary_loop in secondary_loops.items():
             self._make_plant_loop(
                 loop_name=loop_name,
