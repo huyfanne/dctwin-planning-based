@@ -130,14 +130,20 @@ class CFDManager:
         reduced-order solver: POD
         """
         if self.isk8s:
+            self.k8s_config["k8s_resources"] = self.k8s_config["k8s_meshing_resources"]
+            self.k8s_config["k8s_taint"] = self.k8s_config["k8s_cpu_taint"]
             self.geometry_backend = SalomeBackendK8s(k8s_config=self.k8s_config)
             self.mesh_backend = SnappyHexBackendK8s(
-                process_num=self.mesh_process, k8s_config=self.k8s_config
+                process_num=self.mesh_process, k8s_config=self.k8s_config, is_gpu=self.is_gpu
             )
             if self.steady:
+                self.k8s_config["k8s_resources"] = self.k8s_config["k8s_solving_resources"]
+                if self.k8s_config["k8s_gpu_taint"]:
+                    self.k8s_config["k8s_taint"] = self.k8s_config["k8s_gpu_taint"]
                 self.solver_backend = SteadySolverBackendK8s(
                     process_num=self.solve_process,
                     k8s_config=self.k8s_config,
+                    is_gpu=self.is_gpu
                 )
                 # use reduced-order simulation if POD mode is provided
                 if not self.run_cfd and self.pod_method is not None:
@@ -148,8 +154,11 @@ class CFDManager:
                         self.room, self.object_mesh_index
                     )
             else:
+                self.k8s_config["k8s_resources"] = self.k8s_config["k8s_solving_resources"]
+                self.k8s_config["k8s_taint"] = self.k8s_config["k8s_gpu_taint"]
                 self.solver_backend = TransientSolverBackendK8s(
-                    process_num=self.solve_process
+                    process_num=self.solve_process,
+                    is_gpu=self.is_gpu
                 )
         else:
             self.geometry_backend = SalomeBackend(self.docker_client, is_gpu=self.is_gpu)

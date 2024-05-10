@@ -38,7 +38,7 @@ class SnappyHexBackendMixin:
                     "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
                     "blockMesh && surfaceFeatureExtract && "
                     "decomposePar -copyZero -force && "
-                    "mpirun --allow-run-as-root -np "
+                    "mpirun --use-hwthread-cpus --allow-run-as-root -np "
                     f"{self.process_num} snappyHexMesh -parallel -overwrite && "
                     "reconstructParMesh -constant -mergeTol 6 && "
                     f"{topo_set_command}"

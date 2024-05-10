@@ -39,8 +39,6 @@ class BackendK8s(BaseBackend):
                 ),
             )
         )
-        self.is_k8s_azure_gpu_cluster = k8s_config.get("is_k8s_azure_gpu_cluster", False)
-        self.k8s_gpu_taint = k8s_config.get("k8s_gpu_taint", "")
 
     def run_container(
         self,
@@ -97,8 +95,6 @@ class BackendK8s(BaseBackend):
             resources=k8s_resources,
             is_local_k8s=is_local_k8s,
             local_volume_path=DEFAULT_LOCAL_VOLUME_PATH,
-            is_k8s_azure_gpu_cluster=self.is_k8s_azure_gpu_cluster,
-            k8s_gpu_taint=self.k8s_gpu_taint,
             k8s_taint=k8s_taint,
             volume_mount=volume_mount,
             additional_params={

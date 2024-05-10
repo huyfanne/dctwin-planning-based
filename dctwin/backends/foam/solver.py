@@ -140,7 +140,7 @@ class SolverBackendMixin:
                     "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
                     "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/amgx/lib && "
                     "decomposePar -force && "
-                    "mpirun --allow-run-as-root "
+                    "mpirun --use-hwthread-cpus --allow-run-as-root "
                     f"-np {self.process_num} {self.solver} -parallel && "
                     f"reconstructPar {latest_time} && "
                     "rm -rf /data/processor*"
