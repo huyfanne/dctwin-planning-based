@@ -64,24 +64,30 @@ class CFDManager:
     :param field_config: field configuration for meshing
     :param pod_method: POD method, can be GP, Flux, or GP-Flux
     :param docker_client: docker client
+    :param is_k8s: whether to use k8s for simulation
+    :param k8s_config: k8s configuration
+    :param scale_server_flow_rate: whether to scale server flow rate
+    :param acu2server_flow_ratio: ratio of acu supply air flow rate to total server flow rate
+    :param is_gpu: whether to use GPU for simulation
     """
 
     def __init__(
-            self,
-            room: Room,
-            mesh_process: int = 32,
-            solve_process: int = 32,
-            steady: bool = True,
-            run_cfd: bool = True,
-            write_interval: int = 50,
-            end_time: int = 100,
-            field_config: Dict = None,
-            pod_method: str = "GP",
-            docker_client: docker.DockerClient = None,
-            is_k8s: bool = False,
-            k8s_config: Dict = {},
-            scale_server_flow_rate: bool = False,
-            acu2server_flow_ratio: float = 1.0,
+        self,
+        room: Room,
+        mesh_process: int = 32,
+        solve_process: int = 32,
+        steady: bool = True,
+        run_cfd: bool = True,
+        write_interval: int = 50,
+        end_time: int = 100,
+        field_config: Dict = None,
+        pod_method: str = "GP",
+        docker_client: docker.DockerClient = None,
+        is_k8s: bool = False,
+        k8s_config: Dict = {},
+        scale_server_flow_rate: bool = False,
+        acu2server_flow_ratio: float = 0.8,
+        is_gpu: bool = False,
     ) -> None:
         if not is_k8s:
             self.docker_client = docker_client if docker_client else docker.from_env()
@@ -110,6 +116,7 @@ class CFDManager:
         self.k8s_config = k8s_config
         self.scale_server_flow_rate = scale_server_flow_rate
         self.acu2server_flow_ratio = acu2server_flow_ratio
+        self.is_gpu = is_gpu
 
         self.last_state_case = None
         self.object_mesh_index = read_object_mesh_index(room=self.room)
@@ -123,14 +130,20 @@ class CFDManager:
         reduced-order solver: POD
         """
         if self.isk8s:
+            self.k8s_config["k8s_resources"] = self.k8s_config["k8s_meshing_resources"]
+            self.k8s_config["k8s_taint"] = self.k8s_config["k8s_cpu_taint"]
             self.geometry_backend = SalomeBackendK8s(k8s_config=self.k8s_config)
             self.mesh_backend = SnappyHexBackendK8s(
-                process_num=self.mesh_process, k8s_config=self.k8s_config
+                process_num=self.mesh_process, k8s_config=self.k8s_config, is_gpu=self.is_gpu
             )
             if self.steady:
+                self.k8s_config["k8s_resources"] = self.k8s_config["k8s_solving_resources"]
+                if self.k8s_config["k8s_gpu_taint"]:
+                    self.k8s_config["k8s_taint"] = self.k8s_config["k8s_gpu_taint"]
                 self.solver_backend = SteadySolverBackendK8s(
                     process_num=self.solve_process,
                     k8s_config=self.k8s_config,
+                    is_gpu=self.is_gpu
                 )
                 # use reduced-order simulation if POD mode is provided
                 if not self.run_cfd and self.pod_method is not None:
@@ -141,17 +154,20 @@ class CFDManager:
                         self.room, self.object_mesh_index
                     )
             else:
+                self.k8s_config["k8s_resources"] = self.k8s_config["k8s_solving_resources"]
+                self.k8s_config["k8s_taint"] = self.k8s_config["k8s_gpu_taint"]
                 self.solver_backend = TransientSolverBackendK8s(
-                    process_num=self.solve_process
+                    process_num=self.solve_process,
+                    is_gpu=self.is_gpu
                 )
         else:
-            self.geometry_backend = SalomeBackend(self.docker_client)
+            self.geometry_backend = SalomeBackend(self.docker_client, is_gpu=self.is_gpu)
             self.mesh_backend = SnappyHexBackend(
-                self.docker_client, process_num=self.mesh_process
+                self.docker_client, process_num=self.mesh_process, is_gpu=self.is_gpu
             )
             if self.steady:
                 self.solver_backend = SteadySolverBackend(
-                    self.docker_client, process_num=self.solve_process
+                    self.docker_client, process_num=self.solve_process, is_gpu=self.is_gpu
                 )
                 # use reduced-order simulation if POD mode is provided
                 if not self.run_cfd and self.pod_method is not None:
@@ -531,11 +547,12 @@ class CFDManager:
             # step 2: mesh geometry
             if run_mesh:
                 self.mesh()
-                if save_mesh_index and self.object_mesh_index is None:
-                    self.object_mesh_index = calc_object_mesh_index(
-                        room=self.room,
-                        mesh_points=read_mesh_coordinates(),
-                    )
+                if save_mesh_index:
+                    if self.object_mesh_index is None:
+                        self.object_mesh_index = calc_object_mesh_index(
+                            room=self.room,
+                            mesh_points=read_mesh_coordinates(),
+                        )
                     save_json_file(
                         path=config.cfd.mesh_dir.joinpath("object_mesh_index.json"),
                         saved_dict=self.object_mesh_index,

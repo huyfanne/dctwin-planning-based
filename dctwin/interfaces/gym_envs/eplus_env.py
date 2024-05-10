@@ -34,6 +34,7 @@ class EPlusEnv(BaseEnv):
         docker_client: docker.DockerClient = None,
         is_k8s: bool = False,
         k8s_config: dict = None,
+        is_gpu: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -57,6 +58,7 @@ class EPlusEnv(BaseEnv):
                 host=config.host,
                 network=config.network,
                 docker_client=docker_client,
+                is_gpu=is_gpu,
             )
 
     def _set_eplus_environ(self) -> None:

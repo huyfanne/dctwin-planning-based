@@ -118,7 +118,7 @@ class SolverBackendMixin:
     Backend for OpenFOAM solver. The class is inherited from the core Backend
     """
 
-    docker_image = "ghcr.io/cap-dcwiz/openfoam-v1912-centos72:latest"
+    docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:latest"
 
     only_save_latest = True
     write_interval = 10
@@ -137,9 +137,10 @@ class SolverBackendMixin:
                 "bash",
                 "-c",
                 (
-                    "source /opt/OpenFOAM/setImage_v1912.sh && "
+                    "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
+                    "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/amgx/lib && "
                     "decomposePar -force && "
-                    "mpirun --allow-run-as-root "
+                    "mpirun --use-hwthread-cpus --allow-run-as-root "
                     f"-np {self.process_num} {self.solver} -parallel && "
                     f"reconstructPar {latest_time} && "
                     "rm -rf /data/processor*"
@@ -149,7 +150,7 @@ class SolverBackendMixin:
             command = [
                 "bash",
                 "-c",
-                (f"source /opt/OpenFOAM/setImage_v1912.sh && {self.solver}"),
+                (f"source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/amgx/lib && {self.solver}"),
             ]
         return command
 
@@ -249,6 +250,7 @@ class SteadySolverBackend(SolverBackend):
             write_interval=self.write_interval,
             end_time=self.end_time,
             process_num=self.process_num,
+            is_gpu=self.is_gpu,
         )
 
 

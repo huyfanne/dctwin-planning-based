@@ -200,8 +200,7 @@ class IDFBuilder:
         heat_exchanger_names = self.building.constructions.heat_exchangers
         for heat_exchanger_name in heat_exchanger_names:
             hx_obj = self.model.getobject(
-                key="HeatExchanger:FluidToFluid".upper(),
-                name=heat_exchanger_name
+                key="HeatExchanger:FluidToFluid".upper(), name=heat_exchanger_name
             )
             self.device_key_map["heat_exchangers"][heat_exchanger_name] = {
                 "cooling load": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Heat Transfer Rate [W](TimeStep)",

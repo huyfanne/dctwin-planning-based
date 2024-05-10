@@ -33,6 +33,7 @@ def generate_control_dict(
     write_interval: int = 100,
     end_time: int = 500,
     process_num: int = 1,
+    is_gpu: bool = False,
 ) -> None:
     if steady is False:
         delta_t = float("1e-5")
@@ -46,10 +47,17 @@ def generate_control_dict(
         Path(template_dir, f"foam/system/{system_folder}/fvSchemes"),
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
-    shutil.copy(
-        Path(template_dir, f"foam/system/{system_folder}/fvSolution"),
-        Path(config.cfd.case_dir, "system/fvSolution"),
-    )
+
+    if is_gpu:
+        shutil.copy(
+            Path(template_dir, f"foam/system/{system_folder}/fvSolution_gpu"),
+            Path(config.cfd.case_dir, "system/fvSolution"),
+        )
+    else:
+        shutil.copy(
+            Path(template_dir, f"foam/system/{system_folder}/fvSolution_cpu"),
+            Path(config.cfd.case_dir, "system/fvSolution"),
+        )
     with open(Path(config.cfd.case_dir, "system/controlDict"), "w") as f:
         f.write(
             template_env.get_template(
@@ -73,7 +81,7 @@ def generate_control_dict(
             )
 
 
-def init_foam():
+def init_foam(is_gpu: bool = False):
     Path(config.cfd.case_dir, "0").mkdir(parents=True, exist_ok=True)
     Path(config.cfd.case_dir, "constant/triSurface").mkdir(parents=True, exist_ok=True)
     Path(config.cfd.case_dir, "system").mkdir(parents=True, exist_ok=True)
@@ -102,10 +110,16 @@ def init_foam():
         Path(template_dir, "foam/system/steady/fvSchemes"),
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
-    shutil.copy(
-        Path(template_dir, "foam/system/steady/fvSolution"),
-        Path(config.cfd.case_dir, "system/fvSolution"),
-    )
+    if is_gpu:
+        shutil.copy(
+            Path(template_dir, f"foam/system/steady/fvSolution_gpu"),
+            Path(config.cfd.case_dir, "system/fvSolution"),
+        )
+    else:
+        shutil.copy(
+            Path(template_dir, f"foam/system/steady/fvSolution_cpu"),
+            Path(config.cfd.case_dir, "system/fvSolution"),
+        )
 
     generate_control_dict()
 

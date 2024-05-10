@@ -21,7 +21,7 @@ class SnappyHexBackendMixin:
     Backend for snappyHexMesh. The class is inherited from the core Backend.
     """
 
-    docker_image = "ghcr.io/cap-dcwiz/openfoam-v1912-centos72:latest"
+    docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:latest"
     perforated_openings = {}
 
     @property
@@ -35,10 +35,10 @@ class SnappyHexBackendMixin:
                 "bash",
                 "-c",
                 (
-                    "source /opt/OpenFOAM/setImage_v1912.sh && "
+                    "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
                     "blockMesh && surfaceFeatureExtract && "
                     "decomposePar -copyZero -force && "
-                    "mpirun --allow-run-as-root -np "
+                    "mpirun --use-hwthread-cpus --allow-run-as-root -np "
                     f"{self.process_num} snappyHexMesh -parallel -overwrite && "
                     "reconstructParMesh -constant -mergeTol 6 && "
                     f"{topo_set_command}"
@@ -54,7 +54,7 @@ class SnappyHexBackendMixin:
                 "bash",
                 "-c",
                 (
-                    "source /opt/OpenFOAM/setImage_v1912.sh && "
+                    "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
                     "blockMesh && surfaceFeatureExtract && snappyHexMesh -overwrite && "
                     "createPatch -overwrite && rm -rf /data/constant/triSurface/*.eMesh"
                 ),
@@ -83,7 +83,7 @@ class SnappyHexBackendMixin:
                 if opening.velocity:
                     self.perforated_openings[key] = opening
 
-        init_foam()
+        init_foam(is_gpu=self.is_gpu)
         generate_block_dict(room)
         generate_snappy_dict(
             room=room,

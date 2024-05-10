@@ -68,39 +68,40 @@ class BackendK8s(BaseBackend):
         else:
             config.load_incluster_config()
             sub_path = str(case_dir).replace("/tm-data/", "", 1)
-            
+
         volume_mount = {
             "mount_path": self.volume_data_dir,
             "sub_path": sub_path,
-            }
-        
+        }
+
         backoff_limit = 0
-        ttl_seconds_after_finished=20
+        ttl_seconds_after_finished = 20
         job_name = f"{worker_name}-{job_uuid}"
 
         # Danger, do not remove this line, used by kubernetes cluster to remove container accordingly
         logger.info(f"container_id: {job_name}")
 
         job = K8sJob(
-                name=job_uuid,
-                image=image,
-                command=command,
-                working_dir_in_volume=working_dir,
-                worker_name=worker_name,
-                need_service=False,
-                need_volume=True,
-                start=True,
-                env_vars=environment,
-                namespace=namespace,
-                resources=k8s_resources,
-                is_local_k8s=is_local_k8s,
-                local_volume_path=DEFAULT_LOCAL_VOLUME_PATH,
-                k8s_taint=k8s_taint,
-                volume_mount=volume_mount,
-                additional_params={
-                    "spec.ttl_seconds_after_finished": ttl_seconds_after_finished,
-                    "spec.backoff_limit": backoff_limit,
-                })
+            name=job_uuid,
+            image=image,
+            command=command,
+            working_dir_in_volume=working_dir,
+            worker_name=worker_name,
+            need_service=False,
+            need_volume=True,
+            start=True,
+            env_vars=environment,
+            namespace=namespace,
+            resources=k8s_resources,
+            is_local_k8s=is_local_k8s,
+            local_volume_path=DEFAULT_LOCAL_VOLUME_PATH,
+            k8s_taint=k8s_taint,
+            volume_mount=volume_mount,
+            additional_params={
+                "spec.ttl_seconds_after_finished": ttl_seconds_after_finished,
+                "spec.backoff_limit": backoff_limit,
+            },
+        )
         stream_log = job.stream()
         if background:
             return None
