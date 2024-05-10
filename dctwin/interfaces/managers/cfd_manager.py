@@ -511,7 +511,8 @@ class CFDManager:
             self.update_boundary_conditions(**boundary_conditions)
             boundary_conditions = self.format_boundary_conditions
 
-        if self.scale_server_flow_rate or self.room.constructions.check_sealed:
+        # if self.scale_server_flow_rate or self.room.constructions.check_sealed:
+        if self.scale_server_flow_rate:
             boundary_conditions = self._scale_server_flow_rate(
                 boundary_conditions=boundary_conditions,
                 acu2server_flow_ratio=self.acu2server_flow_ratio,
