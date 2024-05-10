@@ -547,11 +547,12 @@ class CFDManager:
             # step 2: mesh geometry
             if run_mesh:
                 self.mesh()
-                if save_mesh_index and self.object_mesh_index is None:
-                    self.object_mesh_index = calc_object_mesh_index(
-                        room=self.room,
-                        mesh_points=read_mesh_coordinates(),
-                    )
+                if save_mesh_index:
+                    if self.object_mesh_index is None:
+                        self.object_mesh_index = calc_object_mesh_index(
+                            room=self.room,
+                            mesh_points=read_mesh_coordinates(),
+                        )
                     save_json_file(
                         path=config.cfd.mesh_dir.joinpath("object_mesh_index.json"),
                         saved_dict=self.object_mesh_index,
