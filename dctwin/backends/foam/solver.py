@@ -42,6 +42,7 @@ class Builder:
         self.server_dict = server_dict
         self.last_state_case = last_state_case
         try:
+            # self.sealed = self.room.constructions.check_sealed
             self.sealed = False
         except KeyError:
             logger.error("Error: there is no -sealed- in the JSON -meta-, please refer the example in -tutorials- "
@@ -118,7 +119,7 @@ class SolverBackendMixin:
     Backend for OpenFOAM solver. The class is inherited from the core Backend
     """
 
-    docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:latest"
+    docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:0.0.1"
 
     only_save_latest = True
     write_interval = 10
