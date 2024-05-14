@@ -41,7 +41,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: .
-        push: true
+        platforms: linux/amd64
         secrets: |
           GITHUB_TOKEN=${{ secrets.GIT_TOKEN }}
         tags: ghcr.io/cap-dcwiz/dctwin:${{ steps.vars.outputs.version }}
