@@ -2,10 +2,10 @@ name: build-current-version
 on:
   push:
     branches:
-      - main
+      - weiming-github-workflow
 
 jobs:
-  build:
+  build-and-scout:
     runs-on: ubuntu-latest
     steps:
     - name: Check out code
@@ -45,3 +45,16 @@ jobs:
         secrets: |
           GITHUB_TOKEN=${{ secrets.GIT_TOKEN }}
         tags: ghcr.io/cap-dcwiz/dctwin:${{ steps.vars.outputs.version }}
+    - name: Authenticate to Docker
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_PAT }}
+    
+    - name: Docker Scout
+      id: docker-scout
+      uses: docker/scout-action@v1
+      with:
+        command: quickview,cves,recommendations
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
