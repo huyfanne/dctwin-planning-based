@@ -10,8 +10,12 @@ env:
 jobs:
   build-and-scout:
     runs-on:
-      labels: large_16c
+      labels: large_4c
     steps:
+    - name: Set Swap Space
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 20
     - name: Collect Workflow Telemetry
       uses: catchpoint/workflow-telemetry-action@v2
     - name: Check out code
