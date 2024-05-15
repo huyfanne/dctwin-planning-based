@@ -13,7 +13,7 @@ eplus_env_config {
     input_source: "data/schedule/workloads/ite_1.json"
     variable_name: "ite_1 cpu loading schedule"
     schedule_config {
-      initial_value: 1.0
+      initial_value: 0.5
       lb: 0.0
       ub: 1.0
       schedule_type: ITE
