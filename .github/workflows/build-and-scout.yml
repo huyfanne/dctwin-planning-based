@@ -16,7 +16,7 @@ jobs:
       uses: SebRollen/toml-action@v1.2.0
       with:
         file: pyproject.toml  
-        field: version
+        field: tool.poetry.version
 
     - name: Log in to the Container registry
       uses: docker/login-action@v2
@@ -33,7 +33,7 @@ jobs:
         secrets: |
           GITHUB_TOKEN=${{ secrets.GIT_TOKEN }}
         tags: ghcr.io/cap-dcwiz/dctwin:${{ steps.version.outputs.value }}
-        
+
     - name: Authenticate to Docker
       uses: docker/login-action@v3
       with:
