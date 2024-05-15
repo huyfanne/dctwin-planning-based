@@ -632,7 +632,7 @@ ELECTRICEQUIPMENT:ITE:AIRCOOLED,
     FlowFromSystem,           !- Air Flow Calculation Method
     Watts/Unit,               !- Design Power Input Calculation Method
     1000,                     !- Watts per Unit
-    10,                       !- Number of Units
+    1000,                     !- Number of Units
     0,                        !- Watts per Zone Floor Area
     ite_1 operation schedule,    !- Design Power Input Schedule Name
     ite_1 cpu schedule,       !- CPU Loading Schedule Name
@@ -1495,10 +1495,35 @@ EnergyManagementSystem:Sensor,
     Whole Building,           !- OutputVariable or OutputMeter Index Key Name
     Facility Total HVAC Electricity Demand Rate;    !- OutputVariable or OutputMeter Name
 
+ENERGYMANAGEMENTSYSTEM:ACTUATOR,
+    chiller_1_chilled_water_pump_pump_mass_flow_rate,    !- Name
+    chiller-1 chilled water pump,    !- Actuated Component Unique Name
+    Pump,                     !- Actuated Component Type
+    Pump Mass Flow Rate;      !- Actuated Component Control Type
+
+ENERGYMANAGEMENTSYSTEM:ACTUATOR,
+    chiller_1_on_off_supervisory,    !- Name
+    chiller-1,                !- Actuated Component Unique Name
+    Plant Component Chiller:Electric:EIR,    !- Actuated Component Type
+    On/Off Supervisory;       !- Actuated Component Control Type
+
+ENERGYMANAGEMENTSYSTEM:ACTUATOR,
+    cooling_tower_1_on_off_supervisory,    !- Name
+    cooling tower-1,          !- Actuated Component Unique Name
+    Plant Component CoolingTower:VariableSpeed,    !- Actuated Component Type
+    On/Off Supervisory;       !- Actuated Component Control Type
+
 EnergyManagementSystem:ProgramCallingManager,
     Calculate Power Utilization Effectiveness,    !- Name
     EndOfZoneTimestepBeforeZoneReporting,    !- EnergyPlus Model Calling Point
     CalculatePUE;             !- Program Name 1
+
+ENERGYMANAGEMENTSYSTEM:PROGRAMCALLINGMANAGER,
+    internal_actuator_calling_manager,    !- Name
+    InsideHVACSystemIterationLoop,    !- EnergyPlus Model Calling Point
+    program_chiller_1_chilled_water_pump_pump_mass_flow_rate,    !- Program Name 1
+    program_chiller_1_on_off_supervisory,    !- Program Name 2
+    program_cooling_tower_1_on_off_supervisory;    !- Program Name 3
 
 EnergyManagementSystem:Program,
     CalculatePUE,             !- Name
@@ -1511,6 +1536,18 @@ EnergyManagementSystem:Program,
 EnergyManagementSystem:Program,
     CalculateCarbon,          !- Name
     set Carbon_Emissions = 0.4 * Total_Purchased_Electricity / 1000 / 12;    !- Program Line 1
+
+ENERGYMANAGEMENTSYSTEM:PROGRAM,
+    program_chiller_1_chilled_water_pump_pump_mass_flow_rate,    !- Name
+    SET chiller_1_chilled_water_pump_pump_mass_flow_rate = 100.0;    !- Program Line 1
+
+ENERGYMANAGEMENTSYSTEM:PROGRAM,
+    program_chiller_1_on_off_supervisory,    !- Name
+    SET chiller_1_on_off_supervisory = 1.0;    !- Program Line 1
+
+ENERGYMANAGEMENTSYSTEM:PROGRAM,
+    program_cooling_tower_1_on_off_supervisory,    !- Name
+    SET cooling_tower_1_on_off_supervisory = 1.0;    !- Program Line 1
 
 EnergyManagementSystem:GlobalVariable,
     PUE_Value;                !- Erl Variable 1 Name

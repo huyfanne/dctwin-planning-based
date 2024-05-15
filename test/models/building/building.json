@@ -585,7 +585,7 @@
                         "ites": {
                             "ite_1": {
                                 "zone": "zone",
-                                "numberOfUnits": 10,
+                                "numberOfUnits": 1000,
                                 "wattsPerUnit": 1000,
                                 "supplyAirNodeName": "zone inlet node 1",
                                 "model": "ITE Model"
@@ -639,6 +639,9 @@
                                         },
                                         "power": {
                                             "model": "typical chiller"
+                                        },
+                                        "operation": {
+                                            "onOffSupervisory": 1
                                         }
                                     }
                                 },
@@ -652,6 +655,9 @@
                                         },
                                         "control": {
                                             "model": "chw pump"
+                                        },
+                                        "operation": {
+                                            "pumpMassFlowRate": 100
                                         }
                                     }
                                 }
@@ -735,6 +741,9 @@
                                         },
                                         "power": {
                                             "model": "YorkCalcUserDefined"
+                                        },
+                                        "operation": {
+                                            "onOffSupervisory": 1
                                         }
                                     }
                                 },

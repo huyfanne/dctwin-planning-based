@@ -11,6 +11,7 @@ from .plant_builder import PlantBuilder
 from .model_builder import ModelBuilder
 from .zone_builder import RoomBuilder
 from .electric_builder import ElectricSystemBuilder
+from .actuator_builder import ActuatorBuilder
 from .utils import make_surfaces
 
 
@@ -40,6 +41,7 @@ class IDFBuilder:
         self.model_builder = ModelBuilder(self.model)
         self.plant_builder = PlantBuilder(self.model)
         self.room_builder = RoomBuilder(self.model)
+        self.actuator_builder = ActuatorBuilder(self.model)
         self.electric_system_builder = ElectricSystemBuilder(self.model)
 
         self._set_global_geometry_rules(building.geometry)
@@ -74,6 +76,9 @@ class IDFBuilder:
 
     def _make_plant(self) -> None:
         self.plant_builder.make_plant(self.building.constructions.plant)
+
+    def _make_actuators(self) -> None:
+        self.actuator_builder.make_actuators(self.building.constructions.plant)
 
     def _make_schedule(self) -> None:
         pass
@@ -277,6 +282,7 @@ class IDFBuilder:
         self._make_plant()
         self._make_schedule()
         self._make_elctric_load_centers()
+        self._make_actuators()
 
     def save(
         self,

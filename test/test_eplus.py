@@ -30,7 +30,7 @@ if __name__ == "__main__":
         # network="host",
         # host="host.docker.internal"
     )
-    config.make_cpu_loading_schedules()
+    config.make_cpu_loading_schedules(initial_value=0.5)
     config.make_chilled_water_loop_supply_temperature_actions()
     config.make_acu_supply_air_temperature_actions()
     config.make_acu_supply_air_flow_rate_actions()
