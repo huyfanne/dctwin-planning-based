@@ -4,10 +4,13 @@ on:
     branches:
       - weiming-github-workflow
 
+env:
+  ACTIONS_RUNNER_DEBUG: true
+  ACTIONS_STEP_DEBUG: true
 jobs:
   build-and-scout:
     runs-on:
-      labels: large_4c
+      labels: large_16c
     steps:
     - name: Check out code
       uses: actions/checkout@v2
