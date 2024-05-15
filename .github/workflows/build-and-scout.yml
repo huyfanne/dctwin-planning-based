@@ -10,7 +10,7 @@ env:
 jobs:
   build-and-scout:
     runs-on:
-      labels: large_4c
+      labels: large
     steps:
     - name: Set Swap Space
       uses: actionhippie/swap-space@v1
@@ -19,7 +19,7 @@ jobs:
     - name: Collect Workflow Telemetry
       uses: catchpoint/workflow-telemetry-action@v2
     - name: Check out code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Get version
       id: version
@@ -29,14 +29,14 @@ jobs:
         field: tool.poetry.version
 
     - name: Log in to the Container registry
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Build and push Docker image
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5.3.0
       with:
         context: .
         platforms: linux/amd64
