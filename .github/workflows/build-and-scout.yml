@@ -15,7 +15,7 @@ jobs:
     - name: Set Swap Space
       uses: actionhippie/swap-space@v1
       with:
-        size: 20G
+        size: 6.5G
     - name: Collect Workflow Telemetry
       uses: catchpoint/workflow-telemetry-action@v2
     - name: Check out code
