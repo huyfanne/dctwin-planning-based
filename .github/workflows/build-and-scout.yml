@@ -13,9 +13,9 @@ jobs:
       labels: large_4c
     steps:
     - name: Set Swap Space
-      uses: pierotofy/set-swap-space@master
+      uses: actionhippie/swap-space@v1
       with:
-        swap-size-gb: 20
+        size: 20G
     - name: Collect Workflow Telemetry
       uses: catchpoint/workflow-telemetry-action@v2
     - name: Check out code
