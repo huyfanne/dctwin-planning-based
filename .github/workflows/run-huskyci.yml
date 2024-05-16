@@ -30,6 +30,7 @@ jobs:
           sudo usermod -aG docker $(whoami)
           make install
           source .env
+          export HUSKYCI_CLIENT_REPO_BRANCH="poc-python-safety"
           make run-client-linux
 
       # - name: Set up Python
