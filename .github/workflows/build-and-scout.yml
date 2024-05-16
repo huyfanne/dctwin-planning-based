@@ -1,8 +1,6 @@
 name: build-current-version
 on:
-  push:
-    branches:
-      - weiming-github-workflow
+  workflow_dispatch
 
 env:
   ACTIONS_RUNNER_DEBUG: true
