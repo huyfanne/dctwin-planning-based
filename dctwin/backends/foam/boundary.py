@@ -126,7 +126,7 @@ class ACUBoundary(Boundary):
             {{
                 type            exprFixedValue;
                 value           $internalField;
-                valueExpr       "max(t1,t2)";
+                valueExpr       "max(0,t2)";
                 variables
                 (
                     "{t_sink}{{acu_return_{self.acu_id}}} = weightAverage(T)"
