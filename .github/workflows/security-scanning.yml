@@ -128,3 +128,37 @@ jobs:
         with:
            name: Trivy report
            path: trivy-results-full.html
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}} # Only required for Organizations, not personal accounts.
+  bandit-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run bandit
+        if: '!cancelled()'
+        uses: mdegis/bandit-action@v1.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: "."
+          level: high
+      - name: Install poetry
+        if: '!cancelled()'
+        uses: snok/install-poetry@v1
+      - name: Setup safety
+        if: '!cancelled()'
+        run: |
+          poetry export -f requirements.txt --output requirements.txt
+          pip install safety
+      - name: Run safety (manually check this for vulnerable repos)
+        if: '!cancelled()'
+        run: echo "::notice $(safety check -r requirements.txt)"
+      
