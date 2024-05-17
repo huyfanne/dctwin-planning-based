@@ -1,0 +1,29 @@
+name: test
+
+on:
+  push:
+  pull_request:
+jobs:
+  bandit-safety-gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run bandit
+        if: '!cancelled()'
+        uses: mdegis/bandit-action@v1.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: "."
+          level: high
+      - name: Run safety
+        if: '!cancelled()'
+        uses: pyupio/safety-action@v1
+        with:
+          api-key: ${{ secrets.SAFETY_API_KEY }}
+      - name: Run gitleaks
+        if: '!cancelled()'  
+        uses: gitleaks/gitleaks-action@v2
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}} # Only required for Organizations, not personal accounts.
