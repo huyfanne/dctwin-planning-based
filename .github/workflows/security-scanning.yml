@@ -159,6 +159,7 @@ jobs:
         id: run_safety
         run: echo "SAFETY=$(safety check -r requirements.txt --save-html ./CI_safety_report.html)" >> $GITHUB_OUTPUT
       - name: Comment with safety results
+        if: '!cancelled()'
         uses: thollander/actions-comment-pull-request@v2 
         with:
           message: ${{ steps.run_safety.outputs.SAFETY }}
