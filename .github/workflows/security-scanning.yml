@@ -134,10 +134,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Run gitleaks
-        uses: gitleaks/gitleaks-action@v2
         with:
           fetch-depth: 0
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}} # Only required for Organizations, not personal accounts.
@@ -154,9 +154,14 @@ jobs:
         run: |
           poetry export -f requirements.txt --output requirements.txt
           pip install safety
-      - name: Run safety (manually check this for vulnerable repos!)
+      - name: Run safety
         if: '!cancelled()'
-        run: echo "::notice $(safety check -r requirements.txt --save-html ./CI_safety_report.html)"
+        id: run_safety
+        run: echo "SAFETY=$(safety check -r requirements.txt --save-html ./CI_safety_report.html)" >> $GITHUB_OUTPUT
+      - name: Comment with safety results
+        uses: thollander/actions-comment-pull-request@v2 
+        with:
+          message: ${{ steps.run_safety.outputs.SAFETY }}
       - name: Run bandit
         if: '!cancelled()'
         uses: mdegis/bandit-action@v1.0

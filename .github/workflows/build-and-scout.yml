@@ -14,8 +14,7 @@ jobs:
       uses: actionhippie/swap-space@v1
       with:
         size: 20G
-    - name: Collect Workflow Telemetry
-      uses: catchpoint/workflow-telemetry-action@v2
+    
     - name: Check out code
       uses: actions/checkout@v4
 
