@@ -29,7 +29,8 @@ jobs:
           sudo usermod -aG docker $(whoami)
           make install
           source .env
-          export HUSKYCI_CLIENT_REPO_BRANCH="poc-python-safety"
+          export HUSKYCI_CLIENT_REPO_BRANCH=$GITHUB_HEAD_REF
+          export HUSKYCI_CLIENT_REPO_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git
           make run-client-linux
 
       # - name: Set up Python

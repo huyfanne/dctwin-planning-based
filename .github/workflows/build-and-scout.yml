@@ -1,6 +1,6 @@
 name: build-current-version
 on:
-  workflow_dispatch
+  pull_request
 
 env:
   ACTIONS_RUNNER_DEBUG: true
@@ -8,12 +8,12 @@ env:
 jobs:
   build-and-scout:
     runs-on:
-      labels: large
+      labels: large_4c
     steps:
     - name: Set Swap Space
       uses: actionhippie/swap-space@v1
       with:
-        size: 6.5G
+        size: 20G
     - name: Collect Workflow Telemetry
       uses: catchpoint/workflow-telemetry-action@v2
     - name: Check out code
@@ -55,4 +55,11 @@ jobs:
         command: quickview,cves,recommendations
         image: ghcr.io/cap-dcwiz/dctwin:${{ steps.version.outputs.value }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
+        sarif-file: dockerscout-output.json
+      
+    - name: Upload artifacts
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v4
+      with: 
+        path: dockerscout-output.json
 
