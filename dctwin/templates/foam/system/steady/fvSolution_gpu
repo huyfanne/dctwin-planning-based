@@ -35,7 +35,7 @@ solvers
                 ksp_type cg;
                 ksp_cg_single_reduction true;
                 ksp_max_iter "100";
-                pc_type gamg;
+                pc_type bjacobi;
                 mat_type mpiaijcusparse;
                 vec_type mpicuda;
                 // pc_type hypre;
