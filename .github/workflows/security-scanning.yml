@@ -164,10 +164,16 @@ jobs:
       #   with:
       #     message: ${{ steps.run_safety.outputs.SAFETY }}
       - name: Run safety 3
+        id: safety
         uses: pyupio/safety-action@v1
         with:
           api-key: ${{ secrets.SAFETY_API_KEY }}
           args: --detailed-output
+      - name: Comment with safety results
+        if: '!cancelled()'
+        uses: thollander/actions-comment-pull-request@v2 
+        with:
+          message: ${{ steps.safety.outputs.cli-output }}
       - name: Run bandit
         if: '!cancelled()'
         uses: mdegis/bandit-action@v1.0
