@@ -146,23 +146,28 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Install poetry
-        if: '!cancelled()'
-        uses: snok/install-poetry@v1
-      - name: Setup safety
-        if: '!cancelled()'
-        run: |
-          poetry export -f requirements.txt --output requirements.txt
-          pip install safety
-      - name: Run safety
-        if: '!cancelled()'
-        id: run_safety
-        run: echo "SAFETY=$(safety check -r requirements.txt --save-html ./CI_safety_report.html)" >> $GITHUB_OUTPUT
-      - name: Comment with safety results
-        if: '!cancelled()'
-        uses: thollander/actions-comment-pull-request@v2 
+      # - name: Install poetry
+      #   if: '!cancelled()'
+      #   uses: snok/install-poetry@v1
+      # - name: Setup safety
+      #   if: '!cancelled()'
+      #   run: |
+      #     poetry export -f requirements.txt --output requirements.txt
+      #     pip install safety
+      # - name: Run safety
+      #   if: '!cancelled()'
+      #   id: run_safety
+      #   run: echo "SAFETY=<<EOF\n$(safety check -r requirements.txt --output text --save-html ./CI_safety_report.html)\nEOF" >> $GITHUB_OUTPUT
+      # - name: Comment with safety results-
+      #   if: '!cancelled()'
+      #   uses: thollander/actions-comment-pull-request@v2 
+      #   with:
+      #     message: ${{ steps.run_safety.outputs.SAFETY }}
+      - name: Run safety 3
+        uses: pyupio/safety-action@v1
         with:
-          message: ${{ steps.run_safety.outputs.SAFETY }}
+          api-key: ${{ secrets.SAFETY_API_KEY }}
+          args: --detailed-output
       - name: Run bandit
         if: '!cancelled()'
         uses: mdegis/bandit-action@v1.0
@@ -174,13 +179,13 @@ jobs:
         if: '!cancelled()'
         run: |
           pip install bandit
+          echo "::output ${{ secrets.SAFETY_API_KEY }}"
           bandit . -r -o CI_bandit_report.html -f html
-          echo "::notice $(ls -la)"
       - name: Upload artifacts
         if: '!cancelled()'
         uses: actions/upload-artifact@v4
         with:
+          name: Python CI reports
           path: |
-            CI_safety_report.html
             CI_bandit_report.html
           
