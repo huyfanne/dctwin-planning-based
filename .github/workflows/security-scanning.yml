@@ -144,6 +144,9 @@ jobs:
   bandit-safety:
     runs-on: ubuntu-latest
     steps:
+      - id: aaa
+        run: echo "{aba}={3}" >> $GITHUB_OUTPUT
+      - run: echo $ ABABBEACEAT ${{ steps.aaa.outputs.aba }}
       - name: Checkout code
         uses: actions/checkout@v4
       # - name: Install poetry
@@ -166,14 +169,22 @@ jobs:
       - name: Run safety 3
         id: safety
         uses: pyupio/safety-action@v1
+        env:
+          GITHUB_OUTPUT: safety_output.txt
         with:
           api-key: ${{ secrets.SAFETY_API_KEY }}
           args: --detailed-output
+      - name: Process output
+        id: safety_proc
+        run: |
+          a=$(sed 's/[{}]//g' safety_output.txt)
+          echo $a
+          echo $a >> $GITHUB_OUTPUT
       - name: Comment with safety results
         if: '!cancelled()'
         uses: thollander/actions-comment-pull-request@v2 
         with:
-          message: ${{ steps.safety.outputs.cli-output }}
+          message: ${{ steps.safety.safety_proc.cli-output }}
       - name: Run bandit
         if: '!cancelled()'
         uses: mdegis/bandit-action@v1.0
