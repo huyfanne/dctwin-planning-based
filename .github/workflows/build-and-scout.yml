@@ -1,4 +1,4 @@
-name: build-current-version
+name: build-and-scout
 on:
   pull_request
 
