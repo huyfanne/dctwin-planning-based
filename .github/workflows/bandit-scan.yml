@@ -1,0 +1,34 @@
+name: Bandit Scan (python code)
+
+on:
+  pull_request:
+    branches: ["main","dev"]
+    paths:
+      - '**.py'
+        
+
+jobs:
+  bandit-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run bandit
+        uses: mdegis/bandit-action@v1.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: "."
+          level: high
+      - name: Run bandit again (to upload)
+        if: '!cancelled()'
+        run: |
+          pip install bandit
+          bandit . -r -o CI_bandit_report.html -f html
+      - name: Upload artifacts
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bandit vuln report
+          path: |
+            CI_bandit_report.html
+          

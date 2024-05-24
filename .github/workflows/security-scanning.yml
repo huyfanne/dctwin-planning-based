@@ -19,53 +19,41 @@ jobs:
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}} # Only required for Organizations, not personal accounts.
-  bandit-safety:
+  safety:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Setup safety
-        if: '!cancelled()'
         run: |
           pip install safety
       - name: Run safety
         env:
           SAFETY_API_KEY: ${{ secrets.SAFETY_API_KEY }}
-        if: '!cancelled()'
         id: run_safety
         run: |
           set +e
           out=$(safety --stage cicd scan --detailed-output)
           err=$?
-          echo "$out"
+          echo -- "$out"
           {
             echo 'SAFETY<<Eof'
             echo "$out"
             echo 'Eof'
           } >> "$GITHUB_OUTPUT"
-      - name: Comment with safety results-
+          echo -- "$out" > CI_safety_report.txt
+          exit $?
+      - name: Comment with safety results
+        uses: mshick/add-pr-comment@v2.8.2
         if: '!cancelled()'
-        uses: thollander/actions-comment-pull-request@v2 
         with:
           message: ${{ steps.run_safety.outputs.SAFETY }}
-      - name: Run bandit
-        if: '!cancelled()'
-        uses: mdegis/bandit-action@v1.0
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          path: "."
-          level: high
-      - name: Run bandit again (to upload)
-        if: '!cancelled()'
-        run: |
-          pip install bandit
-          echo "::output ${{ secrets.SAFETY_API_KEY }}"
-          bandit . -r -o CI_bandit_report.html -f html
+          message-id: 15
+          update-only: true
       - name: Upload artifacts
         if: '!cancelled()'
         uses: actions/upload-artifact@v4
         with:
-          name: Python CI reports
-          path: |
-            CI_bandit_report.html
+          name: Safety vuln report
+          path: CI_safety_report.txt
           

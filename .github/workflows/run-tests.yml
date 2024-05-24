@@ -6,7 +6,8 @@ on:
 
 jobs:
   run-cfd:
-    runs-on: ubuntu-latest
+    runs-on:
+      labels: large
     steps:
       - name: Check out code
         uses: actions/checkout@v2
