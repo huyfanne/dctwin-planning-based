@@ -3,6 +3,8 @@ name: Bandit Scan (python code)
 on:
   pull_request:
     branches: ["main","dev"]
+    paths: 
+      - '**.py'
 
 jobs:
   bandit:
