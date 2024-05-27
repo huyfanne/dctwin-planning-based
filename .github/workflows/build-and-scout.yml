@@ -4,8 +4,6 @@ on:
     paths:
       - Dockerfile
       - poetry.lock
-  schedule:
-    - cron: '42 13 * * 4'
   
 env:
   ACTIONS_RUNNER_DEBUG: true
