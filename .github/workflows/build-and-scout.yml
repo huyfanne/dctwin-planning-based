@@ -1,7 +1,12 @@
 name: build-and-scout
 on:
-  pull_request
-
+  pull_request:
+    paths:
+      - Dockerfile
+      - poetry.lock
+  schedule:
+    - cron: '42 13 * * 4'
+  
 env:
   ACTIONS_RUNNER_DEBUG: true
   ACTIONS_STEP_DEBUG: true

@@ -35,13 +35,13 @@ jobs:
           set +e
           out=$(safety --stage cicd scan --detailed-output)
           err=$?
-          echo -- "$out"
+          echo - "$out"
           {
             echo 'SAFETY<<Eof'
             echo "$out"
             echo 'Eof'
           } >> "$GITHUB_OUTPUT"
-          echo -- "$out" > CI_safety_report.txt
+          echo - "$out" > CI_safety_report.txt
           exit $?
       - name: Comment with safety results
         uses: mshick/add-pr-comment@v2.8.2
@@ -49,7 +49,6 @@ jobs:
         with:
           message: ${{ steps.run_safety.outputs.SAFETY }}
           message-id: 15
-          update-only: true
       - name: Upload artifacts
         if: '!cancelled()'
         uses: actions/upload-artifact@v4
