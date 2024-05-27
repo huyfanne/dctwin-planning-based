@@ -3,9 +3,6 @@ name: Bandit Scan (python code)
 on:
   pull_request:
     branches: ["main","dev"]
-    paths:
-      - '**.py'
-  push:
 
 jobs:
   bandit:
@@ -24,6 +21,7 @@ jobs:
         with: 
           comment-id: ${{ steps.fc.outputs.comment-id }}
       - name: Run bandit
+        if: '!cancelled()'
         uses: mdegis/bandit-action@v1.0
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
