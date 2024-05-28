@@ -457,7 +457,7 @@ class PODBackendMixin:
             # load pod modes, mean temperature field,
             # training boundary conditions and training labels (POD coefficients)
             with open(Path(config.cfd.pod_dir).joinpath("pod_data.pkl"), "rb") as f:
-                data = pickle.load(f)
+                data = pickle.load(f) #nosec
                 assert isinstance(data, dict), "data.pkl should be a dictionary!"
                 try:
                     pod.modes = data["modes"].float()

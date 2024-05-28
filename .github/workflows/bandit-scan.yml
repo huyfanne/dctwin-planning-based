@@ -18,8 +18,10 @@ jobs:
         with:
           issue-number: ${{ github.event.number }}
           body-includes: Bandit results
+        continue-on-error: true
       - name: Delete comment
         uses: detomarco/delete-comments@v1.0.4
+        if: steps.fc.outcome == 'success'
         with: 
           comment-id: ${{ steps.fc.outputs.comment-id }}
       - name: Run bandit
@@ -34,6 +36,7 @@ jobs:
         run: |
           pip install bandit
           bandit . -r -o CI_bandit_report.html -f html
+        continue-on-error: true
       - name: Upload artifacts
         if: '!cancelled()'
         uses: actions/upload-artifact@v4
