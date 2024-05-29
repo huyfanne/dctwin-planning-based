@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -21,8 +22,9 @@ class PumpModel(nn.Module):
         self.config = config
         self.uid = config.uid
         self.learnable = learnable
-
         # define the model parameters
+        self.design_power = self.config.power.design_power_consumption
+        self.design_flow_rate = self.config.cooling.design_maximum_flow_rate
         self.power_curve = CubicCurve(
             init_params=torch.tensor([
                 config.power.coefficient_1_of_the_part_load_performance_curve,
@@ -48,28 +50,8 @@ class PumpModel(nn.Module):
         self,
         mass_flow_rate: torch.Tensor
     ):
-        if self.learnable:
-            return self.power_curve(mass_flow_rate)
-        else:
-            design_power = self.config.power.design_power_consumption
-            design_flow_rate = self.config.cooling.design_maximum_flow_rate
-            if design_power == "autosize" or design_flow_rate == "autosize":
-                try:
-                    data, _ = self.buffer.sample(10)
-                    power = data.pump_power.mean()
-                    return torch.tensor(power, dtype=torch.float32).view(-1, 1)
-                except:
-                    return torch.zeros_like(mass_flow_rate).view(-1, 1)
-            vol_flow_rate = mass_flow_rate / rho_water
-            flow_fraction = torch.clip(vol_flow_rate / design_flow_rate, 0, 1)
-            coef1 = self.config.power.coefficient_1_of_the_part_load_performance_curve
-            coef2 = self.config.power.coefficient_2_of_the_part_load_performance_curve
-            coef3 = self.config.power.coefficient_3_of_the_part_load_performance_curve
-            coef4 = self.config.power.coefficient_4_of_the_part_load_performance_curve
-            power = design_power * (
-                coef1 + coef2 * flow_fraction + coef3 * flow_fraction**2 + coef4 * flow_fraction**3
-            )
-            return power
+        flow_fraction = mass_flow_rate / (self.design_flow_rate * rho_water)
+        return self.design_power * self.power_curve(flow_fraction)
 
     def learn(self):
         if self.learnable:
@@ -77,9 +59,13 @@ class PumpModel(nn.Module):
             mask = batch.pump_mass_flow_rate > 0
             batch = batch[mask]
             if len(batch) > 3:
+                flow_fraction = np.clip(
+                    batch.pump_mass_flow_rate / (self.design_flow_rate * rho_water), 0, 1
+                )
+                power_fraction = batch.pump_power / self.design_power
                 self.power_curve.learn(
-                    x=torch.tensor(batch.pump_mass_flow_rate, dtype=torch.float32),
-                    y=torch.tensor(batch.pump_power, dtype=torch.float32)
+                    x=torch.tensor(flow_fraction, dtype=torch.float32),
+                    y=torch.tensor(power_fraction, dtype=torch.float32)
                 )
             else:
                 from loguru import logger

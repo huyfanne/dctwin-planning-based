@@ -6,6 +6,8 @@ from dclib.cooling.plant.facilities import Chiller
 from dctwin.models.curves import QuadraticCurve, BiQuadraticCurve
 from dctwin.data import Batch, Buffer
 
+from loguru import logger
+
 
 class ChillerModel(nn.Module):
     """
@@ -20,6 +22,9 @@ class ChillerModel(nn.Module):
         self.uid = config.uid
         self.learnable = learnable
         # define model parameters
+        self.reference_capacity = config.cooling.reference_capacity
+        self.reference_cop = config.cooling.reference_cop
+        self.design_power = self.reference_capacity / self.reference_cop
         self.plr_curve = QuadraticCurve(
             init_params=torch.tensor(
                 config.power.electric_input_to_cooling_output_ratio_function_of_part_load_ratio_curve,
@@ -45,7 +50,7 @@ class ChillerModel(nn.Module):
         cooling_load: torch.Tensor
     ):
         partial_load = cooling_load / self.config.cooling.reference_capacity
-        return self.plr_curve(partial_load)
+        return self.design_power * self.plr_curve(partial_load)
 
     def collect(self, data: dict):
         assert "cooling load" in self.key_mapping.keys(), "The \"cooling load\" key is not provided."
@@ -74,9 +79,22 @@ class ChillerModel(nn.Module):
     def learn(self):
         if self.learnable:
             batch, _ = self.buffer.sample(batch_size=0)
-            self.plr_curve.learn(
-                x=torch.tensor(batch.chiller_cooling_load/self.config.cooling.reference_capacity, dtype=torch.float32),
-                y=torch.tensor(batch.chiller_power, dtype=torch.float32),
-            )
+            mask = batch.chiller_cooling_load > 0
+            batch = batch[mask]
+            if len(batch) > 3:
+                partial_load = batch.chiller_cooling_load / self.config.cooling.reference_capacity
+                power_fraction = batch.chiller_power / self.design_power
+                self.plr_curve.learn(
+                    x=torch.tensor(
+                        partial_load, dtype=torch.float32
+                    ),
+                    y=torch.tensor(
+                        power_fraction, dtype=torch.float32
+                    ),
+                )
+            else:
+                logger.warning(
+                    "No sufficient data is available for learning the chiller model. Skip the learning process."
+                )
         else:
             pass

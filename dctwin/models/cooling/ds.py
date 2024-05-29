@@ -25,10 +25,10 @@ class BranchData:
     """
     def __init__(
         self,
-        inlet_temperature: Union[float, Tensor],
-        inlet_mass_flow_rate: Union[float, Tensor],
-        outlet_temperature: Union[float, Tensor],
-        outlet_mass_flow_rate: float = Union[float, Tensor],
+        inlet_temperature: float | Tensor,
+        inlet_mass_flow_rate: float | Tensor,
+        outlet_temperature: float | Tensor,
+        outlet_mass_flow_rate: float | Tensor
     ):
         self.inlet = NodeData(inlet_temperature, inlet_mass_flow_rate)
         self.outlet = NodeData(outlet_temperature, outlet_mass_flow_rate)

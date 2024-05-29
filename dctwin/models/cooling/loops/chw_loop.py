@@ -1,5 +1,6 @@
-from typing import Dict, List
+from typing import Dict
 
+import numpy as np
 import torch
 import torch.nn as nn
 from dclib.room import Room
@@ -58,7 +59,8 @@ class CHWLoopManager(nn.Module):
                     for chiller_name, chiller in supply_branch.components.chillers.items():
                         chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["chiller"] = ChillerModel(
                             config=chiller,
-                            key_mapping=self.device_key_mapping["chillers"][chiller_name]
+                            key_mapping=self.device_key_mapping["chillers"][chiller_name],
+                            learnable=False
                         )
                         self.add_module(
                             chiller_name,
@@ -68,7 +70,8 @@ class CHWLoopManager(nn.Module):
                     for pump_name, pump in supply_branch.components.pumps.items():
                         chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["pump"] = PumpModel(
                             config=pump,
-                            key_mapping=self.device_key_mapping["chilled water pumps"][pump_name]
+                            key_mapping=self.device_key_mapping["chilled water pumps"][pump_name],
+                            learnable=True
                         )
                         self.add_module(
                             pump_name,
@@ -98,7 +101,7 @@ class CHWLoopManager(nn.Module):
                                 external_fluid_name="air"
                             )
                         self.add_module(
-                            f"{acu.uid} cooling coil",
+                            f"{acu.uid.lower()} cooling coil",
                             chw_loop_models[chw_loop_name]["demand_branches"][demand_branch_name]["coil"]
                         )
         return chw_loop_models
@@ -109,7 +112,7 @@ class CHWLoopManager(nn.Module):
     def _sim(
         self,
         plant_control_inputs: Batch,
-        acu_simulation_results: Batch,
+        acu_simulation_results: Batch
     ):
         # cooling coil property
         acu_property = {}
@@ -121,6 +124,7 @@ class CHWLoopManager(nn.Module):
         )
         acu_simulation_results["sensible_heat_transfer_rate"] = Batch()
         acu_simulation_results["water_mass_flow_rate"] = Batch()
+        chiller_availability_schedule = plant_control_inputs["chiller availability schedule"]
         # Set loop exiting temperature according to the control inputs
         for chilled_water_loop_name, chilled_water_loop in self.models.items():
             control = plant_control_inputs[chilled_water_loop_name]
@@ -145,14 +149,14 @@ class CHWLoopManager(nn.Module):
                 if demand_branch["side"] == "middle":
                     coil_model = demand_branch["coil"]
                     # first locate the cooling coil, identifying its ACU and the zone that hosts the ACU
-                    supply_air_flow_rate = acu_simulation_results.air_mass_flow_rates[coil_model.uid]
+                    supply_air_flow_rate = acu_simulation_results.air_mass_flow_rates[coil_model.uid.lower()]
                     # simulate the required chilled water mass flow rate of the cooling coil
                     if torch.isclose(supply_air_flow_rate, torch.tensor(0.0)):
                         water_mass_flow_rate = torch.tensor(0.0)
                         heat_transfer_rate = torch.tensor(0.0)
                     else:
-                        supply_air_sp = acu_simulation_results.supply_air_sps[coil_model.uid]
-                        inlet_air_temperature = acu_simulation_results.return_air_temperatures[coil_model.uid]
+                        supply_air_sp = acu_simulation_results.supply_air_sps[coil_model.uid.lower()]
+                        inlet_air_temperature = acu_simulation_results.return_air_temperatures[coil_model.uid.lower()]
                         water_mass_flow_rate, heat_transfer_rate, supply_air_temperature = coil_model.solve(
                             T_air_in=inlet_air_temperature,
                             m_air=supply_air_flow_rate,
@@ -160,8 +164,8 @@ class CHWLoopManager(nn.Module):
                             T_air_out_sp=supply_air_sp
                         )
                     # record the cooling coil property
-                    acu_simulation_results.sensible_heat_transfer_rate[coil_model.uid] = heat_transfer_rate
-                    acu_simulation_results.water_mass_flow_rate[coil_model.uid] = water_mass_flow_rate
+                    acu_simulation_results.sensible_heat_transfer_rate[coil_model.uid.lower()] = heat_transfer_rate
+                    acu_simulation_results.water_mass_flow_rate[coil_model.uid.lower()] = water_mass_flow_rate
                     # simulate the return temperature of a cooling coil
                     if torch.isclose(water_mass_flow_rate, torch.tensor(0.0)):
                         return_temp = chw_sp
@@ -176,12 +180,12 @@ class CHWLoopManager(nn.Module):
                         outlet_mass_flow_rate=water_mass_flow_rate,
                     )
                     # update the total demand-side mass flow rate and the weighted return temperature
-                    total_demand_loop_m += water_mass_flow_rate
+                    total_demand_loop_m += water_mass_flow_rate.view(-1)
                     weighted_return_temperature += return_temp * water_mass_flow_rate
                     num_middle_branches += 1
                     # the cooling load that should be met by the chiller plant is equal to IT power and CRAH power
                     total_cooling_load += (
-                        heat_transfer_rate + acu_simulation_results.fan_powers[coil_model.uid]
+                        heat_transfer_rate.view(-1) + acu_simulation_results.fan_powers[coil_model.uid.lower()].view(-1)
                     )
 
             # calculate average return temperature
@@ -204,6 +208,14 @@ class CHWLoopManager(nn.Module):
                         outlet_mass_flow_rate=total_demand_loop_m,
                     )
 
+            # supply-side simulation starts
+            # determine supply-side available chillers at the current time step
+            available_supply_branches = []
+            for supply_branch_name, supply_branch in chilled_water_loop["supply_branches"].items():
+                if supply_branch["side"] == "middle":
+                    if int(chiller_availability_schedule[supply_branch_name]):
+                        available_supply_branches.append(supply_branch_name)
+            num_available_chillers = len(available_supply_branches)
             # supply-side fluid property simulation of the chilled water loop
             for supply_branch_name, supply_branch in chilled_water_loop["supply_branches"].items():
                 if supply_branch["side"] == "inlet":
@@ -214,12 +226,20 @@ class CHWLoopManager(nn.Module):
                         outlet_mass_flow_rate=total_demand_loop_m,
                     )
                 if supply_branch["side"] == "middle":
-                    branch_fluid_properties["supply"][supply_branch_name] = BranchData(
-                        inlet_temperature=average_return_temperature,
-                        inlet_mass_flow_rate=total_demand_loop_m/4,
-                        outlet_temperature=chw_sp,
-                        outlet_mass_flow_rate=total_demand_loop_m/4,
-                    )
+                    if supply_branch_name in available_supply_branches:
+                        branch_fluid_properties["supply"][supply_branch_name] = BranchData(
+                            inlet_temperature=average_return_temperature,
+                            inlet_mass_flow_rate=total_demand_loop_m/num_available_chillers,
+                            outlet_temperature=chw_sp,
+                            outlet_mass_flow_rate=total_demand_loop_m/num_available_chillers,
+                        )
+                    else:
+                        branch_fluid_properties["supply"][supply_branch_name] = BranchData(
+                            inlet_temperature=average_return_temperature,
+                            inlet_mass_flow_rate=torch.tensor(0.0),
+                            outlet_temperature=average_return_temperature,
+                            outlet_mass_flow_rate=torch.tensor(0.0),
+                        )
                 if supply_branch["side"] == "outlet":
                     branch_fluid_properties["supply"][supply_branch_name] = BranchData(
                         inlet_temperature=chw_sp,
@@ -229,37 +249,24 @@ class CHWLoopManager(nn.Module):
                     )
 
             # distribute cooling load to each chiller according to the uniform load workloads
-            num_chiller = 0
             chiller_cooling_loads = {}
             for supply_branch_name, supply_branch in chilled_water_loop["supply_branches"].items():
                 if "chiller" in supply_branch.keys():
-                    num_chiller += 1
-            for supply_branch_name, supply_branch in chilled_water_loop["supply_branches"].items():
-                if "chiller" in supply_branch.keys():
-                    chiller_model = supply_branch["chiller"]
-                    chiller_cooling_loads[chiller_model.uid] = total_cooling_load / num_chiller
-                    branch_fluid_properties["supply"][supply_branch_name].set_inlet(
-                        temperature=average_return_temperature,
-                        mass_flow_rate=total_demand_loop_m / num_chiller
-                    )
-                    branch_fluid_properties["supply"][supply_branch_name].set_outlet(
-                        temperature=chw_sp,
-                        mass_flow_rate=total_demand_loop_m / num_chiller
-                    )
+                    if supply_branch_name in available_supply_branches:
+                        chiller_model = supply_branch["chiller"]
+                        chiller_cooling_loads[chiller_model.uid] = total_cooling_load / num_available_chillers
+                    else:
+                        chiller_cooling_loads[supply_branch["chiller"].uid] = torch.tensor([[0.0]])
+
             # Equipment power consumption simulation of the chilled water loop
-            for demand_branch_name, demand_branch in chilled_water_loop["demand_branches"].items():
-                if "pump" in demand_branch.keys():
-                    pump_model = demand_branch["pump"]
-                    chilled_water_pump_property[pump_model.uid] = Batch(
-                        mass_flow_rate=branch_fluid_properties["supply"][demand_branch_name].inlet_M,
-                        power=pump_model(branch_fluid_properties["supply"][demand_branch_name].inlet_M)
-                    )
             for supply_branch_name, supply_branch in chilled_water_loop["supply_branches"].items():
                 if "pump" in supply_branch.keys():
                     pump_model = supply_branch["pump"]
                     chilled_water_pump_property[pump_model.uid] = Batch(
                         mass_flow_rate=branch_fluid_properties["supply"][supply_branch_name].inlet_M,
-                        power=pump_model(branch_fluid_properties["supply"][supply_branch_name].inlet_M)
+                        power=pump_model(
+                            branch_fluid_properties["supply"][supply_branch_name].inlet_M
+                        )
                     )
                 if "chiller" in supply_branch.keys():
                     chiller_model = supply_branch["chiller"]
@@ -327,7 +334,7 @@ class CHWLoopManager(nn.Module):
         """
         acu_simulation_results, chilled_water_pump_property, chiller_property = self._sim(
             plant_control_inputs=plant_control_inputs,
-            acu_simulation_results=acu_simulation_results,
+            acu_simulation_results=acu_simulation_results
         )
         return Batch(
             acu_simulation_results=acu_simulation_results,

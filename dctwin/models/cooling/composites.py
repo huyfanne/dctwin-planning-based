@@ -55,6 +55,7 @@ class AirWaterCoolingComposite(nn.Module):
 
     def _init_log_dict(self):
         self.simulation_results = {
+            "zones": {},
             "acus": {},
             "chilled water pumps": {},
             "chillers": {},
@@ -64,6 +65,11 @@ class AirWaterCoolingComposite(nn.Module):
             "total hvac power": [],
             "total dc power": [],
         }
+        for zone_name in self.device_key_mapping["zones"].keys():
+            self.simulation_results["zones"][zone_name] = {
+                "zone air temperature": [],
+                "zone ite inlet temperature": [],
+            }
         for acu_name in self.device_key_mapping["acus"].keys():
             self.simulation_results["acus"][acu_name] = {
                 "fan": {
@@ -109,23 +115,24 @@ class AirWaterCoolingComposite(nn.Module):
         # calculate the facility hvac power
         facility_hvac_power = 0.0
         for zone_name, fan_power in air_loop_simulation_results.acu_property.fan_powers.items():
-            facility_hvac_power += fan_power
+            facility_hvac_power += fan_power.view(-1)
         for pump_name, chilled_water_pump_property in chw_loop_simulation_results.chilled_water_pump_property.items():
-            facility_hvac_power += chilled_water_pump_property.power.item()
+            facility_hvac_power += chilled_water_pump_property.power.view(-1)
         for chiller_name, chiller_property in chw_loop_simulation_results.chiller_property.items():
-            facility_hvac_power += chiller_property.power
+            facility_hvac_power += chiller_property.power.view(-1)
         for pump_name, condenser_water_pump_property in cw_loop_simulation_results.condenser_water_pump_property.items():
-            facility_hvac_power += condenser_water_pump_property.power
+            facility_hvac_power += condenser_water_pump_property.power.view(-1)
         for tower_name, cooling_tower_property in cw_loop_simulation_results.cooling_tower_property.items():
-            facility_hvac_power += cooling_tower_property.power
+            facility_hvac_power += cooling_tower_property.power.view(-1)
 
         # fetch the DC IT equipment power
         ite_power = 0.0
-        for zone_name, it_load in zone_heat_loads.ite_heat_loads.items():
+        for zone_name, it_load in zone_heat_loads.zone_ite_heat_loads.items():
             ite_power += it_load
 
         # get the total power consumption of a DC
         total_power = facility_hvac_power + ite_power
+
         return Batch(
             facility_hvac_power=facility_hvac_power,
             ite_power=ite_power,
@@ -139,14 +146,24 @@ class AirWaterCoolingComposite(nn.Module):
         cw_loop_simulation_results: Batch,
         summary: Batch
     ):
+        for zone_name in self.device_key_mapping["zones"].keys():
+            self.simulation_results["zones"][zone_name]["zone air temperature"].append(
+                air_loop_simulation_results.zone_air_temperatures[zone_name].item()
+            )
+            self.simulation_results["zones"][zone_name]["zone ite inlet temperature"].append(
+                air_loop_simulation_results.zone_ite_inlet_temperatures[zone_name].item()
+            )
         for acu_name in self.device_key_mapping["acus"].keys():
             self.simulation_results["acus"][acu_name]["fan"]["air mass flow rate"].append(
-                air_loop_simulation_results.acu_property.air_mass_flow_rates[acu_name].item()
+                air_loop_simulation_results.acu_property.air_mass_flow_rates[acu_name.lower()].item()
             )
             self.simulation_results["acus"][acu_name]["fan"]["power"].append(
-                air_loop_simulation_results.acu_property.fan_powers[acu_name].item()
+                air_loop_simulation_results.acu_property.fan_powers[acu_name.lower()].item()
             )
         for pump_name in self.device_key_mapping["chilled water pumps"].keys():
+            self.simulation_results["chilled water pumps"][pump_name]["mass flow rate"].append(
+                chw_loop_simulation_results.chilled_water_pump_property[pump_name].mass_flow_rate.item()
+            )
             self.simulation_results["chilled water pumps"][pump_name]["power"].append(
                 chw_loop_simulation_results.chilled_water_pump_property[pump_name].power.item()
             )
@@ -154,10 +171,19 @@ class AirWaterCoolingComposite(nn.Module):
             self.simulation_results["chillers"][chiller_name]["cooling load"].append(
                 chw_loop_simulation_results.chiller_property[chiller_name].cooling_load.item()
             )
+            self.simulation_results["chillers"][chiller_name]["chilled water supply temperature"].append(
+                chw_loop_simulation_results.chiller_property[chiller_name].chilled_water_temperature.item()
+            )
+            self.simulation_results["chillers"][chiller_name]["condenser water supply temperature"].append(
+                chw_loop_simulation_results.chiller_property[chiller_name].condenser_water_temperature.item()
+            )
             self.simulation_results["chillers"][chiller_name]["power"].append(
                 chw_loop_simulation_results.chiller_property[chiller_name].power.item()
             )
         for pump_name in self.device_key_mapping["condenser water pumps"].keys():
+            self.simulation_results["condenser water pumps"][pump_name]["mass flow rate"].append(
+                cw_loop_simulation_results.condenser_water_pump_property[pump_name].mass_flow_rate.item()
+            )
             self.simulation_results["condenser water pumps"][pump_name]["power"].append(
                 cw_loop_simulation_results.condenser_water_pump_property[pump_name].power.item()
             )
@@ -211,7 +237,7 @@ class AirWaterCoolingComposite(nn.Module):
         :return:
         """
         air_loop_simulation_results = self.air_loop_manager(
-            heat_loads=zone_heat_loads.ite_heat_loads,
+            heat_loads=zone_heat_loads.zone_ite_heat_loads,
             acu_controls=acts.zones
         )
         chw_loop_simulation_results = self.chw_loop_manager.forward(

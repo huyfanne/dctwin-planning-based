@@ -8,22 +8,23 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.11"
+python = ">=3.9,<=3.12"
 jinja2 = "3.1.2"
 markupsafe = "2.0.1"
 setuptools = "59.8.0"
+cython = ">=3.0.10"  # for successful installation of cchardet
 gym = "^0.26.2"
 cvxpy = "^1.2.1"
 opyplus = "^1.4.2"
 fluidfoam = "^0.2.3"
-torch = "1.11.0"
+torch = ">=2.2.0"
 gpytorch = "^1.9.0"
 tqdm = "^4.64.1"
 protobuf = "3.19.0"
 cvxpylayers = "^0.1.5"
 sympy = "1.11.1"
 docker = "^6.1.2"
-scipy = "1.10.1"
+scipy = "^1.10.1"
 kubernetes = "^27.2.0"
 eppy = "^0.5.63"
 dclib = {git = "https://github.com/cap-dcwiz/dclib.git", tag="1.4.0"}
@@ -32,7 +33,7 @@ coolprop = "^6.6.0"
 torchdiffeq = "^0.2.3"
 psutil = "5.9.8"
 vtk = "9.3.0"
-mayavi = "4.8.1"
+mayavi = "^4.8.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
