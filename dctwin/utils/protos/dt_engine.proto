@@ -67,6 +67,7 @@ message IDFXIActuatorConfig {
       Schedule_Value = 3;
       On_Off_Supervisory = 4;
       Availability_Status = 5;
+      Humidity_Ratio_Setpoint = 6;
   }
   required string actuated_component_unique_name = 1;
   required ComponentType actuated_component_type = 2;
