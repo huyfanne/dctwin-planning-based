@@ -421,12 +421,15 @@ class RoomBuilder:
             num_dehumidifier = len(dehumidifiers) if dehumidifiers else 0
             if num_dehumidifier == 0:
                 return
+
+            dehumidifying_schedule_name = f"{zone_name} dehumidifying relative humidity setpoint schedule" if config.dehumidifying_setpoint else ""
+
             model.newidfobject(
                 key="ZoneControl:Humidistat".upper(),
                 Name=f"{zone_name} room humidity control",
                 Zone_Name=zone_name,
                 Humidifying_Relative_Humidity_Setpoint_Schedule_Name=f"{zone_name} humidifying relative humidity setpoint schedule",
-                Dehumidifying_Relative_Humidity_Setpoint_Schedule_Name=f"{zone_name} dehumidifying relative humidity setpoint schedule",
+                Dehumidifying_Relative_Humidity_Setpoint_Schedule_Name=dehumidifying_schedule_name,
             )
             model.newidfobject(
                 key="Schedule:Constant".upper(),
@@ -434,12 +437,13 @@ class RoomBuilder:
                 Schedule_Type_Limits_Name="Relative Humidity",
                 Hourly_Value=config.humidifying_setpoint,
             )
-            model.newidfobject(
-                key="Schedule:Constant".upper(),
-                Name=f"{zone_name} dehumidifying relative humidity setpoint schedule",
-                Schedule_Type_Limits_Name="Relative Humidity",
-                Hourly_Value=config.dehumidifying_setpoint,
-            )
+            if config.dehumidifying_setpoint:
+                model.newidfobject(
+                    key="Schedule:Constant".upper(),
+                    Name=f"{zone_name} dehumidifying relative humidity setpoint schedule",
+                    Schedule_Type_Limits_Name="Relative Humidity",
+                    Hourly_Value=config.dehumidifying_setpoint,
+                )
 
         make_zone_thermostat(
             model=self.model,
