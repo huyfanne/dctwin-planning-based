@@ -1,10 +1,9 @@
 from CoolProp.CoolProp import PropsSI
-import numpy as np
 import torch
 import torch.nn as nn
 from loguru import logger
 from dclib.cooling.room.facilities import ACU, CDU
-
+from dclib.cooling.plant.facilities.heat_exchanger import HeatExchanger as HX
 from dctwin.data import Batch, Buffer
 
 from tqdm import tqdm
@@ -16,7 +15,7 @@ class HeatExchanger(nn.Module):
 
     def __init__(
         self,
-        config: ACU | CDU,
+        config: ACU | CDU | HX,
         internal_fluid_name: str,
         external_fluid_name: str,
         key_mapping: dict = None,
@@ -31,8 +30,9 @@ class HeatExchanger(nn.Module):
         transverse_pitch: float | int = 0.03,
         thermal_conductivity: float = 400,
         tol: float = 0.01,
-        max_root_finding_iter: int = 50,
-        max_learning_iter: int = 50,
+        max_root_finding_iter: int = 100,
+        max_learning_iter: int = 2000,
+        min_loss: float = 0.05
     ):
         """
         A PIML-based model for cooling coil inside an ACU. It leverages the geometry information of the cooling coil as
@@ -99,18 +99,19 @@ class HeatExchanger(nn.Module):
 
         self.key_mapping = key_mapping
         self.buffer = Buffer(size=100)
-        self.opt = torch.optim.Adam(self.parameters(), lr=0.1)
+        self.opt = torch.optim.Adam(self.parameters(), lr=1.0)
         self.learnable = learnable
         self.max_learning_iter = max_learning_iter
         self.tol = tol
+        self.min_loss = min_loss
         self.max_root_finding_iter = max_root_finding_iter
 
     def _correct_nusselt_number(self, nu: torch.Tensor):
         if self.num_row < 20:
-            N_list = np.array([1, 2, 3, 4, 5, 7, 10, 13, 16])  # row number list
-            N_list = abs(N_list - np.array(self.num_row))  # difference between row number and row number list
+            N_list = torch.tensor([1, 2, 3, 4, 5, 7, 10, 13, 16])  # row number list
+            N_list = torch.abs(N_list - torch.tensor(self.num_row))  # difference between row number and row number list
             coef2_list = [0.7, 0.8, 0.86, 0.9, 0.92, 0.95, 0.97, 0.98, 0.99]  # correction coefficient list
-            min_id = np.where(N_list == np.min(N_list))[0]  # minimum difference id
+            min_id = torch.where(N_list == torch.min(N_list))[0]  # minimum difference id
             coef2 = coef2_list[min_id[0]]  # correction coefficient
             nu *= coef2  # corrected external fluid Nusselt number
         return nu
@@ -221,8 +222,15 @@ class HeatExchanger(nn.Module):
                     )
                     loss.backward(retain_graph=True)
                     self.opt.step()
-                    self._project_ws()  # project the parameters to the positive region to make them feasible
+                    # self._project_ws()  # project the parameters to the positive region to make them feasible
                     pbar.set_description(f"Loss: {loss.item():.4f}")
+                    if loss.item() < self.min_loss:
+                        break
+            else:
+                logger.warning(
+                    f"Insufficient data for learning the heat exchanger model @ {self.uid}."
+                    f"Only {len(batch)} valid data points are available."
+                )
 
     def forward(
         self,
@@ -315,7 +323,7 @@ class HeatExchanger(nn.Module):
             )
             # bi-section main loop
             for iteration in range(1, self.max_root_finding_iter + 1):
-                if T_air_out - T_air_out_sp > 0:
+                if T_air_out > T_air_out_sp:
                     m_water_min = m_water
                 else:
                     m_water_max = m_water
@@ -329,7 +337,10 @@ class HeatExchanger(nn.Module):
                 if torch.abs(T_air_out - T_air_out_sp) < self.tol:
                     break
             if iteration == self.max_root_finding_iter:
-                print(f"{self.config.uid}: root finding failed at iteration {iteration}. T_air_out = {T_air_out.item()}")
+                logger.warning(
+                    f"{self.config.uid}: root finding failed at iteration {iteration}."
+                    f" T_air_out = {T_air_out.item()}, T_air_sp= {T_air_out_sp.item()}."
+                )
         # insert gradient calculation
         with torch.enable_grad():
             m_water = m_water.requires_grad_(requires_grad=True)

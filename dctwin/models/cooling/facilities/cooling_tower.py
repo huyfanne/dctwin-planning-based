@@ -49,7 +49,7 @@ class CoolingTowerModel(nn.Module):
                 cooling_tower_water_mass_flow_rate=data[self.key_mapping["water mass flow rate"]],
                 cooling_tower_supply_water_temperature=data[self.key_mapping["supply water temperature"]],
                 outside_air_wetbulb_temperature=data[self.key_mapping["outside air wetbulb temperature"]],
-                cooling_tower_air_flow_rate_ratio=data[self.key_mapping["cooling tower air flow rate ratio"]],
+                cooling_tower_air_flow_rate_ratio=data[self.key_mapping["air flow rate ratio"]],
                 cooling_tower_fan_power=data[self.key_mapping["power"]],
             )
         )

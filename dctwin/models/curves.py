@@ -151,7 +151,7 @@ class CubicCurve(Curve):
         y: torch.Tensor,
     ) -> None:
         coefs = curve_fit(
-            lambda x, a, b, c, d: a * (x**3) + b * (x**2) + c * x + d,
+            lambda x, a, b, c, d: a + b * x + c * (x**2) + d * (x**3),
             x.view(-1).detach().numpy(), y.view(-1).detach().numpy()
         )[0]
         self.params.data = torch.tensor(coefs, dtype=torch.float32)
