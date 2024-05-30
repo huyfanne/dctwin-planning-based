@@ -302,6 +302,62 @@ class ConfigBuilder:
                 ub=ub,
             ) if variable_names is None or "return flow rate" in variable_names else None
 
+    def make_secondary_chilled_water_loop_observations(
+        self,
+        exposed: bool = True,
+        normalize_method: int = None,
+        lb: float = None,
+        ub: float = None,
+        variable_names: Union[str, List[str]] = None
+    ):
+        for secondary_chilled_water_loop_name, secondary_chilled_water_loop in self.device_key_map[
+            "secondary chilled water loops"
+        ].items():
+            # observe chilled water loop supply temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{secondary_chilled_water_loop_name} supply temperature".lower(),
+                key_value=secondary_chilled_water_loop["supply temperature"].split(":")[0],
+                output_variable_name="System Node Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "supply temperature" in variable_names else None
+            # observe chilled water loop return temperature
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{secondary_chilled_water_loop_name} return temperature".lower(),
+                key_value=secondary_chilled_water_loop["return temperature"].split(":")[0],
+                output_variable_name="System Node Temperature",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "return temperature" in variable_names else None
+            # observe chilled water loop supply flow rate
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{secondary_chilled_water_loop_name} supply flow rate".lower(),
+                key_value=secondary_chilled_water_loop["supply flow rate"].split(":")[0],
+                output_variable_name="System Node Mass Flow Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "supply flow rate" in variable_names else None
+            # observe chilled water loop return flow rate
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{secondary_chilled_water_loop_name} return flow rate".lower(),
+                key_value=secondary_chilled_water_loop["return flow rate"].split(":")[0],
+                output_variable_name="System Node Mass Flow Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "return flow rate" in variable_names else None
+
     def make_condenser_water_loop_observations(
         self,
         exposed: bool = True,
@@ -420,7 +476,7 @@ class ConfigBuilder:
                 ub=ub,
             ) if variable_names is None or "inlet air temperature" in variable_names else None
 
-    def make_acu_fan_hum_observations(
+    def make_acu_hum_observations(
         self,
         exposed: bool = True,
         normalize_method: int = None,
@@ -440,7 +496,7 @@ class ConfigBuilder:
             # observe ACU air outlet relative humidity
             self._make_observation(
                 exposed=exposed,
-                variable_name=f"{acu_name} fan outlet air relative humidity".lower(),
+                variable_name=f"{acu_name} outlet air relative humidity".lower(),
                 key_value=acu["fan"]["outlet air relative humidity"].split(":")[0],
                 output_variable_name="System Node Relative Humidity",
                 reporting_frequency="timestep",
@@ -451,7 +507,7 @@ class ConfigBuilder:
             # observe ACU air inlet relative humidity
             self._make_observation(
                 exposed=exposed,
-                variable_name=f"{acu_name} fan inlet air relative humidity".lower(),
+                variable_name=f"{acu_name} inlet air relative humidity".lower(),
                 key_value=acu["fan"]["inlet air relative humidity"].split(":")[0],
                 output_variable_name="System Node Relative Humidity",
                 reporting_frequency="timestep",
@@ -459,6 +515,28 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub,
             ) if variable_names is None or "inlet air relative humidity" in variable_names else None
+            # observe ACU air outlet relative humidity
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{acu_name} outlet air humidity ratio".lower(),
+                key_value=acu["fan"]["outlet air humidity ratio"].split(":")[0],
+                output_variable_name="System Node Humidity Ratio",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "outlet air humidity ratio" in variable_names else None
+            # observe ACU air inlet relative humidity
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{acu_name} inlet air humidity ratio".lower(),
+                key_value=acu["fan"]["inlet air humidity ratio"].split(":")[0],
+                output_variable_name="System Node Humidity Ratio",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "inlet air humidity ratio" in variable_names else None
 
     def make_cooling_coil_observations(
         self,
@@ -589,6 +667,28 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub,
             ) if variable_names is None or "air mass flow rate" in variable_names else None
+            # inlet air relative humidity
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{dehumidifier_name} inlet air relative humidity".lower(),
+                key_value=dehumidifier["inlet air relative humidity"].split(":")[0],
+                output_variable_name="System Node Relative Humidity",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "inlet air relative humidity" in variable_names else None
+            # outlet air relative humidity
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{dehumidifier_name} outlet air relative humidity".lower(),
+                key_value=dehumidifier["outlet air relative humidity"].split(":")[0],
+                output_variable_name="System Node Relative Humidity",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "outlet air relative humidity" in variable_names else None
             # observe removed water mass flow rate
             self._make_observation(
                 exposed=exposed,
@@ -645,6 +745,33 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub,
             ) if variable_names is None or "power" in variable_names else None
+
+        for sec_chw_pump_name, sec_chw_pump in self.device_key_map[
+            "secondary chilled water pumps"
+        ].items():
+            # observe secondary chilled water pump mass flow rate
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{sec_chw_pump_name} mass flow rate".lower(),
+                key_value=sec_chw_pump["mass flow rate"].split(":")[0],
+                output_variable_name="System Node Mass Flow Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "mass flow rate" in variable_names else None
+            # observe secondary chilled water pump power consumption
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{sec_chw_pump_name} power consumption".lower(),
+                key_value=sec_chw_pump["power"].split(":")[0],
+                output_variable_name="Pump Electricity Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "power" in variable_names else None
+
         for cw_pump_name, cw_pump in self.device_key_map[
             "condenser water pumps"
         ].items():
@@ -1083,6 +1210,17 @@ class ConfigBuilder:
                 lb=lb,
                 ub=ub,
             ) if variable_names is None or "air relative humidity" in variable_names else None
+            # observe zone air humidity ratio
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{zone_name} air relative humidity".lower(),
+                key_value=zone["air relative humidity"].split(":")[0],
+                output_variable_name="Zone Air Humidity Ratio",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "air relative humidity" in variable_names else None
 
     def make_ite_observations(
         self,
@@ -1321,9 +1459,9 @@ class ConfigBuilder:
         lb: float = 0.0,
         ub: float = 1.0,
     ):
-        chilled_water_loops = self.building["constructions"]["plant"]["chilledWaterLoops"]
+        chilled_water_loops = self.building.constructions.plant.chilled_water_loops
         for chilled_water_loop_name, chilled_water_loop in chilled_water_loops.items():
-            for branch_name, branch in chilled_water_loop["supplyBranches"].items():
+            for branch_name, branch in chilled_water_loop.supply_branches.items():
                 self._make_actions(
                     variable_name=f"{branch_name} on off".lower(),
                     actuated_component_unique_name=f"{branch_name}",
@@ -1336,7 +1474,7 @@ class ConfigBuilder:
                     input_source=schedule_dir.joinpath(
                         f"{branch_name}.json"
                     ),
-                ) if branch["side"] == "middle" else None
+                ) if branch.side == "middle" else None
 
     def make_chilled_water_pump_flow_rates_actions_prescheduled(
         self,

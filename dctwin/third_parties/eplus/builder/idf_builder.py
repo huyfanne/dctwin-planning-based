@@ -84,6 +84,7 @@ class IDFBuilder:
     def _make_device_key_mapping(self) -> None:
         self.device_key_map = {
             "chilled water loops": {},
+            "secondary chilled water loops": {},
             "condenser water loops": {},
             "zones": {},
             "ites": {},
@@ -109,6 +110,18 @@ class IDFBuilder:
                 "supply flow rate": f"{chilled_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
                 "return flow rate": f"{chilled_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
             }
+        if self.building.constructions.plant.secondary_chilled_water_loops is not None:
+            secondary_chilled_water_loop_names = self.building.constructions.plant.secondary_chilled_water_loops
+            for secondary_chilled_water_loop_name in secondary_chilled_water_loop_names:
+                secondary_chilled_water_loop_obj = self.model.getobject(
+                    key="PlantLoop".upper(), name=secondary_chilled_water_loop_name
+                )
+                self.device_key_map["secondary chilled water loops"][secondary_chilled_water_loop_name] = {
+                    "supply temperature": f"{secondary_chilled_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                    "return temperature": f"{secondary_chilled_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                    "supply flow rate": f"{secondary_chilled_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                    "return flow rate": f"{secondary_chilled_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                }
         # create condenser water loop device key mapping
         condenser_water_loop_names = (
             self.building.constructions.plant.condenser_water_loops
@@ -130,6 +143,7 @@ class IDFBuilder:
             self.device_key_map["zones"][zone_name] = {
                 "air temperature": f"{zone_obj['Name'].upper()}:Zone Air Temperature [C](TimeStep)",
                 "air relative humidity": f"{zone_obj['Name'].upper()}:Zone Air Relative Humidity [%](TimeStep)",
+                "air humidity ratio": f"{zone_obj['Name'].upper()}:Zone Air Humidity Ratio [](TimeStep)",
                 "ite power": f"{zone_obj['Name'].upper()}:Zone ITE CPU Electricity Rate [W](TimeStep)",
             }
         # create ITE device key mapping
@@ -158,6 +172,8 @@ class IDFBuilder:
                 "inlet air temperature": f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
                 "outlet air relative humidity": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
                 "inlet air relative humidity": f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
+                "outlet air humidity ratio": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Humidity Ratio [](TimeStep)",
+                "inlet air humidity ratio": f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Humidity Ratio [](TimeStep)",
             }
             coil_obj = self.model.getobject(
                 key="Coil:Cooling:Water".upper(), name=f"{acu_name} cooling coil"
@@ -192,6 +208,16 @@ class IDFBuilder:
                 key="Pump:VariableSpeed".upper(), name=pump_name
             )
             self.device_key_map["chilled water pumps"][pump_name] = {
+                "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "power": f"{pump_obj['Name'].upper()}:Pump Electricity Rate [W](TimeStep)",
+            }
+        # create secondary chilled water pump device key mapping
+        sec_pump_names = self.building.constructions.secondary_chilled_water_pump_keys
+        for pump_name in sec_pump_names:
+            pump_obj = self.model.getobject(
+                key="Pump:VariableSpeed".upper(), name=pump_name
+            )
+            self.device_key_map["secondary chilled water pumps"][pump_name] = {
                 "mass flow rate": f"{pump_obj['Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
                 "power": f"{pump_obj['Name'].upper()}:Pump Electricity Rate [W](TimeStep)",
             }
