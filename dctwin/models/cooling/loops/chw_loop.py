@@ -158,10 +158,10 @@ class CHWLoopManager(nn.Module):
                         supply_air_sp = acu_simulation_results.supply_air_sps[coil_model.uid.lower()]
                         inlet_air_temperature = acu_simulation_results.return_air_temperatures[coil_model.uid.lower()]
                         water_mass_flow_rate, heat_transfer_rate, supply_air_temperature = coil_model.solve(
-                            T_air_in=inlet_air_temperature,
-                            m_air=supply_air_flow_rate,
-                            T_water_in=chw_sp,
-                            T_air_out_sp=supply_air_sp
+                            T_air_in=inlet_air_temperature.view(-1, 1),
+                            m_air=supply_air_flow_rate.view(-1, 1),
+                            T_water_in=chw_sp.view(-1, 1),
+                            T_air_out_sp=supply_air_sp.view(-1, 1)
                         )
                         total_demand_loop_m = total_demand_loop_m + water_mass_flow_rate
                     # record the cooling coil property
