@@ -31,7 +31,7 @@ class FanModel(nn.Module):
         if config.cooling.design_air_flow_rate != "" and config.cooling.pressure_rise != "":
             self.design_power = (
                 config.cooling.design_air_flow_rate * config.cooling.pressure_rise /
-                (rho_air * config.power.fan_total_efficiency)
+                (config.power.fan_total_efficiency)
             )
         else:
             logger.warning(
