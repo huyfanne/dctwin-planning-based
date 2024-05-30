@@ -14,8 +14,8 @@ def nusseltCoefficient(Re):
 
 
 def firctionFactor(
-        rr: torch.Tensor,
-        Re: torch.Tensor
+    rr: torch.Tensor,
+    Re: torch.Tensor
 ):
     """
     Calculate the friction factor of internal fluid
@@ -33,10 +33,10 @@ def firctionFactor(
 
 
 def NTUHE(
-        C_inside: torch.Tensor,
-        C_outside: torch.Tensor,
-        U_total: torch.Tensor,
-        A_HE: torch.Tensor
+    C_inside: torch.Tensor,
+    C_outside: torch.Tensor,
+    U_total: torch.Tensor,
+    A_HE: torch.Tensor
 ):
     """
     Calculate the NTU and effectiveness of a cross-flow heat exchanger
@@ -66,9 +66,9 @@ def NTUHE(
 
 
 def nusseltNumberIn(
-        rr: torch.Tensor,
-        Re: torch.Tensor,
-        PrandtlNumber: torch.Tensor
+    rr: torch.Tensor,
+    Re: torch.Tensor,
+    PrandtlNumber: torch.Tensor
 ):
     """
     calculate the Nusselt number and friction factor of internal fluid

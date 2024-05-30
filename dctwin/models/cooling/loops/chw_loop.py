@@ -163,6 +163,7 @@ class CHWLoopManager(nn.Module):
                             T_water_in=chw_sp,
                             T_air_out_sp=supply_air_sp
                         )
+                        total_demand_loop_m = total_demand_loop_m + water_mass_flow_rate
                     # record the cooling coil property
                     acu_simulation_results.sensible_heat_transfer_rate[coil_model.uid.lower()] = heat_transfer_rate
                     acu_simulation_results.water_mass_flow_rate[coil_model.uid.lower()] = water_mass_flow_rate
@@ -180,7 +181,6 @@ class CHWLoopManager(nn.Module):
                         outlet_mass_flow_rate=water_mass_flow_rate,
                     )
                     # update the total demand-side mass flow rate and the weighted return temperature
-                    total_demand_loop_m += water_mass_flow_rate.view(-1)
                     weighted_return_temperature += return_temp * water_mass_flow_rate
                     num_middle_branches += 1
                     # the cooling load that should be met by the chiller plant is equal to IT power and CRAH power
@@ -236,9 +236,9 @@ class CHWLoopManager(nn.Module):
                     else:
                         branch_fluid_properties["supply"][supply_branch_name] = BranchData(
                             inlet_temperature=average_return_temperature,
-                            inlet_mass_flow_rate=torch.tensor(0.0),
+                            inlet_mass_flow_rate=0.0 * total_demand_loop_m,
                             outlet_temperature=average_return_temperature,
-                            outlet_mass_flow_rate=torch.tensor(0.0),
+                            outlet_mass_flow_rate=0.0 * total_demand_loop_m,
                         )
                 if supply_branch["side"] == "outlet":
                     branch_fluid_properties["supply"][supply_branch_name] = BranchData(

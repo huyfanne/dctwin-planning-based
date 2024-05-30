@@ -41,14 +41,16 @@ class AirLoopManager(nn.Module):
                 )
                 self.add_module(acu_name, zone_models[zone_name.lower()][acu.uid.lower()])
         return zone_models
+
     def _get_active_acu_ids(self, acu_controls: Batch) -> List:
         return [
-            acu_name for acu_name, acu_control in acu_controls.items() if not
-            torch.isclose(acu_control.supply_air_mass_flow_rate, torch.zeros(1))
+            acu_name for acu_name, acu_control in acu_controls.items() if acu_control.acu_on_off == 1
         ]
 
     def _distribute_heat_load(self, heat_loads: Batch, active_acus: List) -> Dict:
-        return {acu_name: heat_loads / len(active_acus) for acu_name in active_acus}
+        return {
+            acu_name: heat_loads / len(active_acus) for acu_name in active_acus
+        }
 
     def _sim(
         self,
