@@ -185,7 +185,7 @@ class PlantBuilder:
         plant_loop["Demand_Side_Connector_List_Name"] = f"{loop_name} demand connectors"
         plant_loop["Maximum_Loop_Temperature"] = 100
         plant_loop["Minimum_Loop_Temperature"] = 5
-        plant_loop["Maximum_Loop_Flow_Rate"] = "autosize"
+        plant_loop["Maximum_Loop_Flow_Rate"] = meta.maximum_loop_flow_rate
         plant_loop["Minimum_Loop_Flow_Rate"] = 0
         plant_loop[
             "Loop_Temperature_Setpoint_Node_Name"
