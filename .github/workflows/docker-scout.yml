@@ -1,13 +1,10 @@
-name: build-and-scout
+name: Docker Scout on image
 on:
   pull_request:
     paths:
       - Dockerfile
       - poetry.lock
-  
-env:
-  ACTIONS_RUNNER_DEBUG: true
-  ACTIONS_STEP_DEBUG: true
+
 jobs:
   build-and-scout:
     runs-on:

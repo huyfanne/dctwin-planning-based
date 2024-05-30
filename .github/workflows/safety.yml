@@ -1,24 +1,10 @@
-name: Security Scanning
+name: Safety Scan
 
 on:
   pull_request:
     branches: ["main","dev"]
-  schedule:
-    - cron: '42 13 * * 4'
 
 jobs:
-  gitleaks:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Run gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}} # Only required for Organizations, not personal accounts.
   safety:
     runs-on: ubuntu-latest
     steps:
