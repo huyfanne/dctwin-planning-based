@@ -260,7 +260,7 @@ class HeatExchanger(nn.Module):
         h_i = nu_i * k_i / self.tube_diameter  # internal fluid heat transfer coefficient
 
         dP_i = fr * (self.tube_length / self.tube_diameter) * (rho_i * u_i ** 2) / 2  # internal fluid pressure drop
-        pump_power_i = (self.num_row * self.num_transverse) * dP_i * (m_water / rho_i)  # internal fluid pumping power
+        # pump_power_i = (self.num_row * self.num_transverse) * dP_i * (m_water / rho_i)  # internal fluid pumping power
 
         # tube outside
         u_o = m_air / rho_o / (self.tube_length * self.H_he)  # external fluid velocity
@@ -275,10 +275,10 @@ class HeatExchanger(nn.Module):
 
         f_o = 0.2  # external fluid friction factor
         dP_o = self.num_row * (rho_o * u_omax ** 2 / 2) * f_o  # external fluid pressure drop
-        pump_power_o = dP_o * (m_air / rho_o)  # external fluid pumping power
+        # pump_power_o = dP_o * (m_air / rho_o)  # external fluid pumping power
 
         # pumping power, U value and NTU value
-        pump_power = pump_power_i + pump_power_o  # W, pumping power
+        # pump_power = pump_power_i + pump_power_o  # W, pumping power
         U = 1 / (
             1 / h_i + 1 / h_o + torch.log((self.tube_thickness + self.tube_diameter) / self.tube_diameter) *
             self.tube_diameter / self.tube_kappa
@@ -290,10 +290,10 @@ class HeatExchanger(nn.Module):
         C_min = torch.minimum(C_i, C_o)  # W/K, minimum heat capacity
         eff, NTU = NTUHE(C_i, C_o, U, A)  # efficiency and number transfer unit of heat exchanger
         Q_max = C_min * (T_air_in - T_water_in)  # W, maximum heat transfer
-        heat_transfer_rate = eff * Q_max - pump_power  # W, heat transfer
+        heat_transfer_rate = eff * Q_max # - pump_power  # W, heat transfer
         T_air_out = T_air_in - heat_transfer_rate / C_o  # degree C, external fluid outlet temperature
-        T_water_out = T_water_in + (heat_transfer_rate + pump_power) / C_i
-        return T_water_out, T_air_out, NTU, eff, heat_transfer_rate, pump_power
+        T_water_out = T_water_in + (heat_transfer_rate)/C_i #+ pump_power) / C_i
+        return T_water_out, T_air_out, NTU, eff, heat_transfer_rate, 0.0
 
     def solve(
         self,

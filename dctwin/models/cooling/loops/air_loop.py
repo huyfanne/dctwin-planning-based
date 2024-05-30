@@ -64,7 +64,8 @@ class AirLoopManager(nn.Module):
             return_air_temperatures=Batch(),
             ite_inlet_temperatures=Batch(),
             fan_powers=Batch(),
-            active_acu_ids=Batch()
+            active_acu_ids=Batch(),
+            acu_on_off_schedule=Batch()
         )
         zone_air_temperatures = Batch()
         zone_ite_inlet_temperatures = Batch()
@@ -90,6 +91,7 @@ class AirLoopManager(nn.Module):
                 )
                 # simulate the return air temperature of the ACU
                 if acu_name in active_acu_ids:
+                    acu_property.acu_on_off_schedule[f"{zone_name.lower()} {acu_name.lower()}"] = 1
                     acu_return_temperature = SteadyStateThermodynamics.sim(
                         supply_air_temperature=zone_acu_controls[acu_name].supply_air_temperature,
                         supply_air_mass_flow_rate=zone_acu_controls[acu_name].supply_air_mass_flow_rate,
@@ -105,6 +107,8 @@ class AirLoopManager(nn.Module):
                         acu_return_temperature * zone_acu_controls[acu_name].supply_air_mass_flow_rate
                     )
                     total_acu_air_mass_flow_rate += zone_acu_controls[acu_name].supply_air_mass_flow_rate
+                else:
+                    acu_property.acu_on_off_schedule[f"{zone_name.lower()} {acu_name.lower()}"] = 0
             # update the zone air temperature
             zone_air_temperatures[zone_name] = weighted_return_temperature / total_acu_air_mass_flow_rate
             # update the zone ITE inlet temperature

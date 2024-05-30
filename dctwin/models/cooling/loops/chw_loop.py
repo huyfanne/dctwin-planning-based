@@ -151,7 +151,7 @@ class CHWLoopManager(nn.Module):
                     # first locate the cooling coil, identifying its ACU and the zone that hosts the ACU
                     supply_air_flow_rate = acu_simulation_results.air_mass_flow_rates[coil_model.uid.lower()]
                     # simulate the required chilled water mass flow rate of the cooling coil
-                    if torch.isclose(supply_air_flow_rate, torch.tensor(0.0)):
+                    if acu_simulation_results.acu_on_off_schedule[coil_model.uid.lower()] == 0:
                         water_mass_flow_rate = torch.tensor(0.0)
                         heat_transfer_rate = torch.tensor(0.0)
                     else:
@@ -168,7 +168,7 @@ class CHWLoopManager(nn.Module):
                     acu_simulation_results.sensible_heat_transfer_rate[coil_model.uid.lower()] = heat_transfer_rate
                     acu_simulation_results.water_mass_flow_rate[coil_model.uid.lower()] = water_mass_flow_rate
                     # simulate the return temperature of a cooling coil
-                    if torch.isclose(water_mass_flow_rate, torch.tensor(0.0)):
+                    if water_mass_flow_rate == 0.0:
                         return_temp = chw_sp
                     else:
                         return_temp = chw_sp + heat_transfer_rate / (
