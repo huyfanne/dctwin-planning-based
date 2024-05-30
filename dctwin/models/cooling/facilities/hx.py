@@ -311,10 +311,10 @@ class HeatExchanger(nn.Module):
         :param T_air_out_sp:
         :return:
         """
-        m_water_min = torch.tensor(0.0, dtype=torch.float32).view(1, -1)
-        m_water_max = m_air.item()
-        m_water = (m_water_min + m_water_max) / 2
         with torch.no_grad():
+            m_water_min = torch.tensor(0.0, dtype=torch.float32).view(1, -1)
+            m_water_max = m_air.item()
+            m_water = (m_water_min + m_water_max) / 2
             T_water_out, T_air_out, NTU, eff, Q, power = self.forward(
                 T_air_in=T_air_in,
                 m_air=m_air,
@@ -342,21 +342,23 @@ class HeatExchanger(nn.Module):
                     f" T_air_out = {T_air_out.item()}, T_air_sp= {T_air_out_sp.item()}."
                 )
         # insert gradient calculation
-        with torch.enable_grad():
-            m_water = m_water.requires_grad_(requires_grad=True)
-            T_water_out, T_air_out, _, _, Q, _ = self.forward(
-                T_air_in=T_air_in,
-                m_air=m_air,
-                T_water_in=T_water_in,
-                m_water=m_water
-            )
-            g = T_air_out - T_air_out_sp
-            jacob = torch.autograd.grad(
-                g,
-                m_water,
-                retain_graph=True
-            )[0]
-            # reengage the gradient calculation by inserting the gradient into the computation graph
-            m_water = m_water - g
-        m_water.register_hook(lambda grad: grad / jacob)  # implicit gradient calculation
-        return m_water, Q, T_air_out
+        m = m_water.clone().requires_grad_(requires_grad=True)
+        T_water_out, T_air_out, _, _, Q, _ = self.forward(
+            T_air_in=T_air_in,
+            m_air=m_air,
+            T_water_in=T_water_in,
+            m_water=m
+        )
+        g = T_air_out - T_air_out_sp  # g should be close to zero (up to tolerance)
+        J = torch.autograd.grad(
+            g,
+            m,
+            retain_graph=True
+        )[0]
+        # reengage the gradient calculation by inserting the gradient into the computation graph
+        m = m - g
+        m.register_hook(
+            lambda grad: grad / J
+        )  # implicit gradient calculation
+        m.backward(retain_graph=True)
+        return m, Q, T_air_out
