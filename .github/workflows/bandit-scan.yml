@@ -18,6 +18,7 @@ jobs:
         with:
           issue-number: ${{ github.event.number }}
           body-includes: Bandit results
+          comment-author: github-actions
         continue-on-error: true
       - name: Delete comment
         uses: detomarco/delete-comments@v1.0.4

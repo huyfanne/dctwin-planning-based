@@ -6,9 +6,9 @@ template_dir = Path(Path(__file__).parent.parent, "templates")
 template_env = Environment(
     loader=FileSystemLoader(template_dir),
     autoescape=select_autoescape(
-            default_for_string=False,
-            default=False,
-        ),
+        default_for_string=False,
+        default=False,
+    ),
     trim_blocks=True,
     lstrip_blocks=True,
 )
