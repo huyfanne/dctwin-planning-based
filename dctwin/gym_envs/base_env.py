@@ -30,6 +30,8 @@ class BaseEnv(gym.Env):
         Why? we tried to use a templated function with params, but turns out it's bad
     :param schedule_fn: the callback facility workloads function defined by the user
         e.g., the IT utilization workloads
+    :param parse_obs_fn: the callback function to parse the observation into a user-specific format
+        e.g. parsed obs = {"cpu_loading": 0.5, "acu-1 supply T": 22, ...}
     :param task_id: the identity of the current environment (defined for multi-task learning)
     :param num_constraints: the number of constraints in the environment (defined 0)
     """
@@ -39,6 +41,7 @@ class BaseEnv(gym.Env):
         config: DTEngineConfig,
         reward_fn: Callable,
         schedule_fn: Callable,
+        parse_obs_fn: Callable = None,
         task_id: Optional[str] = "0",
         num_constraints: Optional[int] = 0,
         last_episode_idx: Optional[int] = None,
@@ -58,6 +61,9 @@ class BaseEnv(gym.Env):
         # set up reward
         self._reward = Reward(ScalarDataItemConfig(variable_name="reward"))
         self._reward_fn = reward_fn
+
+        # set up observation parser
+        self._parse_obs_fn = parse_obs_fn
 
         # set up simulation time
         self._set_simulation_time()
@@ -294,6 +300,7 @@ class BaseEnv(gym.Env):
         return dict(
             time=self._timestamp if hasattr(self, "_timestamp") else datetime.now(),
             task_id=self._task_id,
+            parsed_obs=self._parse_obs_fn(self) if self._parse_obs_fn is not None else None,
         )
 
     def _calculate_reward(self) -> float:
@@ -316,7 +323,7 @@ class BaseEnv(gym.Env):
             current_observation: xx,
             ....
         }
-        it may includes a lots of info that is logically unknown to the agent
+        it may include a lots of info that is logically unknown to the agent
         :return:
         """
         raise NotImplementedError

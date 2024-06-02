@@ -31,6 +31,7 @@ class EPlusEnv(BaseEnv):
         config: EPlusEnvConfig,
         reward_fn: Optional[Callable] = None,
         schedule_fn: Optional[Callable] = None,
+        parse_obs_fn: Optional[Callable] = None,
         docker_client: docker.DockerClient = None,
         is_k8s: bool = False,
         k8s_config: dict = None,
@@ -40,6 +41,7 @@ class EPlusEnv(BaseEnv):
             config=config,
             reward_fn=reward_fn,
             schedule_fn=schedule_fn,
+            parse_obs_fn=parse_obs_fn,
             **kwargs,
         )
         self._set_eplus_environ()
