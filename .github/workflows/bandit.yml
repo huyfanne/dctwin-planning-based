@@ -25,7 +25,7 @@ jobs:
         if: '!cancelled()'
         with:
           message-path: CI_bandit_report.txt
-          message-id: 15
+          message-id: 10
 
       - name: Upload artifacts
         if: '!cancelled()'
