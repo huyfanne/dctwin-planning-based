@@ -51,7 +51,7 @@ jobs:
       id: docker-scout
       uses: docker/scout-action@v1
       with:
-        command: quickview,cves,recommendations
+        command: cves,recommendations
         image: ghcr.io/cap-dcwiz/dctwin:${{ steps.version.outputs.value }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
         sarif-file: dockerscout-output.json

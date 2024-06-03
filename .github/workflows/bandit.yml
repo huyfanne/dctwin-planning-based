@@ -13,39 +13,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Find Comment
-        uses: peter-evans/find-comment@v3
-        id: fc
-        with:
-          issue-number: ${{ github.event.number }}
-          body-includes: Bandit results
-          comment-author: github-actions
-        continue-on-error: true
-
-      - name: Delete comment
-        uses: detomarco/delete-comments@v1.0.4
-        if: steps.fc.outcome == 'success'
-        with: 
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-
-      - name: Run bandit
-        if: '!cancelled()'
-        uses: mdegis/bandit-action@v1.0
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          path: "."
-          level: high
-
       - name: Run bandit again (to upload)
         if: '!cancelled()'
         run: |
           pip install bandit
-          bandit . -r -o CI_bandit_report.html -f html
+          bandit . -r -o CI_bandit_report.txt -f text
         continue-on-error: true
+
+      - name: Comment with bandit results
+        uses: mshick/add-pr-comment@v2.8.2
+        if: '!cancelled()'
+        with:
+          message-path: CI_bandit_report.txt
+          message-id: 15
 
       - name: Upload artifacts
         if: '!cancelled()'
         uses: actions/upload-artifact@v4
         with:
           name: Bandit vuln report
-          path: CI_bandit_report.html
+          path: CI_bandit_report.txt
