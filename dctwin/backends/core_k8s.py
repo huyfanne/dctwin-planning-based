@@ -81,6 +81,12 @@ class BackendK8s(BaseBackend):
         # Danger, do not remove this line, used by kubernetes cluster to remove container accordingly
         logger.info(f"container_id: {job_name}")
 
+        if self.is_gpu:
+            print("GPU is enabled")
+            output = subprocess.check_output(['nvidia-smi', '--query-gpu=index', '--format=csv,noheader'], universal_newlines=True)
+            gpu_device_ids = [str(idx) for idx in output.strip().split('\n')]
+            print(f"GPU device ids: {gpu_device_ids}")
+
         job = K8sJob(
             name=job_uuid,
             image=image,
