@@ -1,6 +1,7 @@
 import logging
 
 from kubernetes import client
+from docker import types
 import time
 import socket
 
@@ -45,6 +46,7 @@ class K8sJob:
         k8s_taint=DEFAULT_K8S_TAINT,  # The taint for the job, e.g. "key:value
         volume_mount=DEFAULT_VOLUME_MOUNT,  # The volume mount for the job. If None, the default volume is used
         additional_params=None,  # Additional parameters for the job, e.g. ttl_seconds_after_finished
+        gpu_device_ids=None, # Device IDs for GPU
     ) -> None:
         self._core_api_ins = None
         self._batch_api_ins = None
@@ -75,6 +77,7 @@ class K8sJob:
 
         self._cleaned = False
         self._status_cache = None
+        self.gpu_device_ids = gpu_device_ids
 
         if start:
             self.start()
@@ -293,6 +296,9 @@ class K8sJob:
                 ),
             ]
             container_args["working_dir"] = self.working_dir_in_container
+
+        if self.gpu_device_ids != None:
+            container_args["device_requests"] = [types.DeviceRequest(device_ids=self.gpu_device_ids, capabilities=[['gpu']])] 
 
         tolerations = []
         if self.k8s_taint != "":
