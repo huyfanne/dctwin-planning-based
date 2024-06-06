@@ -56,8 +56,10 @@ class Backend(BaseBackend):
         self.check_image()
 
         if self.is_gpu:
+            print("GPU is enabled")
             output = subprocess.check_output(['nvidia-smi', '--query-gpu=index', '--format=csv,noheader'], universal_newlines=True)
             gpu_device_ids = [str(idx) for idx in output.strip().split('\n')]
+            print(f"GPU device ids: {gpu_device_ids}")
         try:
             self.client.close()
             self.container = self.client.containers.run(
