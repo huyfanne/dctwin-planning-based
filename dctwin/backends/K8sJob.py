@@ -297,9 +297,6 @@ class K8sJob:
             ]
             container_args["working_dir"] = self.working_dir_in_container
 
-        if self.gpu_device_ids != None:
-            container_args["device_requests"] = [types.DeviceRequest(device_ids=self.gpu_device_ids, capabilities=[['gpu']])] 
-
         tolerations = []
         if self.k8s_taint != "":
             for taint in self.k8s_taint.split(","):
@@ -314,6 +311,8 @@ class K8sJob:
             final_resources = client.V1ResourceRequirements(
                 requests=self.resources, limits=self.resources
             )
+            final_resources.limits['nvidia.com/gpu'] = 1
+            del final_resources.requests['gpu']
             container_args["resources"] = final_resources
 
         if self.need_service:
