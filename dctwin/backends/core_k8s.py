@@ -37,7 +37,7 @@ class BackendK8s(BaseBackend):
             k8s_config.get(
                 "k8s_resources",
                 json.dumps(
-                    {"cpu": "16000m", "memory": "4Gi", "ephemeral-storage": "1000Mi"}
+                    {"cpu": "16000m", "memory": "4Gi", "ephemeral-storage": "1000Mi", "gpu": "1"}
                 ),
             )
         )
