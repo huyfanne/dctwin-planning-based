@@ -311,9 +311,9 @@ class K8sJob:
             final_resources = client.V1ResourceRequirements(
                 requests=self.resources, limits=self.resources
             )
-            if 'gpu' in self.resources:
-                final_resources.limits['nvidia.com/gpu'] = 1
-                del final_resources.requests['gpu']
+            # if 'gpu' in self.resources:
+            #     final_resources.limits['nvidia.com/gpu'] = 1
+            #     del final_resources.requests['gpu']
             container_args["resources"] = final_resources
 
         if self.need_service:
