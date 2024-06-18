@@ -3,6 +3,7 @@ import math
 import shutil
 from typing import List, Dict
 from dataclasses import dataclass
+from loguru import logger
 
 from dclib.room import Room
 from dclib.models.geometry.basics import Vertex
@@ -48,16 +49,18 @@ def generate_control_dict(
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
 
-    # if is_gpu:
-    shutil.copy(
-        Path(template_dir, f"foam/system/{system_folder}/fvSolution_gpu"),
-        Path(config.cfd.case_dir, "system/fvSolution"),
-    )
-    # else:
-    #     shutil.copy(
-    #         Path(template_dir, f"foam/system/{system_folder}/fvSolution_cpu"),
-    #         Path(config.cfd.case_dir, "system/fvSolution"),
-    #     )
+    logger.info(f"delta_t: {delta_t}, write_interval: {write_interval}, end_time: {end_time}, is_gpu: {is_gpu}")
+    if is_gpu:
+        shutil.copy(
+            Path(template_dir, f"foam/system/{system_folder}/fvSolution_gpu"),
+            Path(config.cfd.case_dir, "system/fvSolution"),
+        )
+    else:
+        shutil.copy(
+            Path(template_dir, f"foam/system/{system_folder}/fvSolution_cpu"),
+            Path(config.cfd.case_dir, "system/fvSolution"),
+        )
+    
     with open(Path(config.cfd.case_dir, "system/controlDict"), "w") as f:
         f.write(
             template_env.get_template(
@@ -110,6 +113,8 @@ def init_foam(is_gpu: bool = False):
         Path(template_dir, "foam/system/steady/fvSchemes"),
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
+
+    logger.info(f"Init foam: is_gpu: {is_gpu}")
     if is_gpu:
         shutil.copy(
             Path(template_dir, f"foam/system/steady/fvSolution_gpu"),

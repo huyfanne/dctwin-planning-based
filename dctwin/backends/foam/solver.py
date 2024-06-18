@@ -274,6 +274,7 @@ class TransientSolverBackend(SolverBackend):
             write_interval=self.write_interval,
             end_time=self.end_time,
             process_num=self.process_num,
+            is_gpu=self.is_gpu,
         )
 
 
@@ -296,6 +297,7 @@ class SteadySolverBackendK8s(SolverBackendK8s):
             write_interval=self.write_interval,
             end_time=self.end_time,
             process_num=self.process_num,
+            is_gpu=self.is_gpu,
         )
 
 
@@ -318,4 +320,5 @@ class TransientSolverBackendK8s(SolverBackendK8s):
             write_interval=self.write_interval,
             end_time=self.end_time,
             process_num=self.process_num,
+            is_gpu=self.is_gpu,
         )
