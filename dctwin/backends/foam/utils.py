@@ -48,16 +48,16 @@ def generate_control_dict(
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
 
-    if is_gpu:
-        shutil.copy(
-            Path(template_dir, f"foam/system/{system_folder}/fvSolution_gpu"),
-            Path(config.cfd.case_dir, "system/fvSolution"),
-        )
-    else:
-        shutil.copy(
-            Path(template_dir, f"foam/system/{system_folder}/fvSolution_cpu"),
-            Path(config.cfd.case_dir, "system/fvSolution"),
-        )
+    # if is_gpu:
+    shutil.copy(
+        Path(template_dir, f"foam/system/{system_folder}/fvSolution_gpu"),
+        Path(config.cfd.case_dir, "system/fvSolution"),
+    )
+    # else:
+    #     shutil.copy(
+    #         Path(template_dir, f"foam/system/{system_folder}/fvSolution_cpu"),
+    #         Path(config.cfd.case_dir, "system/fvSolution"),
+    #     )
     with open(Path(config.cfd.case_dir, "system/controlDict"), "w") as f:
         f.write(
             template_env.get_template(
