@@ -144,7 +144,8 @@ class SolverBackendMixin:
                     "mpirun --use-hwthread-cpus --allow-run-as-root "
                     f"-np {self.process_num} {self.solver} -parallel && "
                     f"reconstructPar {latest_time} && "
-                    "rm -rf /data/processor*"
+                    "rm -rf /data/processor* && "
+                    "tail -f /dev/null"  # This command will keep the container running indefinitely
                 ),
             ]
         else:
