@@ -430,7 +430,7 @@ class CFDManager:
                             # try to open
                             try:
                                 logger.info(f"Application '{application_name}' searched. Path{file_path}. Try...")
-                                subprocess.run([file_path, "--data", data_path], shell=True, check=True)
+                                subprocess.run([file_path, "--data", data_path], check=True)
                                 valid_flag = True
                                 break
                             except Exception as e:
@@ -446,8 +446,8 @@ class CFDManager:
 
         elif system == "Linux":
             try:
-                command = "whereis paraview"
-                result = subprocess.run(command, capture_output=True, text=True, shell=True)
+                command = ['whereis', 'paraview']
+                result = subprocess.run(command, capture_output=True, text=True)
                 path = result.stdout.strip().split(": ")[1].split()[0]
                 logger.info(f"Application '{application_name}'. Try...")
                 subprocess.run([path, data_path], capture_output=True, text=True)

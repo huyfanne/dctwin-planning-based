@@ -81,7 +81,7 @@ class EplusBackendMixin:
         # Enable keep-alive for the socket
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self._socket.settimeout(3600)
-        self._socket.bind(("0.0.0.0", 0))
+        self._socket.bind(("0.0.0.0", 0)) #nosec
         self._socket.listen()
         if self._host == "":
             self._host = socket.gethostbyname(socket.gethostname())
