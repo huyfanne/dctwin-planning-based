@@ -82,17 +82,7 @@ class BackendK8s(BaseBackend):
 
         # Danger, do not remove this line, used by kubernetes cluster to remove container accordingly
         logger.info(f"container_id: {job_name}")
-
-        # if self.is_gpu:
-        #     logger.info("GPU option is enabled")
-        #     if shutil.which('nvidia-smi') is not None:
-        #         output = subprocess.check_output(['nvidia-smi', '--query-gpu=index', '--format=csv,noheader'], universal_newlines=True)
-        #         gpu_device_ids = [str(idx) for idx in output.strip().split('\n')]
-        #         logger.info(f"GPU device ids: {gpu_device_ids}")
-        #     else:
-        #         logger.info("nvidia-smi command not found. Please ensure Nvidia drivers are installed.")
-        #         gpu_device_ids = None
-
+        
         job = K8sJob(
             name=job_uuid,
             image=image,
@@ -112,8 +102,7 @@ class BackendK8s(BaseBackend):
             additional_params={
                 "spec.ttl_seconds_after_finished": ttl_seconds_after_finished,
                 "spec.backoff_limit": backoff_limit,
-            },
-            # gpu_device_ids=gpu_device_ids
+            }
         )
         stream_log = job.stream()
         if background:
