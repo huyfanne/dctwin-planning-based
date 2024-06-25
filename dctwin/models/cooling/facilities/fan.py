@@ -21,7 +21,7 @@ class FanModel(nn.Module):
         config: ACU,
         key_mapping: dict,
         learnable: bool = True
-    ):
+    ) -> None:
         super(FanModel, self).__init__()
         self.config = config
         self.uid = config.uid
