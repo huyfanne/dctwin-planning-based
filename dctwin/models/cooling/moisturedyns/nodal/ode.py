@@ -38,11 +38,11 @@ class DifferentiableODE:
         current_zone_temperature: torch.Tensor,
         supply_air_humidity_ratio: torch.Tensor,
         supply_air_mass_flow_rate: torch.Tensor,
-        sensible_load: torch.Tensor,
+        latent_load: torch.Tensor,
     ):
         with torch.no_grad():
             return odeint(
-                func=self._make_func(supply_air_humidity_ratio, supply_air_mass_flow_rate, sensible_load),
+                func=self._make_func(supply_air_humidity_ratio, supply_air_mass_flow_rate, latent_load),
                 y0=current_zone_temperature,
                 t=self.t_span,
                 method=self.method,
