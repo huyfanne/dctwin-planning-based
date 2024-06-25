@@ -465,12 +465,12 @@ class PlantBuilder:
                     key="SetpointManager:Scheduled".upper(),
                     Name=f"{loop_name} exit temperature setpoint manager",
                     Control_Variable="Temperature",
-                    Schedule_Name=f"{loop_name} exit temperature setpoint",
+                    Schedule_Name=f"{loop_name} exit temperature setpoint schedule",
                     Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node"
                 )
                 self.model.newidfobject(
                     key="Schedule:Constant".upper(),
-                    Name=f"{loop_name} exit temperature setpoint",
+                    Name=f"{loop_name} exit temperature setpoint schedule",
                     Schedule_Type_Limits_Name="Temperature",
                     Hourly_Value=condenser_loop.sizing.design_loop_exit_temperature
                 )
