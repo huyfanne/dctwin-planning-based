@@ -507,9 +507,7 @@ class CFDManager:
         :return: temperature fields (np.ndarray, torch.Tensor) or sensor measured results (Dict)
         """
 
-        if boundary_conditions is not None:
-            self.update_boundary_conditions(**boundary_conditions)
-            boundary_conditions = self.format_boundary_conditions
+        
 
         # if self.scale_server_flow_rate or self.room.constructions.check_sealed:
         if self.scale_server_flow_rate:
@@ -518,6 +516,10 @@ class CFDManager:
                 acu2server_flow_ratio=self.acu2server_flow_ratio,
                 expert_mode=expert_mode
             )
+        
+        if boundary_conditions is not None:
+            self.update_boundary_conditions(**boundary_conditions)
+            boundary_conditions = self.format_boundary_conditions
 
         if self.pod_backend is not None and not self.run_cfd:
             # use reduced-order CFD simulation if POD backend is provided
