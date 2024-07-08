@@ -1,8 +1,8 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from scipy.optimize import root
 
+from xitorch.optimize import rootfinder
 from loguru import logger
 
 
@@ -12,34 +12,32 @@ class VoltageModel(nn.Module):
         self,
         num_cells_in_series: int,
         num_cells_in_strings: int,
-        Vnom_default: torch.Tensor | float,
-        resistance: torch.Tensor | float,
         dt_hr: torch.Tensor | float,
-        Vfull: torch.Tensor | float,
-        Vexp: torch.Tensor | float,
-        Vnom: torch.Tensor | float,
-        Qfull: torch.Tensor | float,
-        Qexp: torch.Tensor | float,
-        Qnom: torch.Tensor | float,
-        C_rate: torch.Tensor | float,
+        resistance: torch.Tensor | float = 0.09,
+        Vfull: torch.Tensor | float = 4.2,
+        Vexp: torch.Tensor | float = 3.53,
+        Vnom: torch.Tensor | float = 3.42,
+        Qfull: torch.Tensor | float = 3.2,
+        Qexp: torch.Tensor | float = 0.8075 * 3.2,
+        Qnom: torch.Tensor | float = 0.976875 * 3.2,
+        C_rate: torch.Tensor | float = 1.0
     ):
         super().__init__()
         # voltage parameters
         self.num_cells_series = num_cells_in_series
         self.num_strings = num_cells_in_strings
-        self.Vnom_default = Vnom_default
         self.resistance = resistance
         self.dt_hr = dt_hr
-        self.Vfull = Vfull
-        self.Vexp = Vexp
-        self.Vnom = Vnom
-        self.Qfull = Qfull
-        self.Qexp = Qexp
-        self.Qnom = Qnom
-        self.C_rate = C_rate
+        self.Vfull = torch.tensor([Vfull]) if isinstance(Vfull, float) else Vfull
+        self.Vexp = torch.tensor([Vexp]) if isinstance(Vexp, float) else Vexp
+        self.Vnom = torch.tensor([Vnom]) if isinstance(Vnom, float) else Vnom
+        self.Qfull = torch.tensor([Qfull]) if isinstance(Qfull, float) else Qfull
+        self.Qexp = torch.tensor([Qexp]) if isinstance(Qexp, float) else Qexp
+        self.Qnom = torch.tensor([Qnom]) if isinstance(Qnom, float) else Qnom
+        self.C_rate = torch.tensor([C_rate]) if isinstance(C_rate, float) else C_rate
         # voltage state
-        self.cell_voltage = 0.0
-        self.soc = 0.0
+        self.cell_voltage = None
+        self.soc = None
         self._A = None
         self._B0 = None
         self._K = None
@@ -106,48 +104,62 @@ class VoltageModel(nn.Module):
         maxI = current * self.num_strings
         return max_p * self.num_strings * self.num_cells_series
 
-    def solve_current_for_discharge_power(self, I: torch.Tensor, target_power_per_cell: torch.Tensor):
-        V = (
-            self._E0 - self._K * self.solver_Q / (self.solver_q - I * self.dt_hr) +
-            self._A * torch.exp(-self._B0 * (self.solver_Q - (self.solver_q - I * self.dt_hr))) -
-            self.resistance * I
-        )
-        return I * V - target_power_per_cell
-
-    def solve_current_for_charge_power(self, I: torch.Tensor, target_power_per_cell: torch.Tensor):
-        V = (
-            self._E0 - self._K * self.solver_Q / (self.solver_q + I * self.dt_hr) +
-            self._A * torch.exp(-self._B0 * (self.solver_Q - (self.solver_q + I * self.dt_hr))) -
-            self.resistance * I
-        )
-        return I * V - target_power_per_cell
-
     def calculate_current_for_target_w(
         self,
         P_watts: torch.Tensor | float,
         q: torch.Tensor | float,
-        qmax: torch.Tensor | float,
-        T_battery: torch.Tensor | float
+        qmax: torch.Tensor | float
     ):
         if P_watts == 0:
             return 0.0
 
         target_power_per_cell = torch.abs(P_watts) / (self.num_cells_series * self.num_strings)
+        current_charge_per_string = q / self.num_strings
+        max_charge_per_string = qmax / self.num_strings
 
-        def f(
-            I: torch.Tensor
-        ):
-            if P_watts > 0:
-                return self.solve_current_for_discharge_power(I, target_power_per_cell)
-            else:
-                return self.solve_current_for_charge_power(I, target_power_per_cell)
+        def solve_current_for_discharge_power(I: torch.Tensor):
+            V = (
+                self._E0 - self._K * max_charge_per_string / (current_charge_per_string - I * self.dt_hr) +
+                self._A * torch.exp(-self._B0 * (max_charge_per_string - (current_charge_per_string - I * self.dt_hr)))-
+                self.resistance * I
+            )
+            return I * V - target_power_per_cell
+
+        def solve_current_for_charge_power(I: torch.Tensor):
+            V = (
+                self._E0 - self._K * max_charge_per_string / (current_charge_per_string + I * self.dt_hr) +
+                self._A * torch.exp(-self._B0 * (max_charge_per_string - (current_charge_per_string + I * self.dt_hr)))-
+                self.resistance * I
+            )
+            return I * V - target_power_per_cell
+
+        if P_watts > 0:
+            f = solve_current_for_charge_power
+        else:
+            f = solve_current_for_discharge_power
 
         direction = 1.0 if P_watts > 0 else -1.0
-        x = torch.tensor([self.solver_power / self.cell_voltage * self.dt_hr], dtype=torch.float64)
+
+        if self.cell_voltage is not None:
+            x = torch.tensor([target_power_per_cell / self.cell_voltage * self.dt_hr], dtype=torch.float64)
+        else:
+            x = torch.tensor([target_power_per_cell / self.Vnom * self.dt_hr], dtype=torch.float64)
         # find the current that satisfies the power demand
-        x = root(
-            fun=f,
-            x0=np.ndarray.flatten(x.detach().numpy()),
+        x = rootfinder(
+            fcn=f,
+            y0=x
         )
-        x = torch.from_numpy(x)
-        return x[0] * self.num_strings * direction
+        return x * self.num_strings * direction
+
+
+if __name__ == "__main__":
+    model = VoltageModel(
+        num_cells_in_series=139,
+        num_cells_in_strings=1,
+        dt_hr=1
+    )
+    model.calculate_current_for_target_w(
+        P_watts=torch.tensor(10000.),
+        q=model.Qfull,
+        qmax=model.Qfull
+    )
