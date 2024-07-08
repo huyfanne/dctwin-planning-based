@@ -51,6 +51,9 @@ class PumpModel(nn.Module):
         mass_flow_rate: torch.Tensor
     ):
         flow_fraction = mass_flow_rate / (self.design_flow_rate * rho_water)
+        flow_fraction = torch.clip(
+            flow_fraction, 0, 1
+        )
         return self.design_power * self.power_curve(flow_fraction)
 
     def learn(self):

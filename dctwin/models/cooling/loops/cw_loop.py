@@ -125,7 +125,9 @@ class CWLoopManager(nn.Module):
             # for the demand-side, we start with the middle branches that contain the cooling coils
             for demand_branch_name, demand_branch in condensing_water_loop["demand_branches"].items():
                 if demand_branch["side"] == "middle":
-                    clg_load = chw_loop_simulation_results.chiller_property[demand_branch["chiller"].uid].cooling_load
+                    clg_load = chw_loop_simulation_results.chiller_property[
+                        demand_branch["chiller"].uid.lower()
+                    ].cooling_load
                     # for condenser loop, the chiller condenser flow rate is always equal to the designed flow rate
                     mass_flow_rate = torch.tensor(
                         demand_branch["chiller"].config.cooling.reference_condenser_fluid_flow_rate * rho_water,
@@ -199,7 +201,7 @@ class CWLoopManager(nn.Module):
             for supply_branch_name, supply_branch in condensing_water_loop["supply_branches"].items():
                 if "pump" in supply_branch.keys():
                     pump_model = supply_branch["pump"]
-                    condenser_water_pump_property[pump_model.uid] = Batch(
+                    condenser_water_pump_property[pump_model.uid.lower()] = Batch(
                         mass_flow_rate=branch_fluid_properties["supply"][supply_branch_name].inlet_M,
                         power=pump_model(branch_fluid_properties["supply"][supply_branch_name].inlet_M)
                     )
@@ -211,7 +213,7 @@ class CWLoopManager(nn.Module):
                         cw_supply_water_temperature=branch_fluid_properties["supply"][supply_branch_name].outlet_T,
                         outside_air_wetbulb_temperature=outside_air_temperature
                     )
-                    cooling_tower_property[cooling_tower_model.uid] = Batch(
+                    cooling_tower_property[cooling_tower_model.uid.lower()] = Batch(
                         return_water_temperature=branch_fluid_properties["supply"][supply_branch_name].inlet_T,
                         return_water_mass_flow_rate=branch_fluid_properties["supply"][supply_branch_name].inlet_M,
                         supply_water_temperature=branch_fluid_properties["supply"][supply_branch_name].outlet_T,

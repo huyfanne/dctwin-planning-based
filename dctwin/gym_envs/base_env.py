@@ -169,8 +169,8 @@ class BaseEnv(gym.Env):
             if not count_criteria(item):
                 continue
             if use_unnormed_value:
-                lb_.append(item.resizer.lb)
-                ub_.append(item.resizer.ub)
+                lb_.append(min_)
+                ub_.append(max_)
             else:
                 lb_.append(
                     item.resizer.resized_lb if item.resizer is not None else min_

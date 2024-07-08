@@ -29,10 +29,10 @@ class HeatExchanger(nn.Module):
         transverse_number: float | int = 60,
         transverse_pitch: float | int = 0.03,
         thermal_conductivity: float = 400,
-        tol: float = 0.01,
+        tol: float = 0.1,
         max_root_finding_iter: int = 100,
-        max_learning_iter: int = 2000,
-        min_loss: float = 0.05
+        max_learning_iter: int = 500,
+        min_loss: float = 0.01
     ):
         """
         A PIML-based model for cooling coil inside an ACU. It leverages the geometry information of the cooling coil as
@@ -70,11 +70,11 @@ class HeatExchanger(nn.Module):
         )
         self.num_row = nn.Parameter(
             torch.tensor(row_number, dtype=torch.float32),
-            requires_grad=learnable
+            requires_grad=False
         )
         self.num_transverse = nn.Parameter(
             torch.tensor(transverse_number, dtype=torch.float32),
-            requires_grad=learnable
+            requires_grad=False
         )
         self.row_pitch = nn.Parameter(
             torch.tensor(row_pitch, dtype=torch.float32),
@@ -98,8 +98,8 @@ class HeatExchanger(nn.Module):
         self.extern_fluid_name = external_fluid_name
 
         self.key_mapping = key_mapping
-        self.buffer = Buffer(size=100)
-        self.opt = torch.optim.Adam(self.parameters(), lr=1.0)
+        self.buffer = Buffer(size=1000)
+        self.opt = torch.optim.Adam(self.parameters(), lr=1.0e-2)
         self.learnable = learnable
         self.max_learning_iter = max_learning_iter
         self.tol = tol
@@ -193,7 +193,7 @@ class HeatExchanger(nn.Module):
 
     def learn(self):
         if self.learnable:
-            batch, _ = self.buffer.sample(batch_size=0)  # sample all data from the buffer
+            batch, _ = self.buffer.sample(batch_size=16)  # sample all data from the buffer
             mask = batch.cooling_coil_air_mass_flow_rate > 0
             batch = batch[mask]
             if len(batch) > 10:
@@ -222,7 +222,7 @@ class HeatExchanger(nn.Module):
                     )
                     loss.backward(retain_graph=True)
                     self.opt.step()
-                    # self._project_ws()  # project the parameters to the positive region to make them feasible
+                    self._project_ws()  # project the parameters to the positive region to make them feasible
                     pbar.set_description(f"Loss: {loss.item():.4f}")
                     if loss.item() < self.min_loss:
                         break
@@ -259,9 +259,6 @@ class HeatExchanger(nn.Module):
         fr, nu_i = nusseltNumberIn(rr_i, Re_i, Pr_i)  # friction factor and Nusselt number
         h_i = nu_i * k_i / self.tube_diameter  # internal fluid heat transfer coefficient
 
-        dP_i = fr * (self.tube_length / self.tube_diameter) * (rho_i * u_i ** 2) / 2  # internal fluid pressure drop
-        # pump_power_i = (self.num_row * self.num_transverse) * dP_i * (m_water / rho_i)  # internal fluid pumping power
-
         # tube outside
         u_o = m_air / rho_o / (self.tube_length * self.H_he)  # external fluid velocity
         u_omax = self.transverse_pitch / (self.transverse_pitch - self.tube_diameter) * u_o
@@ -273,12 +270,6 @@ class HeatExchanger(nn.Module):
         Nu_o = self._correct_nusselt_number(Nu_o)
         h_o = Nu_o * k_o / self.tube_diameter   # external fluid heat transfer coefficient
 
-        f_o = 0.2  # external fluid friction factor
-        dP_o = self.num_row * (rho_o * u_omax ** 2 / 2) * f_o  # external fluid pressure drop
-        # pump_power_o = dP_o * (m_air / rho_o)  # external fluid pumping power
-
-        # pumping power, U value and NTU value
-        # pump_power = pump_power_i + pump_power_o  # W, pumping power
         U = 1 / (
             1 / h_i + 1 / h_o + torch.log((self.tube_thickness + self.tube_diameter) / self.tube_diameter) *
             self.tube_diameter / self.tube_kappa
@@ -360,5 +351,4 @@ class HeatExchanger(nn.Module):
         m.register_hook(
             lambda grad: grad / J
         )  # implicit gradient calculation
-        m.backward(retain_graph=True)
         return m, Q, T_air_out

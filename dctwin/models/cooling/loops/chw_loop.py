@@ -60,7 +60,7 @@ class CHWLoopManager(nn.Module):
                         chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["chiller"] = ChillerModel(
                             config=chiller,
                             key_mapping=self.device_key_mapping["chillers"][chiller_name],
-                            learnable=False
+                            learnable=True
                         )
                         self.add_module(
                             chiller_name,
@@ -71,7 +71,7 @@ class CHWLoopManager(nn.Module):
                         chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["pump"] = PumpModel(
                             config=pump,
                             key_mapping=self.device_key_mapping["chilled water pumps"][pump_name],
-                            learnable=True
+                            learnable=False
                         )
                         self.add_module(
                             pump_name,
@@ -185,7 +185,7 @@ class CHWLoopManager(nn.Module):
                     num_middle_branches += 1
                     # the cooling load that should be met by the chiller plant is equal to IT power and CRAH power
                     total_cooling_load += (
-                        heat_transfer_rate.view(-1) + acu_simulation_results.fan_powers[coil_model.uid.lower()].view(-1)
+                        heat_transfer_rate + acu_simulation_results.fan_powers[coil_model.uid.lower()]
                     )
 
             # calculate average return temperature
@@ -262,7 +262,7 @@ class CHWLoopManager(nn.Module):
             for supply_branch_name, supply_branch in chilled_water_loop["supply_branches"].items():
                 if "pump" in supply_branch.keys():
                     pump_model = supply_branch["pump"]
-                    chilled_water_pump_property[pump_model.uid] = Batch(
+                    chilled_water_pump_property[pump_model.uid.lower()] = Batch(
                         mass_flow_rate=branch_fluid_properties["supply"][supply_branch_name].inlet_M,
                         power=pump_model(
                             branch_fluid_properties["supply"][supply_branch_name].inlet_M
@@ -275,7 +275,7 @@ class CHWLoopManager(nn.Module):
                         chw_sp=chw_sp,
                         cw_sp=plant_control_inputs["condenser water loop"]["supply_sp"],
                     )
-                    chiller_property[chiller_model.uid] = Batch(
+                    chiller_property[chiller_model.uid.lower()] = Batch(
                         cooling_load=chiller_cooling_loads[chiller_model.uid],
                         power=power,
                         chilled_water_temperature=chw_sp,
