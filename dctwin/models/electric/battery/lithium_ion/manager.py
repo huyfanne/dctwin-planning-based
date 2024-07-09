@@ -91,7 +91,7 @@ class LithiumIonBattery(nn.Module):
         Calculate the current based on the input power in kW.
         """
         if power_kw == 0:
-            return torch.zeros(1)
+            return torch.zeros(1), torch.zeros(1)
         if power_kw < 0.:  # charging
             max_power, current = self.calculate_max_charge_power_kw()
             if max_power > power_kw:
@@ -132,7 +132,7 @@ class LithiumIonBattery(nn.Module):
             q=self.capacity_model.q0,
             q_max=self.capacity_model.q_max
         )
-        return max_discharge_power / 1000., max_I
+        return max_discharge_power * 0.001, max_I
 
     def calculate_max_charge_power_kw(self):
         """
@@ -142,7 +142,7 @@ class LithiumIonBattery(nn.Module):
             q=self.capacity_model.q0,
             q_max=self.capacity_model.q_max
         )
-        return max_charge_power / 1000., max_I
+        return max_charge_power * 0.001, max_I
 
     def run_thermal_model(
         self,
@@ -158,7 +158,7 @@ class LithiumIonBattery(nn.Module):
 
     def run_voltage_model(self, I: torch.Tensor | float):
         return self.voltage_model.update_voltage(
-            q=self.capacity_model.q0,
+            q=self.capacity_model.q0 - I * self.voltage_model.dt_hr,
             q_max=self.capacity_model.q_max,
             I=I
         )
@@ -189,7 +189,7 @@ class LithiumIonBattery(nn.Module):
         # fixed power charge/discharge mode
         if I is None:
             # calculate the battery cell current based on the demanded power
-            I = self.calculate_current_for_power_kw(P_kw)
+            _, I = self.calculate_current_for_power_kw(P_kw)
         # calculate the new battery temperature based on the current
         self.thermal_model.update_battery_temperature(I, T_room)
         # run the voltage model to calculate the battery terminal voltage given the current
@@ -224,7 +224,9 @@ if __name__ == "__main__":
     #     P_kw=torch.tensor(1.0),
     #     I=None
     # )
-    I = model.voltage_model.Qfull * model.voltage_model.C_rate
+
+    # Fixed power discharge
+    I = torch.tensor([.5])
     total_time = 1 / (model.voltage_model.C_rate / 10)
     res_soc = []
     res_power = []
@@ -236,14 +238,16 @@ if __name__ == "__main__":
         )
         res_soc.append(model.capacity_model.soc)
         res_voltage.append(model.V)
-        res_power.append(model.P)
+        res_power.append(model.P*1000)
     res_voltage = torch.stack(res_voltage).view(-1)
     res_power = torch.stack(res_power).view(-1)
     res_soc = torch.stack(res_soc).view(-1)
 
     t = torch.arange(0, total_time.item(), model.voltage_model.dt_hr)
+
     plt.figure(dpi=300)
     plt.subplot(311)
+    plt.title(f"Fixed Discharge Current: {I.item():.1f} A")
     plt.plot(res_voltage, label="Voltage [V]")
     plt.grid(axis="y")
     plt.xlabel("Time [s]")
@@ -254,7 +258,7 @@ if __name__ == "__main__":
     plt.plot(res_power, label="Power [kW]")
     plt.grid(axis="y")
     plt.xlabel("Time [s]")
-    plt.ylabel("Power [kW]")
+    plt.ylabel("Power [W]")
     plt.legend()
 
     plt.subplot(313)
@@ -264,5 +268,70 @@ if __name__ == "__main__":
     plt.ylabel("SOC [%]")
 
     plt.legend()
+    plt.show()
 
+    # Fixed power discharge
+    model = LithiumIonBattery(
+        num_cells_in_series=1,
+        num_cells_in_strings=1,
+        initial_fractional_state_of_charge=100.,
+        battery_mass=342.,
+        battery_surface_area=4.26,
+        battery_specific_heat_capacity=1500.,
+        heat_transfer_coefficient_between_battery_and_ambient=7.5,
+        dc_to_dc_charging_efficiency=0.95,
+        dt_hr=1.0/10,
+        C_rate=0.2
+    )
+    P_kw = torch.tensor(0.005)
+    total_time = 1 / (model.voltage_model.C_rate / 5)
+    res_soc = []
+    res_power = []
+    res_voltage = []
+    for i in range(int(total_time.item())):
+        model.forward(
+            P_kw=P_kw,
+            I=None
+        )
+        logger.info(
+            f"Voltage: {model.V.item():.3f}, "
+            f"Power: {model.P.item()*1000:.3f}, "
+            f"SOC: {model.capacity_model.soc.item():.3f} "
+            f"I: {model.I.item():.3f}"
+        )
+        if model.capacity_model.soc < 1e-3:
+            break
+        res_soc.append(model.capacity_model.soc)
+        res_voltage.append(model.V)
+        res_power.append(model.P*1000)
+    res_voltage = torch.stack(res_voltage).view(-1)
+    res_power = torch.stack(res_power).view(-1)
+    res_soc = torch.stack(res_soc).view(-1)
+
+    t = torch.arange(0, total_time.item(), model.voltage_model.dt_hr)
+
+    plt.figure(dpi=300)
+    plt.subplot(311)
+    plt.title(f"Fixed Discharge Power: {P_kw.item()*1000:.1f} W")
+    plt.plot(res_voltage[:-1], label="Voltage [V]")
+    plt.grid(axis="y")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Voltage [V]")
+    plt.legend()
+
+    plt.subplot(312)
+    plt.plot(res_power[:-1], label="Power [W]")
+    plt.grid(axis="y")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Power [W]")
+    plt.ylim(0, 10)
+    plt.legend()
+
+    plt.subplot(313)
+    plt.plot(res_soc[:-1], label="SOC [%]")
+    plt.grid(axis="y")
+    plt.xlabel("Time [s]")
+    plt.ylabel("SOC [%]")
+
+    plt.legend()
     plt.show()

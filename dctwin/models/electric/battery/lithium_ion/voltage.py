@@ -131,6 +131,7 @@ class VoltageModel(nn.Module):
         current_q_per_string = q / self.num_strings
         max_q_per_string = q_max / self.num_strings
         I = current_q_per_string * 0.5  # initial current
+        I = I.view(1)
         vol = 0
         incr = q / 200
         max_p = 0
@@ -168,18 +169,18 @@ class VoltageModel(nn.Module):
         max_charge_per_string = q_max / self.num_strings
 
         def solve_current_for_discharge_power(I: torch.Tensor):
-            V = (
-                self._E0 - self._K * max_charge_per_string / (current_charge_per_string - I * self.dt_hr) +
-                self._A * torch.exp(-self._B0 * (max_charge_per_string - (current_charge_per_string - I * self.dt_hr)))-
-                self.resistance * I
+            V = self.compute_voltage(
+                q_max=max_charge_per_string,
+                q=current_charge_per_string - I * self.dt_hr,
+                I=I
             )
             return I * V - target_power_per_cell
 
         def solve_current_for_charge_power(I: torch.Tensor):
-            V = (
-                self._E0 - self._K * max_charge_per_string / (current_charge_per_string + I * self.dt_hr) +
-                self._A * torch.exp(-self._B0 * (max_charge_per_string - (current_charge_per_string + I * self.dt_hr)))-
-                self.resistance * I
+            V = self.compute_voltage(
+                q_max=max_charge_per_string,
+                q=current_charge_per_string - I * self.dt_hr,
+                I=I
             )
             return I * V - target_power_per_cell
 
@@ -198,30 +199,13 @@ class VoltageModel(nn.Module):
         # find the current that satisfies the power demand with differentiable root finding function in xitorch library
         x = rootfinder(
             fcn=f,
-            y0=x
+            y0=x,
+
         )
-        return x * self.num_strings * direction
-
-
-if __name__ == "__main__":
-    model = VoltageModel(
-        num_cells_in_series=139,
-        num_cells_in_strings=25,
-        dt_hr=1.0
-    )
-    p_dischargable, _ = model.calculate_max_discharge_w(
-        q=model.Qfull,
-        q_max=model.Qfull
-    )
-    logger.info(
-        f"Maximum discharge power: {p_dischargable.item():.3f} W"
-    )
-    p = torch.tensor(-1000.)
-    I = model.calculate_current_for_target_w(
-        P_watts=p,
-        q=model.Qfull,
-        q_max=model.Qfull
-    )
-    logger.info(
-        f"Charged power: {p.item():.3f} W, Charged Current: {I.item(): 2f} A"
-    )
+        V = self.compute_voltage(
+            q_max=max_charge_per_string,
+            q=current_charge_per_string - x * self.dt_hr,
+            I=x
+        )
+        P = x * V * self.num_cells_series * self.num_strings
+        return P, x * self.num_strings * direction
