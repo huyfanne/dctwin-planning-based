@@ -32,14 +32,14 @@ class LithiumIonBattery(nn.Module):
         Qfull: torch.Tensor | float = 3.2,
         Qexp: torch.Tensor | float = 0.8075 * 3.2,
         Qnom: torch.Tensor | float = 0.976875 * 3.2,
-        C_rate: torch.Tensor | float = 1.0
+        C_rate: torch.Tensor | float = 0.2
     ):
         super().__init__()
         self.capacity_model = CapacityModel(
             q_max=Qfull,
             initial_soc=initial_fractional_state_of_charge,
             min_soc=0.0,
-            max_soc=1.0,
+            max_soc=100.0,
             dt_hr=dt_hr
         )
         self.voltage_model = VoltageModel(
@@ -75,8 +75,8 @@ class LithiumIonBattery(nn.Module):
         self.Q_max = torch.tensor(Qfull)
         self.I = torch.zeros(1)
         self.P = torch.zeros(1)
-        self.P_dischargable = self.calculate_max_discharge_power_kw()
-        self.P_chargeable = self.calculate_max_charge_power_kw()
+        self.max_discharge_P, self.max_discharge_I = self.calculate_max_discharge_power_kw()
+        self.max_charge_P, self.max_charge_I = self.calculate_max_charge_power_kw()
         self.lifetime_counter = torch.zeros(1)
 
     @property
@@ -137,9 +137,9 @@ class LithiumIonBattery(nn.Module):
         """
         max_charge_power, max_I = self.voltage_model.calculate_max_charge_w(
             q=self.capacity_model.q0,
-            q_max=self.capacity_model.q_max_lifetime
+            q_max=self.capacity_model.q_max
         )
-        return  max_charge_power / 1000., max_I
+        return max_charge_power / 1000., max_I
 
     def run_thermal_model(
         self,
@@ -151,9 +151,7 @@ class LithiumIonBattery(nn.Module):
         self,
         I: torch.Tensor | float
     ):
-        return self.capacity_model.update_capacity(
-            I=I, dt_hr=self.dt_hr
-        )
+        return self.capacity_model.update_capacity(I=I)
 
     def run_voltage_model(self, I: torch.Tensor | float):
         return self.voltage_model.update_voltage(
@@ -173,7 +171,7 @@ class LithiumIonBattery(nn.Module):
     def update_state(self, I: torch.Tensor | float):
         self.I = I
         self.Q = self.capacity_model.q0
-        self.Q_max = self.capacity_model.qmax
+        self.Q_max = self.capacity_model.q_max
         self.V = self.voltage_model.cell_voltage
         self.P_dischargable = self.calculate_max_discharge_power_kw()
         self.P_chargeable = self.calculate_max_charge_power_kw()
@@ -186,8 +184,10 @@ class LithiumIonBattery(nn.Module):
         self.thermal_model.update_battery_temperature(I, T_room)
         # run the voltage model to calculate the battery terminal voltage given the current
         self.run_voltage_model(I)
+        # run the capacity model to update the battery charge capacity given the charge current
+        self.run_capacity_model(I)
         # update the lifetime model and losses model
-        self.run_lifetime_model()
+        # self.run_lifetime_model()
         # update all electrical states
         self.update_state(I)
 
@@ -202,10 +202,15 @@ if __name__ == "__main__":
         battery_surface_area=4.26,
         battery_specific_heat_capacity=1500.,
         heat_transfer_coefficient_between_battery_and_ambient=7.5,
-        dc_to_dc_charging_efficiency=0.95
+        dc_to_dc_charging_efficiency=0.95,
+        dt_hr=1
     )
     print(model.max_Ah_capacity)
-    # model.forward(
-    #     P_kw=torch.tensor(1.0)
-    # )
+    print(model.max_discharge_P)
+    print(model.max_discharge_I)
+    print(model.max_charge_P)
+    print(model.max_charge_I)
+    model.forward(
+        P_kw=torch.tensor(1.0)
+    )
 

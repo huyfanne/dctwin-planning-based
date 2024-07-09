@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 
-class ChargeMode(Enum):
+class ChargeMode:
     NO_CHARGE = 0
     CHARGE = 1
     DISCHARGE = 2
@@ -30,7 +30,7 @@ class CapacityModel(nn.Module):
         self.dt_hr = dt_hr if isinstance(dt_hr, torch.Tensor) else torch.tensor(dt_hr)
         # capacity state
         # [Ah] - Total capacity at current timestep
-        self.q0 = self. q_max * initial_soc
+        self.q0 = self. q_max * initial_soc / 100.
         # [Ah] - Maximum capacity considering lifetime degradation at current timestep
         self.q_max_lifetime = q_max if isinstance(q_max, torch.Tensor) else torch.tensor(q_max)
         # [A] - Cell current at current timestep
@@ -44,7 +44,7 @@ class CapacityModel(nn.Module):
         # Charge mode at current timestep
         self.charge_mode = ChargeMode.NO_CHARGE
         # Charge mode at previous timestep
-        self.prev_charge = ChargeMode.NO_CHARGE
+        self.prev_charge = -1
         # indicates if the charge mode has changed
         self.change_mode = False
         # algorithmic parameters
@@ -89,14 +89,14 @@ class CapacityModel(nn.Module):
         """
         Update the state of charge based on the current available charge q0.
         """
-        if self.q_max_lifetime == 0:
+        if self.q_max == 0:
             self.q0 = 0
             self.soc = 0
             return
-        if self.q0 > self.q_max_lifetime:
-            self.q0 = self.q_max_lifetime
-        if self.qmax_lifetime > 0:
-            self.soc = 100. * (self.q0 / self.q_max_lifetime)
+        if self.q0 > self.q_max:
+            self.q0 = self.q_max
+        if self.q_max > 0:
+            self.soc = 100. * (self.q0 / self.q_max)
         else:
             self.soc = 0.
 
@@ -105,7 +105,7 @@ class CapacityModel(nn.Module):
         elif self.soc < 0.:
             self.soc = 0.
 
-    def update_capacity(self, I: torch.Tensor | float, dt_hr: torch.Tensor | float):
+    def update_capacity(self, I: torch.Tensor | float):
         """
         Update the available charge q0 based on the current and time interval of the current timestep.
         :param I: Current at the current timestep  [unit: A]
@@ -113,11 +113,10 @@ class CapacityModel(nn.Module):
         """
         self.soc_prev = self.soc
         self.I_losses = 0.0
-        self.dt_hr = dt_hr
         self.cell_current = I
 
         # compute charge change ( I > 0 discharging, I < 0 charging)
-        self.q0 -= self.cell_current * self.dt_hr
+        self.q0 -= self.cell_current[0] * self.dt_hr
 
         # check if SOC constraints violated, update q0, I if so
         self.check_soc()
