@@ -8,30 +8,29 @@ class ThermalModel(nn.Module):
 
     def __init__(
         self,
-        dt_hr: float | torch.Tensor | np.ndarray,
-        mass: float | torch.Tensor | np.ndarray,
-        surface_area: float | torch.Tensor | np.ndarray,
-        Cp: float | torch.Tensor | np.ndarray,
-        h: float | torch.Tensor | np.ndarray,
-        resistance: float | torch.Tensor | np.ndarray,
-        T_room_init: float | torch.Tensor | np.ndarray
+        dt_hr: float | torch.Tensor,
+        mass: float | torch.Tensor,
+        surface_area: float | torch.Tensor,
+        Cp: float | torch.Tensor,
+        h: float | torch.Tensor,
+        resistance: float | torch.Tensor,
+        T_room_init: float | torch.Tensor
     ):
         super().__init__()
         # thermal parameters
-        self.dt_hr = dt_hr
+        self.dt_hr = dt_hr if isinstance(dt_hr, torch.Tensor) else torch.tensor(dt_hr)
         self.dt_sec = dt_hr * 3600
-        self.mass = mass
-        self.surface_area = surface_area
-        self.Cp = Cp
-        self.h = h
-        self.resistance = resistance
-        self.T_room_init = T_room_init
+        self.mass = mass if isinstance(mass, torch.Tensor) else torch.tensor(mass)
+        self.surface_area = surface_area if isinstance(surface_area, torch.Tensor) else torch.tensor(surface_area)
+        self.Cp = Cp if isinstance(Cp, torch.Tensor) else torch.tensor(Cp)
+        self.h = h if isinstance(h, torch.Tensor) else torch.tensor(h)
+        self.resistance = resistance if isinstance(resistance, torch.Tensor) else torch.tensor(resistance)
+        self.T_room_init = T_room_init if isinstance(T_room_init, torch.Tensor) else torch.tensor(T_room_init)
         # thermal state
-        self.q_relative_thermal = 0.0
-        self.T_batt = 0.0
-        self.T_room = 0.0
+        self.T_batt = T_room_init
+        self.T_room = T_room_init
+        self.T_batt_prev = T_room_init
         self.heat_dissipated = 0.0
-        self.T_batt_prev = 0.0
 
     def update_battery_temperature(
         self,
