@@ -1,6 +1,9 @@
+from typing import Optional
+
 import torch
 import torch.nn as nn
 from loguru import logger
+import matplotlib.pyplot as plt
 
 from capacity import CapacityModel
 from voltage import VoltageModel
@@ -173,13 +176,20 @@ class LithiumIonBattery(nn.Module):
         self.Q = self.capacity_model.q0
         self.Q_max = self.capacity_model.q_max
         self.V = self.voltage_model.cell_voltage
-        self.P_dischargable = self.calculate_max_discharge_power_kw()
-        self.P_chargeable = self.calculate_max_charge_power_kw()
+        self.max_discharge_P, self.max_discharge_I = self.calculate_max_discharge_power_kw()
+        self.max_charge_P, self.max_charge_I = self.calculate_max_charge_power_kw()
         self.P = I * self.voltage_model.cell_voltage * 0.001  # convert to kW
 
-    def forward(self, P_kw: torch.Tensor | float, T_room: torch.Tensor | float = None):
-        # calculate the battery cell current based on the demanded power
-        I = self.calculate_current_for_power_kw(P_kw)
+    def forward(
+        self,
+        P_kw: Optional[torch.Tensor | float] = None,
+        I: Optional[torch.Tensor | float] = None,
+        T_room: torch.Tensor | float = None
+    ):
+        # fixed power charge/discharge mode
+        if I is None:
+            # calculate the battery cell current based on the demanded power
+            I = self.calculate_current_for_power_kw(P_kw)
         # calculate the new battery temperature based on the current
         self.thermal_model.update_battery_temperature(I, T_room)
         # run the voltage model to calculate the battery terminal voltage given the current
@@ -193,24 +203,66 @@ class LithiumIonBattery(nn.Module):
 
 
 if __name__ == "__main__":
-
     model = LithiumIonBattery(
-        num_cells_in_series=139,
-        num_cells_in_strings=25,
+        num_cells_in_series=1,
+        num_cells_in_strings=1,
         initial_fractional_state_of_charge=100.,
         battery_mass=342.,
         battery_surface_area=4.26,
         battery_specific_heat_capacity=1500.,
         heat_transfer_coefficient_between_battery_and_ambient=7.5,
         dc_to_dc_charging_efficiency=0.95,
-        dt_hr=1
+        dt_hr=1.0/10,
+        C_rate=0.2
     )
-    print(model.max_Ah_capacity)
-    print(model.max_discharge_P)
-    print(model.max_discharge_I)
-    print(model.max_charge_P)
-    print(model.max_charge_I)
-    model.forward(
-        P_kw=torch.tensor(1.0)
-    )
+    # print(model.max_Ah_capacity)
+    # print(model.max_discharge_P)
+    # print(model.max_discharge_I)
+    # print(model.max_charge_P)
+    # print(model.max_charge_I)
+    # model.forward(
+    #     P_kw=torch.tensor(1.0),
+    #     I=None
+    # )
+    I = model.voltage_model.Qfull * model.voltage_model.C_rate
+    total_time = 1 / (model.voltage_model.C_rate / 10)
+    res_soc = []
+    res_power = []
+    res_voltage = []
+    for i in range(int(total_time.item())):
+        model.forward(
+            P_kw=None,
+            I=I
+        )
+        res_soc.append(model.capacity_model.soc)
+        res_voltage.append(model.V)
+        res_power.append(model.P)
+    res_voltage = torch.stack(res_voltage).view(-1)
+    res_power = torch.stack(res_power).view(-1)
+    res_soc = torch.stack(res_soc).view(-1)
 
+    t = torch.arange(0, total_time.item(), model.voltage_model.dt_hr)
+    plt.figure(dpi=300)
+    plt.subplot(311)
+    plt.plot(res_voltage, label="Voltage [V]")
+    plt.grid(axis="y")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Voltage [V]")
+    plt.legend()
+
+    plt.subplot(312)
+    plt.plot(res_power, label="Power [kW]")
+    plt.grid(axis="y")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Power [kW]")
+    plt.legend()
+
+    plt.subplot(313)
+    plt.plot(res_soc, label="SOC [%]")
+    plt.grid(axis="y")
+    plt.xlabel("Time [s]")
+    plt.ylabel("SOC [%]")
+
+    plt.legend()
+
+    plt.show()

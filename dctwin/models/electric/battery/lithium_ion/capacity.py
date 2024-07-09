@@ -90,8 +90,8 @@ class CapacityModel(nn.Module):
         Update the state of charge based on the current available charge q0.
         """
         if self.q_max == 0:
-            self.q0 = 0
-            self.soc = 0
+            self.q0 = torch.zeros(1)
+            self.soc = torch.zeros(1)
             return
         if self.q0 > self.q_max:
             self.q0 = self.q_max
@@ -101,9 +101,9 @@ class CapacityModel(nn.Module):
             self.soc = 0.
 
         if self.soc > 100.0:
-            self.soc = 100.0
+            self.soc = torch.tensor(100.)
         elif self.soc < 0.:
-            self.soc = 0.
+            self.soc = torch.zeros(1)
 
     def update_capacity(self, I: torch.Tensor | float):
         """
