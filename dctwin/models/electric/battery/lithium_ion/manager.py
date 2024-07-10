@@ -175,10 +175,10 @@ class LithiumIonBattery(nn.Module):
         self.I = I
         self.Q = self.capacity_model.q0
         self.Q_max = self.capacity_model.q_max
-        self.V = self.voltage_model.cell_voltage
+        self.V = self.voltage_model.cell_voltage * self.voltage_model.num_cells_series
         self.max_discharge_P, self.max_discharge_I = self.calculate_max_discharge_power_kw()
         self.max_charge_P, self.max_charge_I = self.calculate_max_charge_power_kw()
-        self.P = I * self.voltage_model.cell_voltage * 0.001  # convert to kW
+        self.P = I * self.V * 0.001  # convert to kW
 
     def forward(
         self,
@@ -197,7 +197,7 @@ class LithiumIonBattery(nn.Module):
         # run the capacity model to update the battery charge capacity given the charge current
         self.run_capacity_model(I)
         # update the lifetime model and losses model
-        # self.run_lifetime_model()
+        self.run_lifetime_model()
         # update all electrical states
         self.update_state(I)
 
@@ -296,7 +296,7 @@ if __name__ == "__main__":
         logger.info(
             f"Voltage: {model.V.item():.3f}, "
             f"Power: {model.P.item()*1000:.3f}, "
-            f"SOC: {model.capacity_model.soc.item():.3f} "
+            f"SOC: {model.capacity_model.soc.item():.3f}, "
             f"I: {model.I.item():.3f}"
         )
         if model.capacity_model.soc < 1e-3:

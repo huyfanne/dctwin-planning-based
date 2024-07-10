@@ -20,54 +20,54 @@ class NMCLifetimeModel(nn.Module):
         dt_hr: torch.Tensor | float
     ):
         super().__init__()
-        self.q_relative = 0.0  # total lifetime relative capacity %
-        self.n_cycles = 0.0  # number of cycles
-        self.range = 0.0  # %, range of the battery
-        self.average_range = 0.0  # %, average range of the battery
-        self.day_age_of_battery = 0.0  # days, age of the battery
+        self.q_relative = torch.tensor(0.0)  # total lifetime relative capacity %
+        self.n_cycles = torch.tensor(0.0)  # number of cycles
+        self.range = torch.tensor(0.0)  # %, range of the battery
+        self.average_range = torch.tensor(0.0)  # %, average range of the battery
+        self.day_age_of_battery = torch.tensor(0.0)  # days, age of the battery
         # NMC lifetime model states
-        self.q_relative_li = 0.0  # %, SEI degradation
-        self.q_relative_neg = 0.0  # %, cycle degradation
-        self.dq_relative_li_old = 0.0  # %, SEI degradation at previous timestep
-        self.dq_relative_neg_old = 0.0  # %, cycle degradation at previous timestep
-        self.dod_max = 0.0  # %, maximum depth of discharge
-        self.n_cycles_prev_day = 0.0  # number of cycles in the previous day
+        self.q_relative_li = torch.tensor(0.0)  # %, SEI degradation
+        self.q_relative_neg = torch.tensor(0.0)  # %, cycle degradation
+        self.dq_relative_li_old = torch.tensor(0.0)  # %, SEI degradation at previous timestep
+        self.dq_relative_neg_old = torch.tensor(0.0)  # %, cycle degradation at previous timestep
+        self.dod_max = torch.tensor(0.0)  # %, maximum depth of discharge
+        self.n_cycles_prev_day = torch.tensor(0.0)  # number of cycles in the previous day
 
         # parameters for reference anode and cell potential
-        self.Uneg_ref = 0.08
-        self.V_ref = 3.7
+        self.Uneg_ref = torch.tensor(0.08)
+        self.V_ref = torch.tensor(3.7)
         # parameters for capacity degradation due to positive electrode-site-limit
-        self.d0_ref = 75.1
-        self.Ea_d0_1 = 4126.0
-        self.Ea_d0_2 = 9752000.0
-        self.Ah_ref = 75.
+        self.d0_ref = torch.tensor(75.1)
+        self.Ea_d0_1 = torch.tensor(4126.0)
+        self.Ea_d0_2 = torch.tensor(9752000.0)
+        self.Ah_ref = torch.tensor(75.)
         # parameters for capacity degradation due to SEI
-        self.b0 = 1.07
-        self.b1_ref = 0.003503
-        self.Ea_b1 = 35392.
-        self.alpha_a_b1 = -1
-        self.beta_b1 = 2.157
-        self.gamma = 2.472
-        self.b2_ref = 0.00001541
-        self.Ea_b_2 = -42800.
-        self.b3_ref = 0.02805
-        self.Ea_b3 = 42800.
-        self.alpha_a_b3 = 0.0066
-        self.tau_b3 = 5.
-        self.theta = 0.135
+        self.b0 = torch.tensor(1.07)
+        self.b1_ref = torch.tensor(0.003503)
+        self.Ea_b1 = torch.tensor(35392.)
+        self.alpha_a_b1 = torch.tensor(-1.)
+        self.beta_b1 = torch.tensor(2.157)
+        self.gamma = torch.tensor(2.472)
+        self.b2_ref = torch.tensor(0.00001541)
+        self.Ea_b_2 = torch.tensor(-42800.)
+        self.b3_ref = torch.tensor(0.02805)
+        self.Ea_b3 = torch.tensor(42800.)
+        self.alpha_a_b3 = torch.tensor(0.0066)
+        self.tau_b3 = torch.tensor(5.)
+        self.theta = torch.tensor(0.135)
         # parameters for capacity degradation due to cycles
-        self.c0_ref = 75.64
-        self.Ea_c0_ref = 2224.
-        self.c2_ref = 0.0039193
-        self.Ea_c2 = -48260.
-        self.s = 0.0
-        self.beta_c2 = 4.54
-        self.cum_dt = 0.0
-        self.b1_dt = 0.0
-        self.b2_dt = 0.0
-        self.b3_dt = 0.0
-        self.c0_dt = 0.0
-        self.c2_dt = 0.0
+        self.c0_ref = torch.tensor(75.64)
+        self.Ea_c0_ref = torch.tensor(2224.)
+        self.c2_ref = torch.tensor(0.0039193)
+        self.Ea_c2 = torch.tensor(-48260.)
+        self.s = torch.tensor(0.0)
+        self.beta_c2 = torch.tensor(4.54)
+        self.cum_dt = torch.tensor(0.0)
+        self.b1_dt = torch.tensor(0.0)
+        self.b2_dt = torch.tensor(0.0)
+        self.b3_dt = torch.tensor(0.0)
+        self.c0_dt = torch.tensor(0.0)
+        self.c2_dt = torch.tensor(0.0)
         # timestep
         self.dt_hr = dt_hr
 
@@ -215,7 +215,7 @@ class NMCLifetimeModel(nn.Module):
         T_battery += 273.15
         if charge_changed:
             self.rainflow(prev_dod)
-        dt_day = 1/24 * self.dt_hr
+        dt_day = 1/24. * self.dt_hr
         new_cum_dt = self.cum_dt + dt_day
 
         if new_cum_dt > 1 + 1e-7:
