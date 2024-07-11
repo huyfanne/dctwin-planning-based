@@ -45,7 +45,7 @@ jobs:
 
   run-cosim:
     runs-on:
-      labels: large
+      labels: large_4c
     steps:
       - name: Check out code
         uses: actions/checkout@v2
