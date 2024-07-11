@@ -78,7 +78,10 @@ class IDFBuilder:
         self.plant_builder.make_plant(self.building.constructions.plant)
 
     def _make_actuators(self) -> None:
-        self.actuator_builder.make_actuators(self.building.constructions.plant)
+        self.actuator_builder.make_actuators(
+            self.building.constructions.plant, 
+            self.building.constructions.zones
+        )
 
     def _make_schedule(self) -> None:
         pass
