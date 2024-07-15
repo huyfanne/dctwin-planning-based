@@ -314,8 +314,7 @@ class CFDManager:
 
         return boundary_conditions
 
-    @staticmethod
-    def _scale_server_flow_rate(
+    def _scale_server_flow_rate(self,
             boundary_conditions: Dict, acu2server_flow_ratio: float = 0.8, expert_mode: bool = False
     ) -> Dict:
         """
@@ -343,6 +342,11 @@ class CFDManager:
             boundary_conditions["server_volume_flow_rates"][server_id] = (
                     volume_flow_rate * scale_factor
             )
+
+        for rack_id, rack in self.room.constructions.racks.items():
+            for server_id, server in rack.constructions.servers.items():
+                if server.cooling.fan_type =="Variable":
+                    server.cooling.volume_flow_rate_ratio *= scale_factor
 
         sum_acu_volume_flow_rate_after = sum(
             boundary_conditions["supply_air_volume_flow_rates"].values()
@@ -519,7 +523,6 @@ class CFDManager:
                 expert_mode=expert_mode
             )
             self.update_boundary_conditions(**boundary_conditions)
-            boundary_conditions = self.format_boundary_conditions
         
         if self.pod_backend is not None and not self.run_cfd:
             # use reduced-order CFD simulation if POD backend is provided
