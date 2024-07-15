@@ -91,36 +91,36 @@ class AirWaterCoolingComposite(nn.Module):
             "total dc power": [],
         }
         for zone_name in self.device_key_mapping["zones"].keys():
-            self.simulation_results["zones"][zone_name] = {
+            self.simulation_results["zones"][zone_name.lower()] = {
                 "zone air temperature": [],
                 "zone ite inlet temperature": [],
             }
         for acu_name in self.device_key_mapping["acus"].keys():
-            self.simulation_results["acus"][acu_name] = {
+            self.simulation_results["acus"][acu_name.lower()] = {
                 "fan": {
                     "air mass flow rate": [],
                     "power": []
                 }
             }
         for pump_name in self.device_key_mapping["chilled water pumps"].keys():
-            self.simulation_results["chilled water pumps"][pump_name] = {
+            self.simulation_results["chilled water pumps"][pump_name.lower()] = {
                 "mass flow rate": [],
                 "power": []
             }
         for chiller_name in self.device_key_mapping["chillers"].keys():
-            self.simulation_results["chillers"][chiller_name] = {
+            self.simulation_results["chillers"][chiller_name.lower()] = {
                 "cooling load": [],
                 "chilled water supply temperature": [],
                 "condenser water supply temperature": [],
                 "power": []
             }
         for pump_name in self.device_key_mapping["condenser water pumps"].keys():
-            self.simulation_results["condenser water pumps"][pump_name] = {
+            self.simulation_results["condenser water pumps"][pump_name.lower()] = {
                 "mass flow rate": [],
                 "power": []
             }
         for tower_name in self.device_key_mapping["cooling towers"].keys():
-            self.simulation_results["cooling towers"][tower_name] = {
+            self.simulation_results["cooling towers"][tower_name.lower()] = {
                 "return water temperature": [],
                 "water mass flow rate": [],
                 "supply water temperature": [],
@@ -172,52 +172,52 @@ class AirWaterCoolingComposite(nn.Module):
         summary: Batch
     ):
         for zone_name in self.device_key_mapping["zones"].keys():
-            self.simulation_results["zones"][zone_name]["zone air temperature"].append(
-                air_loop_simulation_results.zone_air_temperatures[zone_name].item()
+            self.simulation_results["zones"][zone_name.lower()]["zone air temperature"].append(
+                air_loop_simulation_results.zone_air_temperatures[zone_name.lower()].item()
             )
-            self.simulation_results["zones"][zone_name]["zone ite inlet temperature"].append(
-                air_loop_simulation_results.zone_ite_inlet_temperatures[zone_name].item()
+            self.simulation_results["zones"][zone_name.lower()]["zone ite inlet temperature"].append(
+                air_loop_simulation_results.zone_ite_inlet_temperatures[zone_name.lower()].item()
             )
         for acu_name in self.device_key_mapping["acus"].keys():
-            self.simulation_results["acus"][acu_name]["fan"]["air mass flow rate"].append(
+            self.simulation_results["acus"][acu_name.lower()]["fan"]["air mass flow rate"].append(
                 air_loop_simulation_results.acu_property.air_mass_flow_rates[acu_name.lower()].item()
             )
-            self.simulation_results["acus"][acu_name]["fan"]["power"].append(
+            self.simulation_results["acus"][acu_name.lower()]["fan"]["power"].append(
                 air_loop_simulation_results.acu_property.fan_powers[acu_name.lower()].item()
             )
         for pump_name in self.device_key_mapping["chilled water pumps"].keys():
-            self.simulation_results["chilled water pumps"][pump_name]["mass flow rate"].append(
-                chw_loop_simulation_results.chilled_water_pump_property[pump_name].mass_flow_rate.item()
+            self.simulation_results["chilled water pumps"][pump_name.lower()]["mass flow rate"].append(
+                chw_loop_simulation_results.chilled_water_pump_property[pump_name.lower()].mass_flow_rate.item()
             )
-            self.simulation_results["chilled water pumps"][pump_name]["power"].append(
-                chw_loop_simulation_results.chilled_water_pump_property[pump_name].power.item()
+            self.simulation_results["chilled water pumps"][pump_name.lower()]["power"].append(
+                chw_loop_simulation_results.chilled_water_pump_property[pump_name.lower()].power.item()
             )
         for chiller_name in self.device_key_mapping["chillers"].keys():
-            self.simulation_results["chillers"][chiller_name]["cooling load"].append(
-                chw_loop_simulation_results.chiller_property[chiller_name].cooling_load.item()
+            self.simulation_results["chillers"][chiller_name.lower()]["cooling load"].append(
+                chw_loop_simulation_results.chiller_property[chiller_name.lower()].cooling_load.item()
             )
-            self.simulation_results["chillers"][chiller_name]["chilled water supply temperature"].append(
-                chw_loop_simulation_results.chiller_property[chiller_name].chilled_water_temperature.item()
+            self.simulation_results["chillers"][chiller_name.lower()]["chilled water supply temperature"].append(
+                chw_loop_simulation_results.chiller_property[chiller_name.lower()].chilled_water_temperature.item()
             )
-            self.simulation_results["chillers"][chiller_name]["condenser water supply temperature"].append(
-                chw_loop_simulation_results.chiller_property[chiller_name].condenser_water_temperature.item()
+            self.simulation_results["chillers"][chiller_name.lower()]["condenser water supply temperature"].append(
+                chw_loop_simulation_results.chiller_property[chiller_name.lower()].condenser_water_temperature.item()
             )
-            self.simulation_results["chillers"][chiller_name]["power"].append(
-                chw_loop_simulation_results.chiller_property[chiller_name].power.item()
+            self.simulation_results["chillers"][chiller_name.lower()]["power"].append(
+                chw_loop_simulation_results.chiller_property[chiller_name.lower()].power.item()
             )
         for pump_name in self.device_key_mapping["condenser water pumps"].keys():
-            self.simulation_results["condenser water pumps"][pump_name]["mass flow rate"].append(
-                cw_loop_simulation_results.condenser_water_pump_property[pump_name].mass_flow_rate.item()
+            self.simulation_results["condenser water pumps"][pump_name.lower()]["mass flow rate"].append(
+                cw_loop_simulation_results.condenser_water_pump_property[pump_name.lower()].mass_flow_rate.item()
             )
-            self.simulation_results["condenser water pumps"][pump_name]["power"].append(
-                cw_loop_simulation_results.condenser_water_pump_property[pump_name].power.item()
+            self.simulation_results["condenser water pumps"][pump_name.lower()]["power"].append(
+                cw_loop_simulation_results.condenser_water_pump_property[pump_name.lower()].power.item()
             )
         for tower_name in self.device_key_mapping["cooling towers"].keys():
-            self.simulation_results["cooling towers"][tower_name]["cooling load"].append(
-                cw_loop_simulation_results.cooling_tower_property[tower_name].cooling_load.item()
+            self.simulation_results["cooling towers"][tower_name.lower()]["cooling load"].append(
+                cw_loop_simulation_results.cooling_tower_property[tower_name.lower()].cooling_load.item()
             )
-            self.simulation_results["cooling towers"][tower_name]["power"].append(
-                cw_loop_simulation_results.cooling_tower_property[tower_name].power.item()
+            self.simulation_results["cooling towers"][tower_name.lower()]["power"].append(
+                cw_loop_simulation_results.cooling_tower_property[tower_name.lower()].power.item()
             )
         # fill in summary information
         self.simulation_results["total it power"].append(summary.ite_power.item())

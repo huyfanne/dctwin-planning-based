@@ -40,7 +40,7 @@ class HeatLoadManager(nn.Module):
     ):
         ite_heat_load = 0.0
         for ite_name, cpu_load_schedule in zone_cpu_load_schedules.items():
-            ite_heat_load += self.models["ites"][ite_name](
+            ite_heat_load += self.models["ites"][ite_name.lower()](
                 cpu_load_schedule,
                 None
             )

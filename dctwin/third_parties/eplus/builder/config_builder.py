@@ -135,6 +135,8 @@ class ConfigBuilder:
         end_month: int = 9,
         end_day_of_month: int = 1,
         number_of_timesteps_per_hour: int = 4,
+        use_unnormed_obs: bool = True,
+        use_unnormed_act: bool = True,
         network: str = "host",
         host: str = "localhost",
         use_unnormed_act: bool = False,
@@ -144,6 +146,8 @@ class ConfigBuilder:
         self.model.eplus_env_config.weather_file = str(weather_file)
         self.model.eplus_env_config.network = network
         self.model.eplus_env_config.host = host
+        self.model.eplus_env_config.use_unnormed_obs = use_unnormed_obs
+        self.model.eplus_env_config.use_unnormed_act = use_unnormed_act
         self.model.eplus_env_config.simulation_time_config.begin_month = begin_month
         self.model.eplus_env_config.simulation_time_config.begin_day_of_month = (
             begin_day_of_month
