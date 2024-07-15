@@ -11,8 +11,6 @@ from dctwin.models.cooling.loops.cw_loop import CWLoopManager
 from dctwin.data import Batch
 from dctwin.models.heat_gains import HeatLoadManager
 
-from dctwin.utils.config import dctwin_config as config
-
 from CoolProp.CoolProp import PropsSI
 
 from dclib import Room

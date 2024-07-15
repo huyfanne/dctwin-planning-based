@@ -423,7 +423,7 @@ class CHWLoopManager(nn.Module):
 
         return Batch(acu_property), Batch(chilled_water_pump_property), Batch(chiller_property)
 
-    def collect(self, data: dict):
+    def collect(self, data: Batch):
         """
         Collect the data from outside environment and store them into a buffer for learning purposes
         :return:

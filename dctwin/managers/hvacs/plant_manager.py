@@ -1,15 +1,10 @@
-from typing import Dict, Optional
+from typing import Dict
 
-import numpy as np
 import torch
 import torch.nn as nn
 from dclib.room import Room
 from dclib.building import Plant
-from dclib.cooling.plant.loops import (
-    SecondaryChilledWaterLoops,
-    ChilledWaterLoops,
-    CondenserWaterLoops
-)
+
 from dclib.cooling.plant.facilities import Components
 
 from dctwin.data.batch import Batch
@@ -18,8 +13,7 @@ from dctwin.models.cooling.facilities import (
     ChillerModel,
     PumpModel,
     ThermalStorageTankModel,
-    CoolingTowerModel,
-    PipeModel,
+    CoolingTowerModel
 )
 from dctwin.models.cooling.ds import BranchData
 
@@ -27,7 +21,6 @@ from dctwin.utils.const import water_specific_heat
 
 
 class PlantManager(nn.Module):
-
     """
     PlantManager is used to manage the plant loops of the building. It contains the following attributes:
     :param device_key_mapping: the mapping between the device name and the device key
@@ -38,10 +31,10 @@ class PlantManager(nn.Module):
     """
 
     def __init__(
-        self,
-        device_key_mapping: Dict,
-        zones: Dict[str, Room],
-        plant: Plant,
+            self,
+            device_key_mapping: Dict,
+            zones: Dict[str, Room],
+            plant: Plant,
     ) -> None:
 
         super(PlantManager, self).__init__()
@@ -69,8 +62,8 @@ class PlantManager(nn.Module):
                     self._init_facility_models(branch_components=branch.components)
 
     def _init_facility_models(
-        self,
-        branch_components: Components
+            self,
+            branch_components: Components
     ) -> None:
 
         if branch_components.pipes:
@@ -80,11 +73,11 @@ class PlantManager(nn.Module):
 
         if branch_components.pumps:
             for component_id, component in branch_components.pumps.items():
-                 component.model = PumpModel(
-                     config=component,
-                     key_mapping=self.device_key_mapping
-                 )
-                 self.add_module(component_id, component.model)
+                component.model = PumpModel(
+                    config=component,
+                    key_mapping=self.device_key_mapping
+                )
+                self.add_module(component_id, component.model)
 
         if branch_components.acu:
             for component_id, component in branch_components.acu.items():
@@ -121,17 +114,17 @@ class PlantManager(nn.Module):
                 component.model = HeatExchanger(
                     config=component,
                     key_mapping=self.device_key_mapping,
-                    internal_fluid_name = "water",
-                    external_fluid_name = "air"
+                    internal_fluid_name="water",
+                    external_fluid_name="air"
                 )
 
     def _distribute_heat_load(self, heat_loads: Batch, num_acus: int) -> Dict:
         return {acu_name: heat_loads / num_acus for acu_name in self.chw_loop_models}
 
     def _sim(
-        self,
-        plant_control_inputs: Batch,
-        acu_simulation_results: Batch
+            self,
+            plant_control_inputs: Batch,
+            acu_simulation_results: Batch
     ):
         # cooling coil property
         acu_property = {}
@@ -191,7 +184,7 @@ class PlantManager(nn.Module):
                         return_temp = chw_sp
                     else:
                         return_temp = chw_sp + heat_transfer_rate / (
-                            water_mass_flow_rate * water_specific_heat
+                                water_mass_flow_rate * water_specific_heat
                         )
                     branch_fluid_properties["demand"][demand_branch_name] = BranchData(
                         inlet_temperature=chw_sp,
@@ -204,7 +197,8 @@ class PlantManager(nn.Module):
                     num_middle_branches += 1
                     # the cooling load that should be met by the chiller plant is equal to IT power and CRAH power
                     total_cooling_load += (
-                        heat_transfer_rate.view(-1) + acu_simulation_results.fan_powers[coil_model.uid.lower()].view(-1)
+                            heat_transfer_rate.view(-1) + acu_simulation_results.fan_powers[
+                        coil_model.uid.lower()].view(-1)
                     )
 
             # calculate average return temperature
@@ -248,9 +242,9 @@ class PlantManager(nn.Module):
                     if supply_branch_name in available_supply_branches:
                         branch_fluid_properties["supply"][supply_branch_name] = BranchData(
                             inlet_temperature=average_return_temperature,
-                            inlet_mass_flow_rate=total_demand_loop_m/num_available_chillers,
+                            inlet_mass_flow_rate=total_demand_loop_m / num_available_chillers,
                             outlet_temperature=chw_sp,
-                            outlet_mass_flow_rate=total_demand_loop_m/num_available_chillers,
+                            outlet_mass_flow_rate=total_demand_loop_m / num_available_chillers,
                         )
                     else:
                         branch_fluid_properties["supply"][supply_branch_name] = BranchData(
@@ -282,8 +276,8 @@ class PlantManager(nn.Module):
                 if "pump" in supply_branch.keys():
                     pump_model = supply_branch["pump"]
                     pump_power = pump_model(
-                            branch_fluid_properties["supply"][supply_branch_name].inlet_M
-                        )
+                        branch_fluid_properties["supply"][supply_branch_name].inlet_M
+                    )
                     chilled_water_pump_property[pump_model.uid] = Batch(
                         mass_flow_rate=branch_fluid_properties["supply"][supply_branch_name].inlet_M,
                         power=pump_power,
@@ -299,7 +293,8 @@ class PlantManager(nn.Module):
                         cooling_load=chiller_cooling_loads[chiller_model.uid],
                         power=chiller_power,
                         chilled_water_temperature=chw_sp,
-                        condenser_water_temperature=plant_control_inputs[f"{chiller_model.uid} condenser water loop"]["supply_sp"],
+                        condenser_water_temperature=plant_control_inputs[f"{chiller_model.uid} condenser water loop"][
+                            "supply_sp"],
                     )
 
         return Batch(acu_property), Batch(chilled_water_pump_property), Batch(chiller_property)

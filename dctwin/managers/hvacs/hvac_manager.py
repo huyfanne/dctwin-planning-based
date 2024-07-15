@@ -1,34 +1,24 @@
-from datetime import datetime, timedelta
-from typing import Callable, List, Any, Union, Tuple, Dict, Optional
+from abc import ABC
+from datetime import datetime
+from typing import Any, Tuple, Dict, List
 
-import gym
-from dclib.cooling.plant.loops import Branch, CondenserWaterLoops, SecondaryChilledWaterLoops, ChilledWaterLoops
-from gym.utils import seeding
-import numpy as np
-from loguru import logger
-from torch import nn
-
-from dctwin.utils import (
-    DTEngineConfig,
-    ScalarDataItemConfig,
-    config as base_env,
-)
-
-from dctwin.managers.ds import (
-    ScalarDataItem,
-    Action,
-    Observation,
-    ActionControlVariable,
-)
-
-from dctwin.data.batch import Batch
-from dctwin.managers.base import BaseManager
-from dclib import Building
-from dclib.cooling.plant.facilities import Chiller, CoolingTower, Pump
 import torch
+import numpy as np
+
+from dclib import Building
+from dclib.cooling.plant.loops import Branch, CondenserWaterLoops, SecondaryChilledWaterLoops, ChilledWaterLoops
+
+from dctwin.data import Batch
+from dctwin.models.heat_gains import HeatLoadManager
+from dctwin.utils import DTEngineConfig
+from dctwin.managers.base import BaseManager
+
+from .airloop_manager import AirLoopManager
+from .plant_manager import PlantManager
+from ..ds import ActionControlVariable
 
 
-class HVACManager(BaseManager):
+class HVACManager(BaseManager, ABC):
     """ Base class for all data center environments.
     """
 
@@ -36,17 +26,32 @@ class HVACManager(BaseManager):
         self,
         config: DTEngineConfig,
         building: Building,
+        device_key_mapping: Dict = None
     ) -> None:
-        super().__init__(config, building)
+        super().__init__(
+            config,
+            building,
+            device_key_mapping
+        )
+
+        self.heat_load_manager = HeatLoadManager(
+            zones=self._building.constructions.zones,
+            device_key_mapping=self._device_key_mapping
+        )
+        self.air_loop_manager = AirLoopManager(
+            zones=self._building.constructions.zones,
+            device_key_mapping=self._device_key_mapping
+        )
+        self.plant_manager = PlantManager(
+            device_key_mapping=self._device_key_mapping,
+            zones=self._building.constructions.zones,
+            plant=self._building.constructions.plant,
+        )
+
         # set up basics
         self._config = config
         self._building = building
 
-        # set up inputs
-        # Set up actions
-        self._set_actions()
-        # set up observations
-        self._set_observations()
         # reset observation and action data
         self._reset_data()
 
@@ -210,7 +215,7 @@ class HVACManager(BaseManager):
             )
         )
 
-    def format_actions(self, input_data: np.ndarray | torch.Tensor, **kwargs) -> Batch:
+    def format_actions(self, input_data: np.ndarray | torch.Tensor | List, **kwargs) -> Batch:
         _, acts = self._reset_zone_data({}, {})
         _, acts = self._reset_plant_data({}, acts)
         data = Batch(acts=acts)
@@ -298,7 +303,11 @@ class HVACManager(BaseManager):
 
         return data.acts
 
-    def format_observations(self, obs: np.ndarray | torch.Tensor, **kwargs) -> Batch:
+    def format_observations(
+        self,
+        obs: np.ndarray | torch.Tensor | Batch,
+        **kwargs
+    ) -> Batch:
         return obs
 
     def run(
@@ -306,32 +315,25 @@ class HVACManager(BaseManager):
         acts: Batch,
         obs:  Batch = None,
         **kwargs,
-    ) -> Batch:
+    ):
         """
         Run the simulation with the
         :param: states (Batch) current system states,
         :param: actions (Batch) given control signals,
         :return: next system states
         """
-
         self.data.update(acts=acts)
-
-        # initialize the only if obs is given otherwise use the default sizing values
-        if obs is not None:
-            self.data.update(obs=obs)
-
-        it_power = 10 * self.data.acts["data hall 1a ite-1"].cpu_load_utilization * 500 + torch.pow(self.data.acts["data hall 1a ite-1"].cpu_load_utilization, 2) * 200
-        chiller_1 = 1 * self.data.acts["chilled water loop"].supply_temperature_sp * 0.5 + torch.pow(self.data.acts["chilled water loop"].supply_temperature_sp, 2) * 2
-        chiller_2 = 1 * self.data.acts["chilled water loop"].supply_temperature_sp * 0.5 + torch.pow(self.data.acts["chilled water loop"].supply_temperature_sp, 2) * 2
-
-        fan_power_1 = 1 * self.data.acts["data hall 1a acu-1"].supply_mass_flow_rate_sp * 0.5 + torch.pow(self.data.acts["data hall 1a acu-1"].supply_mass_flow_rate_sp, 2) * 2
-        fan_power_2 = 1 * self.data.acts["data hall 1a acu-2"].supply_mass_flow_rate_sp * 0.5 + torch.pow(self.data.acts["data hall 1a acu-2"].supply_mass_flow_rate_sp, 2) * 2
-
-        pump_power_1 = - 1 * self.data.acts["data hall 1a acu-1"].supply_temperature_sp * 0.5 + torch.pow(self.data.acts["data hall 1a acu-1"].supply_temperature_sp, 2) * 2
-        pump_power_2 = - 1 * self.data.acts["data hall 1a acu-2"].supply_temperature_sp * 0.5 + torch.pow(self.data.acts["data hall 1a acu-2"].supply_temperature_sp, 2) * 2
-
-        pump_power_3 = - 1 * self.data.acts["secondary chilled water loop"].supply_temperature_sp * 0.5 + torch.pow(self.data.acts["secondary chilled water loop"].supply_temperature_sp, 2) * 2
-        power = (chiller_1 + chiller_2) * it_power * 0.2 + fan_power_1 + fan_power_2 + pump_power_1 + pump_power_2 + pump_power_3
-
-        self.data.obs_next.dc.facility_power = power
-        return self.data
+        self.heat_load_manager.forward(
+            states=self.data.obs.zones,
+            actions=self.data.acts
+        )
+        self.air_loop_manager.forward(
+            states=self.data.obs.zones,
+            states_next=self.data.obs_next.zones,
+            actions=self.data.acts
+        )
+        self.plant_manager.forward(
+            states=self.data.obs.plants,
+            actions=self.data.acts.plants,
+            inputs=self.data.obs.weather
+        )

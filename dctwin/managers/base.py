@@ -1,30 +1,22 @@
 from abc import abstractmethod
 from datetime import datetime, timedelta
-from typing import Callable, List, Any, Union, Tuple, Dict, Optional
+from typing import Dict
 
-import gym
-from dclib.cooling.plant.loops import Branch, CondenserWaterLoops, SecondaryChilledWaterLoops, ChilledWaterLoops
-from gym.utils import seeding
-import numpy as np
 from loguru import logger
 from torch import nn
 
 from dctwin.utils import (
     DTEngineConfig,
-    ScalarDataItemConfig,
     config as base_env,
 )
 
 from dctwin.managers.ds import (
-    ScalarDataItem,
     Action,
-    Observation,
-    ActionControlVariable,
+    Observation
 )
 
 from dctwin.data.batch import Batch
 from dclib import Building
-from dclib.cooling.plant.facilities import Chiller, CoolingTower, Pump
 import torch
 
 
@@ -36,11 +28,13 @@ class BaseManager(nn.Module):
         self,
         config: DTEngineConfig,
         building: Building,
+        device_key_mapping: Dict = None,
     ) -> None:
         super().__init__()
         # set up basics
         self._config = config
         self._building = building
+        self._device_key_mapping = device_key_mapping
 
         # set up inputs
         # Set up actions
@@ -88,10 +82,7 @@ class BaseManager(nn.Module):
                 year=year, month=begin_month, day=begin_day_of_month
             )
             self._timestamp_interval = timedelta(
-                minutes=int(
-                    60
-                    / self._config.simulation_time_config.number_of_timesteps_per_hour
-                )
+                minutes=int(60 / self._config.simulation_time_config.number_of_timesteps_per_hour)
             )
             self._timestamp = self._starting_timestamp
             base_env.eplus_cfd.timestamp = self._timestamp
@@ -108,7 +99,6 @@ class BaseManager(nn.Module):
     def format_data(self, **kwargs) -> Batch:
         pass
 
-
     @abstractmethod
-    def run(self, **kwargs) -> Batch:
+    def run(self, **kwargs):
         pass

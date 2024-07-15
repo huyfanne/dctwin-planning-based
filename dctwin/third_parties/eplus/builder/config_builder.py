@@ -138,9 +138,7 @@ class ConfigBuilder:
         use_unnormed_obs: bool = True,
         use_unnormed_act: bool = True,
         network: str = "host",
-        host: str = "localhost",
-        use_unnormed_act: bool = False,
-        use_unnormed_obs: bool = False,
+        host: str = "localhost"
     ) -> None:
         self.model.eplus_env_config.model_file = str(idf_file)
         self.model.eplus_env_config.weather_file = str(weather_file)
@@ -1702,7 +1700,6 @@ class ConfigBuilder:
 
     def get_model(self) -> DTEngineConfig:
         return self.model
-
 
 
 class CDUConfigBuilder:
