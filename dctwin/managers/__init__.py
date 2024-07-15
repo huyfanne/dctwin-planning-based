@@ -2,11 +2,13 @@
 The managers integrate multiple components to provide a high-level interface for the user.
 """
 
-from .pod_builder import PODBuilder
-from .cfd_manager import CFDManager
+from .hvacs.pod_builder import PODBuilder
+from .hvacs.cfd_manager import CFDManager
+from .hvacs.hvac_manager import HVACManager
 
 
 __all__ = [
     "PODBuilder",
-    "CFDManager"
+    "CFDManager",
+    "HVACManager"
 ]

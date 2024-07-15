@@ -262,6 +262,63 @@ message EplusCDUEnvConfig {
     optional EnvParams env_params = 4; // co-simulation env config
 }
 
+
+message DCTwinActionConfig {
+  enum ControlVariable {
+    Fan_Air_Mass_Flow_Rate = 0;
+    Temperature_Setpoint = 1;
+    Pump_Mass_Flow_Rate = 2;
+    Schedule_Value = 3;
+    On_Off_Supervisory = 4;
+    Availability_Status = 5;
+    Humidity_Ratio_Setpoint = 6;
+    CPU_Utilization = 7;
+  }
+  optional bool requires_grad = 1 [default = true];
+  required ControlVariable control_variable = 2;
+  required string device_unique_key = 3;
+  required string variable_name = 4;
+  oneof value {
+    double default_normed_value = 5;
+    double default_unnormed_value = 6;
+  }
+  optional NormalizeConfig normalize_config = 7;
+}
+
+message DCTwinObservationConfig {
+  enum ObservationType {
+    Temperature = 0;
+    Mass_Flow_Rate = 1;
+    Humidity_Ratio = 2;
+    Power = 3;
+    Load = 4;
+    On_Off_Status = 5;
+    Availability_Status = 6;
+  }
+  enum ObservationNode {
+    inlet = 0;
+    outlet = 1;
+    self = 2;
+  }
+  required string device_unique_key = 1;
+  required ObservationNode observation_node = 2;
+  required ObservationType observation_type = 3;
+  required string variable_name = 4;
+  oneof value {
+    double default_normed_value = 5;
+    double default_unnormed_value = 6;
+  }
+  optional NormalizeConfig normalize_config = 7;
+}
+
+message DCTwinConfig {
+  optional SimulationTimeConfig simulation_time_config = 1;
+  repeated DCTwinActionConfig actions = 4;
+  optional bool use_unnormed_act = 5 [default = true];
+  repeated DCTwinObservationConfig observations = 6;
+  optional bool use_unnormed_obs = 7 [default = true];
+}
+
 // main engine configuration
 message DTEngineConfig {
   optional LoggingConfig logging_config = 1;
@@ -272,5 +329,5 @@ message DTEngineConfig {
     EplusCDUEnvConfig eplus_cdu_env_config = 5;
   }
   optional CFDEnvConfig cfd_config = 6;
-
+  optional DCTwinConfig dctwin_config = 7;
 }

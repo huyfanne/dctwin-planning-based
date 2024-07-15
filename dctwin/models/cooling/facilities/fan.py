@@ -70,7 +70,7 @@ class FanModel(nn.Module):
 
     def forward(self, mass_flow_rate: torch.Tensor):
         flow_fraction = mass_flow_rate / (self.design_volume_flow_rate * rho_air)
-        assert torch.all(flow_fraction <= 1), "The air mass flow rate must be positive."
+        # assert torch.all(flow_fraction <= 1), "The air mass flow rate must be positive."
         return self.design_power * self.power_curve(flow_fraction)
 
     def learn(self):

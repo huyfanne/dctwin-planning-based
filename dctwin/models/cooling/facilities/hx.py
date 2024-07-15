@@ -31,8 +31,8 @@ class HeatExchanger(nn.Module):
         thermal_conductivity: float = 400,
         tol: float = 0.01,
         max_root_finding_iter: int = 100,
-        max_learning_iter: int = 2000,
-        min_loss: float = 0.05
+        max_learning_iter: int = 500,
+        min_loss: float = 0.002
     ):
         """
         A PIML-based model for cooling coil inside an ACU. It leverages the geometry information of the cooling coil as
@@ -98,8 +98,8 @@ class HeatExchanger(nn.Module):
         self.extern_fluid_name = external_fluid_name
 
         self.key_mapping = key_mapping
-        self.buffer = Buffer(size=100)
-        self.opt = torch.optim.Adam(self.parameters(), lr=1.0)
+        self.buffer = Buffer(size=1000)
+        self.opt = torch.optim.Adam(self.parameters(), lr=1e-1)
         self.learnable = learnable
         self.max_learning_iter = max_learning_iter
         self.tol = tol
@@ -193,7 +193,7 @@ class HeatExchanger(nn.Module):
 
     def learn(self):
         if self.learnable:
-            batch, _ = self.buffer.sample(batch_size=0)  # sample all data from the buffer
+            batch, _ = self.buffer.sample(batch_size=256)  # sample all data from the buffer
             mask = batch.cooling_coil_air_mass_flow_rate > 0
             batch = batch[mask]
             if len(batch) > 10:
@@ -260,7 +260,7 @@ class HeatExchanger(nn.Module):
         h_i = nu_i * k_i / self.tube_diameter  # internal fluid heat transfer coefficient
 
         dP_i = fr * (self.tube_length / self.tube_diameter) * (rho_i * u_i ** 2) / 2  # internal fluid pressure drop
-        # pump_power_i = (self.num_row * self.num_transverse) * dP_i * (m_water / rho_i)  # internal fluid pumping power
+        pump_power_i = (self.num_row * self.num_transverse) * dP_i * (m_water / rho_i)  # internal fluid pumping power
 
         # tube outside
         u_o = m_air / rho_o / (self.tube_length * self.H_he)  # external fluid velocity
@@ -275,10 +275,10 @@ class HeatExchanger(nn.Module):
 
         f_o = 0.2  # external fluid friction factor
         dP_o = self.num_row * (rho_o * u_omax ** 2 / 2) * f_o  # external fluid pressure drop
-        # pump_power_o = dP_o * (m_air / rho_o)  # external fluid pumping power
+        pump_power_o = dP_o * (m_air / rho_o)  # external fluid pumping power
 
         # pumping power, U value and NTU value
-        # pump_power = pump_power_i + pump_power_o  # W, pumping power
+        pump_power = pump_power_i + pump_power_o  # W, pumping power
         U = 1 / (
             1 / h_i + 1 / h_o + torch.log((self.tube_thickness + self.tube_diameter) / self.tube_diameter) *
             self.tube_diameter / self.tube_kappa
@@ -290,10 +290,12 @@ class HeatExchanger(nn.Module):
         C_min = torch.minimum(C_i, C_o)  # W/K, minimum heat capacity
         eff, NTU = NTUHE(C_i, C_o, U, A)  # efficiency and number transfer unit of heat exchanger
         Q_max = C_min * (T_air_in - T_water_in)  # W, maximum heat transfer
-        heat_transfer_rate = eff * Q_max # - pump_power  # W, heat transfer
+        heat_transfer_rate = eff * Q_max - pump_power  # W, heat transfer
         T_air_out = T_air_in - heat_transfer_rate / C_o  # degree C, external fluid outlet temperature
-        T_water_out = T_water_in + (heat_transfer_rate)/C_i #+ pump_power) / C_i
-        return T_water_out, T_air_out, NTU, eff, heat_transfer_rate, 0.0
+        T_water_out = T_water_in + (heat_transfer_rate + pump_power) / C_i
+        with torch.no_grad():
+            sensible_cooling_load = m_air * Cp_o * (T_air_in - T_air_out)
+        return T_water_out, T_air_out, NTU, eff, sensible_cooling_load, 0.0
 
     def solve(
         self,
@@ -360,5 +362,5 @@ class HeatExchanger(nn.Module):
         m.register_hook(
             lambda grad: grad / J
         )  # implicit gradient calculation
-        m.backward(retain_graph=True)
+        # m.backward(retain_graph=True)
         return m, Q, T_air_out

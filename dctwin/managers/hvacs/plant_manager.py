@@ -4,11 +4,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 from dclib.room import Room
+from dclib.building import Plant
 from dclib.cooling.plant.loops import (
     SecondaryChilledWaterLoops,
     ChilledWaterLoops,
     CondenserWaterLoops
 )
+from dclib.cooling.plant.facilities import Components
 
 from dctwin.data.batch import Batch
 from dctwin.models.cooling.facilities import (
@@ -16,18 +18,20 @@ from dctwin.models.cooling.facilities import (
     ChillerModel,
     PumpModel,
     ThermalStorageTankModel,
+    CoolingTowerModel,
+    PipeModel,
 )
 from dctwin.models.cooling.ds import BranchData
 
 from dctwin.utils.const import water_specific_heat
 
 
-class CHWLoopManager(nn.Module):
+class PlantManager(nn.Module):
 
     """
-    CHWLoopManager is used to manage the chilled water loops of the building. It contains the following attributes:
+    PlantManager is used to manage the plant loops of the building. It contains the following attributes:
     :param device_key_mapping: the mapping between the device name and the device key
-    :param zones: the zones of the building
+    :param zones: the zones of the building that are connected to the plant loops
     :param chw_loops: the chilled water loops of the building
     :param cw_loops: the condenser water loops of the building
     :param sec_chw_loops: the secondary chilled water loops of the building if any.This is optional.
@@ -37,212 +41,89 @@ class CHWLoopManager(nn.Module):
         self,
         device_key_mapping: Dict,
         zones: Dict[str, Room],
-        chw_loops: Dict[str, ChilledWaterLoops],
-        cw_loops: Optional[Dict[str, CondenserWaterLoops]] = None,
-        sec_chw_loops: Optional[Dict[str, SecondaryChilledWaterLoops]] = None,
-    ):
-        super(CHWLoopManager, self).__init__()
+        plant: Plant,
+    ) -> None:
+
+        super(PlantManager, self).__init__()
+
         self.zones = zones
-        self.chw_loops = chw_loops
-        self.sec_chw_loops = sec_chw_loops
-        self.cw_loops = cw_loops
+        self.plant = plant
         self.device_key_mapping = device_key_mapping
-        self.chw_loop_models, self.sec_loop_models = self._init_models()
 
-    def _init_models(self):
-        """
-        Initialize the learnable models for the chilled water loops
-        """
-        chw_loop_models = {}
-        sec_chw_loop_models = {}
+        # Initialize the models for the plant loops
+        self._init_models()
 
-        sec_demand_branch_models = {}
-        sec_supply_branch_models = {}
-        chw_demand_branch_models = {}
-        chw_supply_branch_models = {}
+    def _init_models(self) -> None:
 
-        # get the model of each plant equipments of the building
-        if self.sec_chw_loops is not None:
-            for sec_loop_name, sec_loop in self.sec_chw_loops.items():
-                sec_chw_loop_models[sec_loop_name] = {
-                    "supply_branches": {},
-                    "demand_branches": {},
-                }
+        for loops in [
+            self.plant.secondary_chilled_water_loops,
+            self.plant.chilled_water_loops,
+            self.plant.condenser_water_loops,
+        ]:
+            for loop_id, loop in loops.items():
+                # half-loop demand side components
+                for branch_id, branch in loop.demand_branches.items():
+                    self._init_facility_models(branch_components=branch.components)
+                # half-loop supply side components
+                for branch_id, branch in loop.supply_branches.items():
+                    self._init_facility_models(branch_components=branch.components)
 
-                for demand_branch_name, demand_branch in sec_loop.demand_branches.items():
-                    chw_loop_models[sec_loop_name]["demand_branches"][demand_branch_name] = {
-                        "side": demand_branch.side,
-                    }
-                    if demand_branch.components.pumps is not None:
-                        for pump_name, pump in demand_branch.components.pumps.items():
-                            chw_loop_models[sec_loop_name]["demand_branches"][demand_branch_name]["pump"] = PumpModel(
-                                config=pump,
-                                key_mapping=self.device_key_mapping["chilled water pumps"][pump_name]
-                            )
-                            self.add_module(
-                                pump_name,
-                                chw_loop_models[sec_loop_name]["demand_branches"][demand_branch_name]["pump"]
-                            )
-                    if demand_branch.components.acu is not None:
-                        for acu_name, acu in demand_branch.components.acu.items():
-                            chw_loop_models[sec_loop_name]["demand_branches"][demand_branch_name]["coil"] =\
-                                HeatExchanger(
-                                    config=acu,
-                                    key_mapping=self.device_key_mapping["acus"][acu_name]["cooling coil"],
-                                    internal_fluid_name="water",
-                                    external_fluid_name="air"
-                                )
-                            self.add_module(
-                                f"{acu.uid.lower()} cooling coil",
-                                chw_loop_models[sec_loop_name]["demand_branches"][demand_branch_name]["coil"]
-                            )
+    def _init_facility_models(
+        self,
+        branch_components: Components
+    ) -> None:
 
-                for supply_branch_name, supply_branch in sec_loop.supply_branches.items():
-                    sec_chw_loop_models[sec_loop_name]["supply_branches"][supply_branch_name] = {
-                        "side": supply_branch.side,
-                    }
-                    if supply_branch.components.tanks is not None:
-                        for tank_name, tank in supply_branch.components.tanks.items():
-                            sec_chw_loop_models[sec_loop_name]["supply_branches"][supply_branch_name]["tank"] = ThermalStorageTankModel(
-                                config=tank,
-                                key_mapping=self.device_key_mapping["tanks"][tank_name]
-                            )
-                            sec_supply_branch_models[tank_name] = sec_chw_loop_models[sec_loop_name]["supply_branches"][supply_branch_name]["tank"]
-                            self.add_module(
-                                tank_name,
-                                sec_chw_loop_models[sec_loop_name]["supply_branches"][supply_branch_name]["tank"]
-                            )
-                    if supply_branch.components.pumps is not None:
-                        for pump_name, pump in supply_branch.components.pumps.items():
-                            sec_chw_loop_models[sec_loop_name]["supply_branches"][supply_branch_name]["pump"] = PumpModel(
-                                config=pump,
-                                key_mapping=self.device_key_mapping["chilled water pumps"][pump_name],
-                                learnable=True
-                            )
-                            sec_supply_branch_models[pump_name] = sec_chw_loop_models[sec_loop_name]["supply_branches"][supply_branch_name]["pump"]
-                            self.add_module(
-                                pump_name,
-                                sec_chw_loop_models[sec_loop_name]["supply_branches"][supply_branch_name]["pump"]
-                            )
-                    if supply_branch.components.heat_exchangers is not None:
-                        for heat_exchanger_name, heat_exchanger in supply_branch.components.heat_exchangers.items():
-                            sec_chw_loop_models[sec_loop_name]["supply_branches"][supply_branch_name]["heat_exchanger"] = \
-                                HeatExchanger(
-                                    config=heat_exchanger,
-                                    key_mapping=self.device_key_mapping["heat exchangers"][heat_exchanger_name],
-                                    internal_fluid_name="water",
-                                    external_fluid_name="water"
-                                )
-                            sec_supply_branch_models[heat_exchanger_name] = sec_chw_loop_models[sec_loop_name]["supply_branches"][supply_branch_name]["heat_exchanger"]
-                            self.add_module(
-                                f"{heat_exchanger.uid} heat exchanger",
-                                sec_chw_loop_models[sec_loop_name]["supply_branches"][supply_branch_name]["heat_exchanger"]
-                            )
-        else:
-            sec_chw_loop_models = None
+        if branch_components.pipes:
+            for component_id, component in branch_components.pipes.items():
+                component.model = None
+                self.add_module(component_id, component.model)
 
-        for chw_loop_name, chw_loop in self.chw_loops.items():
-            # get the model of the plant
-            chw_loop_models[chw_loop_name] = {
-                "supply_branches": {},
-                "demand_branches": {},
-            }
-            for demand_branch_name, demand_branch in chw_loop.demand_branches.items():
-                chw_loop_models[chw_loop_name]["demand_branches"][demand_branch_name] = {
-                    "side": demand_branch.side,
-                }
+        if branch_components.pumps:
+            for component_id, component in branch_components.pumps.items():
+                 component.model = PumpModel(
+                     config=component,
+                     key_mapping=self.device_key_mapping
+                 )
+                 self.add_module(component_id, component.model)
 
-                if self.sec_chw_loops is not None:
-                    # if there is a secondary loop,
-                    # we inherit the demand-side components from the secondary supply branches
-                    if demand_branch.components.pumps is not None:
-                        for pump_name, pump in demand_branch.components.pumps.items():
-                            chw_loop_models[chw_loop_name]["demand_branches"][demand_branch_name]["pump"] = sec_supply_branch_models[pump_name]
-                    if demand_branch.components.tanks is not None:
-                        for tank_name, tank in demand_branch.components.tanks.items():
-                            chw_loop_models[chw_loop_name]["demand_branches"][demand_branch_name]["tank"] = sec_supply_branch_models[tank_name]
-                    if demand_branch.components.heat_exchangers is not None:
-                        for heat_exchanger_name, heat_exchanger in demand_branch.components.heat_exchangers.items():
-                            chw_loop_models[chw_loop_name]["demand_branches"][demand_branch_name]["heat_exchanger"] = sec_supply_branch_models[heat_exchanger_name]
+        if branch_components.acu:
+            for component_id, component in branch_components.acu.items():
+                component.model = HeatExchanger(
+                    config=component,
+                    key_mapping=self.device_key_mapping,
+                    internal_fluid_name="water",
+                    external_fluid_name="air"
+                )
 
-                else:
-                    # if there is no secondary loop,
-                    # we need to instantiate the new demand-side components
-                    if demand_branch.components.pumps is not None:
-                        for pump_name, pump in demand_branch.components.pumps.items():
-                            chw_loop_models[chw_loop_name]["demand_branches"][demand_branch_name]["pump"] = PumpModel(
-                                config=pump,
-                                key_mapping=self.device_key_mapping["chilled water pumps"][pump_name]
-                            )
-                            self.add_module(
-                                pump_name,
-                                chw_loop_models[chw_loop_name]["demand_branches"][demand_branch_name]["pump"]
-                            )
-                    if demand_branch.components.acu is not None:
-                        for acu_name, acu in demand_branch.components.acu.items():
-                            chw_loop_models[chw_loop_name]["demand_branches"][demand_branch_name]["coil"] =\
-                                HeatExchanger(
-                                    config=acu,
-                                    key_mapping=self.device_key_mapping["acus"][acu_name]["cooling coil"],
-                                    internal_fluid_name="water",
-                                    external_fluid_name="air"
-                                )
-                            self.add_module(
-                                f"{acu.uid.lower()} cooling coil",
-                                chw_loop_models[chw_loop_name]["demand_branches"][demand_branch_name]["coil"]
-                            )
-                    if demand_branch.components.tanks is not None:
-                        for tank_name, tank in demand_branch.components.tanks.items():
-                            chw_loop_models[chw_loop_name]["demand_branches"][demand_branch_name]["tank"] = ThermalStorageTankModel(
-                                config=tank,
-                                key_mapping=self.device_key_mapping["tanks"][tank_name]
-                            )
-                            self.add_module(
-                                tank_name,
-                                chw_loop_models[chw_loop_name]["demand_branches"][demand_branch_name]["tank"]
-                            )
+        if branch_components.chillers:
+            for component_id, component in branch_components.chillers.items():
+                component.model = ChillerModel(
+                    config=component,
+                    key_mapping=self.device_key_mapping
+                )
 
-            for supply_branch_name, supply_branch in chw_loop.supply_branches.items():
-                chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name] = {
-                    "side": supply_branch.side,
-                }
-                if supply_branch.components.heat_exchangers is not None:
-                    for heat_exchanger_name, heat_exchanger in supply_branch.components.heat_exchangers.items():
-                        chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["heat_exchanger"] = \
-                            HeatExchanger(
-                                config=heat_exchanger,
-                                key_mapping=self.device_key_mapping["heat exchangers"][heat_exchanger_name],
-                                internal_fluid_name="water",
-                                external_fluid_name="water"
-                            )
-                        self.add_module(
-                            f"{heat_exchanger.uid} heat exchanger",
-                            chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["heat_exchanger"]
-                        )
-                if supply_branch.components.chillers is not None:
-                    for chiller_name, chiller in supply_branch.components.chillers.items():
-                        chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["chiller"] = ChillerModel(
-                            config=chiller,
-                            key_mapping=self.device_key_mapping["chillers"][chiller_name],
-                            learnable=False
-                        )
-                        self.add_module(
-                            chiller_name,
-                            chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["chiller"]
-                        )
-                if supply_branch.components.pumps is not None:
-                    for pump_name, pump in supply_branch.components.pumps.items():
-                        chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["pump"] = PumpModel(
-                            config=pump,
-                            key_mapping=self.device_key_mapping["chilled water pumps"][pump_name],
-                            learnable=True
-                        )
-                        self.add_module(
-                            pump_name,
-                            chw_loop_models[chw_loop_name]["supply_branches"][supply_branch_name]["pump"]
-                        )
+        if branch_components.tanks:
+            for component_id, component in branch_components.tanks.items():
+                component.model = ThermalStorageTankModel(
+                    config=component,
+                    key_mapping=self.device_key_mapping
+                )
 
-        return chw_loop_models, sec_chw_loop_models
+        if branch_components.cooling_towers:
+            for component_id, component in branch_components.cooling_towers.items():
+                component.model = CoolingTowerModel(
+                    config=component,
+                    key_mapping=self.device_key_mapping
+                )
+
+        if branch_components.heat_exchangers:
+            for component_id, component in branch_components.heat_exchangers.items():
+                component.model = HeatExchanger(
+                    config=component,
+                    key_mapping=self.device_key_mapping,
+                    internal_fluid_name = "water",
+                    external_fluid_name = "air"
+                )
 
     def _distribute_heat_load(self, heat_loads: Batch, num_acus: int) -> Dict:
         return {acu_name: heat_loads / num_acus for acu_name in self.chw_loop_models}
@@ -465,8 +346,10 @@ class CHWLoopManager(nn.Module):
 
     def forward(
         self,
-        plant_control_inputs: Batch,
-        acu_simulation_results: Batch,
+        states: Batch,
+        actions: Batch,
+        inputs: Batch,
+        **kwargs,
     ) -> Batch:
         """
         Simulate the building with the learned models and the given control signals (acts)
