@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Dict, List
 
-import torch
 import torch.nn as nn
 
 from dclib.room import Room
@@ -29,7 +28,7 @@ class AirLoopManager(nn.Module):
         zone_models = {}
         # get the model for each zone equipment of the building
         for zone_name, zone in self.zones.items():
-            zone_models[zone_name.lower()] = {}
+            zone_models[zone_name] = {}
             # get the ACU equipments of the zone
             for acu_name, acu in zone.constructions.acus.items():
                 acu.model = FanModel(
@@ -37,20 +36,10 @@ class AirLoopManager(nn.Module):
                     key_mapping=self.device_key_mapping["acus"][acu_name]["fan"],
                 )
                 self.add_module(acu_name, acu.model)
-                zone_models[zone_name.lower()][acu.uid.lower()] = acu.model
+                zone_models[zone_name][acu.uid] = acu.model
         return zone_models
 
-    def _get_active_acu_ids(self, acu_controls: Batch) -> List:
-        return [
-            acu_name for acu_name, acu_control in acu_controls.items() if acu_control.acu_on_off == 1
-        ]
-
-    def _distribute_heat_load(self, heat_loads: Batch, active_acus: List) -> Dict:
-        return {
-            acu_name: heat_loads / len(active_acus) for acu_name in active_acus
-        }
-
-    def collect(self, data: dict):
+    def collect(self, data: Batch | Dict):
         """
         Collect the data from outside environment and store them into a buffer for learning purposes
         :return:
@@ -82,24 +71,26 @@ class AirLoopManager(nn.Module):
         Simulate the building with the learned models and the given control signals (acts)
         :return:
         """
-        zone_air_temperatures = Batch()
-        zone_ite_inlet_temperatures = Batch()
         for zone_name, zone in self.zones.items():
-            # simulate the load distribution among multiple ACUs in each zone
+            # get the active acu ids
             active_acu_ids = [
                 acu_name for acu_name, acu in zone.constructions.acus.items() if actions[acu_name].on_off_schedule == 1
             ]
-            zone_acu_heat_load = self._distribute_heat_load(states[zone_name].sensible_heat_load, active_acu_ids)
+            # uniform distribution of the heat load among active ACUs
+            zone_acu_heat_load = {
+                active_acu_name: states[zone_name].sensible_heat_load / len(active_acu_ids)
+                for active_acu_name in active_acu_ids
+            }
             weighted_return_temperature = 0
             total_acu_air_mass_flow_rate = 0
             zone_avg_ite_inlet_temperature = 0
             for acu_name, acu in zone.constructions.acus.items():
                 if acu_name in active_acu_ids:
-                    states_next[zone_name][acu_name].supply_air_mass_flow_rate =\
+                    states_next[acu_name].supply_air_mass_flow_rate =\
                         actions[acu_name].supply_mass_flow_rate_sp
-                    states_next[zone_name][acu_name].supply_air_temperature =\
+                    states_next[acu_name].supply_air_temperature =\
                         actions[acu_name].supply_temperature_sp
-                    states_next[zone_name][acu_name].fan_power = self.models[zone_name][acu_name](
+                    states_next[acu_name].fan_power = self.models[zone_name][acu_name](
                         actions[acu_name].supply_mass_flow_rate_sp
                     )
                     acu_return_temperature = SteadyStateThermodynamics.sim(
@@ -107,7 +98,7 @@ class AirLoopManager(nn.Module):
                         supply_air_mass_flow_rate=actions[acu_name].supply_mass_flow_rate_sp,
                         sensible_heat_load=zone_acu_heat_load[acu_name],
                     )
-                    states_next[zone_name][acu_name].return_air_temperature = acu_return_temperature
+                    states_next[acu_name].return_air_temperature = acu_return_temperature
                     # zone_avg_ite_inlet_temperature += (
                     #     0.9 * zone_acu_controls[acu_name].supply_air_temperature + 0.1 * acu_return_temperature
                     # )

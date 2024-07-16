@@ -59,14 +59,14 @@ class HVACManager(BaseManager, ABC):
         self.last_obs = None
         self._timestamp: datetime = datetime.now()
 
-    def _reset_acu_data(self, zone: Any, zone_name: str, obs: dict, acts: dict) -> Tuple[dict, dict]:
+    def _reset_acu_data(self, zone: Any, obs: dict, acts: dict) -> Tuple[dict, dict]:
         for acu_name, acu in zone.constructions.acus.items():
             acts[acu_name] = Batch(
                 supply_temperature_sp=(),
                 supply_mass_flow_rate_sp=(),
-                on_off_schedule=(),
+                on_off_schedule=torch.tensor(True, dtype=torch.bool, requires_grad=False),
             )
-            obs[zone_name][acu_name] = Batch(
+            obs[acu_name] = Batch(
                 supply_air_temperature=torch.tensor(
                     zone.sizing.sizing_zone.zone_cooling_design_supply_air_temperature,
                     dtype=torch.float32,
@@ -74,10 +74,11 @@ class HVACManager(BaseManager, ABC):
                 ),
                 supply_air_mass_flow_rate=(),
                 fan_power=(),
+                return_air_temperature=(),
             )
         return obs, acts
 
-    def _reset_ite_data(self, zone: Any, zone_name: str, zone_obs: dict, acts: dict) -> Tuple[dict, dict]:
+    def _reset_ite_data(self, zone: Any, zone_obs: dict, acts: dict) -> Tuple[dict, dict]:
         for ite_name, ite in zone.constructions.heat_gains.ites.items():
             acts[ite_name] = Batch(
                 cpu_load_utilization=(),
@@ -97,8 +98,8 @@ class HVACManager(BaseManager, ABC):
                 sensible_heat_load=(),
             )
             # reset zone facility and IT equipment data
-            self._reset_acu_data(zone, zone_name, obs, acts)
-            self._reset_ite_data(zone, zone_name, obs, acts)
+            self._reset_acu_data(zone, obs, acts)
+            self._reset_ite_data(zone, obs, acts)
 
         return obs, acts
 
@@ -109,6 +110,8 @@ class HVACManager(BaseManager, ABC):
             self._building.constructions.plant.chilled_water_loops,
             self._building.constructions.plant.condenser_water_loops,
         ]:
+            if loops is None:
+                continue
             for loop_id, loop in loops.items():
                 # half-loop demand side components
                 plant_obs[loop_id] = {}
@@ -152,7 +155,7 @@ class HVACManager(BaseManager, ABC):
             for chiller_id, chiller in branch.components.chillers.items():
                 acts[chiller_id] = Batch(
                     supply_temperature_sp=(),
-                    on_off_schedule=(),
+                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
                 )
                 plant_obs[chiller_id] = Batch(
                     power=(),
@@ -161,7 +164,7 @@ class HVACManager(BaseManager, ABC):
             for pump_id, pump in branch.components.pumps.items():
                 acts[pump_id] = Batch(
                     supply_mass_flow_rate_sp=(),
-                    on_off_schedule=(),
+                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
                 )
                 plant_obs[pump_id] = Batch(
                     power=(),
@@ -170,7 +173,7 @@ class HVACManager(BaseManager, ABC):
             for tower_id, tower in branch.components.cooling_towers.items():
                 acts[tower_id] = Batch(
                     supply_temperature_sp=(),
-                    on_off_schedule=(),
+                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
                 )
                 plant_obs[tower_id] = Batch(
                     power=(),
@@ -179,7 +182,7 @@ class HVACManager(BaseManager, ABC):
             for tank_id, tank in branch.components.tanks.items():
                 acts[tank_id] = Batch(
                     supply_temperature_sp=(),
-                    on_off_schedule=(),
+                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
                 )
                 plant_obs[tank_id] = Batch(
                     tank_water_temperature=torch.tensor(
@@ -212,8 +215,23 @@ class HVACManager(BaseManager, ABC):
                 dc=obs,
                 zones=zone_obs,
                 plants=plant_obs,
+            ),
+            external_inputs=Batch(
+                outdoor_temperature=(),
+                electrical_price=(),
+                carbon_intensity=(),
             )
         )
+
+    def format_external_inputs(self, external_inputs: Dict | Batch) -> Batch:
+        data = Batch()
+        for external_input_name, external_input in external_inputs.items():
+            data[external_input_name] = torch.tensor(
+                [external_input],
+                dtype=torch.float32,
+                requires_grad=False
+            )
+        return data
 
     def format_actions(self, input_data: np.ndarray | torch.Tensor | List, **kwargs) -> Batch:
         _, acts = self._reset_zone_data({}, {})
@@ -224,8 +242,8 @@ class HVACManager(BaseManager, ABC):
             if act.control_variable == ActionControlVariable.On_Off_Supervisory:
                 variable = torch.tensor(
                     [input_data[ptr]],
-                    dtype=torch.float32,
-                    requires_grad=True if act.requires_grad else False
+                    dtype=torch.bool,
+                    requires_grad=False
                 )
                 data.acts[act.device_unique_key].on_off_schedule = variable
 
@@ -245,7 +263,8 @@ class HVACManager(BaseManager, ABC):
                     )
                     data.acts[act.device_unique_key].supply_temperature_sp = variable
 
-            elif act.control_variable == ActionControlVariable.Fan_Air_Mass_Flow_Rate or act.control_variable == ActionControlVariable.Pump_Mass_Flow_Rate:
+            elif (act.control_variable == ActionControlVariable.Fan_Air_Mass_Flow_Rate or
+                  act.control_variable == ActionControlVariable.Pump_Mass_Flow_Rate):
                 if hasattr(data.acts[act.device_unique_key], 'on_off_schedule'):
                     variable = torch.tensor(
                         [input_data[ptr]] if data.acts[act.device_unique_key].on_off_schedule else [0],
@@ -291,7 +310,8 @@ class HVACManager(BaseManager, ABC):
                     data.acts[act.device_unique_key].supply_temperature_sp = self.acts_required_grad[ptr]
                     ptr += 1
 
-            elif act.control_variable == ActionControlVariable.Fan_Air_Mass_Flow_Rate or act.control_variable == ActionControlVariable.Pump_Mass_Flow_Rate:
+            elif (act.control_variable == ActionControlVariable.Fan_Air_Mass_Flow_Rate or
+                  act.control_variable == ActionControlVariable.Pump_Mass_Flow_Rate):
                 if data.acts[act.device_unique_key].supply_mass_flow_rate_sp.requires_grad:
                     data.acts[act.device_unique_key].supply_mass_flow_rate_sp = self.acts_required_grad[ptr]
                     ptr += 1
@@ -314,7 +334,7 @@ class HVACManager(BaseManager, ABC):
         self,
         acts: Batch,
         obs:  Batch = None,
-        **kwargs,
+        external_inputs: Batch = None
     ):
         """
         Run the simulation with the
@@ -322,18 +342,25 @@ class HVACManager(BaseManager, ABC):
         :param: actions (Batch) given control signals,
         :return: next system states
         """
-        self.data.update(acts=acts)
-        self.heat_load_manager.forward(
-            states=self.data.obs.zones,
-            actions=self.data.acts
+        self.data.update(
+            acts=acts,
+            external_inputs=external_inputs
         )
-        self.air_loop_manager.forward(
-            states=self.data.obs.zones,
-            states_next=self.data.obs_next.zones,
-            actions=self.data.acts
-        )
-        self.plant_manager.forward(
-            states=self.data.obs.plants,
-            actions=self.data.acts.plants,
-            inputs=self.data.obs.weather
-        )
+        if self.heat_load_manager is not None:
+            self.heat_load_manager.forward(
+                states=self.data.obs.zones,
+                actions=self.data.acts
+            )
+        if self.air_loop_manager is not None:
+            self.air_loop_manager.forward(
+                states=self.data.obs.zones,
+                states_next=self.data.obs_next.zones,
+                actions=self.data.acts
+            )
+        if self.plant_manager is not None:
+            self.plant_manager.forward(
+                states=self.data.obs,
+                states_next=self.data.obs_next,
+                actions=self.data.acts,
+                external_inputs=self.data.external_inputs
+            )
