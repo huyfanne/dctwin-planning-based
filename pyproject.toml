@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dctwin"
-version = "1.6.3"
+version = "1.6.4"
 description = "Building Multiphysics Digital Twin for Data Centers."
 authors = ["Ruihang Wang <ruihang001@ntu.edu.sg>", "Ryan Wong <ryan.wong@ntu.edu.sg>", "Zhiwei Cao <zhiwei003@ntu.edu.sg>", "Neng <xiad0001@ntu.edu.sg>"]
 packages = [
@@ -29,7 +29,7 @@ eppy = "^0.5.63"
 dclib = {git = "https://github.com/cap-dcwiz/dclib.git", tag="v1.2.4"}
 sh = "^2.0.6"
 psutil = "5.9.8"
-vtk = "9.3.0"
+vtk = "9.3.1"
 mayavi = "4.8.1"
 requests = ">2.32"
 
