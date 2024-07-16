@@ -2,7 +2,7 @@ from .registraion import make_env
 from dctwin import adapters, backends, interfaces, templates, utils
 from dctwin.backends import IDFBuilder, ConfigBuilder
 
-__version__ = "1.6.4"
+__version__ = "1.6.5"
 
 __all__ = [
     "adapters",
