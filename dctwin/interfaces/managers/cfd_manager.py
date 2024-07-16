@@ -345,7 +345,7 @@ class CFDManager:
 
         for rack_id, rack in self.room.constructions.racks.items():
             for server_id, server in rack.constructions.servers.items():
-                if server.cooling.fan_type =="Variable":
+                if server.cooling.fan_type == "Variable":
                     server.cooling.volume_flow_rate_ratio *= scale_factor
 
         sum_acu_volume_flow_rate_after = sum(
