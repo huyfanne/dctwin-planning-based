@@ -86,7 +86,6 @@ class HVACManager(BaseManager, ABC):
         return zone_obs, acts
 
     def _reset_zone_data(self, obs: dict, acts: dict) -> Tuple[dict, dict]:
-
         for zone_name, zone in self._building.constructions.zones.items():
             obs[zone_name] = Batch(
                 zone_air_temperature=torch.tensor(
@@ -135,7 +134,6 @@ class HVACManager(BaseManager, ABC):
                         plant_obs=plant_obs,
                         acts=acts,
                     )
-
         return plant_obs, acts
 
     def _reset_branch_data(
@@ -182,6 +180,8 @@ class HVACManager(BaseManager, ABC):
             for tank_id, tank in branch.components.tanks.items():
                 acts[tank_id] = Batch(
                     supply_temperature_sp=(),
+                    use_side_inlet_temperature_sp=(),
+                    use_side_mass_flow_rate=(),
                     on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
                 )
                 plant_obs[tank_id] = Batch(
@@ -288,6 +288,14 @@ class HVACManager(BaseManager, ABC):
                 )
                 data.acts[act.device_unique_key].cpu_load_utilization = variable
 
+            elif act.control_variable == ActionControlVariable.Tank_Use_Side_Mass_Flow_Rate:
+                variable = torch.tensor(
+                    [input_data[ptr]],
+                    dtype=torch.float32,
+                    requires_grad=True if act.requires_grad else False
+                )
+                data.acts[act.device_unique_key].use_side_mass_flow_rate = variable
+
             else:
                 raise ValueError(f"Unknown control variable {act.control_variable}")
 
@@ -319,6 +327,11 @@ class HVACManager(BaseManager, ABC):
             elif act.control_variable == ActionControlVariable.CPU_Utilization:
                 if data.acts[act.device_unique_key].cpu_load_utilization.requires_grad:
                     data.acts[act.device_unique_key].cpu_load_utilization = self.acts_required_grad[ptr]
+                    ptr += 1
+
+            elif act.control_variable == ActionControlVariable.Tank_Use_Side_Mass_Flow_Rate:
+                if data.acts[act.device_unique_key].use_side_mass_flow_rate.requires_grad:
+                    data.acts[act.device_unique_key].use_side_mass_flow_rate = self.acts_required_grad[ptr]
                     ptr += 1
 
         return data.acts

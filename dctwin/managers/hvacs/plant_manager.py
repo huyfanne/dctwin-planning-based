@@ -65,8 +65,8 @@ class PlantManager(nn.Module):
                     self._init_facility_models(branch_components=branch.components)
 
     def _init_facility_models(
-            self,
-            branch_components: Components
+        self,
+        branch_components: Components
     ) -> None:
 
         if branch_components.pipes:
@@ -174,7 +174,161 @@ class PlantManager(nn.Module):
         :return:
         """
         if self.plant.secondary_chilled_water_loops is not None:
-            pass
+            # Demand-side fluid property simulation of the chilled water loop
+            total_demand_loop_m = 0.
+            weighted_return_temperature = 0.
+            total_cooling_load = 0.
+            for loop_name, loop in self.plant.secondary_chilled_water_loops.items():
+                # get the supply water temperature setpoint of the secondary chilled water loop
+                middle_supply_branches = {
+                    k: v for k, v in loop.supply_branches.items() if v.side == "middle"
+                }
+                supply_water_temperature = torch.zeros(1, 1)
+                num_active_tanks = 0
+                for branch_name, branch in middle_supply_branches.items():
+                    if branch.components.tanks is not None:
+                        tank_name = list(branch.components.tanks.keys())[0]
+                        assert len(branch.components.tanks) == 1, \
+                            logger.critical("Only one tank is allowed in one branch")
+                        if actions[tank_name].on_off_schedule == 1:
+                            supply_water_temperature += states.plants[tank_name].tank_water_temperature
+                            num_active_tanks += 1
+                    if branch.components.heat_exchangers is not None:
+                        # TODO: if heat exchangers present, the supply water temperature is the setpoint temperature
+                        pass
+                supply_water_temperature /= num_active_tanks
+                # get inlet, outlet and middle demand branches
+                inlet_branches = {
+                    k: v for k, v in loop.demand_branches.items() if v.side == "inlet"
+                }
+                assert len(inlet_branches) == 1, logger.critical("Only one inlet branch is allowed")
+                middle_branches = {
+                    k: v for k, v in loop.demand_branches.items() if v.side == "middle"
+                }
+                outlet_branches = {
+                    k: v for k, v in loop.demand_branches.items() if v.side == "outlet"
+                }
+                assert len(outlet_branches) == 1, logger.critical("Only one outlet branch is allowed")
+                branch_total_flow_rate = torch.zeros(1, 1)
+                branch_heat_transfer_rate = torch.zeros(1, 1)
+                branch_outlet_temperature = supply_water_temperature
+                # simulate the middle branches
+                for branch_name, branch in middle_branches.items():
+                    assert len(branch.components.acu) == 1, logger.critical(
+                        "Only one ACU is allowed in the middle branch"
+                    )
+                    acu_name = list(branch.components.acu.keys())[0]
+                    acu = branch.components.acu[acu_name]
+                    if actions[acu_name].on_off_schedule == 1:
+                        water_mass_flow_rate, heat_transfer_rate, _ = acu.model.solve(
+                            T_air_in=states_next.zones[acu_name].return_air_temperature.view(-1, 1),
+                            m_air=states_next.zones[acu_name].supply_air_mass_flow_rate.view(-1, 1),
+                            T_water_in=supply_water_temperature.view(-1, 1),
+                            T_air_out_sp=actions[acu_name].supply_temperature_sp.view(-1, 1)
+                        )
+                        branch_total_flow_rate += water_mass_flow_rate
+                        branch_heat_transfer_rate += (
+                            heat_transfer_rate +
+                            states_next.zones[acu_name].fan_power * acu.power.motor_in_airstream_fraction
+                        )
+                        branch_outlet_temperature = supply_water_temperature + heat_transfer_rate / (
+                            water_mass_flow_rate * water_specific_heat
+                        )
+                    states_next.plants[branch_name].branch_inlet_temperature = supply_water_temperature
+                    states_next.plants[branch_name].branch_water_mass_flow_rate = branch_total_flow_rate
+                    states_next.plants[branch_name].branch_outlet_temperature = branch_outlet_temperature
+                    weighted_return_temperature += branch_outlet_temperature * branch_total_flow_rate
+
+                    total_demand_loop_m += branch_total_flow_rate
+                    total_cooling_load += branch_heat_transfer_rate
+
+                # calculate average return temperature
+                average_return_temperature = supply_water_temperature + total_cooling_load / (
+                    water_specific_heat * total_demand_loop_m
+                )
+
+                # fill in fluid properties for the inlet and outlet branches
+                for branch_name, branch in inlet_branches.items():
+                    states_next.plants[branch_name].branch_inlet_temperature = supply_water_temperature
+                    states_next.plants[branch_name].branch_water_mass_flow_rate = total_demand_loop_m
+                    states_next.plants[branch_name].branch_outlet_temperature = supply_water_temperature
+
+                for branch_name, branch in outlet_branches.items():
+                    states_next.plants[branch_name].branch_inlet_temperature = average_return_temperature
+                    states_next.plants[branch_name].branch_water_mass_flow_rate = total_demand_loop_m
+                    states_next.plants[branch_name].branch_outlet_temperature = average_return_temperature
+
+                # supply-side fluid property simulation of the chilled water loop
+                inlet_branches = {
+                    k: v for k, v in loop.supply_branches.items() if v.side == "inlet"
+                }
+                assert len(inlet_branches) == 1, logger.critical("Only one inlet branch is allowed")
+                middle_branches = {
+                    k: v for k, v in loop.supply_branches.items() if v.side == "middle"
+                }
+                outlet_branches = {
+                    k: v for k, v in loop.supply_branches.items() if v.side == "outlet"
+                }
+                assert len(outlet_branches) == 1, logger.critical("Only one outlet branch is allowed")
+
+                # simulate the supply inlet branch
+                for branch_name, branch in inlet_branches.items():
+                    states_next.plants[branch_name].branch_inlet_temperature = average_return_temperature
+                    states_next.plants[branch_name].branch_water_mass_flow_rate = total_demand_loop_m
+                    states_next.plants[branch_name].branch_outlet_temperature = average_return_temperature
+
+                # simulate the middle supply branches
+                # step 1: distribute total mass flow rate into multiple branches
+                for branch_name, branch in middle_branches.items():
+                    # if tanks are present, update the tank temperature by simulating the tank thermal model
+                    if branch.components.tanks is not None:
+                        tank_name = list(branch.components.tanks.keys())[0]
+                        tank_model = branch.components.tanks[tank_name].model
+                        if actions[tank_name].on_off_schedule == 1:
+                            states_next.plants[branch_name].branch_inlet_temperature = average_return_temperature
+                            states_next.plants[branch_name].branch_water_mass_flow_rate = (
+                                total_demand_loop_m / num_active_tanks
+                            )
+                            # TODO: Get T_source_in from primary chilled water loop setpoint
+                            tank_temperature = tank_model.forward(
+                                T_tank_current=states.plants[tank_name].tank_water_temperature,
+                                T_outdoor=external_inputs.outdoor_temperature,
+                                T_use_in=average_return_temperature,
+                                T_source_in=torch.tensor(16., dtype=torch.float32, requires_grad=False),
+                                m_use=actions[tank_name].use_side_mass_flow_rate,
+                                m_source=states_next.plants[branch_name].branch_water_mass_flow_rate,
+                                time=torch.tensor(900., dtype=torch.float32, requires_grad=False),
+                            )
+                            states_next.plants[tank_name].tank_water_temperature = tank_temperature
+                            states_next.plants[branch_name].branch_outlet_temperature = tank_temperature
+                        else:
+                            states_next.plants[branch_name].branch_inlet_temperature = average_return_temperature
+                            states_next.plants[branch_name].branch_water_mass_flow_rate = torch.tensor(
+                                [0.], dtype=torch.float32
+                            )
+                            states_next.plants[branch_name].branch_outlet_temperature = average_return_temperature
+                    if branch.components.heat_exchangers is not None:
+                        # TODO: simulate the process of cooling down the return warm water from the demand side with HX
+                        pass
+
+                    # simulate the supply outlet branch
+                    for branch_name, branch in outlet_branches.items():
+                        states_next.plants[branch_name].branch_inlet_temperature = supply_water_temperature
+                        states_next.plants[branch_name].branch_water_mass_flow_rate = total_demand_loop_m
+                        states_next.plants[branch_name].branch_outlet_temperature = supply_water_temperature
+
+                # Only passive devices are allowed in the supply-side of the secondary chilled water loop
+                for branch_name, branch in loop.supply_branches.items():
+                    if branch.components.pumps is not None:
+                        assert len(branch.components.pumps) == 1, logger.critical(
+                            "Only one pump is allowed for each supply branch"
+                        )
+                        pump_name = list(branch.components.pumps.keys())[0]
+                        pump_model = branch.components.pumps[pump_name].model
+                        states_next.plants[pump_name].pump_power = pump_model(
+                            states_next.plants[branch_name].branch_water_mass_flow_rate,
+                        )
+
         if self.plant.chilled_water_loops is not None:
             # Demand-side fluid property simulation of the chilled water loop
             total_demand_loop_m = 0.
@@ -199,35 +353,72 @@ class PlantManager(nn.Module):
                 branch_outlet_temperature = chw_sp.view(1, 1)
                 # simulate the middle branches
                 for branch_name, branch in middle_branches.items():
-                    assert len(branch.components.acu) == 1,\
-                        logger.critical("Only one ACU is allowed in the middle branch")
-                    acu_name = list(branch.components.acu.keys())[0]
-                    acu = branch.components.acu[acu_name]
-                    if actions[acu_name].on_off_schedule == 1:
-                        water_mass_flow_rate, heat_transfer_rate, _ = acu.model.solve(
-                            T_air_in=states_next.zones[acu_name].return_air_temperature.view(-1, 1),
-                            m_air=states_next.zones[acu_name].supply_air_mass_flow_rate.view(-1, 1),
-                            T_water_in=chw_sp.view(-1, 1),
-                            T_air_out_sp=actions[acu_name].supply_temperature_sp.view(-1, 1)
-                        )
-                        branch_total_flow_rate += water_mass_flow_rate
-                        branch_heat_transfer_rate += (
-                            heat_transfer_rate +
-                            states_next.zones[acu_name].fan_power * acu.power.motor_in_airstream_fraction
-                        )
-                        branch_outlet_temperature = chw_sp + heat_transfer_rate / (
-                            water_mass_flow_rate * water_specific_heat
-                        )
-                    states_next.plants[branch_name].branch_inlet_temperature = chw_sp
-                    states_next.plants[branch_name].branch_water_mass_flow_rate = branch_total_flow_rate
-                    states_next.plants[branch_name].branch_outlet_temperature = branch_outlet_temperature
-                    weighted_return_temperature += branch_outlet_temperature * branch_total_flow_rate
+                    # handle the case when the demand branch contains a cooling coil of a ACU
+                    if branch.components.acu is not None:
+                        assert len(branch.components.acu) == 1,\
+                            logger.critical("Only one ACU is allowed in the middle branch")
+                        acu_name = list(branch.components.acu.keys())[0]
+                        acu = branch.components.acu[acu_name]
+                        if actions[acu_name].on_off_schedule == 1:
+                            water_mass_flow_rate, heat_transfer_rate, _ = acu.model.solve(
+                                T_air_in=states_next.zones[acu_name].return_air_temperature.view(-1, 1),
+                                m_air=states_next.zones[acu_name].supply_air_mass_flow_rate.view(-1, 1),
+                                T_water_in=chw_sp.view(-1, 1),
+                                T_air_out_sp=actions[acu_name].supply_temperature_sp.view(-1, 1)
+                            )
+                            branch_total_flow_rate = water_mass_flow_rate
+                            branch_heat_transfer_rate = (
+                                heat_transfer_rate +
+                                states_next.zones[acu_name].fan_power * acu.power.motor_in_airstream_fraction
+                            )
+                            branch_outlet_temperature = chw_sp + heat_transfer_rate / (
+                                water_mass_flow_rate * water_specific_heat
+                            )
+                        states_next.plants[branch_name].branch_inlet_temperature = chw_sp
+                        states_next.plants[branch_name].branch_water_mass_flow_rate = branch_total_flow_rate
+                        states_next.plants[branch_name].branch_outlet_temperature = branch_outlet_temperature
+                        weighted_return_temperature += branch_outlet_temperature * branch_total_flow_rate
 
-                    total_demand_loop_m += branch_total_flow_rate
-                    total_cooling_load += branch_heat_transfer_rate
+                        total_demand_loop_m += branch_total_flow_rate
+                        total_cooling_load += branch_heat_transfer_rate
+
+                    # handle the case when the demand branch contains a tank
+                    elif branch.components.tanks is not None:
+                        assert len(branch.components.tanks) == 1, \
+                            logger.critical("Only one tank is allowed in one branch")
+                        tank_name = list(branch.components.tanks.keys())[0]
+                        if actions[tank_name].on_off_schedule == 1:
+                            branch_total_flow_rate = actions[tank_name].use_side_mass_flow_rate
+                            # required cooling load to cool down the thermal storage tank
+                            branch_heat_transfer_rate = water_specific_heat * branch_total_flow_rate * (
+                                states.plants[tank_name].tank_water_temperature - chw_sp
+                            )
+                            # update the tank temperature
+                            states_next.plants[branch_name].branch_inlet_temperature = chw_sp
+                            states_next.plants[branch_name].branch_water_mass_flow_rate = branch_total_flow_rate
+                            states_next.plants[branch_name].branch_outlet_temperature = (
+                                states.plants[tank_name].tank_water_temperature
+                            )
+                            weighted_return_temperature += (
+                                states_next.plants[branch_name].branch_outlet_temperature * branch_total_flow_rate
+                            )
+
+                            total_demand_loop_m += branch_total_flow_rate
+                            total_cooling_load += branch_heat_transfer_rate
+
+                    # handle the case when the demand branch contains a heat exchanger
+                    elif branch.components.heat_exchangers is not None:
+                        assert len(branch.components.heat_exchangers) == 1, \
+                            logger.critical("Only one heat exchanger is allowed in one branch")
+                        heat_exchanger_name = list(branch.components.heat_exchangers.keys())[0]
+                        heat_exchanger = branch.components.heat_exchangers[heat_exchanger_name]
+                        if actions[heat_exchanger_name].on_off_schedule == 1:
+                            pass
 
                 # calculate average return temperature
-                average_return_temperature = chw_sp + total_cooling_load / (water_specific_heat * total_demand_loop_m)
+                average_return_temperature = chw_sp + total_cooling_load / (
+                    water_specific_heat * total_demand_loop_m
+                )
 
                 # fill in fluid properties for the inlet and outlet branches
                 for branch_name, branch in inlet_branches.items():
@@ -260,6 +451,7 @@ class PlantManager(nn.Module):
                     states_next.plants[branch_name].branch_outlet_temperature = average_return_temperature
 
                 # simulate the middle supply branches
+
                 # step 1: get the active chillers
                 num_active_chillers = 0
                 for branch_name, branch in middle_branches.items():
@@ -269,6 +461,7 @@ class PlantManager(nn.Module):
                         chiller_name = list(branch.components.chillers.keys())[0]
                         if actions[chiller_name].on_off_schedule == 1:
                             num_active_chillers += 1
+
                 # step 2: distribute total mass flow rate into multiple branches
                 for branch_name, branch in middle_branches.items():
                     if branch.components.chillers is not None:
@@ -425,7 +618,7 @@ class PlantManager(nn.Module):
                         states_next.plants[branch_name].branch_water_mass_flow_rate = total_demand_loop_m
                         states_next.plants[branch_name].branch_outlet_temperature = average_return_temperature
 
-                # Device performance simulation
+                # device performance simulation
                 for branch_name, branch in condenser_water_loop.supply_branches.items():
                     if branch.components.pumps is not None:
                         assert len(branch.components.pumps) == 1, logger.critical(

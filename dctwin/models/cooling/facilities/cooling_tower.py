@@ -26,6 +26,7 @@ class CoolingTowerModel(nn.Module):
         cw_return_water_mass_flow_rate: torch.Tensor = None,
         cw_supply_water_temperature: torch.Tensor = None,
         outside_air_wetbulb_temperature: torch.Tensor = None,
+
     ):
         # By default, the cooling tower is operated at the maximum capacity. Therefore, we use the average power
         # consumption data collected in the online process as the output.
