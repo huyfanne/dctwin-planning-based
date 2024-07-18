@@ -82,10 +82,6 @@ class LithiumIonBattery(nn.Module):
         self.max_charge_P, self.max_charge_I = self.calculate_max_charge_power_kw()
         self.lifetime_counter = torch.zeros(1)
 
-    @property
-    def max_Ah_capacity(self):
-        return self.capacity_model.q_max * self.voltage_model.num_strings
-
     def calculate_current_for_power_kw(self, power_kw: torch.Tensor):
         """
         Calculate the current based on the input power in kW.
@@ -197,7 +193,7 @@ class LithiumIonBattery(nn.Module):
         # run the capacity model to update the battery charge capacity given the charge current
         self.run_capacity_model(I)
         # update the lifetime model and losses model
-        self.run_lifetime_model()
+        # self.run_lifetime_model()
         # update all electrical states
         self.update_state(I)
 
@@ -272,7 +268,7 @@ if __name__ == "__main__":
 
     # Fixed power discharge
     model = LithiumIonBattery(
-        num_cells_in_series=1,
+        num_cells_in_series=100,
         num_cells_in_strings=1,
         initial_fractional_state_of_charge=100.,
         battery_mass=342.,

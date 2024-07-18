@@ -54,17 +54,18 @@ class HeatLoadManager(nn.Module):
 
     def forward(
         self,
-        cpu_load_schedule: Batch,
+        states: Batch,
+        actions: Batch
     ):
         """
         Simulate the building with the learned models and the given control signals (acts)
         :return:
         """
-        zone_ite_heat_loads = {}
-        for zone_name, zone_cpu_schedule in cpu_load_schedule.items():
-            zone_ite_heat_loads[zone_name] = self._sim_zone_ite_heat_gains(
-                zone_cpu_load_schedules=zone_cpu_schedule
-            )
-        return Batch(
-            zone_ite_heat_loads=zone_ite_heat_loads
-        )
+        for zone_name, zone in self.zones.items():
+            total_ite = 0.
+            for ite_name, ite in zone.constructions.heat_gains.ites.items():
+                total_ite += self.models["ites"][ite.uid.lower()](
+                    actions[ite_name].cpu_load_utilization,
+                    None
+                )
+            states[zone_name].sensible_heat_load = total_ite

@@ -36,7 +36,7 @@ class ScalarDataItem:
         if default_value_type == "default_normed_value":
             self.set_normed_value(config.default_normed_value)
         elif default_value_type == "default_unnormed_value":
-            if config.control_type == ActionControlType.FIXED:
+            if config.control_type == DCTwinActionConfig.FIXED:
                 logger.info(
                     f"Fixed value {config.default_unnormed_value} is set for {self.variable_name}"
                 )
@@ -86,6 +86,7 @@ class Observation(ScalarDataItem):
 
 
 ActionControlVariable = DCTwinActionConfig.ControlVariable
+
 
 class Action(ScalarDataItem):
     # noinspection PyBroadException
