@@ -27,9 +27,7 @@ class PlantManager(nn.Module):
     PlantManager is used to manage the plant loops of the building. It contains the following attributes:
     :param device_key_mapping: the mapping between the device name and the device key
     :param zones: the zones of the building that are connected to the plant loops
-    :param chw_loops: the chilled water loops of the building
-    :param cw_loops: the condenser water loops of the building
-    :param sec_chw_loops: the secondary chilled water loops of the building if any.This is optional.
+    :param plant: the chiller plant object of the building
     """
 
     def __init__(
@@ -110,7 +108,7 @@ class PlantManager(nn.Module):
                 component.model = CoolingTowerModel(
                     config=component,
                     key_mapping=self.device_key_mapping,
-                    learnable=False  # TODO: add parametric learnable cooling tower models
+                    learnable=False  # TODO: add learnable cooling tower models
                 )
 
         if branch_components.heat_exchangers:
@@ -294,10 +292,10 @@ class PlantManager(nn.Module):
                                 T_tank_current=states.plants[tank_name].tank_water_temperature,
                                 T_outdoor=external_inputs.outdoor_temperature,
                                 T_use_in=average_return_temperature,
-                                T_source_in=torch.tensor(16., dtype=torch.float32, requires_grad=False),
-                                m_use=actions[tank_name].use_side_mass_flow_rate,
-                                m_source=states_next.plants[branch_name].branch_water_mass_flow_rate,
-                                time=torch.tensor(900., dtype=torch.float32, requires_grad=False),
+                                T_source_in=torch.tensor(12., dtype=torch.float32, requires_grad=False),
+                                m_use=states_next.plants[branch_name].branch_water_mass_flow_rate,
+                                m_source=actions[tank_name].use_side_mass_flow_rate,
+                                time=torch.tensor(600., dtype=torch.float32, requires_grad=False),
                             )
                             states_next.plants[tank_name].tank_water_temperature = tank_temperature
                             states_next.plants[branch_name].branch_outlet_temperature = tank_temperature
@@ -307,9 +305,17 @@ class PlantManager(nn.Module):
                                 [0.], dtype=torch.float32
                             )
                             states_next.plants[branch_name].branch_outlet_temperature = average_return_temperature
-                    if branch.components.heat_exchangers is not None:
+
+                    # if heat exchangers are present, run the heat exchanger to cool down the return warm water
+                    elif branch.components.heat_exchangers is not None:
                         # TODO: simulate the process of cooling down the return warm water from the demand side with HX
                         pass
+
+                    else:
+                        raise logger.critical(
+                            "Only tanks and heat exchangers are allowed in the supply side of "
+                            "the secondary chilled water loop"
+                        )
 
                     # simulate the supply outlet branch
                     for branch_name, branch in outlet_branches.items():
@@ -355,8 +361,9 @@ class PlantManager(nn.Module):
                 for branch_name, branch in middle_branches.items():
                     # handle the case when the demand branch contains a cooling coil of a ACU
                     if branch.components.acu is not None:
-                        assert len(branch.components.acu) == 1,\
-                            logger.critical("Only one ACU is allowed in the middle branch")
+                        assert len(branch.components.acu) == 1, logger.critical(
+                            "Only one ACU is allowed in the middle branch"
+                        )
                         acu_name = list(branch.components.acu.keys())[0]
                         acu = branch.components.acu[acu_name]
                         if actions[acu_name].on_off_schedule == 1:
@@ -391,21 +398,19 @@ class PlantManager(nn.Module):
                             branch_total_flow_rate = actions[tank_name].use_side_mass_flow_rate
                             # required cooling load to cool down the thermal storage tank
                             branch_heat_transfer_rate = water_specific_heat * branch_total_flow_rate * (
-                                states.plants[tank_name].tank_water_temperature - chw_sp
+                                states_next.plants[tank_name].tank_water_temperature - chw_sp
                             )
                             # update the tank temperature
                             states_next.plants[branch_name].branch_inlet_temperature = chw_sp
                             states_next.plants[branch_name].branch_water_mass_flow_rate = branch_total_flow_rate
                             states_next.plants[branch_name].branch_outlet_temperature = (
-                                states.plants[tank_name].tank_water_temperature
+                                states_next.plants[tank_name].tank_water_temperature
                             )
                             weighted_return_temperature += (
                                 states_next.plants[branch_name].branch_outlet_temperature * branch_total_flow_rate
                             )
-
                             total_demand_loop_m += branch_total_flow_rate
                             total_cooling_load += branch_heat_transfer_rate
-
                     # handle the case when the demand branch contains a heat exchanger
                     elif branch.components.heat_exchangers is not None:
                         assert len(branch.components.heat_exchangers) == 1, \
@@ -413,7 +418,13 @@ class PlantManager(nn.Module):
                         heat_exchanger_name = list(branch.components.heat_exchangers.keys())[0]
                         heat_exchanger = branch.components.heat_exchangers[heat_exchanger_name]
                         if actions[heat_exchanger_name].on_off_schedule == 1:
+                            # TODO: simulate the demand side of the heat exchanger
                             pass
+                    else:
+                        raise logger.critical(
+                            "Only ACUs, tanks and heat exchangers are allowed in the demand side"
+                            " of the primary chilled water loop"
+                        )
 
                 # calculate average return temperature
                 average_return_temperature = chw_sp + total_cooling_load / (
@@ -479,11 +490,11 @@ class PlantManager(nn.Module):
                             )
                             states_next.plants[branch_name].branch_outlet_temperature = average_return_temperature
 
-                    # simulate the supply outlet branch
-                    for branch_name, branch in outlet_branches.items():
-                        states_next.plants[branch_name].branch_inlet_temperature = chw_sp
-                        states_next.plants[branch_name].branch_water_mass_flow_rate = total_demand_loop_m
-                        states_next.plants[branch_name].branch_outlet_temperature = chw_sp
+                # simulate the supply outlet branch
+                for branch_name, branch in outlet_branches.items():
+                    states_next.plants[branch_name].branch_inlet_temperature = chw_sp
+                    states_next.plants[branch_name].branch_water_mass_flow_rate = total_demand_loop_m
+                    states_next.plants[branch_name].branch_outlet_temperature = chw_sp
 
                 # Device performance simulation
                 for branch_name, branch in chilled_water_loop.supply_branches.items():
@@ -496,6 +507,7 @@ class PlantManager(nn.Module):
                         states_next.plants[pump_name].pump_power = pump_model(
                             states_next.plants[branch_name].branch_water_mass_flow_rate,
                         )
+
                     if branch.components.chillers is not None:
                         assert len(branch.components.chillers) == 1, logger.critical(
                             "Only one chiller is allowed for each supply branch"
@@ -508,6 +520,10 @@ class PlantManager(nn.Module):
                             chw_sp=chw_sp,
                             cw_sp=external_inputs.outdoor_temperature
                         )
+
+                    if branch.components.pipes is not None:
+                        pass
+
         if self.plant.condenser_water_loops is not None:
             # Demand-side fluid property simulation of the chilled water loop
             total_demand_loop_m = 0.

@@ -46,8 +46,10 @@ class BaseManager(nn.Module):
 
         # others
         self.last_obs = None
-        self.acts_required_grad: torch.Tensor = torch.tensor([], requires_grad=True)
         self._timestamp: datetime = datetime.now()
+
+    def _reset_acts_required_grad(self):
+        self.acts_required_grad = torch.tensor([], requires_grad=True)
 
     @property
     def actions(self):

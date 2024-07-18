@@ -55,8 +55,7 @@ class HeatLoadManager(nn.Module):
     def forward(
         self,
         states: Batch,
-        actions: Batch,
-        **kwargs
+        actions: Batch
     ):
         """
         Simulate the building with the learned models and the given control signals (acts)
@@ -70,4 +69,3 @@ class HeatLoadManager(nn.Module):
                     None
                 )
             states[zone_name].sensible_heat_load = total_ite
-

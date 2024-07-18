@@ -4,6 +4,8 @@ from typing import Any, Tuple, Dict, List
 
 import torch
 import numpy as np
+from copy import deepcopy
+from loguru import logger
 
 from dclib import Building
 from dclib.cooling.plant.loops import Branch, CondenserWaterLoops, SecondaryChilledWaterLoops, ChilledWaterLoops
@@ -212,9 +214,9 @@ class HVACManager(BaseManager, ABC):
                 plants=plant_obs,
             ),
             obs_next=Batch(
-                dc=obs,
-                zones=zone_obs,
-                plants=plant_obs,
+                dc=deepcopy(obs),
+                zones=deepcopy(zone_obs),
+                plants=deepcopy(plant_obs),
             ),
             external_inputs=Batch(
                 outdoor_temperature=(),
@@ -222,6 +224,28 @@ class HVACManager(BaseManager, ABC):
                 carbon_intensity=(),
             )
         )
+
+    def _update_states(self):
+        # overwrite the current states with the next states
+        for device_name, device in self.data.obs_next.zones.items():
+            for key, value in device.items():
+                if isinstance(value, torch.Tensor):
+                    self.data.obs.zones[device_name][key] = deepcopy(value.detach())
+                else:
+                    self.data.obs.zones[device_name][key] = deepcopy(value)
+
+        for device_name, device in self.data.obs_next.plants.items():
+            for key, value in device.items():
+                if isinstance(value, torch.Tensor):
+                    self.data.obs.plants[device_name][key] = deepcopy(value.detach())
+                else:
+                    self.data.obs.plants[device_name][key] = deepcopy(value)
+
+        for key, value in self.data.obs_next.dc.items():
+            if isinstance(value, torch.Tensor):
+                self.data.obs.dc[key] = deepcopy(value.detach())
+            else:
+                self.data.obs.dc[key] = deepcopy(value)
 
     def format_external_inputs(self, external_inputs: Dict | Batch) -> Batch:
         data = Batch()
@@ -233,9 +257,10 @@ class HVACManager(BaseManager, ABC):
             )
         return data
 
-    def format_actions(self, input_data: np.ndarray | torch.Tensor | List, **kwargs) -> Batch:
+    def format_actions(self, input_data: np.ndarray | torch.Tensor | List) -> Batch:
         _, acts = self._reset_zone_data({}, {})
         _, acts = self._reset_plant_data({}, acts)
+        self._reset_acts_required_grad()
         data = Batch(acts=acts)
         ptr = 0
         for act in self.actions:
@@ -336,13 +361,6 @@ class HVACManager(BaseManager, ABC):
 
         return data.acts
 
-    def format_observations(
-        self,
-        obs: np.ndarray | torch.Tensor | Batch,
-        **kwargs
-    ) -> Batch:
-        return obs
-
     def run(
         self,
         acts: Batch,
@@ -361,7 +379,7 @@ class HVACManager(BaseManager, ABC):
         )
         if self.heat_load_manager is not None:
             self.heat_load_manager.forward(
-                states=self.data.obs.zones,
+                states=self.data.obs_next.zones,
                 actions=self.data.acts
             )
         if self.air_loop_manager is not None:
@@ -377,3 +395,5 @@ class HVACManager(BaseManager, ABC):
                 actions=self.data.acts,
                 external_inputs=self.data.external_inputs
             )
+        # update the states
+        self._update_states()
