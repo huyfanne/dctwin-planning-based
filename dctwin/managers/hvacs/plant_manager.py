@@ -35,6 +35,7 @@ class PlantManager(nn.Module):
         device_key_mapping: Dict,
         zones: Dict[str, Room],
         plant: Plant,
+        time_step: float = None
     ) -> None:
 
         super(PlantManager, self).__init__()
@@ -42,6 +43,7 @@ class PlantManager(nn.Module):
         self.zones = zones
         self.plant = plant
         self.device_key_mapping = device_key_mapping
+        self.time_step = time_step
 
         # Initialize the models for the plant loops
         self._init_models()
@@ -288,14 +290,15 @@ class PlantManager(nn.Module):
                                 total_demand_loop_m / num_active_tanks
                             )
                             # TODO: Get T_source_in from primary chilled water loop setpoint
+                            assert self.time_step is not None, logger.critical("Time step is set to None!")
                             tank_temperature = tank_model.forward(
                                 T_tank_current=states.plants[tank_name].tank_water_temperature,
                                 T_outdoor=external_inputs.outdoor_temperature,
                                 T_use_in=average_return_temperature,
-                                T_source_in=torch.tensor(12., dtype=torch.float32, requires_grad=False),
+                                T_source_in=actions["chilled water loop"].supply_temperature_sp,
                                 m_use=states_next.plants[branch_name].branch_water_mass_flow_rate,
                                 m_source=actions[tank_name].use_side_mass_flow_rate,
-                                time=torch.tensor(600., dtype=torch.float32, requires_grad=False),
+                                time=torch.tensor(self.time_step, dtype=torch.float32, requires_grad=False),
                             )
                             states_next.plants[tank_name].tank_water_temperature = tank_temperature
                             states_next.plants[branch_name].branch_outlet_temperature = tank_temperature

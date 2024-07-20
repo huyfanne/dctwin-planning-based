@@ -5,7 +5,6 @@ from typing import Any, Tuple, Dict, List
 import torch
 import numpy as np
 from copy import deepcopy
-from loguru import logger
 
 from dclib import Building
 from dclib.cooling.plant.loops import Branch, CondenserWaterLoops, SecondaryChilledWaterLoops, ChilledWaterLoops
@@ -35,7 +34,11 @@ class HVACManager(BaseManager, ABC):
             building,
             device_key_mapping
         )
-
+        # set up basics
+        self._config = config
+        self._building = building
+        self._time_step = 1 / self._config.simulation_time_config.number_of_timesteps_per_hour * 3600  # in seconds
+        # set up managers
         self.heat_load_manager = HeatLoadManager(
             zones=self._building.constructions.zones,
             device_key_mapping=self._device_key_mapping
@@ -48,15 +51,11 @@ class HVACManager(BaseManager, ABC):
             device_key_mapping=self._device_key_mapping,
             zones=self._building.constructions.zones,
             plant=self._building.constructions.plant,
+            time_step=self._time_step
+
         )
-
-        # set up basics
-        self._config = config
-        self._building = building
-
         # reset observation and action data
         self._reset_data()
-
         # others
         self.last_obs = None
         self._timestamp: datetime = datetime.now()
@@ -101,11 +100,9 @@ class HVACManager(BaseManager, ABC):
             # reset zone facility and IT equipment data
             self._reset_acu_data(zone, obs, acts)
             self._reset_ite_data(zone, obs, acts)
-
         return obs, acts
 
     def _reset_plant_data(self, plant_obs: dict, acts: dict) -> Tuple[dict, dict]:
-
         for loops in [
             self._building.constructions.plant.secondary_chilled_water_loops,
             self._building.constructions.plant.chilled_water_loops,
@@ -188,7 +185,7 @@ class HVACManager(BaseManager, ABC):
                 )
                 plant_obs[tank_id] = Batch(
                     tank_water_temperature=torch.tensor(
-                        loop.sizing.design_loop_exit_temperature,
+                        21.0,   # initial tank temperature
                         dtype=torch.float32,
                         requires_grad=False,
                     )
