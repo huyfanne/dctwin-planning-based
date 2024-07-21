@@ -334,7 +334,7 @@ class PlantManager(nn.Module):
                         )
                         pump_name = list(branch.components.pumps.keys())[0]
                         pump_model = branch.components.pumps[pump_name].model
-                        states_next.plants[pump_name].pump_power = pump_model(
+                        states_next.plants[pump_name].power = pump_model(
                             states_next.plants[branch_name].branch_water_mass_flow_rate,
                         )
 
@@ -507,7 +507,7 @@ class PlantManager(nn.Module):
                         )
                         pump_name = list(branch.components.pumps.keys())[0]
                         pump_model = branch.components.pumps[pump_name].model
-                        states_next.plants[pump_name].pump_power = pump_model(
+                        states_next.plants[pump_name].power = pump_model(
                             states_next.plants[branch_name].branch_water_mass_flow_rate,
                         )
 
@@ -517,7 +517,10 @@ class PlantManager(nn.Module):
                         )
                         chiller_name = list(branch.components.chillers.keys())[0]
                         chiller_model = branch.components.chillers[chiller_name].model
-                        states_next.plants[chiller_name].cooling_load = total_cooling_load / num_active_chillers
+                        if num_active_chillers > 0:
+                            states_next.plants[chiller_name].cooling_load = total_cooling_load / num_active_chillers
+                        else:
+                            states_next.plants[chiller_name].cooling_load = torch.zeros(1)
                         states_next.plants[chiller_name].power = chiller_model(
                             cooling_load=states_next.plants[chiller_name].cooling_load,
                             chw_sp=chw_sp,
@@ -645,7 +648,7 @@ class PlantManager(nn.Module):
                         )
                         pump_name = list(branch.components.pumps.keys())[0]
                         pump_model = branch.components.pumps[pump_name].model
-                        states_next.plants[pump_name].pump_power = pump_model(
+                        states_next.plants[pump_name].power = pump_model(
                             states_next.plants[branch_name].branch_water_mass_flow_rate,
                         )
                     if branch.components.cooling_towers is not None:
