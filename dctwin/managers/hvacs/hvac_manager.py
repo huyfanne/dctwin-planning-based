@@ -120,7 +120,7 @@ class HVACManager(BaseManager, ABC):
                     cooling_load=(),
                 )
         if branch.components.tanks:
-            tank_water_temperature = torch.zeros(1, 1)
+            tank_water_temperature = torch.zeros(1,)
             for tank_id, tank in branch.components.tanks.items():
                 if len(branch.components.tanks) > 1:
                     raise ValueError("Only one tank is allowed in a branch")
@@ -128,17 +128,17 @@ class HVACManager(BaseManager, ABC):
                     # supply_temperature_sp=(),
                     # use_side_inlet_temperature_sp=(),
                     source_side_mass_flow_rate=(),
-                    use_sied_mass_flow_rate=(),
-                    source_side_cooling_load=(),
-                    use_side_cooling_load=(),
                     on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
                 )
                 obs[tank_id] = Batch(
                     tank_water_temperature=torch.tensor(
-                        21.0,  # initial tank temperature
+                        [21.0],  # initial tank temperature
                         dtype=torch.float32,
                         requires_grad=False,
-                    )
+                    ),
+                    use_sied_mass_flow_rate=(),
+                    source_side_cooling_load=(),
+                    use_side_cooling_load=(),
                 )
                 tank_water_temperature += obs[tank_id].tank_water_temperature
             obs[branch_id].outlet_temperature = tank_water_temperature / len(branch.components.tanks)
@@ -170,7 +170,7 @@ class HVACManager(BaseManager, ABC):
 
             if branch.side == "outlet":
                 outlet_branch.update({branch_id: branch})
-                mixed_water_temperature = torch.zeros(1, 1)
+                mixed_water_temperature = torch.zeros(1,)
                 for middle_branch_id, middle_branch in middle_branches.items():
                     if len(obs[middle_branch_id].outlet_temperature) != 0:
                         mixed_water_temperature += obs[middle_branch_id].outlet_temperature
@@ -352,13 +352,13 @@ class HVACManager(BaseManager, ABC):
                 )
                 data.acts[act.device_unique_key].cpu_load_utilization = variable
 
-            elif act.control_variable == ActionControlVariable.Tank_Use_Side_Mass_Flow_Rate:
+            elif act.control_variable == ActionControlVariable.Tank_Source_Side_Mass_Flow_Rate:
                 variable = torch.tensor(
                     [input_data[ptr]],
                     dtype=torch.float32,
                     requires_grad=True if act.requires_grad else False
                 )
-                data.acts[act.device_unique_key].use_side_mass_flow_rate = variable
+                data.acts[act.device_unique_key].source_side_mass_flow_rate = variable
 
             else:
                 raise ValueError(f"Unknown control variable {act.control_variable}")
@@ -393,9 +393,9 @@ class HVACManager(BaseManager, ABC):
                     data.acts[act.device_unique_key].cpu_load_utilization = self.acts_required_grad[ptr]
                     ptr += 1
 
-            elif act.control_variable == ActionControlVariable.Tank_Use_Side_Mass_Flow_Rate:
-                if data.acts[act.device_unique_key].use_side_mass_flow_rate.requires_grad:
-                    data.acts[act.device_unique_key].use_side_mass_flow_rate = self.acts_required_grad[ptr]
+            elif act.control_variable == ActionControlVariable.Tank_Source_Side_Mass_Flow_Rate:
+                if data.acts[act.device_unique_key].source_side_mass_flow_rate.requires_grad:
+                    data.acts[act.device_unique_key].source_side_mass_flow_rate = self.acts_required_grad[ptr]
                     ptr += 1
 
         return data.acts

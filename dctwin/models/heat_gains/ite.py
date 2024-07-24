@@ -58,7 +58,7 @@ class ITEModel(nn.Module):
         if inlet_air_temperature is None:
             inlet_air_temperature = torch.tensor(
                 0, dtype=torch.float32
-            ).view(-1, 1)
+            )
         # calculate the cpu power
         cpu_power = (
             self.cpu_power_curve(cpu_schedule, inlet_air_temperature) * self.config.rated_power *

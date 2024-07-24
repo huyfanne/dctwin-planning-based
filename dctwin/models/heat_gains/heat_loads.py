@@ -1,5 +1,5 @@
 from typing import Dict
-
+import torch
 import torch.nn as nn
 
 from dclib.room import Room
@@ -62,7 +62,7 @@ class HeatLoadManager(nn.Module):
         :return:
         """
         for zone_name, zone in self.zones.items():
-            total_ite = 0.
+            total_ite = torch.zeros(1,)
             for ite_name, ite in zone.constructions.heat_gains.ites.items():
                 total_ite += self.models["ites"][ite.uid.lower()](
                     actions[ite_name].cpu_load_utilization,

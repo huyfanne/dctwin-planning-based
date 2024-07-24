@@ -181,7 +181,7 @@ class PlantManager(nn.Module):
 
     @staticmethod
     def _update_mixer(data: Batch, outlet_branch_id: str, mixed_branches: Dict) -> None:
-        mixed_outlet_temperature, mixed_outlet_water_mass_flow_rate = torch.zeros(1, 1), torch.zeros(1, 1)
+        mixed_outlet_temperature, mixed_outlet_water_mass_flow_rate = torch.zeros(1,), torch.zeros(1,)
         for branch_id, branch in mixed_branches.items():
             mixed_outlet_water_mass_flow_rate += data.obs_next.plants[branch_id].water_mass_flow_rate
         for branch_id, branch in mixed_branches.items():
@@ -326,7 +326,7 @@ class PlantManager(nn.Module):
     ) -> None:
 
         if branch.components.pipes is not None:
-            outlet_temperature = torch.zeros(1, 1)
+            outlet_temperature = torch.zeros(1,)
             for component_id, component in branch.components.pipes.items():
                 # TODO: add the pipe model
                 temperature = data.obs_next.plants[branch_id].inlet_temperature
