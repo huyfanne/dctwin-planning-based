@@ -326,7 +326,7 @@ class PlantManager(nn.Module):
     ) -> None:
 
         if branch.components.pipes is not None:
-            outlet_temperature = torch.zeros(1, 1)
+            outlet_temperature = torch.zeros(1)
             for component_id, component in branch.components.pipes.items():
                 # TODO: add the pipe model
                 temperature = data.obs_next.plants[branch_id].inlet_temperature
@@ -346,13 +346,13 @@ class PlantManager(nn.Module):
                         T_air_out_sp=data.acts[component_id].supply_temperature_sp,
                     )
                     coil_sensible_heat_load = (
-                            coil_heat_transfer_rate +
-                            data.obs_next.zones[component_id].fan_power *
-                            component.power.motor_in_airstream_fraction
+                        coil_heat_transfer_rate +
+                        data.obs_next.zones[component_id].fan_power *
+                        component.power.motor_in_airstream_fraction
                     )
                     outlet_temperature = (
-                            data.obs_next.plants[branch_id].inlet_temperature +
-                            coil_heat_transfer_rate / (coil_requested_mass_flow_rate * water_specific_heat)
+                        data.obs_next.plants[branch_id].inlet_temperature +
+                        coil_heat_transfer_rate / (coil_requested_mass_flow_rate * water_specific_heat)
                     )
                     # update data
                     data.obs_next.plants[loop_id].demand_side_total_cooling_load += coil_sensible_heat_load
@@ -362,8 +362,10 @@ class PlantManager(nn.Module):
                     data.obs_next.zones[component_id].coil_sensible_heat_load = coil_sensible_heat_load
                 else:
                     # if the ACU is off, the mass flow rate is 0
-                    data.obs_next.plants[branch_id].outlet_temperature = data.obs_next.plants[branch_id].inlet_temperature
-                    data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
+                    data.obs_next.plants[branch_id].outlet_temperature =\
+                        data.obs_next.plants[branch_id].inlet_temperature
+                    data.obs_next.plants[branch_id].water_mass_flow_rate =\
+                        torch.tensor([0.], dtype=torch.float32)
 
         if branch.components.pumps is not None:
             for component_id, component in branch.components.pumps.items():
@@ -499,7 +501,6 @@ class PlantManager(nn.Module):
             self.plant.chilled_water_loops,
             self.plant.condenser_water_loops,
         ]:
-
             for loop_id, loop in loops.items():
                 # solve the demand side branches
                 self._solve_half_loop_side_branches(

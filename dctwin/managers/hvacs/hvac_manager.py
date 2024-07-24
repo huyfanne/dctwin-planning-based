@@ -120,13 +120,11 @@ class HVACManager(BaseManager, ABC):
                     cooling_load=(),
                 )
         if branch.components.tanks:
-            tank_water_temperature = torch.zeros(1, 1)
+            tank_water_temperature = torch.zeros(1)
             for tank_id, tank in branch.components.tanks.items():
                 if len(branch.components.tanks) > 1:
                     raise ValueError("Only one tank is allowed in a branch")
                 acts[tank_id] = Batch(
-                    # supply_temperature_sp=(),
-                    # use_side_inlet_temperature_sp=(),
                     source_side_mass_flow_rate=(),
                     use_sied_mass_flow_rate=(),
                     source_side_cooling_load=(),
@@ -135,7 +133,7 @@ class HVACManager(BaseManager, ABC):
                 )
                 obs[tank_id] = Batch(
                     tank_water_temperature=torch.tensor(
-                        21.0,  # initial tank temperature
+                        [21.0],  # initial tank temperature
                         dtype=torch.float32,
                         requires_grad=False,
                     )
@@ -352,16 +350,15 @@ class HVACManager(BaseManager, ABC):
                 )
                 data.acts[act.device_unique_key].cpu_load_utilization = variable
 
-            elif act.control_variable == ActionControlVariable.Tank_Use_Side_Mass_Flow_Rate:
+            elif act.control_variable == ActionControlVariable.Tank_Source_Side_Mass_Flow_Rate:
                 variable = torch.tensor(
                     [input_data[ptr]],
                     dtype=torch.float32,
                     requires_grad=True if act.requires_grad else False
                 )
-                data.acts[act.device_unique_key].use_side_mass_flow_rate = variable
-
+                data.acts[act.device_unique_key].source_side_mass_flow_rate = variable
             else:
-                raise ValueError(f"Unknown control variable {act.control_variable}")
+                raise ValueError(f"Unknown control variable {act.control_variable} for {act.variable_name}")
 
             if variable.requires_grad:
                 self.acts_required_grad = torch.cat((self.acts_required_grad, variable))
@@ -393,9 +390,9 @@ class HVACManager(BaseManager, ABC):
                     data.acts[act.device_unique_key].cpu_load_utilization = self.acts_required_grad[ptr]
                     ptr += 1
 
-            elif act.control_variable == ActionControlVariable.Tank_Use_Side_Mass_Flow_Rate:
-                if data.acts[act.device_unique_key].use_side_mass_flow_rate.requires_grad:
-                    data.acts[act.device_unique_key].use_side_mass_flow_rate = self.acts_required_grad[ptr]
+            elif act.control_variable == ActionControlVariable.Tank_Source_Side_Mass_Flow_Rate:
+                if data.acts[act.device_unique_key].source_side_mass_flow_rate.requires_grad:
+                    data.acts[act.device_unique_key].source_side_mass_flow_rate = self.acts_required_grad[ptr]
                     ptr += 1
 
         return data.acts
@@ -407,10 +404,10 @@ class HVACManager(BaseManager, ABC):
         inps: Batch = None
     ):
         """
-        Run the simulation with the
+        Run the simulation with the given control actions
         :param: states (Batch) current system states,
         :param: actions (Batch) given control signals,
-        :return: next system states
+        :param: inps (Batch) external inputs
         """
         self.data.update(
             acts=acts,

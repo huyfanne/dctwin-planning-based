@@ -273,8 +273,7 @@ message DCTwinActionConfig {
     Availability_Status = 5;
     Humidity_Ratio_Setpoint = 6;
     CPU_Utilization = 7;
-    Tank_Use_Side_Mass_Flow_Rate = 8;
-    Tank_Use_Side_Inlet_Temperature_Setpoint = 9;
+    Tank_Source_Side_Mass_Flow_Rate = 8;
   }
   optional bool requires_grad = 1 [default = true];
   required ControlVariable control_variable = 2;
