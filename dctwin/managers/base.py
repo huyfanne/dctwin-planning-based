@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from datetime import datetime, timedelta
 from typing import Dict
 
@@ -16,63 +16,43 @@ from dctwin.managers.ds import (
 )
 
 from dctwin.data.batch import Batch
-from dclib import Building
+from dclib import Building, Room
 import torch
 
 
-class BaseManager(nn.Module):
+class BaseManager(ABC):
     """ Base class for all data center environments.
     """
 
     def __init__(
         self,
         config: DTEngineConfig,
-        building: Building,
+        model: Building | Room,
         device_key_mapping: Dict = None,
     ) -> None:
         super().__init__()
         # set up basics
         self._config = config
-        self._building = building
+        self._model = model
         self._device_key_mapping = device_key_mapping
-
-        # set up inputs
+        self._time_step = 1 / self._config.simulation_time_config.number_of_timesteps_per_hour * 3600  # in seconds
         # Set up actions
         self._set_actions()
         # set up observations
         self._set_observations()
+        # set up simulation time
+        self._set_simulation_time()
         # reset observation and action data
         self._reset_data()
-
-        # others
-        self.last_obs = None
-        self._timestamp: datetime = datetime.now()
 
     def _reset_acts_required_grad(self):
         self.acts_required_grad = torch.tensor([], requires_grad=True)
 
-    @property
-    def actions(self):
-        return self._actions
-
-    @property
-    def act_requires_grad(self):
-        return self.acts_required_grad
-
-    @property
-    def observations(self):
-        return self._observations
-
     def _set_actions(self) -> None:
         self._actions = [Action(config=ac) for ac in self._config.actions]
-        # self._actions = {ac.key: ac for ac in self._config.actions}
-        self._use_unnormed_act = self._config.use_unnormed_act
 
     def _set_observations(self):
-        self._observations = [
-            Observation(config=oc) for oc in self._config.observations
-        ]
-        self._use_unnormed_obs = self._config.use_unnormed_obs
+        self._observations = [Observation(config=oc) for oc in self._config.observations]
 
     def _set_simulation_time(self) -> None:
         if self._config.HasField("simulation_time_config"):
@@ -93,12 +73,24 @@ class BaseManager(nn.Module):
             logger.info("Using real-world time")
             self._use_simulation_time = False
 
+    @property
+    def actions(self):
+        return self._actions
+
+    @property
+    def act_requires_grad(self):
+        return self.acts_required_grad
+
+    @property
+    def observations(self):
+        return self._observations
+
     @abstractmethod
     def _reset_data(self) -> None:
         pass
 
     @abstractmethod
-    def format_data(self, **kwargs) -> Batch:
+    def format_actions(self, **kwargs) -> Batch:
         pass
 
     @abstractmethod

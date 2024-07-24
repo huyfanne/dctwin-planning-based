@@ -30,37 +30,28 @@ class HVACManager(BaseManager, ABC):
         device_key_mapping: Dict = None
     ) -> None:
         super().__init__(
-            config,
-            building,
-            device_key_mapping
+            config=config,
+            model=building,
+            device_key_mapping=device_key_mapping
         )
-        # set up basics
-        self._config = config
-        self._building = building
-        self._time_step = 1 / self._config.simulation_time_config.number_of_timesteps_per_hour * 3600  # in seconds
-        # set up managers
+        # set up managers for HVAC sub-systems
         self.heat_load_manager = HeatLoadManager(
-            zones=self._building.constructions.zones,
+            zones=self._model.constructions.zones,
             device_key_mapping=self._device_key_mapping
         )
         self.air_loop_manager = AirLoopManager(
-            zones=self._building.constructions.zones,
+            zones=self._model.constructions.zones,
             device_key_mapping=self._device_key_mapping
         )
         self.plant_manager = PlantManager(
             device_key_mapping=self._device_key_mapping,
-            zones=self._building.constructions.zones,
-            plant=self._building.constructions.plant,
-            time_step=self._time_step
-
+            # zones=self._model.constructions.zones,
+            plant=self._model.constructions.plant,
+            time_step=self._time_step,
         )
-        # reset observation and action data
-        self._reset_data()
-        # others
-        self.last_obs = None
-        self._timestamp: datetime = datetime.now()
 
-    def _reset_acu_data(self, zone: Any, obs: dict, acts: dict) -> Tuple[dict, dict]:
+    @staticmethod
+    def _reset_acu_data(zone: Any, obs: dict, acts: dict) -> Tuple[dict, dict]:
         for acu_name, acu in zone.constructions.acus.items():
             acts[acu_name] = Batch(
                 supply_temperature_sp=(),
@@ -74,20 +65,121 @@ class HVACManager(BaseManager, ABC):
                     requires_grad=False,
                 ),
                 supply_air_mass_flow_rate=(),
-                fan_power=(),
+                supply_air_relative_humidity=(),
                 return_air_temperature=(),
+                return_air_relative_humidity=(),
+                coil_sensible_heat_load=(),
+                fan_power=(),
             )
         return obs, acts
 
-    def _reset_ite_data(self, zone: Any, zone_obs: dict, acts: dict) -> Tuple[dict, dict]:
+    @staticmethod
+    def _reset_ite_data(zone: Any, zone_obs: dict, acts: dict) -> Tuple[dict, dict]:
         for ite_name, ite in zone.constructions.heat_gains.ites.items():
             acts[ite_name] = Batch(
                 cpu_load_utilization=(),
             )
         return zone_obs, acts
 
+    @staticmethod
+    def _reset_branch_components_data(
+        obs: Dict,
+        acts: Dict,
+        branch_id: str,
+        branch: Branch,
+    ) -> Tuple[Dict, Dict]:
+        if branch.components.chillers:
+            for chiller_id, chiller in branch.components.chillers.items():
+                if len(branch.components.chillers) > 1:
+                    raise ValueError("Only one chiller is allowed in a branch")
+                acts[chiller_id] = Batch(
+                    supply_temperature_sp=(),
+                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
+                )
+                obs[chiller_id] = Batch(
+                    power=(),
+                    cooling_load=(),
+                )
+        if branch.components.pumps:
+            for pump_id, pump in branch.components.pumps.items():
+                acts[pump_id] = Batch(
+                    supply_mass_flow_rate_sp=(),
+                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
+                )
+                obs[pump_id] = Batch(
+                    power=(),
+                )
+        if branch.components.cooling_towers:
+            for tower_id, tower in branch.components.cooling_towers.items():
+                acts[tower_id] = Batch(
+                    supply_temperature_sp=(),
+                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
+                )
+                obs[tower_id] = Batch(
+                    power=(),
+                    cooling_load=(),
+                )
+        if branch.components.tanks:
+            tank_water_temperature = torch.zeros(1, 1)
+            for tank_id, tank in branch.components.tanks.items():
+                if len(branch.components.tanks) > 1:
+                    raise ValueError("Only one tank is allowed in a branch")
+                acts[tank_id] = Batch(
+                    # supply_temperature_sp=(),
+                    # use_side_inlet_temperature_sp=(),
+                    source_side_mass_flow_rate=(),
+                    use_sied_mass_flow_rate=(),
+                    source_side_cooling_load=(),
+                    use_side_cooling_load=(),
+                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
+                )
+                obs[tank_id] = Batch(
+                    tank_water_temperature=torch.tensor(
+                        21.0,  # initial tank temperature
+                        dtype=torch.float32,
+                        requires_grad=False,
+                    )
+                )
+                tank_water_temperature += obs[tank_id].tank_water_temperature
+            obs[branch_id].outlet_temperature = tank_water_temperature / len(branch.components.tanks)
+
+        # TODO: add other components, like heat exchangers
+
+        return obs, acts
+
+    def _reset_half_loop_side_branches(
+        self,
+        obs: Dict,
+        acts: Dict,
+        branches: Dict[str, Branch],
+    ) -> Tuple[dict, dict]:
+        inlet_branch, middle_branches, outlet_branch = {}, {}, {}
+
+        for branch_id, branch in branches.items():
+            obs[branch_id] = Batch(
+                inlet_temperature=(),
+                outlet_temperature=(),
+                water_mass_flow_rate=(),
+            )
+            if branch.side == "inlet":
+                inlet_branch.update({branch_id: branch})
+
+            if branch.side == "middle":
+                middle_branches.update({branch_id: branch})
+                obs, act = self._reset_branch_components_data(obs, acts, branch_id, branch)
+
+            if branch.side == "outlet":
+                outlet_branch.update({branch_id: branch})
+                mixed_water_temperature = torch.zeros(1, 1)
+                for middle_branch_id, middle_branch in middle_branches.items():
+                    if len(obs[middle_branch_id].outlet_temperature) != 0:
+                        mixed_water_temperature += obs[middle_branch_id].outlet_temperature
+                obs[branch_id].inlet_temperature = mixed_water_temperature / len(middle_branches)
+
+        return obs, acts
+
     def _reset_zone_data(self, obs: dict, acts: dict) -> Tuple[dict, dict]:
-        for zone_name, zone in self._building.constructions.zones.items():
+        for zone_name, zone in self._model.constructions.zones.items():
             obs[zone_name] = Batch(
                 zone_air_temperature=torch.tensor(
                     zone.control_states.thermostats.cooling_setpoint,
@@ -102,96 +194,46 @@ class HVACManager(BaseManager, ABC):
             self._reset_ite_data(zone, obs, acts)
         return obs, acts
 
-    def _reset_plant_data(self, plant_obs: dict, acts: dict) -> Tuple[dict, dict]:
+    def _reset_plant_data(self, obs: dict, acts: dict) -> Tuple[dict, dict]:
         for loops in [
-            self._building.constructions.plant.secondary_chilled_water_loops,
-            self._building.constructions.plant.chilled_water_loops,
-            self._building.constructions.plant.condenser_water_loops,
+            self._model.constructions.plant.secondary_chilled_water_loops,
+            self._model.constructions.plant.chilled_water_loops,
+            self._model.constructions.plant.condenser_water_loops,
         ]:
+
             if loops is None:
                 continue
+
             for loop_id, loop in loops.items():
-                # half-loop demand side components
-                plant_obs[loop_id] = {}
+                obs[loop_id] = Batch(
+                    demand_side_total_mass_flow_rate=(
+                        torch.tensor(
+                            [0.],
+                            dtype=torch.float32,
+                        )
+                    ),
+                    demand_side_total_cooling_load=(
+                        torch.tensor(
+                            [0.],
+                            dtype=torch.float32,
+                        )
+                    ),
+                )
                 acts[loop_id] = Batch(
                     supply_temperature_sp=(),
                 )
-                for branch_id, branch in loop.demand_branches.items():
-                    plant_obs, plant_acts = self._reset_branch_data(
-                        loop=loop,
-                        branch_id=branch_id,
-                        branch=branch,
-                        plant_obs=plant_obs,
-                        acts=acts
-                    )
-                # half-loop supply side components
-                for branch_id, branch in loop.supply_branches.items():
-                    plant_obs, plant_acts = self._reset_branch_data(
-                        loop=loop,
-                        branch_id=branch_id,
-                        branch=branch,
-                        plant_obs=plant_obs,
-                        acts=acts,
-                    )
-        return plant_obs, acts
-
-    def _reset_branch_data(
-        self,
-        loop: ChilledWaterLoops | CondenserWaterLoops | SecondaryChilledWaterLoops,
-        branch_id: str,
-        branch: Branch,
-        plant_obs: dict,
-        acts: dict,
-    ) -> Tuple[dict, dict]:
-        plant_obs[branch_id] = Batch(
-            branch_inlet_temperature=(),
-            branch_outlet_temperature=(),
-            branch_water_mass_flow_rate=(),
-        )
-        if branch.components.chillers:
-            for chiller_id, chiller in branch.components.chillers.items():
-                acts[chiller_id] = Batch(
-                    supply_temperature_sp=(),
-                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
+                self._reset_half_loop_side_branches(
+                    obs=obs,
+                    acts=acts,
+                    branches=loop.demand_branches,
                 )
-                plant_obs[chiller_id] = Batch(
-                    power=(),
-                )
-        if branch.components.pumps:
-            for pump_id, pump in branch.components.pumps.items():
-                acts[pump_id] = Batch(
-                    supply_mass_flow_rate_sp=(),
-                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
-                )
-                plant_obs[pump_id] = Batch(
-                    power=(),
-                )
-        if branch.components.cooling_towers:
-            for tower_id, tower in branch.components.cooling_towers.items():
-                acts[tower_id] = Batch(
-                    supply_temperature_sp=(),
-                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
-                )
-                plant_obs[tower_id] = Batch(
-                    power=(),
-                )
-        if branch.components.tanks:
-            for tank_id, tank in branch.components.tanks.items():
-                acts[tank_id] = Batch(
-                    supply_temperature_sp=(),
-                    use_side_inlet_temperature_sp=(),
-                    use_side_mass_flow_rate=(),
-                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
-                )
-                plant_obs[tank_id] = Batch(
-                    tank_water_temperature=torch.tensor(
-                        21.0,   # initial tank temperature
-                        dtype=torch.float32,
-                        requires_grad=False,
-                    )
+                self._reset_half_loop_side_branches(
+                    obs=obs,
+                    acts=acts,
+                    branches=loop.supply_branches,
                 )
 
-        return plant_obs, acts
+        return obs, acts
 
     def _reset_data(self) -> None:
         acts = {}
@@ -215,7 +257,7 @@ class HVACManager(BaseManager, ABC):
                 zones=deepcopy(zone_obs),
                 plants=deepcopy(plant_obs),
             ),
-            external_inputs=Batch(
+            inps=Batch(
                 outdoor_temperature=(),
                 electrical_price=(),
                 carbon_intensity=(),
@@ -244,9 +286,9 @@ class HVACManager(BaseManager, ABC):
             else:
                 self.data.obs.dc[key] = deepcopy(value)
 
-    def format_external_inputs(self, external_inputs: Dict | Batch) -> Batch:
+    def format_external_inputs(self, inps: Dict | Batch) -> Batch:
         data = Batch()
-        for external_input_name, external_input in external_inputs.items():
+        for external_input_name, external_input in inps.items():
             data[external_input_name] = torch.tensor(
                 [external_input],
                 dtype=torch.float32,
@@ -362,7 +404,7 @@ class HVACManager(BaseManager, ABC):
         self,
         acts: Batch,
         obs:  Batch = None,
-        external_inputs: Batch = None
+        inps: Batch = None
     ):
         """
         Run the simulation with the
@@ -372,7 +414,7 @@ class HVACManager(BaseManager, ABC):
         """
         self.data.update(
             acts=acts,
-            external_inputs=external_inputs
+            inps=inps
         )
         if self.heat_load_manager is not None:
             self.heat_load_manager.forward(
@@ -387,10 +429,7 @@ class HVACManager(BaseManager, ABC):
             )
         if self.plant_manager is not None:
             self.plant_manager.forward(
-                states=self.data.obs,
-                states_next=self.data.obs_next,
-                actions=self.data.acts,
-                external_inputs=self.data.external_inputs
+                data=self.data,
             )
         # update the states
         self._update_states()

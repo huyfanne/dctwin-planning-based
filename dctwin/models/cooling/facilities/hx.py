@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from CoolProp.CoolProp import PropsSI
 import torch
 import torch.nn as nn
@@ -205,20 +207,20 @@ class HeatExchanger(nn.Module):
                     _, T_air_out, _, _, _, _ = self.forward(
                         T_air_in=torch.tensor(
                             batch.cooling_coil_inlet_air_temperature, dtype=torch.float32
-                        ).view(-1, 1),
+                        ),
                         m_air=torch.tensor(
                             batch.cooling_coil_air_mass_flow_rate, dtype=torch.float32
-                        ).view(-1, 1),
+                        ),
                         m_water=torch.tensor(
                             batch.cooling_coil_water_mass_flow_rate, dtype=torch.float32
-                        ).view(-1, 1),
+                        ),
                         T_water_in=torch.tensor(
                             batch.cooling_coil_inlet_water_temperature, dtype=torch.float32
-                        ).view(-1, 1),
+                        ),
                     )
                     loss = nn.MSELoss()(
                         T_air_out,
-                        torch.tensor(batch.cooling_coil_outlet_air_temperature, dtype=torch.float32).view(-1, 1)
+                        torch.tensor(batch.cooling_coil_outlet_air_temperature, dtype=torch.float32)
                     )
                     loss.backward(retain_graph=True)
                     self.opt.step()
@@ -303,7 +305,7 @@ class HeatExchanger(nn.Module):
         m_air: torch.Tensor,
         T_water_in: torch.Tensor,
         T_air_out_sp: torch.Tensor,
-    ):
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Calculate the chilled water mass flow rate that satisfies the supply air setpoint temperature
         with Bisection method.
@@ -314,7 +316,7 @@ class HeatExchanger(nn.Module):
         :return:
         """
         with torch.no_grad():
-            m_water_min = torch.tensor(0.0, dtype=torch.float32).view(1, -1)
+            m_water_min = torch.tensor(0.0, dtype=torch.float32)
             m_water_max = m_air.item()
             m_water = (m_water_min + m_water_max) / 2
             T_water_out, T_air_out, NTU, eff, Q, power = self.forward(

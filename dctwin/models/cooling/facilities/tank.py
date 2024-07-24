@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 from loguru import logger
@@ -92,7 +94,7 @@ class ThermalStorageTankModel(nn.Module):
         m_use: torch.Tensor,
         m_source: torch.Tensor,
         time: torch.Tensor,
-    ) -> torch.Tensor:
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Simulate the cooling tank temperature with the given use and source side mass flow rates and temperatures.
         Governing ODE:
@@ -119,5 +121,7 @@ class ThermalStorageTankModel(nn.Module):
         b = - (self.tank_UA / water_specific_heat + self.epsilon_use * m_use + self.epsilon_source * m_source)
         b = b / self.tank_mass
         T_tank_next = ((a / b) + T_tank_current) * torch.exp(b * time) - (a / b)
+        source_side_cooling_load = self.epsilon_source * m_source * (T_source_in - T_tank_current)
+        use_side_cooling_load = self.epsilon_use * m_use * (T_use_in - T_tank_current)
 
-        return T_tank_next
+        return T_tank_next, source_side_cooling_load, use_side_cooling_load
