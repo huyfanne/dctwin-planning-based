@@ -1,5 +1,4 @@
 from abc import ABC
-from datetime import datetime
 from typing import Any, Tuple, Dict, List
 
 import torch
@@ -7,7 +6,7 @@ import numpy as np
 from copy import deepcopy
 
 from dclib import Building
-from dclib.cooling.plant.loops import Branch, CondenserWaterLoops, SecondaryChilledWaterLoops, ChilledWaterLoops
+from dclib.cooling.plant.loops import Branch
 
 from dctwin.data import Batch
 from dctwin.models.heat_gains import HeatLoadManager
@@ -45,7 +44,6 @@ class HVACManager(BaseManager, ABC):
         )
         self.plant_manager = PlantManager(
             device_key_mapping=self._device_key_mapping,
-            # zones=self._model.constructions.zones,
             plant=self._model.constructions.plant,
             time_step=self._time_step,
         )
