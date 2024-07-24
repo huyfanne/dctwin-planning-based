@@ -54,14 +54,14 @@ def NTUHE(
             Cr = C_in / C_out
             C_min = C_in
             NTU = U_total[idx] * A_HE / C_min
-            CC[idx, 0] = torch.exp(-Cr * (1 - torch.exp(-NTU)))
-            eff[idx, 0] = (1 - CC[idx]) / Cr
+            CC[idx] = torch.exp(-Cr * (1 - torch.exp(-NTU)))
+            eff[idx] = (1 - CC[idx]) / Cr
         else:
             Cr = C_out / C_in
             C_min = C_out
             NTU = U_total[idx] * A_HE / C_min
-            CC[idx, 0] = 1 - torch.exp(-Cr * NTU)
-            eff[idx, 0] = 1 - torch.exp(-CC[idx] / Cr)
+            CC[idx] = 1 - torch.exp(-Cr * NTU)
+            eff[idx] = 1 - torch.exp(-CC[idx] / Cr)
     return eff, NTU
 
 
