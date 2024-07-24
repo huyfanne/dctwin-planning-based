@@ -1,5 +1,6 @@
 from typing import Optional
 
+import numpy as np
 import torch
 import torch.nn as nn
 from loguru import logger
@@ -197,15 +198,15 @@ class LithiumIonBattery(nn.Module):
         # run the capacity model to update the battery charge capacity given the charge current
         self.run_capacity_model(I)
         # update the lifetime model and losses model
-        self.run_lifetime_model()
+        #self.run_lifetime_model()
         # update all electrical states
         self.update_state(I)
 
 
 if __name__ == "__main__":
     model = LithiumIonBattery(
-        num_cells_in_series=1,
-        num_cells_in_strings=1,
+        num_cells_in_series=198,
+        num_cells_in_strings=2,
         initial_fractional_state_of_charge=100.,
         battery_mass=342.,
         battery_surface_area=4.26,
@@ -215,16 +216,8 @@ if __name__ == "__main__":
         dt_hr=1.0/10,
         C_rate=0.2
     )
-    # print(model.max_Ah_capacity)
-    # print(model.max_discharge_P)
-    # print(model.max_discharge_I)
-    # print(model.max_charge_P)
-    # print(model.max_charge_I)
-    # model.forward(
-    #     P_kw=torch.tensor(1.0),
-    #     I=None
-    # )
 
+    """
     # Fixed power discharge
     I = torch.tensor([.5])
     total_time = 1 / (model.voltage_model.C_rate / 10)
@@ -269,6 +262,7 @@ if __name__ == "__main__":
 
     plt.legend()
     plt.show()
+    plt.savefig("/home/ztw/dctwin/dctwin/models/electric/battery/lithium_ion/plot.png")
 
     # Fixed power discharge
     model = LithiumIonBattery(
@@ -297,7 +291,8 @@ if __name__ == "__main__":
             f"Voltage: {model.V.item():.3f}, "
             f"Power: {model.P.item()*1000:.3f}, "
             f"SOC: {model.capacity_model.soc.item():.3f}, "
-            f"I: {model.I.item():.3f}"
+            f"I: {model.I.item():.3f},"
+            #f"Lifetime (Q_relative): {model.lifetime_model.q_relative:.3f}"
         )
         if model.capacity_model.soc < 1e-3:
             break
@@ -335,3 +330,79 @@ if __name__ == "__main__":
 
     plt.legend()
     plt.show()
+"""
+    def simulate_battery_cycle(model, discharge_power_kw, charge_power_kw, total_time_discharge, total_time_charge, num_cycles):
+        # Arrays to store results
+        res_soc = []
+        res_power = []
+        res_voltage = []
+        res_time = []
+
+        current_time = 0.0  # Initialize time tracking
+
+        for cycle in range(num_cycles):
+            # Discharge Phase
+            for _ in range(int(total_time_discharge)):
+                model.forward(P_kw=torch.tensor(discharge_power_kw))  # Discharging
+                res_soc.append(model.capacity_model.soc.item())
+                res_voltage.append(model.V.item())
+                res_power.append(model.P.item() * 1000)  # Convert kW to Watts
+                res_time.append(current_time)
+                current_time += model.voltage_model.dt_hr
+
+            # Charge Phase
+            for _ in range(int(total_time_charge)):
+                model.forward(P_kw=torch.tensor(-charge_power_kw))  # Charging
+                res_soc.append(model.capacity_model.soc.item())
+                res_voltage.append(model.V.item())
+                res_power.append(model.P.item() * 1000)  # Convert kW to Watts
+                res_time.append(current_time)
+                current_time += model.voltage_model.dt_hr
+
+        return res_soc, res_power, res_voltage, res_time
+
+    # Define the simulation parameters
+    discharge_power_kw = 0.005  # kW
+    charge_power_kw = 0.004  # kW
+    total_time_discharge = 1 / (model.voltage_model.C_rate / 10)
+    total_time_charge = 1 / (model.voltage_model.C_rate / 10)
+    num_cycles = 10  # Number of complete discharge-charge cycles
+
+    # Run simulation
+    res_soc, res_power, res_voltage, res_time = simulate_battery_cycle(
+    model, 
+    discharge_power_kw, 
+    charge_power_kw, 
+    total_time_discharge, 
+    total_time_charge, 
+    num_cycles)
+
+    # Plotting results
+    time_steps = np.arange(len(res_soc)) * model.voltage_model.dt_hr  # Time in hours
+
+    plt.figure(dpi=300)
+    plt.subplot(311)
+    plt.title("Battery Cycle: Discharge followed by Charge")
+    plt.plot(time_steps, res_voltage, label="Voltage [V]")
+    plt.grid(True)
+    plt.xlabel("Time [h]")
+    plt.ylabel("Voltage [V]")
+    plt.legend()
+
+    plt.subplot(312)
+    plt.plot(time_steps, res_power, label="Power [W]")
+    plt.grid(True)
+    plt.xlabel("Time [h]")
+    plt.ylabel("Power [W]")
+    plt.legend()
+
+    plt.subplot(313)
+    plt.plot(time_steps, res_soc, label="SOC [%]")
+    plt.grid(True)
+    plt.xlabel("Time [h]")
+    plt.ylabel("SOC [%]")
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+    plt.savefig("/home/ztw/dctwin/dctwin/models/electric/battery/lithium_ion/plot_chargedischarge.png")
