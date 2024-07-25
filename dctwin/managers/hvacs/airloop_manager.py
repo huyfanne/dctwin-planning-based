@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Dict, List
 
 import torch.nn as nn
+
 import torch
 from dclib.room import Room
 
@@ -81,6 +82,9 @@ class AirLoopManager(nn.Module):
                 active_acu_name: states_next[zone_name].sensible_heat_load / len(active_acu_ids)
                 for active_acu_name in active_acu_ids
             }
+            weighted_return_temperature = 0
+            total_acu_air_mass_flow_rate = 0
+            zone_avg_ite_inlet_temperature = 0
             weighted_return_temperature = torch.zeros(1,)
             total_acu_air_mass_flow_rate = torch.zeros(1,)
             zone_avg_ite_inlet_temperature = torch.zeros(1,)

@@ -62,6 +62,7 @@ class HeatLoadManager(nn.Module):
         :return:
         """
         for zone_name, zone in self.zones.items():
+            total_ite = 0.
             total_ite = torch.zeros(1,)
             for ite_name, ite in zone.constructions.heat_gains.ites.items():
                 total_ite += self.models["ites"][ite.uid.lower()](
