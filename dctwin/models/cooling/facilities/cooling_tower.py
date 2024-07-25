@@ -31,15 +31,7 @@ class CoolingTowerModel(nn.Module):
         # By default, the cooling tower is operated at the maximum capacity. Therefore, we use the average power
         # consumption data collected in the online process as the output.
         if not self.learnable:
-            if self.config.power.design_fan_power == "autosize":
-                try:
-                    data, _ = self.buffer.sample(10)
-                    power = data.cooling_tower_power.mean()
-                    return torch.tensor(power, dtype=torch.float32).mean().view(-1, 1)
-                except:
-                    return torch.zeros(1)
-            
-            return torch.tensor(float(self.config.power.design_fan_power), dtype=torch.float32).mean().view(-1, 1)
+            return torch.tensor([self.config.power.design_fan_power], dtype=torch.float32)
         else:
             raise NotImplementedError("Learnable cooling tower model is not implemented yet !")
 
