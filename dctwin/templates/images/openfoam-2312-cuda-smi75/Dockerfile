@@ -34,9 +34,9 @@ RUN mkdir -p amgx/build
 RUN mkdir -p /opt/amgx
 WORKDIR /root/amgx/build
 RUN pwd
-RUN /opt/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/amgx -DCUDA_ARCH="60;70;80;86" .. 
-RUN make -j all 
-RUN make install 
+RUN /opt/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/amgx -DCUDA_ARCH="60;70;80;86" ..
+RUN make -j all
+RUN make install
 RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/amgx/lib' >> /etc/bash.bashrc
 
 # Download OpenFOAM v2306
@@ -69,7 +69,7 @@ RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/petsc/lib' >> /opt/OpenFO
 
 # # install foam2csr
 WORKDIR /root
-RUN git clone https://gitlab.hpc.cineca.it/openfoam/foam2csr.git 
+RUN git clone https://gitlab.hpc.cineca.it/openfoam/foam2csr.git
 RUN echo 'export CUBROOT=/root/amgx/thrust/dependencies/' >> /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc
 RUN echo 'export PETSC_INC=/opt/petsc/include' >> /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc
 RUN echo 'export PETSC_LIB_DIR=/opt/petsc/lib' >> /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc
