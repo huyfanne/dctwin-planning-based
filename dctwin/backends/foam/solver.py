@@ -200,6 +200,8 @@ class SolverBackendMixin:
             Path(config.cfd.case_dir, "case.foam").touch(exist_ok=True)
             time.sleep(1)
 
+        room.dump(config.cfd.case_dir / "model.json")
+
         if write_interval is not None:
             self.write_interval = write_interval
         if end_time is not None:
