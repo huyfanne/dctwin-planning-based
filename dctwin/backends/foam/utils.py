@@ -49,7 +49,6 @@ def generate_control_dict(
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
 
-    logger.info(f"delta_t: {delta_t}, write_interval: {write_interval}, end_time: {end_time}, is_gpu: {is_gpu}")
     if is_gpu:
         shutil.copy(
             Path(template_dir, f"foam/system/{system_folder}/fvSolution_gpu"),
@@ -114,7 +113,6 @@ def init_foam(is_gpu: bool = False):
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
 
-    logger.info(f"Init foam: is_gpu: {is_gpu}")
     if is_gpu:
         shutil.copy(
             Path(template_dir, f"foam/system/steady/fvSolution_gpu"),

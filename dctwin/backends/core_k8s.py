@@ -2,12 +2,10 @@ from pathlib import Path
 from typing import Union
 import uuid
 import json
-import subprocess
-import shutil
 
 from dctwin.utils import config as dctwin_config
 from loguru import logger
-from kubernetes import config, client
+from kubernetes import config
 
 from dctwin.backends.base_core import BaseBackend
 from dctwin.backends.K8sJob import K8sJob
@@ -102,7 +100,7 @@ class BackendK8s(BaseBackend):
             additional_params={
                 "spec.ttl_seconds_after_finished": ttl_seconds_after_finished,
                 "spec.backoff_limit": backoff_limit,
-            }
+            },
         )
         stream_log = job.stream()
         if background:

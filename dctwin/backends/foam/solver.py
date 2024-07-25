@@ -56,7 +56,6 @@ class Builder:
         self.render("k", "k")
         self.render("p", "p")
 
-        logger.info(f"Room sealed status: {self.sealed}")
         if self.sealed:
             self.render("p_rgh_pressure", "p_rgh")
         else:

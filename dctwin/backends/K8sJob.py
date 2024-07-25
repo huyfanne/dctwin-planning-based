@@ -1,7 +1,6 @@
 import logging
 
 from kubernetes import client
-from docker import types
 import time
 import socket
 
