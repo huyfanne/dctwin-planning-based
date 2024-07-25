@@ -1,6 +1,6 @@
 eplus_env_config {
-  weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
-  model_file: "models/idf/building.idf"
+  weather_file: "data\\weather\\SGP_Singapore.486980_IWEC.epw"
+  model_file: "models\\idf\\building.idf"
   simulation_time_config {
     begin_month: 9
     begin_day_of_month: 1

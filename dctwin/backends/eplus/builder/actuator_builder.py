@@ -1,12 +1,15 @@
+from typing import Dict, OrderedDict
 from eppy.modeleditor import IDF
 from dclib.cooling.plant.plant import Plant
+from dclib.room import Room
+from dctwin.utils.const import rho_air, air_specific_heat
 
 class ActuatorBuilder:
     def __init__(self, model: IDF):
         self.model = model
         self.program_name_list = []
 
-    def _make_actuators(self, plant: Plant):
+    def _make_actuators(self, plant: Plant, rooms: Dict[str, Room]):
         for _, chilled_water_loop in plant.chilled_water_loops.items():
             for _, branch in chilled_water_loop.supply_branches.items():
                 # pump actuator
@@ -65,6 +68,24 @@ class ActuatorBuilder:
                                 value = cooling_tower.operation.on_off_supervisory
                             )
                         
+        for _, room in rooms.items():
+            for _, acu in room.constructions.acus.items():
+                if acu.cooling.operating.supply_air_temperature is not None:
+                    self._make_actuator_program(
+                        actuated_component_unique_name = f"{acu.uid} AIR LOOP SUPPLY AIR TEMPERATURE SCHEDULE",
+                        actuated_component_type = "Schedule:Constant",
+                        actuated_component_control_type = "Schedule Value",
+                        value = acu.cooling.operating.supply_air_temperature
+                    )
+                if acu.cooling.operating.supply_air_volume_flow_rate is not None:
+                    supply_air_mass_flow_rate = rho_air * acu.cooling.operating.supply_air_volume_flow_rate
+                    self._make_actuator_program(
+                        actuated_component_unique_name = f"{acu.uid} FAN",
+                        actuated_component_type = "Fan",
+                        actuated_component_control_type = "Fan Air Mass Flow Rate",
+                        value = supply_air_mass_flow_rate
+                    )
+
         # program calling manager
         if len(self.program_name_list) > 0:
             program_calling_manager = self.model.newidfobject("EnergyManagementSystem:ProgramCallingManager")
@@ -99,8 +120,8 @@ class ActuatorBuilder:
         self.program_name_list.append(program_name)
 
 
-    def make_actuators(self, plant: Plant):
+    def make_actuators(self, plant: Plant, rooms: Dict[str, Room]):
         """
         Make actuators for plant components
         """
-        self._make_actuators(plant = plant)
+        self._make_actuators(plant = plant, rooms = rooms)
