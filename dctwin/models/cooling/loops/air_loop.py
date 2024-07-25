@@ -121,7 +121,7 @@ class AirLoopManager(nn.Module):
                     ] = zone_air_temperatures[zone_name]
         return acu_property, zone_air_temperatures, zone_ite_inlet_temperatures
 
-    def collect(self, data: dict):
+    def collect(self, data: Batch):
         """
         Collect the data from outside environment and store them into a buffer for learning purposes
         :return:

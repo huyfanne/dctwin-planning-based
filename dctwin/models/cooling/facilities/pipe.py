@@ -86,3 +86,7 @@ class PipeModel:
         delta_p = friction_coefficient * (self.fluid_density * fluid_velocity**2) / 2
         friction_power = delta_p * main_pipe_mass_flow_rate / self.fluid_density
         return friction_power
+
+    def forward(self):
+        #TODO: Implement the forward
+        pass

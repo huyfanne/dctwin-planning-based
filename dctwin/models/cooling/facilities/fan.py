@@ -21,7 +21,7 @@ class FanModel(nn.Module):
         config: ACU,
         key_mapping: dict,
         learnable: bool = True
-    ):
+    ) -> None:
         super(FanModel, self).__init__()
         self.config = config
         self.uid = config.uid
@@ -30,7 +30,8 @@ class FanModel(nn.Module):
         self.design_volume_flow_rate = config.cooling.design_air_flow_rate
         if config.cooling.design_air_flow_rate != "" and config.cooling.pressure_rise != "":
             self.design_power = (
-                self.design_volume_flow_rate * config.cooling.pressure_rise / config.power.fan_total_efficiency
+                config.cooling.design_air_flow_rate * config.cooling.pressure_rise /
+                (config.power.fan_total_efficiency)
             )
         else:
             logger.warning(
@@ -50,7 +51,7 @@ class FanModel(nn.Module):
             requires_grad=learnable
         )
         # initialize the replay buffer
-        self.buffer = Buffer(size=1000)
+        self.buffer = Buffer(size=100)
         self.key_mapping = key_mapping
 
     def collect(self, data: dict):
@@ -69,7 +70,7 @@ class FanModel(nn.Module):
 
     def forward(self, mass_flow_rate: torch.Tensor):
         flow_fraction = mass_flow_rate / (self.design_volume_flow_rate * rho_air)
-        assert torch.all(flow_fraction <= 1), "The air mass flow rate must be inside [0, 1]."
+        # assert torch.all(flow_fraction <= 1), "The air mass flow rate must be positive."
         return self.design_power * self.power_curve(flow_fraction)
 
     def learn(self):

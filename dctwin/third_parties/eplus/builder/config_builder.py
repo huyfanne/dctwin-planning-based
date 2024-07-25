@@ -8,11 +8,25 @@ from pathlib import Path
 
 
 class ConfigBuilder:
+    """
+    A class to build the prototxt configuration for the digital twin simulation.
+    :param Building building: the building object from the dclib
+    :param Dict device_key_map: the map of self-defined device keys to EnergyPlus output variables keys,
+        e.g.,
+        {
+            "chilled water loop": {
+                "supply temperature": "CHILLED WATER LOOP SUPPLY OUTLET NODE:System Node Temperature [C](TimeStep)",
+                "return temperature": "CHILLED WATER LOOP SUPPLY INLET NODE:System Node Temperature [C](TimeStep)",
+                }
+        }
+
+    """
+
     def __init__(
         self,
         building: Building,
         device_key_map: dict,
-    ):
+    )-> None:
         self.building = building
         self.device_key_map = device_key_map
         self.model = DTEngineConfig()
@@ -30,7 +44,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         observation_type: int = None,
-    ):
+    ) -> None:
         observation = self.model.eplus_env_config.observations.add()
         observation.exposed = exposed
         observation.variable_name = variable_name
@@ -64,7 +78,7 @@ class ConfigBuilder:
         masking_variable_name: str = None,
         default_unnormed_value: float = None,
         input_source: Path = None,
-    ):
+    ) -> None:
         action = self.model.eplus_env_config.actions.add()
         action.control_type = control_type
         if default_unnormed_value is not None:
@@ -102,7 +116,12 @@ class ConfigBuilder:
 
     """Simulation and logging config making functions start here"""
 
-    def make_logging_config(self, log_dir: Path, level: int, verbose: bool):
+    def make_logging_config(
+        self,
+        log_dir: Path,
+        level: int,
+        verbose: bool
+    ) -> None:
         self.model.logging_config.log_dir = str(log_dir)
         self.model.logging_config.level = level
         self.model.logging_config.verbose = verbose
@@ -120,7 +139,7 @@ class ConfigBuilder:
         use_unnormed_act: bool = True,
         network: str = "host",
         host: str = "localhost",
-    ):
+    ) -> None:
         self.model.eplus_env_config.model_file = str(idf_file)
         self.model.eplus_env_config.weather_file = str(weather_file)
         self.model.eplus_env_config.network = network
@@ -138,10 +157,15 @@ class ConfigBuilder:
         self.model.eplus_env_config.simulation_time_config.number_of_timesteps_per_hour = (
             number_of_timesteps_per_hour
         )
+        self.model.eplus_env_config.use_unnormed_act = use_unnormed_act
+        self.model.eplus_env_config.use_unnormed_obs = use_unnormed_obs
 
     def make_env_params_config(
-        self, task_id: str, num_constraints: int = 0, last_episode_idx: int = 0
-    ):
+        self,
+        task_id: str,
+        num_constraints: int = 0,
+        last_episode_idx: int = 0
+    ) -> None:
         self.model.eplus_env_config.env_params.task_id = task_id
         self.model.eplus_env_config.env_params.num_constraints = num_constraints
         self.model.eplus_env_config.env_params.last_episode_idx = last_episode_idx
@@ -154,7 +178,7 @@ class ConfigBuilder:
         normalize_method: int = None,
         lb: float = None,
         ub: float = None
-    ):
+    ) -> None:
         for variable_name in variable_names:
             self._make_observation(
                 exposed=exposed,
@@ -175,7 +199,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         for chilled_water_loop_name, chilled_water_loop in self.building.constructions.plant.chilled_water_loops.items():
             # observe chilled water loop supply side outlet temperature
             self._make_observation(
@@ -218,7 +242,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         self._make_observation(
             exposed=exposed,
             variable_name="hvac power",
@@ -257,7 +281,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         for chilled_water_loop_name, chilled_water_loop in self.device_key_map[
             "chilled water loops"
         ].items():
@@ -313,7 +337,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         for secondary_chilled_water_loop_name, secondary_chilled_water_loop in self.device_key_map[
             "secondary chilled water loops"
         ].items():
@@ -369,7 +393,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         for condenser_water_loop_name, condenser_water_loop in self.device_key_map[
             "condenser water loops"
         ].items():
@@ -425,7 +449,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         """
         Make observations for ACU fans
         :param exposed: whether the observation is exposed to the agent
@@ -487,7 +511,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         """
         Make observations for ACU fans
         :param exposed: whether the observation is exposed to the agent
@@ -549,7 +573,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         for acu_name, acu in self.device_key_map["acus"].items():
             # observe inlet air temperature
             self._make_observation(
@@ -636,7 +660,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         for dehumidifier_name, dehumidifier in self.device_key_map["dehumidifiers"].items():
             # observe inlet air temperature
             self._make_observation(
@@ -723,7 +747,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         for chw_pump_name, chw_pump in self.device_key_map[
             "chilled water pumps"
         ].items():
@@ -835,7 +859,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         for chiller_name, chiller in self.device_key_map["chillers"].items():
             # observe chiller cooling load
             self._make_observation(
@@ -943,7 +967,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         for hx_name, hx in self.device_key_map["heat_exchangers"].items():
             # observe heat exchanger cooling load
             self._make_observation(
@@ -1015,7 +1039,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         for cooling_tower_name, cooling_tower in self.device_key_map[
             "cooling towers"
         ].items():
@@ -1081,7 +1105,7 @@ class ConfigBuilder:
         normalize_method: int = 1,
         lb: float = 0.0,
         ub: float = 1.0
-    ):
+    ) -> None:
         for storage_name, storage in self.device_key_map["thermal storage tanks"].items():
             # observe thermal storage average temperature
             self._make_observation(
@@ -1190,7 +1214,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         for zone_name, zone in self.device_key_map["zones"].items():
             # observe zone air temperature
             self._make_observation(
@@ -1233,7 +1257,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         for ite_name, ite in self.device_key_map["ites"].items():
             # observe ITE inlet dry-bulb temperature
             self._make_observation(
@@ -1265,7 +1289,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None
-    ):
+    ) -> None:
         for (
             load_center_name,
             load_center,
@@ -1293,7 +1317,7 @@ class ConfigBuilder:
         masking: bool = False,
         device_values: dict = {},
         disable: bool = False,
-    ):
+    ) -> None:
         for acu_name, acu in self.device_key_map["acus"].items():
             masking_variable_name = (
                 f"{acu_name} on off schedule".lower() if masking else None
@@ -1322,7 +1346,7 @@ class ConfigBuilder:
         masking: bool = False,
         device_values: dict = {},
         disable: bool = False,
-    ):
+    ) -> None:
         for acu_name, acu in self.device_key_map["acus"].items():
             masking_variable_name = (
                 f"{acu_name} on off schedule".lower() if masking else None
@@ -1350,7 +1374,7 @@ class ConfigBuilder:
         default_unnormed_value: float = None,
         device_values: dict = {},
         disable: bool = False,
-    ):
+    ) -> None:
         for loop_name, loop in self.device_key_map["chilled water loops"].items():
             self._make_actions(
                 variable_name=f"{loop_name} supply temperature setpoint".lower(),
@@ -1373,7 +1397,7 @@ class ConfigBuilder:
         default_unnormed_value: float = None,
         device_values: dict = {},
         disable: bool = False,
-    ):
+    ) -> None:
         for loop_name, loop in self.device_key_map["condenser water loops"].items():
             self._make_actions(
                 variable_name=f"{loop_name} supply temperature setpoint".lower(),
@@ -1396,7 +1420,7 @@ class ConfigBuilder:
         default_unnormed_value: float = None,
         device_values: dict = {},
         disable: bool = False,
-    ):
+    ) -> None:
         for pump_name, pump in self.device_key_map["chilled water pumps"].items():
             self._make_actions(
                 variable_name=f"{pump_name} mass flow rate".lower(),
@@ -1419,7 +1443,7 @@ class ConfigBuilder:
         default_unnormed_value: float = None,
         device_values: dict = {},
         disable: bool = False,
-    ):
+    ) -> None:
         for pump_name, pump in self.device_key_map["secondary chilled water pumps"].items():
             self._make_actions(
                 variable_name=f"{pump_name} mass flow rate".lower(),
@@ -1442,7 +1466,7 @@ class ConfigBuilder:
         default_unnormed_value: float = None,
         device_values: dict = {},
         disable: bool = False,
-    ):
+    ) -> None:
         for pump_name, pump in self.device_key_map["condenser water pumps"].items():
             self._make_actions(
                 variable_name=f"{pump_name} mass flow rate".lower(),
@@ -1462,7 +1486,7 @@ class ConfigBuilder:
         normalize_method: int = 1,
         lb: float = 0.0,
         ub: float = 1.0,
-    ):
+    ) -> None:
         chilled_water_loops = self.building.constructions.plant.chilled_water_loops
         for chilled_water_loop_name, chilled_water_loop in chilled_water_loops.items():
             for branch_name, branch in chilled_water_loop.supply_branches.items():
@@ -1488,7 +1512,7 @@ class ConfigBuilder:
         ub: float = 100.0,
         device_values: dict = {},
         disable: bool = False,
-    ):
+    ) -> None:
         for pump_name, pump in self.device_key_map["chilled water pumps"].items():
             self._make_actions(
                 variable_name=f"{pump_name} mass flow rate".lower(),
@@ -1510,7 +1534,7 @@ class ConfigBuilder:
         ub: float = 100.0,
         device_values: dict = {},
         disable: bool = False,
-    ):
+    ) -> None:
         for pump_name, pump in self.device_key_map[
             "secondary chilled water pumps"
         ].items():
@@ -1534,7 +1558,7 @@ class ConfigBuilder:
         ub: float = 100.0,
         device_values: dict = {},
         disable: bool = False,
-    ):
+    ) -> None:
         for pump_name, pump in self.device_key_map["condenser water pumps"].items():
             self._make_actions(
                 variable_name=f"{pump_name} mass flow rate".lower(),
@@ -1554,7 +1578,7 @@ class ConfigBuilder:
         initial_value: float = 1.0,
         lb: float = 0.0,
         ub: float = 1.0,
-    ):
+    ) -> None:
         for acu_name, acu in self.device_key_map["acus"].items():
             fan_name = f"{acu_name} fan"
             action = self.model.eplus_env_config.actions.add()
@@ -1578,7 +1602,7 @@ class ConfigBuilder:
         lb: float = 0.0,
         ub: float = 1.0,
         device_values: dict = {},
-    ):
+    ) -> None:
         for ite_name, ite in self.device_key_map["ites"].items():
             action = self.model.eplus_env_config.actions.add()
             action.control_type = 3
@@ -1602,7 +1626,7 @@ class ConfigBuilder:
         lb: float = 0.0,
         ub: float = 1.0,
         device_values: dict = {},
-    ):
+    ) -> None:
         for hx_name, hx in self.device_key_map["heat_exchangers"].items():
             action = self.model.eplus_env_config.actions.add()
             action.control_type = 3
@@ -1624,7 +1648,7 @@ class ConfigBuilder:
         normalize_method: int = 1,
         lb: float = 0.0,
         ub: float = 1.0,
-    ):
+    ) -> None:
         """
         Make observations for ACU on/off status
         :param exposed: whether the observation is exposed to the agent
@@ -1650,7 +1674,7 @@ class ConfigBuilder:
         normalize_method: int = 1,
         lb: float = 0.0,
         ub: float = 1.0,
-    ):
+    ) -> None:
         """
         Make observations for CPU loading
         :param exposed: whether the observation is exposed to the agent
@@ -1670,11 +1694,11 @@ class ConfigBuilder:
                 observation_type=2,
             )
 
-    def save(self, path: Path = Path("configs/eplus.prototxt")):
+    def save(self, path: Path = Path("configs/eplus.prototxt")) -> None:
         with open(path, "w") as f:
             f.write(text_format.MessageToString(self.model))
 
-    def get_model(self):
+    def get_model(self) -> DTEngineConfig:
         return self.model
 
 
@@ -1683,7 +1707,7 @@ class CDUConfigBuilder:
     def __init__(
         self,
         building: Building
-    ):
+    ) -> None:
         self.building = building
         self.model = DTEngineConfig()
 
@@ -1697,7 +1721,7 @@ class CDUConfigBuilder:
         lb: float = None,
         ub: float = None,
         observation_type: int = None,
-    ):
+    ) -> None:
         observation = self.model.cdu_env_config.observations.add()
         observation.exposed = exposed
         observation.variable_name = variable_name
@@ -1722,7 +1746,7 @@ class CDUConfigBuilder:
         lb: float,
         ub: float,
         default_unnormed_value: float = None,
-    ):
+    ) -> None:
         action = self.model.cdu_env_config.actions.add()
         action.control_type = control_type
         if default_unnormed_value is not None:
@@ -1753,7 +1777,7 @@ class CDUConfigBuilder:
         normalize_method: int = None,
         lb: float = None,
         ub: float = None,
-    ):
+    ) -> None:
         for zone_name, zone in self.building.constructions.zones.items():
             if zone.constructions.cdus is not None:
                 for cdu_name, cdu in zone.constructions.cdus.items():
@@ -1833,7 +1857,7 @@ class CDUConfigBuilder:
         ub: float = None,
         device_values: dict = {},
         disable: bool = False,
-    ):
+    ) -> None:
         for zone_name, zone in self.building.constructions.zones.items():
             if zone.constructions.cdus is not None:
                 for cdu_name, cdu in zone.constructions.cdus.items():
@@ -1855,7 +1879,7 @@ class CDUConfigBuilder:
         ub: float = None,
         device_values: dict = {},
         disable: bool = False,
-    ):
+    ) -> None:
         for zone_name, zone in self.building.constructions.zones.items():
             if zone.constructions.cdus is not None:
                 for cdu_name, cdu in zone.constructions.cdus.items():
@@ -1868,9 +1892,9 @@ class CDUConfigBuilder:
                         default_unnormed_value=device_values.get(f"{cdu.uid}", {}).get("default_unnormed_value", default_unnormed_value),
                     ) if device_values.get(f"{cdu.uid}", {}).get("disable", disable) == False else None
 
-    def save(self, path: Path = Path("configs/cdu.prototxt")):
+    def save(self, path: Path = Path("configs/cdu.prototxt")) -> None:
         with open(path, "w") as f:
             f.write(text_format.MessageToString(self.model))
 
-    def get_model(self):
+    def get_model(self) -> DTEngineConfig:
         return self.model

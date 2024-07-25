@@ -222,10 +222,9 @@ class CWLoopManager(nn.Module):
                         cooling_load=ct_clg_loads[cooling_tower_model.uid],
                         power=power,
                     )
-
         return condenser_water_pump_property, cooling_tower_property
 
-    def collect(self, data: dict):
+    def collect(self, data: Batch):
         """
         Collect the data from outside environment and store them into a buffer for learning purposes
         :return:

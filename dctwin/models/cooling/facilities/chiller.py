@@ -50,7 +50,7 @@ class ChillerModel(nn.Module):
         cooling_load: torch.Tensor
     ):
         partial_load = cooling_load / self.config.cooling.reference_capacity
-        return self.design_power * self.plr_curve(partial_load)
+        return self.design_power * self.plr_curve(partial_load) * self.eir_curve(chw_sp, cw_sp)
 
     def collect(self, data: dict):
         assert "cooling load" in self.key_mapping.keys(), "The \"cooling load\" key is not provided."

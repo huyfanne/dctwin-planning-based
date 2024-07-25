@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from CoolProp.CoolProp import PropsSI
 import torch
 import torch.nn as nn
@@ -29,10 +31,10 @@ class HeatExchanger(nn.Module):
         transverse_number: float | int = 60,
         transverse_pitch: float | int = 0.03,
         thermal_conductivity: float = 400,
-        tol: float = 0.1,
+        tol: float = 0.01,
         max_root_finding_iter: int = 100,
         max_learning_iter: int = 500,
-        min_loss: float = 0.01
+        min_loss: float = 0.002
     ):
         """
         A PIML-based model for cooling coil inside an ACU. It leverages the geometry information of the cooling coil as
@@ -70,11 +72,11 @@ class HeatExchanger(nn.Module):
         )
         self.num_row = nn.Parameter(
             torch.tensor(row_number, dtype=torch.float32),
-            requires_grad=False
+            requires_grad=learnable
         )
         self.num_transverse = nn.Parameter(
             torch.tensor(transverse_number, dtype=torch.float32),
-            requires_grad=False
+            requires_grad=learnable
         )
         self.row_pitch = nn.Parameter(
             torch.tensor(row_pitch, dtype=torch.float32),
@@ -99,7 +101,7 @@ class HeatExchanger(nn.Module):
 
         self.key_mapping = key_mapping
         self.buffer = Buffer(size=1000)
-        self.opt = torch.optim.Adam(self.parameters(), lr=1.0e-2)
+        self.opt = torch.optim.Adam(self.parameters(), lr=1e-1)
         self.learnable = learnable
         self.max_learning_iter = max_learning_iter
         self.tol = tol
@@ -193,7 +195,7 @@ class HeatExchanger(nn.Module):
 
     def learn(self):
         if self.learnable:
-            batch, _ = self.buffer.sample(batch_size=16)  # sample all data from the buffer
+            batch, _ = self.buffer.sample(batch_size=256)  # sample all data from the buffer
             mask = batch.cooling_coil_air_mass_flow_rate > 0
             batch = batch[mask]
             if len(batch) > 10:
@@ -205,24 +207,24 @@ class HeatExchanger(nn.Module):
                     _, T_air_out, _, _, _, _ = self.forward(
                         T_air_in=torch.tensor(
                             batch.cooling_coil_inlet_air_temperature, dtype=torch.float32
-                        ).view(-1, 1),
+                        ),
                         m_air=torch.tensor(
                             batch.cooling_coil_air_mass_flow_rate, dtype=torch.float32
-                        ).view(-1, 1),
+                        ),
                         m_water=torch.tensor(
                             batch.cooling_coil_water_mass_flow_rate, dtype=torch.float32
-                        ).view(-1, 1),
+                        ),
                         T_water_in=torch.tensor(
                             batch.cooling_coil_inlet_water_temperature, dtype=torch.float32
-                        ).view(-1, 1),
+                        ),
                     )
                     loss = nn.MSELoss()(
                         T_air_out,
-                        torch.tensor(batch.cooling_coil_outlet_air_temperature, dtype=torch.float32).view(-1, 1)
+                        torch.tensor(batch.cooling_coil_outlet_air_temperature, dtype=torch.float32)
                     )
                     loss.backward(retain_graph=True)
                     self.opt.step()
-                    self._project_ws()  # project the parameters to the positive region to make them feasible
+                    # self._project_ws()  # project the parameters to the positive region to make them feasible
                     pbar.set_description(f"Loss: {loss.item():.4f}")
                     if loss.item() < self.min_loss:
                         break
@@ -259,6 +261,9 @@ class HeatExchanger(nn.Module):
         fr, nu_i = nusseltNumberIn(rr_i, Re_i, Pr_i)  # friction factor and Nusselt number
         h_i = nu_i * k_i / self.tube_diameter  # internal fluid heat transfer coefficient
 
+        dP_i = fr * (self.tube_length / self.tube_diameter) * (rho_i * u_i ** 2) / 2  # internal fluid pressure drop
+        pump_power_i = (self.num_row * self.num_transverse) * dP_i * (m_water / rho_i)  # internal fluid pumping power
+
         # tube outside
         u_o = m_air / rho_o / (self.tube_length * self.H_he)  # external fluid velocity
         u_omax = self.transverse_pitch / (self.transverse_pitch - self.tube_diameter) * u_o
@@ -270,6 +275,12 @@ class HeatExchanger(nn.Module):
         Nu_o = self._correct_nusselt_number(Nu_o)
         h_o = Nu_o * k_o / self.tube_diameter   # external fluid heat transfer coefficient
 
+        f_o = 0.2  # external fluid friction factor
+        dP_o = self.num_row * (rho_o * u_omax ** 2 / 2) * f_o  # external fluid pressure drop
+        pump_power_o = dP_o * (m_air / rho_o)  # external fluid pumping power
+
+        # pumping power, U value and NTU value
+        pump_power = pump_power_i + pump_power_o  # W, pumping power
         U = 1 / (
             1 / h_i + 1 / h_o + torch.log((self.tube_thickness + self.tube_diameter) / self.tube_diameter) *
             self.tube_diameter / self.tube_kappa
@@ -281,10 +292,12 @@ class HeatExchanger(nn.Module):
         C_min = torch.minimum(C_i, C_o)  # W/K, minimum heat capacity
         eff, NTU = NTUHE(C_i, C_o, U, A)  # efficiency and number transfer unit of heat exchanger
         Q_max = C_min * (T_air_in - T_water_in)  # W, maximum heat transfer
-        heat_transfer_rate = eff * Q_max # - pump_power  # W, heat transfer
+        heat_transfer_rate = eff * Q_max - pump_power  # W, heat transfer
         T_air_out = T_air_in - heat_transfer_rate / C_o  # degree C, external fluid outlet temperature
-        T_water_out = T_water_in + (heat_transfer_rate)/C_i #+ pump_power) / C_i
-        return T_water_out, T_air_out, NTU, eff, heat_transfer_rate, 0.0
+        T_water_out = T_water_in + (heat_transfer_rate + pump_power) / C_i
+        with torch.no_grad():
+            sensible_cooling_load = m_air * Cp_o * (T_air_in - T_air_out)
+        return T_water_out, T_air_out, NTU, eff, sensible_cooling_load, 0.0
 
     def solve(
         self,
@@ -292,7 +305,7 @@ class HeatExchanger(nn.Module):
         m_air: torch.Tensor,
         T_water_in: torch.Tensor,
         T_air_out_sp: torch.Tensor,
-    ):
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Calculate the chilled water mass flow rate that satisfies the supply air setpoint temperature
         with Bisection method.
@@ -303,7 +316,7 @@ class HeatExchanger(nn.Module):
         :return:
         """
         with torch.no_grad():
-            m_water_min = torch.tensor(0.0, dtype=torch.float32).view(1, -1)
+            m_water_min = torch.tensor(0.0, dtype=torch.float32)
             m_water_max = m_air.item()
             m_water = (m_water_min + m_water_max) / 2
             T_water_out, T_air_out, NTU, eff, Q, power = self.forward(
@@ -351,4 +364,5 @@ class HeatExchanger(nn.Module):
         m.register_hook(
             lambda grad: grad / J
         )  # implicit gradient calculation
+        # m.backward(retain_graph=True)
         return m, Q, T_air_out

@@ -7,9 +7,9 @@ from dctwin.models.cooling.loops import AirLoopManager
 from dctwin.models.cooling.loops.chw_loop import CHWLoopManager
 from dctwin.models.cooling.loops.cw_loop import CWLoopManager
 
+
 from dctwin.data import Batch
 from dctwin.models.heat_gains import HeatLoadManager
-
 
 from CoolProp.CoolProp import PropsSI
 
@@ -30,7 +30,7 @@ class AirWaterCoolingComposite(nn.Module):
         self,
         building: Building,
         device_key_mapping: Dict
-    ):
+    ) -> None:
         super(AirWaterCoolingComposite, self).__init__()
         self.building = building
         self.device_key_mapping = device_key_mapping
@@ -52,6 +52,29 @@ class AirWaterCoolingComposite(nn.Module):
             device_key_mapping=self.device_key_mapping
         )
         self._init_log_dict()
+        self.episode = 0
+
+    def reset(self):
+        self.episode += 1
+        pass
+
+    def run(
+        self,
+        states: Batch,
+        actions: Batch,
+        inputs: Batch,
+    ) -> Batch:
+        """
+        Run the simulation with the
+        :param: states (Batch) current system states,
+        :param: actions (Batch) given control signals,
+        :param: inputs (Batch) external inputs,
+        :return: next system states
+        """
+        results = Batch()
+
+        return results
+
 
     def _init_log_dict(self):
         self.simulation_results = {

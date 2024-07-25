@@ -5,6 +5,7 @@ from dctwin.utils import read_engine_config
 from dctwin.gym_envs import get_env_id, BaseEnv
 from dclib import Building
 
+
 def make_env(
     env_proto_config: str,
     reward_fn: Callable[[BaseEnv], float],
