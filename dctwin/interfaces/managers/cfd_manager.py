@@ -571,13 +571,22 @@ class CFDManager:
             # step 3: solve
             self.solve(stream=False)
 
+            all_dirs = [d for d in os.listdir(config.cfd.case_dir)]
+            largest_num = 0
+            for dir_name in all_dirs:
+                try:
+                    num = int(dir_name)
+                    if num > largest_num:
+                        largest_num = num
+                except ValueError:
+                    pass
             self.last_state_case = (
-                config.cfd.case_dir.joinpath(str(self.end_time))
+                config.cfd.case_dir.joinpath(str(largest_num))
                 if not self.steady
                 else None
             )
             # step 4: read results
-            results = read_temperature(config.cfd.case_dir, str(self.end_time))
+            results = read_temperature(config.cfd.case_dir, str(largest_num))
 
             if not config.cfd.PRESERVE_FOAM_LOG and not run_mesh and not run_geometry:
                 shutil.rmtree(config.cfd.case_dir)
