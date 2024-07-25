@@ -3,6 +3,7 @@ from typing import Dict, List
 
 import torch.nn as nn
 
+import torch
 from dclib.room import Room
 
 from dctwin.models.cooling.facilities import FanModel
@@ -84,6 +85,9 @@ class AirLoopManager(nn.Module):
             weighted_return_temperature = 0
             total_acu_air_mass_flow_rate = 0
             zone_avg_ite_inlet_temperature = 0
+            weighted_return_temperature = torch.zeros(1,)
+            total_acu_air_mass_flow_rate = torch.zeros(1,)
+            zone_avg_ite_inlet_temperature = torch.zeros(1,)
             for acu_name, acu in zone.constructions.acus.items():
                 if acu_name in active_acu_ids:
                     states_next[acu_name].supply_air_mass_flow_rate =\

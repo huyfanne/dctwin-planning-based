@@ -195,6 +195,7 @@ class LithiumIonBattery(nn.Module):
         self.run_capacity_model(I)
         # update the lifetime model and losses model
         ## self.run_lifetime_model()
+        # self.run_lifetime_model()
         # update all electrical states
         self.update_state(I)
 

@@ -182,6 +182,7 @@ class PlantManager(nn.Module):
     @staticmethod
     def _update_mixer(data: Batch, outlet_branch_id: str, mixed_branches: Dict) -> None:
         mixed_outlet_temperature, mixed_outlet_water_mass_flow_rate = torch.zeros(1, 1), torch.zeros(1, 1)
+        mixed_outlet_temperature, mixed_outlet_water_mass_flow_rate = torch.zeros(1,), torch.zeros(1,)
         for branch_id, branch in mixed_branches.items():
             mixed_outlet_water_mass_flow_rate += data.obs_next.plants[branch_id].water_mass_flow_rate
         for branch_id, branch in mixed_branches.items():
@@ -327,6 +328,7 @@ class PlantManager(nn.Module):
 
         if branch.components.pipes is not None:
             outlet_temperature = torch.zeros(1, 1)
+            outlet_temperature = torch.zeros(1,)
             for component_id, component in branch.components.pipes.items():
                 # TODO: add the pipe model
                 temperature = data.obs_next.plants[branch_id].inlet_temperature
@@ -357,6 +359,7 @@ class PlantManager(nn.Module):
                     # update data
                     data.obs_next.plants[loop_id].demand_side_total_cooling_load += coil_sensible_heat_load
                     data.obs_next.plants[branch_id].demand_side_total_mass_flow_rate += coil_requested_mass_flow_rate
+                    data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate += coil_requested_mass_flow_rate
                     data.obs_next.plants[branch_id].outlet_temperature = outlet_temperature
                     data.obs_next.plants[branch_id].water_mass_flow_rate = coil_requested_mass_flow_rate
                     data.obs_next.zones[component_id].coil_sensible_heat_load = coil_sensible_heat_load
@@ -414,6 +417,13 @@ class PlantManager(nn.Module):
                     )
                     data.obs_next.plants[component_id].power = chiller_power
                     data.obs_next.plants[branch_id].outlet_temperature = data.acts[component_id].supply_temperature_sp
+                    requested_flow_rate = data.acts[component.other_loop_demand_side].supply_mass_flow_rate_sp,
+                    if loop_side == "demand":
+                        data.obs_next.plants[loop_id].demand_side_total_cooling_load += requested_cooling_load
+                        data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate += requested_flow_rate
+                    data.obs_next.plants[branch_id].outlet_temperature = data.acts[component_id].supply_temperature_sp
+                    data.obs_next.plants[branch_id].water_mass_flow_rate = requested_flow_rate
+                    data.obs_next.plants[component_id].power = chiller_power
                 else:
                     data.obs_next.plants[branch_id].outlet_temperature = data.obs_next.plants[branch_id].inlet_temperature
                     data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
