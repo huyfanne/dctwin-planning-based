@@ -121,7 +121,7 @@ class ThermalStorageTankModel(nn.Module):
         b = - (self.tank_UA / water_specific_heat + self.epsilon_use * m_use + self.epsilon_source * m_source)
         b = b / self.tank_mass
         T_tank_next = ((a / b) + T_tank_current) * torch.exp(b * time) - (a / b)
-        source_side_cooling_load = self.epsilon_source * m_source * (T_source_in - T_tank_current)
-        use_side_cooling_load = self.epsilon_use * m_use * (T_use_in - T_tank_current)
+        source_side_cooling_load = m_source * (T_tank_current - T_source_in) * water_specific_heat
+        use_side_cooling_load = m_use * (T_use_in - T_tank_current) * water_specific_heat
 
         return T_tank_next, source_side_cooling_load, use_side_cooling_load

@@ -49,6 +49,9 @@ class CapacityModel(nn.Module):
         self.change_mode = False
         # algorithmic parameters
         self.tol = 0.002
+        # Initialize with a default value, e.g., None or a starting DOD value
+        self.prev_dod = None
+        self.dod = 50
 
     def check_soc(self):
         q_upper = self.q_max_lifetime * self.max_soc * 0.01
