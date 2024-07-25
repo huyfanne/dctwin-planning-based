@@ -31,7 +31,7 @@ jobs:
       - name: Pull Docker images
         run: |
           docker pull ghcr.io/cap-dcwiz/salome-9-debian10:latest
-          docker pull ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:0.0.1
+          docker pull ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:working
 
       - name: Install dependencies with Poetry
         env:
