@@ -381,7 +381,7 @@ class PlantManager(nn.Module):
                     requested_flow_rate = data.acts[component_id].source_side_mass_flow_rate,
                     tank_temperature, requested_cooling_load, supply_cooling_load = component.model.forward(
                         T_tank_current=data.obs.plants[component_id].tank_water_temperature,
-                        T_outdoor=data.obs.external_inputs.outdoor_temperature,
+                        T_outdoor=data.inps.outdoor_temperature,
                         T_use_in=data.obs_next.plants[branch_id].inlet_temperature,
                         T_source_in=data.acts[component.other_loop_demand_side].supply_temperature_sp,
                         m_use=data.obs_next.plants[branch_id].water_mass_flow_rate,
