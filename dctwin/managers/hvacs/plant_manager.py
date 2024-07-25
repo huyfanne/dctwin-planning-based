@@ -559,6 +559,42 @@ class PlantManager(nn.Module):
             else:
                 raise logger.critical(f"Invalid branch side {branch.side}")
 
+    @staticmethod
+    def _set_main_branch_mass_flow_rate(
+        data: Batch,
+        loop_id: str,
+        supply_branches: Dict,
+        demand_branches: Dict,
+    ):
+        supply_inlet_branch = {
+            k: v for k, v in supply_branches.items() if v.side == "inlet"
+        }
+        inlet_branch_id = list(supply_inlet_branch.keys())[0]
+        data.obs_next.plants[inlet_branch_id].water_mass_flow_rate = (
+            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
+        )
+        supply_outlet_branch = {
+            k: v for k, v in supply_branches.items() if v.side == "outlet"
+        }
+        outlet_branch_id = list(supply_outlet_branch.keys())[0]
+        data.obs_next.plants[outlet_branch_id].water_mass_flow_rate = (
+            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
+        )
+        demand_inlet_branch = {
+            k: v for k, v in demand_branches.items() if v.side == "inlet"
+        }
+        inlet_branch_id = list(demand_inlet_branch.keys())[0]
+        data.obs_next.plants[inlet_branch_id].water_mass_flow_rate = (
+            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
+        )
+        demand_outlet_branch = {
+            k: v for k, v in demand_branches.items() if v.side == "outlet"
+        }
+        outlet_branch_id = list(demand_outlet_branch.keys())[0]
+        data.obs_next.plants[outlet_branch_id].water_mass_flow_rate = (
+            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
+        )
+
     def forward(
         self,
         data: Batch,
@@ -586,4 +622,12 @@ class PlantManager(nn.Module):
                     loop_side="supply",
                     this_branches=loop.supply_branches,
                     other_branches=loop.demand_branches,
+                )
+                # set the mass flow rate of the main branches (inlet/outlet branches) using the solved demand-side total
+                # water mass flow rate
+                self._set_main_branch_mass_flow_rate(
+                    data=data,
+                    loop_id=loop_id,
+                    supply_branches=loop.supply_branches,
+                    demand_branches=loop.demand_branches,
                 )
