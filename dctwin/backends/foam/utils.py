@@ -3,7 +3,6 @@ import math
 import shutil
 from typing import List, Dict
 from dataclasses import dataclass
-from loguru import logger
 
 from dclib.room import Room
 from dclib.models.geometry.basics import Vertex
@@ -48,7 +47,6 @@ def generate_control_dict(
         Path(template_dir, f"foam/system/{system_folder}/fvSchemes"),
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
-
     if is_gpu:
         shutil.copy(
             Path(template_dir, f"foam/system/{system_folder}/fvSolution_gpu"),
@@ -59,7 +57,6 @@ def generate_control_dict(
             Path(template_dir, f"foam/system/{system_folder}/fvSolution_cpu"),
             Path(config.cfd.case_dir, "system/fvSolution"),
         )
-    
     with open(Path(config.cfd.case_dir, "system/controlDict"), "w") as f:
         f.write(
             template_env.get_template(

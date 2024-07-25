@@ -80,7 +80,6 @@ class BackendK8s(BaseBackend):
 
         # Danger, do not remove this line, used by kubernetes cluster to remove container accordingly
         logger.info(f"container_id: {job_name}")
-        
         job = K8sJob(
             name=job_uuid,
             image=image,

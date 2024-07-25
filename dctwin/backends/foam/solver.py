@@ -43,7 +43,6 @@ class Builder:
         self.last_state_case = last_state_case
         try:
             self.sealed = self.room.constructions.check_sealed
-            # self.sealed = False
         except KeyError:
             logger.error("Error: there is no -sealed- in the JSON -meta-, please refer the example in -tutorials- "
                          "and add it...")

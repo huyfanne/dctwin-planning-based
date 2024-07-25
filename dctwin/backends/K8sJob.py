@@ -308,7 +308,6 @@ class K8sJob:
             final_resources = client.V1ResourceRequirements(
                 requests=self.resources, limits=self.resources
             )
-
             container_args["resources"] = final_resources
 
         if self.need_service:

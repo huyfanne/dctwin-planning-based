@@ -167,4 +167,3 @@ reports/dependency-check-report.html
 /tutorials/eplus/log/
 /tutorials/co-sim/log/
 .secrets
-github_token.txt
