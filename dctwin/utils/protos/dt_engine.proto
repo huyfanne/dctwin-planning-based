@@ -313,11 +313,12 @@ message DCTwinObservationConfig {
 }
 
 message DCTwinConfig {
-  optional SimulationTimeConfig simulation_time_config = 1;
-  repeated DCTwinActionConfig actions = 4;
-  optional bool use_unnormed_act = 5 [default = true];
-  repeated DCTwinObservationConfig observations = 6;
-  optional bool use_unnormed_obs = 7 [default = true];
+  optional LoggingConfig logging_config = 1;
+  optional SimulationTimeConfig simulation_time_config = 2;
+  repeated DCTwinActionConfig actions = 3;
+  optional bool use_unnormed_act = 4 [default = true];
+  repeated DCTwinObservationConfig observations = 5;
+  optional bool use_unnormed_obs = 6 [default = true];
 }
 
 // main engine configuration
