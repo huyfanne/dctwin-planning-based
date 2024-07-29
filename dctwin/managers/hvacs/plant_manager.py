@@ -416,7 +416,7 @@ class PlantManager(nn.Module):
                         data.obs_next.plants[branch_id].outlet_temperature = tank_temperature
                         data.obs_next.plants[component_id].source_side_cooling_load = requested_cooling_load
                         data.obs_next.plants[component_id].source_side_mass_flow_rate = requested_flow_rate
-                        data.obs_next.plants[component_id].use_sied_mass_flow_rate = (
+                        data.obs_next.plants[component_id].use_side_mass_flow_rate = (
                             data.obs_next.plants[branch_id].water_mass_flow_rate
                         )
                     elif loop_side == "demand":
@@ -480,6 +480,7 @@ class PlantManager(nn.Module):
                     data.obs_next.plants[branch_id].outlet_temperature = (
                         data.obs_next.plants[branch_id].inlet_temperature
                     )
+                    data.obs_next.plants[component_id].power = torch.tensor([0.], dtype=torch.float32)
 
         if branch.components.cooling_towers is not None:
             for component_id, component in branch.components.cooling_towers.items():
@@ -494,6 +495,12 @@ class PlantManager(nn.Module):
                     data.obs_next.plants[branch_id].outlet_temperature = (
                         data.acts[loop_id].supply_temperature_sp
                     )
+                else:
+                    data.obs_next.plants[branch_id].outlet_temperature = (
+                        data.obs_next.plants[branch_id].inlet_temperature
+                    )
+                    data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
+                    data.obs_next.plants[component_id].power = torch.tensor([0.], dtype=torch.float32)
 
     def _solve_half_loop_side_branches(
         self,
@@ -559,6 +566,42 @@ class PlantManager(nn.Module):
             else:
                 raise logger.critical(f"Invalid branch side {branch.side}")
 
+    @staticmethod
+    def _set_main_branch_mass_flow_rate(
+        data: Batch,
+        loop_id: str,
+        supply_branches: Dict,
+        demand_branches: Dict,
+    ):
+        supply_inlet_branch = {
+            k: v for k, v in supply_branches.items() if v.side == "inlet"
+        }
+        inlet_branch_id = list(supply_inlet_branch.keys())[0]
+        data.obs_next.plants[inlet_branch_id].water_mass_flow_rate = (
+            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
+        )
+        supply_outlet_branch = {
+            k: v for k, v in supply_branches.items() if v.side == "outlet"
+        }
+        outlet_branch_id = list(supply_outlet_branch.keys())[0]
+        data.obs_next.plants[outlet_branch_id].water_mass_flow_rate = (
+            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
+        )
+        demand_inlet_branch = {
+            k: v for k, v in demand_branches.items() if v.side == "inlet"
+        }
+        inlet_branch_id = list(demand_inlet_branch.keys())[0]
+        data.obs_next.plants[inlet_branch_id].water_mass_flow_rate = (
+            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
+        )
+        demand_outlet_branch = {
+            k: v for k, v in demand_branches.items() if v.side == "outlet"
+        }
+        outlet_branch_id = list(demand_outlet_branch.keys())[0]
+        data.obs_next.plants[outlet_branch_id].water_mass_flow_rate = (
+            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
+        )
+
     def forward(
         self,
         data: Batch,
@@ -587,3 +630,16 @@ class PlantManager(nn.Module):
                     this_branches=loop.supply_branches,
                     other_branches=loop.demand_branches,
                 )
+                # set the mass flow rate of the main branches (inlet/outlet branches) using the solved demand-side total
+                # water mass flow rate
+                self._set_main_branch_mass_flow_rate(
+                    data=data,
+                    loop_id=loop_id,
+                    supply_branches=loop.supply_branches,
+                    demand_branches=loop.demand_branches,
+                )
+                # reset the demand-side total cooling load and mass flow rate
+                data.obs_next.plants[loop_id].demand_side_total_cooling_load =\
+                    torch.tensor([0.], dtype=torch.float32)
+                data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate =\
+                    torch.tensor([0.], dtype=torch.float32)

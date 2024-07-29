@@ -1,5 +1,7 @@
+import csv
 from abc import ABC
 from typing import Any, Tuple, Dict, List
+from pathlib import Path
 
 import torch
 import numpy as np
@@ -29,7 +31,7 @@ class HVACManager(BaseManager, ABC):
         device_key_mapping: Dict = None
     ) -> None:
         super().__init__(
-            config=config,
+            config=config.dctwin_config,
             model=building,
             device_key_mapping=device_key_mapping
         )
@@ -47,6 +49,12 @@ class HVACManager(BaseManager, ABC):
             plant=self._model.constructions.plant,
             time_step=self._time_step,
         )
+        # set up the result logging
+        self._pre_process(
+            log_dir=config.logging_config.log_dir
+        )
+        self._current_time = 0
+
 
     @staticmethod
     def _reset_acu_data(zone: Any, obs: dict, acts: dict) -> Tuple[dict, dict]:
@@ -134,9 +142,10 @@ class HVACManager(BaseManager, ABC):
                         dtype=torch.float32,
                         requires_grad=False,
                     ),
-                    use_sied_mass_flow_rate=(),
+                    use_side_mass_flow_rate=(),
                     source_side_cooling_load=(),
                     use_side_cooling_load=(),
+                    source_side_mass_flow_rate=(),
                 )
                 tank_water_temperature += obs[tank_id].tank_water_temperature
             obs[branch_id].outlet_temperature = tank_water_temperature / len(branch.components.tanks)
@@ -283,8 +292,55 @@ class HVACManager(BaseManager, ABC):
                 self.data.obs.dc[key] = deepcopy(value.detach())
             else:
                 self.data.obs.dc[key] = deepcopy(value)
+        # update time step
+        self._current_time += self._time_step
 
-    def format_external_inputs(self, inps: Dict | Batch) -> Batch:
+    def _pre_process(self, log_dir: str) -> None:
+        """
+        Create the log file for the simulation results
+        """
+        fieldnames = ["Timestamp"]
+        for obj_name, obj in self.data.obs.zones.items():
+            for key in obj.keys():
+                fieldnames.append(f"{obj_name}:{key}")
+        for obj_name, obj in self.data.obs.plants.items():
+            for key in obj.keys():
+                fieldnames.append(f"{obj_name}:{key}")
+        log_dir = Path(f"logs/{log_dir}")
+        log_dir.mkdir(parents=True, exist_ok=True)
+        self.file_handler = open(log_dir.joinpath("output.csv"), "wt", newline='')
+        self.log_handler = csv.DictWriter(
+            self.file_handler,
+            fieldnames=fieldnames
+        )
+        self.log_handler.writeheader()
+        self.file_handler.flush()
+
+    def _post_processing(self, ):
+        """
+        Log the simulation results
+        """
+        log_dict = {}
+        log_dict.update(
+            {"Timestamp": self._current_time}
+        )
+        for obj_name, obj in self.data.obs.zones.items():
+            for key in obj.keys():
+                try:
+                    log_dict.update({f"{obj_name}:{key}": obj[key].item()})
+                except:
+                    log_dict.update({f"{obj_name}:{key}": 0.})
+        for obj_name, obj in self.data.obs.plants.items():
+            for key in obj.keys():
+                try:
+                    log_dict.update({f"{obj_name}:{key}": obj[key].item()})
+                except:
+                    log_dict.update({f"{obj_name}:{key}": 0.})
+        self.log_handler.writerow(log_dict)
+        self.file_handler.flush()
+
+    @staticmethod
+    def format_external_inputs(inps: Dict | Batch) -> Batch:
         data = Batch()
         for external_input_name, external_input in inps.items():
             data[external_input_name] = torch.tensor(
@@ -431,3 +487,5 @@ class HVACManager(BaseManager, ABC):
             )
         # update the states
         self._update_states()
+        # log the data
+        self._post_processing()
