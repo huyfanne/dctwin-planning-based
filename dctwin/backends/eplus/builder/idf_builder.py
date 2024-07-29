@@ -296,7 +296,7 @@ class IDFBuilder:
     ) -> None:
         if self.model is not None:
             # save idf
-            self.model.saveas(str(idf_save_path))
+            self.model.saveas(str(idf_save_path), encoding="utf-8")
             logger.info(f"Model saved to {idf_save_path}")
 
             # save device key map
