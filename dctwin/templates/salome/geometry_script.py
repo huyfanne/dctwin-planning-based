@@ -324,7 +324,9 @@ class RackModel:
         )  # Remain only front face
         self.rack_blanking_mesh = util.mesh(blanking_box, 0.1, 0.5)
 
-        slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height, 0)
+        slot_unit_and_actual_rack_height_difference = max(
+            self.size["z"] - self.max_slot * self.slot_height, 0
+        )
 
         if slot_unit_and_actual_rack_height_difference > 0.001:
             blanking_height = slot_unit_and_actual_rack_height_difference / 2
@@ -342,8 +344,12 @@ class RackModel:
                 rack_bottom_blanking_box,
                 exclude=["rear", "bottom", "top", "left", "right"],
             )
-            self.rack_top_blanking_box_mesh = util.mesh(rack_top_blanking_box, 0.05, 0.1)
-            self.rack_bottom_blanking_box_mesh = util.mesh(rack_bottom_blanking_box, 0.05, 0.1)
+            self.rack_top_blanking_box_mesh = util.mesh(
+                rack_top_blanking_box, 0.05, 0.1
+            )
+            self.rack_bottom_blanking_box_mesh = util.mesh(
+                rack_bottom_blanking_box, 0.05, 0.1
+            )
 
         self.is_meshed = True
 
@@ -359,7 +365,9 @@ class RackModel:
             is_export=False,
         )
         meshes.append(mesh)
-        slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height, 0)
+        slot_unit_and_actual_rack_height_difference = max(
+            self.size["z"] - self.max_slot * self.slot_height, 0
+        )
         if self.rack_bottom_blanking_box_mesh is not None:
             mesh = util.copy_mesh(
                 f"rack_panel_{rack_id}_bottom",
@@ -397,7 +405,9 @@ class RackModel:
 
         meshes = []
 
-        slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height, 0)
+        slot_unit_and_actual_rack_height_difference = max(
+            self.size["z"] - self.max_slot * self.slot_height, 0
+        )
         for slot in slots:
             # 0.0015 is the gap between each slot, because 0.045 is full slot height and 0.042 is the actual height
             # z = placement["z"] + 0.0015

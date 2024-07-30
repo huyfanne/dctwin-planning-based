@@ -56,14 +56,23 @@ class Backend(BaseBackend):
         self.check_image()
 
         if self.is_gpu:
-            output = subprocess.check_output(['nvidia-smi', '--query-gpu=index', '--format=csv,noheader'], universal_newlines=True)
-            gpu_device_ids = [str(idx) for idx in output.strip().split('\n')]
+            output = subprocess.check_output(
+                ["nvidia-smi", "--query-gpu=index", "--format=csv,noheader"],
+                universal_newlines=True,
+            )
+            gpu_device_ids = [str(idx) for idx in output.strip().split("\n")]
         try:
             self.client.close()
             self.container = self.client.containers.run(
                 self.docker_image,
                 command=command,
-                device_requests=[types.DeviceRequest(device_ids=gpu_device_ids, capabilities=[['gpu']])] if self.is_gpu else None,
+                device_requests=[
+                    types.DeviceRequest(
+                        device_ids=gpu_device_ids, capabilities=[["gpu"]]
+                    )
+                ]
+                if self.is_gpu
+                else None,
                 auto_remove=auto_remove,
                 volumes={
                     str(case_dir): {

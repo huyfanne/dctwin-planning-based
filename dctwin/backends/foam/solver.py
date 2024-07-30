@@ -44,8 +44,10 @@ class Builder:
         try:
             self.sealed = self.room.constructions.check_sealed
         except KeyError:
-            logger.error("Error: there is no -sealed- in the JSON -meta-, please refer the example in -tutorials- "
-                         "and add it...")
+            logger.error(
+                "Error: there is no -sealed- in the JSON -meta-, please refer the example in -tutorials- "
+                "and add it..."
+            )
             exit(-1)
 
     def run(self) -> None:
@@ -66,11 +68,15 @@ class Builder:
             )
             if self.sealed:
                 self.render(
-                    "U_pressure", "U", "".join(read_internal_field(Path(self.last_state_case, "U")))
+                    "U_pressure",
+                    "U",
+                    "".join(read_internal_field(Path(self.last_state_case, "U"))),
                 )
             else:
                 self.render(
-                    "U", "U", "".join(read_internal_field(Path(self.last_state_case, "U")))
+                    "U",
+                    "U",
+                    "".join(read_internal_field(Path(self.last_state_case, "U"))),
                 )
         else:
             self.render("T", "T")
@@ -97,7 +103,8 @@ class Builder:
                     init_temperature=24 + 273.15,
                     p_rgh=round(self.room_dz * 9.81, 10),
                     acu_boundaries=[
-                        ACUBoundary(key, acu, self.sealed) for key, acu in self.acu_dict.items()
+                        ACUBoundary(key, acu, self.sealed)
+                        for key, acu in self.acu_dict.items()
                     ],
                     server_boundaries=[
                         ServerBoundary(key, server, self.sealed)
@@ -150,7 +157,9 @@ class SolverBackendMixin:
             command = [
                 "bash",
                 "-c",
-                (f"source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/amgx/lib && {self.solver}"),
+                (
+                    f"source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/amgx/lib && {self.solver}"
+                ),
             ]
         return command
 
