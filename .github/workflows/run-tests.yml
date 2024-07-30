@@ -31,7 +31,7 @@ jobs:
       - name: Pull Docker images
         run: |
           docker pull ghcr.io/cap-dcwiz/salome-9-debian10:latest
-          docker pull ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:working
+          docker pull ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0
 
       - name: Install dependencies with Poetry
         env:
@@ -69,7 +69,7 @@ jobs:
       - name: Pull Docker images
         run: |
           docker pull ghcr.io/cap-dcwiz/salome-9-debian10:latest
-          docker pull ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:0.0.1
+          docker pull ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0
           docker pull ghcr.io/cap-dcwiz/energyplus-9-5-0:latest
 
       - name: Install dependencies with Poetry

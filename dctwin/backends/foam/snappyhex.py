@@ -21,7 +21,7 @@ class SnappyHexBackendMixin:
     Backend for snappyHexMesh. The class is inherited from the core Backend.
     """
 
-    docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:working"
+    docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0"
     perforated_openings = {}
 
     @property
