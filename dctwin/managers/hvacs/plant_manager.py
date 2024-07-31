@@ -16,7 +16,7 @@ from dctwin.models.cooling.facilities import (
     ChillerModel,
     PumpModel,
     ThermalStorageTankModel,
-    CoolingTowerModel
+    CoolingTowerModel,
 )
 
 from dctwin.utils.const import water_specific_heat
@@ -44,6 +44,10 @@ class PlantManager(nn.Module):
         self._init_models()
 
     def _init_models(self) -> None:
+        """
+        Initialize the models for the plant loops
+        """
+        _component_models = {}
         for loops in [
             self.plant.secondary_chilled_water_loops,
             self.plant.chilled_water_loops,
@@ -54,68 +58,113 @@ class PlantManager(nn.Module):
             for loop_id, loop in loops.items():
                 # half-loop demand side components
                 for branch_id, branch in loop.demand_branches.items():
-                    self._init_facility_models(branch_components=branch.components)
+                    _component_models = self._init_facility_models(
+                        branch_components=branch.components,
+                        component_models=_component_models,
+                    )
                 # half-loop supply side components
                 for branch_id, branch in loop.supply_branches.items():
-                    self._init_facility_models(branch_components=branch.components)
+                    _component_models = self._init_facility_models(
+                        branch_components=branch.components,
+                        component_models=_component_models,
+                    )
 
     def _init_facility_models(
         self,
         branch_components: Components,
-    ) -> None:
-
+        component_models: Dict,
+    ) -> Dict:
+        """
+        Initialize the models for the plant components,
+        including pipes, pumps, chillers, tanks, cooling towers, etc.
+        """
         if branch_components.pipes:
             for component_id, component in branch_components.pipes.items():
-                component.model = None
-                self.add_module(component_id, component.model)
+                if component_id not in component_models.keys():
+                    component.model = None
+                    component_models[component_id] = component.model
+                    self.add_module(component_id, component.model)
+                else:
+                    component.model = component_models[component_id]
 
         if branch_components.pumps:
             for component_id, component in branch_components.pumps.items():
-                component.model = PumpModel(
-                    config=component,
-                    key_mapping=self.device_key_mapping
-                )
-                self.add_module(component_id, component.model)
+                if component_id not in component_models.keys():
+                    component.model = PumpModel(
+                        config=component,
+                        key_mapping=self.device_key_mapping
+                    )
+                    self.add_module(component_id, component.model)
+                    component_models[component_id] = component.model
+                else:
+                    component.model = component_models[component_id]
 
         if branch_components.acu:
             for component_id, component in branch_components.acu.items():
-                component.model = HeatExchanger(
-                    config=component,
-                    key_mapping=self.device_key_mapping,
-                    internal_fluid_name="water",
-                    external_fluid_name="air"
-                )
+                if component_id not in component_models.keys():
+                    component.model = HeatExchanger(
+                        config=component,
+                        key_mapping=self.device_key_mapping,
+                        internal_fluid_name="water",
+                        external_fluid_name="air"
+                    )
+                    self.add_module(component_id, component.model)
+                    component_models[component_id] = component.model
+                else:
+                    component.model = component_models[component_id]
 
         if branch_components.chillers:
             for component_id, component in branch_components.chillers.items():
-                component.model = ChillerModel(
-                    config=component,
-                    key_mapping=self.device_key_mapping,
-                )
+                if component_id not in component_models.keys():
+                    component.model = ChillerModel(
+                        config=component,
+                        key_mapping=self.device_key_mapping,
+                    )
+                    self.add_module(component_id, component.model)
+                    component_models[component_id] = component.model
+                else:
+                    component.model = component_models[component_id]
 
         if branch_components.tanks:
             for component_id, component in branch_components.tanks.items():
-                component.model = ThermalStorageTankModel(
-                    config=component,
-                    key_mapping=self.device_key_mapping,
-                )
+                if component_id not in component_models.keys():
+                    component.model = ThermalStorageTankModel(
+                        config=component,
+                        key_mapping=self.device_key_mapping,
+                    )
+                    self.add_module(component_id, component.model)
+                    component_models[component_id] = component.model
+                else:
+                    component.model = component_models[component_id]
 
         if branch_components.cooling_towers:
             for component_id, component in branch_components.cooling_towers.items():
-                component.model = CoolingTowerModel(
-                    config=component,
-                    key_mapping=self.device_key_mapping,
-                    learnable=False  # TODO: add learnable cooling tower models
-                )
+                if component_id not in component_models.keys():
+                    component.model = CoolingTowerModel(
+                        config=component,
+                        key_mapping=self.device_key_mapping,
+                        learnable=False  # TODO: add learnable cooling tower models
+                    )
+                    self.add_module(component_id, component.model)
+                    component_models[component_id] = component.model
+                else:
+                    component.model = component_models[component_id]
 
         if branch_components.heat_exchangers:
             for component_id, component in branch_components.heat_exchangers.items():
-                component.model = HeatExchanger(
-                    config=component,
-                    key_mapping=self.device_key_mapping,
-                    internal_fluid_name="water",
-                    external_fluid_name="air",
-                )
+                if component_id not in component_models.keys():
+                    component.model = HeatExchanger(
+                        config=component,
+                        key_mapping=self.device_key_mapping,
+                        internal_fluid_name="water",
+                        external_fluid_name="air",
+                    )
+                    self.add_module(component_id, component.model)
+                    component_models[component_id] = component.model
+                else:
+                    component.model = component_models[component_id]
+
+        return component_models
 
     def collect(self, data: dict) -> None:
         """
@@ -157,10 +206,27 @@ class PlantManager(nn.Module):
                 if "pump" in demand_branch_models.keys():
                     demand_branch_models["pump"].learn()
 
-    def _determine_mass_flow_rate(self, requested_mass_flow_rate: torch.Tensor) -> torch.Tensor:
-        # TODO: add the mass flow rate determination logic, currently, we assume the requested mass flow rate can be
-        #  always met. We need to add the logic to determine the actual mass flow rate based on the pump allowed range
-        pass
+    @staticmethod
+    def _determine_actual_mass_flow_rate(
+        data: Batch,
+        branch: Branch,
+        requested_mass_flow_rate: torch.Tensor,
+    ) -> torch.Tensor:
+        actual_mass_flow_rate = requested_mass_flow_rate
+        if branch.components.pumps is not None:
+            for component_id, component in branch.components.pumps.items():
+                if len(branch.components.pumps) > 1:
+                    raise logger.critical("Only one pump is allowed in the middle branch")
+                if data.acts[component_id].on_off_schedule == 1:
+                    maximum_mass_flow_rate = torch.tensor(
+                        [component.cooling.design_maximum_flow_rate],
+                        dtype=torch.float32,
+                    )
+                    actual_mass_flow_rate = torch.min(requested_mass_flow_rate, maximum_mass_flow_rate)
+                else:
+                    actual_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
+        return actual_mass_flow_rate
+
 
     @staticmethod
     def _set_branch_inlet_properties(
@@ -192,6 +258,49 @@ class PlantManager(nn.Module):
                 )
             else:
                 raise logger.critical(f"Loop side should be either demand or supply, not {loop_side}")
+
+    @staticmethod
+    def _reset_demand_side_data(data: Batch, loop_id: str) -> None:
+        data.obs_next.plants[loop_id].demand_side_total_cooling_load =\
+            torch.tensor([0.], dtype=torch.float32)
+        data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate =\
+            torch.tensor([0.], dtype=torch.float32)
+
+    @staticmethod
+    def _set_main_branch_mass_flow_rate(
+        data: Batch,
+        loop_id: str,
+        supply_branches: Dict,
+        demand_branches: Dict,
+    ) -> None:
+        supply_inlet_branch = {
+            k: v for k, v in supply_branches.items() if v.side == "inlet"
+        }
+        inlet_branch_id = list(supply_inlet_branch.keys())[0]
+        data.obs_next.plants[inlet_branch_id].water_mass_flow_rate = (
+            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
+        )
+        supply_outlet_branch = {
+            k: v for k, v in supply_branches.items() if v.side == "outlet"
+        }
+        outlet_branch_id = list(supply_outlet_branch.keys())[0]
+        data.obs_next.plants[outlet_branch_id].water_mass_flow_rate = (
+            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
+        )
+        demand_inlet_branch = {
+            k: v for k, v in demand_branches.items() if v.side == "inlet"
+        }
+        inlet_branch_id = list(demand_inlet_branch.keys())[0]
+        data.obs_next.plants[inlet_branch_id].water_mass_flow_rate = (
+            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
+        )
+        demand_outlet_branch = {
+            k: v for k, v in demand_branches.items() if v.side == "outlet"
+        }
+        outlet_branch_id = list(demand_outlet_branch.keys())[0]
+        data.obs_next.plants[outlet_branch_id].water_mass_flow_rate = (
+            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
+        )
 
     @staticmethod
     def _update_spliter(data: Batch, split_branch_id: str, inlet_branch: Dict) -> None:
@@ -227,8 +336,8 @@ class PlantManager(nn.Module):
         assert len(outlet_branch) == 1, logger.critical("Only one outlet branch is allowed")
         return inlet_branch, middle_branches, outlet_branch
 
-    @staticmethod
     def _do_flow_and_load_distribution(
+        self,
         data: Batch,
         loop_id: str,
         loop: SecondaryChilledWaterLoops | ChilledWaterLoops | CondenserWaterLoops,
@@ -236,11 +345,12 @@ class PlantManager(nn.Module):
     ) -> None:
         """
         Distribute the total demand cooling load and mass flow rate to the middle branches
+        Currently, this method only supports UniformLoad and SequentialLoad distribution schemes
         :param data: the data batch
         :param loop_id: the loop id
         :param loop: the loop object
         :param middle_branches: the middle branches
-        :return:
+        :return: None
         """
         total_cooling_load = data.obs_next.plants[loop_id].demand_side_total_cooling_load
         total_mass_flow_rate = data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
@@ -265,12 +375,20 @@ class PlantManager(nn.Module):
                         active_devices.append(component_id)
                     else:
                         data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
+            if branch.components.pumps is not None:
+                for component_id, component in branch.components.pumps.items():
+                    if data.acts[component_id].on_off_schedule == 1:
+                        active_devices.append(component_id)
+                    else:
+                        data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
         # TODO: Add the rest of the components
 
         # perform load and mass flow distribution to each active device
         for branch_id, branch in middle_branches.items():
             if branch.components.chillers is not None:
                 for component_id, component in branch.components.chillers.items():
+                    if len(branch.components.chillers) > 1:
+                        raise logger.critical("Only one chiller is allowed in the middle branch")
                     if component_id in active_devices:
                         if loop.meta.load_distribution_scheme == "UniformLoad":
                             total_mass_flow_rate_per_device = total_mass_flow_rate / len(active_devices)
@@ -293,6 +411,8 @@ class PlantManager(nn.Module):
                             )
             if branch.components.tanks is not None:
                 for component_id, component in branch.components.tanks.items():
+                    if len(branch.components.tanks) > 1:
+                        raise logger.critical("Only one tank is allowed in the middle branch")
                     if component_id in active_devices:
                         if loop.meta.load_distribution_scheme == "UniformLoad":
                             total_mass_flow_rate_per_device = total_mass_flow_rate / len(active_devices)
@@ -314,9 +434,10 @@ class PlantManager(nn.Module):
                             raise logger.critical(
                                 f"Invalid load distribution scheme: {loop.meta.load_distribution_scheme}"
                             )
-
             if branch.components.cooling_towers is not None:
                 for component_id, component in branch.components.cooling_towers.items():
+                    if len(branch.components.cooling_towers) > 1:
+                        raise logger.critical("Only one cooling tower is allowed in the middle branch")
                     if component_id in active_devices:
                         if loop.meta.load_distribution_scheme == "UniformLoad":
                             total_mass_flow_rate_per_device = total_mass_flow_rate / len(active_devices)
@@ -338,6 +459,13 @@ class PlantManager(nn.Module):
                             raise logger.critical(
                                 f"Invalid load distribution scheme: {loop.meta.load_distribution_scheme}"
                             )
+
+            actual_flow_rate = self._determine_actual_mass_flow_rate(
+                data=data,
+                branch=branch,
+                requested_mass_flow_rate=data.obs_next.plants[branch_id].water_mass_flow_rate,
+            )
+            data.obs_next.plants[branch_id].water_mass_flow_rate = actual_flow_rate
 
     def _solve_branch_components(
         self,
@@ -390,32 +518,48 @@ class PlantManager(nn.Module):
 
         if branch.components.pumps is not None:
             for component_id, component in branch.components.pumps.items():
-                # TODO: Add pump on/off schedule
-                component.model.forward(
-                    mass_flow_rate=data.obs_next.plants[branch_id].water_mass_flow_rate,
-                )
+                if len(branch.components.pumps) > 1:
+                    raise logger.critical("Cascade pumps are not supported")
+                if data.acts[component_id].on_off_schedule == 1:
+                    actual_flow_rate = self._determine_actual_mass_flow_rate(
+                        data=data,
+                        branch=branch,
+                        requested_mass_flow_rate=data.obs_next.plants[branch_id].water_mass_flow_rate,
+                    )
+                    data.obs_next.plants[branch_id].water_mass_flow_rate = actual_flow_rate
+                    # TODO: Add pump on/off schedule
+                    pump_power = component.model.forward(
+                        mass_flow_rate=data.obs_next.plants[branch_id].water_mass_flow_rate,
+                    )
+                    data.obs_next.plants[component_id].power = pump_power
+                else:
+                    data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
 
         if branch.components.tanks is not None:
             for component_id, component in branch.components.tanks.items():
-                if len(branch.components.tanks) > 1:
-                    raise logger.critical("Only one tank is allowed in one branch")
+                # if len(branch.components.tanks) > 1:
+                #     raise logger.critical("Only one tank is allowed in one branch")
                 if data.acts[component_id].on_off_schedule == 1:
                     requested_flow_rate = data.acts[component_id].source_side_mass_flow_rate
+                    actual_flow_rate = self._determine_actual_mass_flow_rate(
+                        data=data,
+                        branch=branch,
+                        requested_mass_flow_rate=requested_flow_rate,
+                    )
                     if loop_side == "supply":
                         tank_temperature, requested_cooling_load, supply_cooling_load = component.model.forward(
                             T_tank_current=data.obs.plants[component_id].tank_water_temperature,
                             T_outdoor=data.inps.outdoor_temperature,
                             T_use_in=data.obs_next.plants[branch_id].inlet_temperature,
-                            # T_source_in=data.acts[component.other_loop_demand_side].supply_temperature_sp,
-                            T_source_in=data.acts["chilled water loop"].supply_temperature_sp,
+                            T_source_in=data.acts[component.other_loop_side].supply_temperature_sp,
                             m_use=data.obs_next.plants[branch_id].water_mass_flow_rate,
-                            m_source=requested_flow_rate,
+                            m_source=actual_flow_rate,
                             time=torch.tensor(self.time_step, dtype=torch.float32, requires_grad=False),
                         )
-                        data.obs_next.plants[component_id].tank_water_temperature = tank_temperature
                         data.obs_next.plants[branch_id].outlet_temperature = tank_temperature
+                        data.obs_next.plants[component_id].tank_water_temperature = tank_temperature
                         data.obs_next.plants[component_id].source_side_cooling_load = requested_cooling_load
-                        data.obs_next.plants[component_id].source_side_mass_flow_rate = requested_flow_rate
+                        data.obs_next.plants[component_id].source_side_mass_flow_rate = actual_flow_rate
                         data.obs_next.plants[component_id].use_side_mass_flow_rate = (
                             data.obs_next.plants[branch_id].water_mass_flow_rate
                         )
@@ -444,12 +588,8 @@ class PlantManager(nn.Module):
             for component_id, component in branch.components.chillers.items():
                 if data.acts[component_id].on_off_schedule == 1:
                     if loop_side == "supply":
-                        # cw_sp = data.acts[component.other_loop_demand_side].supply_temperature_sp \
-                        #     if data.acts[component.other_loop_demand_side].supply_temperature_sp \
-                        #     else data.inps.outdoor_temperature
-                        # TODO: add the logic to determine the condenser water setpoint temperature
-                        cw_sp = data.acts["condenser water loop"].supply_temperature_sp \
-                            if data.acts["condenser water loop"].supply_temperature_sp \
+                        cw_sp = data.acts[component.other_loop_side].supply_temperature_sp \
+                            if data.acts[component.other_loop_side].supply_temperature_sp \
                             else data.inps.outdoor_temperature
                         chiller_power = component.model.forward(
                             cooling_load=data.obs_next.plants[component_id].cooling_load,
@@ -460,13 +600,18 @@ class PlantManager(nn.Module):
                         data.obs_next.plants[component_id].power = chiller_power
                     elif loop_side == "demand":
                         requested_flow_rate = torch.tensor(
-                            [component.cooling.reference_condenser_fluid_flow_rate*1000.], dtype=torch.float32
+                            [component.cooling.reference_condenser_fluid_flow_rate * 1000.], dtype=torch.float32
+                        )
+                        actual_flow_rate = self._determine_actual_mass_flow_rate(
+                            data=data,
+                            branch=branch,
+                            requested_mass_flow_rate=requested_flow_rate,
                         )
                         data.obs_next.plants[loop_id].demand_side_total_cooling_load += (
                             data.obs_next.plants[component_id].cooling_load
                         )
-                        data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate += requested_flow_rate
-                        data.obs_next.plants[branch_id].water_mass_flow_rate = requested_flow_rate
+                        data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate += actual_flow_rate
+                        data.obs_next.plants[branch_id].water_mass_flow_rate = actual_flow_rate
                         data.obs_next.plants[branch_id].outlet_temperature = (
                             data.obs_next.plants[branch_id].inlet_temperature +
                             data.obs_next.plants[component_id].cooling_load /
@@ -491,7 +636,7 @@ class PlantManager(nn.Module):
                         cw_supply_water_temperature=data.obs_next.plants[branch_id].outlet_temperature,
                         outside_air_wetbulb_temperature=data.inps.outdoor_temperature,
                     )
-                    data.obs_next.plants[component_id].power = cooling_tower_power
+                    data.obs_next.plants[component_id].fan_power = cooling_tower_power
                     data.obs_next.plants[branch_id].outlet_temperature = (
                         data.acts[loop_id].supply_temperature_sp
                     )
@@ -500,7 +645,7 @@ class PlantManager(nn.Module):
                         data.obs_next.plants[branch_id].inlet_temperature
                     )
                     data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
-                    data.obs_next.plants[component_id].power = torch.tensor([0.], dtype=torch.float32)
+                    data.obs_next.plants[component_id].fan_power = torch.tensor([0.], dtype=torch.float32)
 
     def _solve_half_loop_side_branches(
         self,
@@ -566,42 +711,6 @@ class PlantManager(nn.Module):
             else:
                 raise logger.critical(f"Invalid branch side {branch.side}")
 
-    @staticmethod
-    def _set_main_branch_mass_flow_rate(
-        data: Batch,
-        loop_id: str,
-        supply_branches: Dict,
-        demand_branches: Dict,
-    ):
-        supply_inlet_branch = {
-            k: v for k, v in supply_branches.items() if v.side == "inlet"
-        }
-        inlet_branch_id = list(supply_inlet_branch.keys())[0]
-        data.obs_next.plants[inlet_branch_id].water_mass_flow_rate = (
-            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
-        )
-        supply_outlet_branch = {
-            k: v for k, v in supply_branches.items() if v.side == "outlet"
-        }
-        outlet_branch_id = list(supply_outlet_branch.keys())[0]
-        data.obs_next.plants[outlet_branch_id].water_mass_flow_rate = (
-            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
-        )
-        demand_inlet_branch = {
-            k: v for k, v in demand_branches.items() if v.side == "inlet"
-        }
-        inlet_branch_id = list(demand_inlet_branch.keys())[0]
-        data.obs_next.plants[inlet_branch_id].water_mass_flow_rate = (
-            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
-        )
-        demand_outlet_branch = {
-            k: v for k, v in demand_branches.items() if v.side == "outlet"
-        }
-        outlet_branch_id = list(demand_outlet_branch.keys())[0]
-        data.obs_next.plants[outlet_branch_id].water_mass_flow_rate = (
-            data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate
-        )
-
     def forward(
         self,
         data: Batch,
@@ -639,7 +748,4 @@ class PlantManager(nn.Module):
                     demand_branches=loop.demand_branches,
                 )
                 # reset the demand-side total cooling load and mass flow rate
-                data.obs_next.plants[loop_id].demand_side_total_cooling_load =\
-                    torch.tensor([0.], dtype=torch.float32)
-                data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate =\
-                    torch.tensor([0.], dtype=torch.float32)
+                self._reset_demand_side_data(data=data, loop_id=loop_id)
