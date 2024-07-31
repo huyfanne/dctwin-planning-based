@@ -29,6 +29,7 @@ class BaseManager(ABC):
         config: DTEngineConfig,
         model: Building | Room,
         device_key_mapping: Dict = None,
+        ds=None,
     ) -> None:
         super().__init__()
         # set up basics
@@ -43,6 +44,7 @@ class BaseManager(ABC):
         # set up simulation time
         self._set_simulation_time()
         # reset observation and action data
+        self._ds = ds
         self._reset_data()
 
     def _reset_acts_required_grad(self):
