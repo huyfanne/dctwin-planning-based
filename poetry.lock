@@ -1459,12 +1459,12 @@ dev = ["meson-python (>=0.13.1)", "numpy (>=1.25)", "pybind11 (>=2.6)", "setupto
 
 [[package]]
 name = "mayavi"
-version = "4.8.1"
+version = "4.8.2"
 description = "3D scientific data visualization library and application"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "mayavi-4.8.1.tar.gz", hash = "sha256:9f427ef2ca6c91ae78d92d3689ba6beca24c8460e2706d8a1c9b84289ad3fd9e"},
+    {file = "mayavi-4.8.2.tar.gz", hash = "sha256:b10fe9145f21c48e4902f0e746b3603b3cb694d11456515a46820f21a0a74229"},
 ]
 
 [package.dependencies]
@@ -2475,13 +2475,13 @@ pyflakes = ">=1.5.0"
 
 [[package]]
 name = "pymdown-extensions"
-version = "10.8.1"
+version = "10.9"
 description = "Extension pack for Python Markdown."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pymdown_extensions-10.8.1-py3-none-any.whl", hash = "sha256:f938326115884f48c6059c67377c46cf631c733ef3629b6eed1349989d1b30cb"},
-    {file = "pymdown_extensions-10.8.1.tar.gz", hash = "sha256:3ab1db5c9e21728dabf75192d71471f8e50f216627e9a1fa9535ecb0231b9940"},
+    {file = "pymdown_extensions-10.9-py3-none-any.whl", hash = "sha256:d323f7e90d83c86113ee78f3fe62fc9dee5f56b54d912660703ea1816fed5626"},
+    {file = "pymdown_extensions-10.9.tar.gz", hash = "sha256:6ff740bcd99ec4172a938970d42b96128bdc9d4b9bcad72494f29921dc69b753"},
 ]
 
 [package.dependencies]
@@ -3435,4 +3435,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "3390b6dd8b2c2d31a5d3eba066ceb26f6d227587471b7e9ffd34052dfd63039f"
+content-hash = "e9f49e1a9da191e13e2dc1ebd40f3c9a9f8231ec785f6f7948c16c6c7298d425"

@@ -30,8 +30,8 @@ dclib = {git = "https://github.com/cap-dcwiz/dclib.git", tag="v1.2.5"}
 sh = "^2.0.6"
 psutil = "5.9.8"
 vtk = "9.3.1"
-mayavi = "4.8.1"
 requests = ">2.32"
+mayavi = "^4.8.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
