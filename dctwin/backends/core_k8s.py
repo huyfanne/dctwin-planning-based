@@ -5,7 +5,7 @@ import json
 
 from dctwin.utils import config as dctwin_config
 from loguru import logger
-from kubernetes import config, client
+from kubernetes import config
 
 from dctwin.backends.base_core import BaseBackend
 from dctwin.backends.K8sJob import K8sJob
@@ -80,7 +80,6 @@ class BackendK8s(BaseBackend):
 
         # Danger, do not remove this line, used by kubernetes cluster to remove container accordingly
         logger.info(f"container_id: {job_name}")
-
         job = K8sJob(
             name=job_uuid,
             image=image,

@@ -132,47 +132,58 @@ class CFDManager:
         if self.isk8s:
             self.k8s_config["k8s_resources"] = self.k8s_config["k8s_meshing_resources"]
             self.k8s_config["k8s_taint"] = self.k8s_config["k8s_cpu_taint"]
-            self.geometry_backend = SalomeBackendK8s(k8s_config=self.k8s_config)
+            self.geometry_backend = SalomeBackendK8s(
+                k8s_config=self.k8s_config, is_gpu=self.is_gpu
+            )
             self.mesh_backend = SnappyHexBackendK8s(
-                process_num=self.mesh_process, k8s_config=self.k8s_config, is_gpu=self.is_gpu
+                process_num=self.mesh_process,
+                k8s_config=self.k8s_config,
+                is_gpu=self.is_gpu,
             )
             if self.steady:
-                self.k8s_config["k8s_resources"] = self.k8s_config["k8s_solving_resources"]
+                self.k8s_config["k8s_resources"] = self.k8s_config[
+                    "k8s_solving_resources"
+                ]
                 if self.k8s_config["k8s_gpu_taint"]:
                     self.k8s_config["k8s_taint"] = self.k8s_config["k8s_gpu_taint"]
                 self.solver_backend = SteadySolverBackendK8s(
                     process_num=self.solve_process,
                     k8s_config=self.k8s_config,
-                    is_gpu=self.is_gpu
+                    is_gpu=self.is_gpu,
                 )
                 # use reduced-order simulation if POD mode is provided
                 if not self.run_cfd and self.pod_method is not None:
                     assert (
-                            self.object_mesh_index is not None
+                        self.object_mesh_index is not None
                     ), "object mesh index is required for POD simulation"
                     self.pod_backend = PODBackendK8s.load(
                         self.room, self.object_mesh_index
                     )
             else:
-                self.k8s_config["k8s_resources"] = self.k8s_config["k8s_solving_resources"]
+                self.k8s_config["k8s_resources"] = self.k8s_config[
+                    "k8s_solving_resources"
+                ]
                 self.k8s_config["k8s_taint"] = self.k8s_config["k8s_gpu_taint"]
                 self.solver_backend = TransientSolverBackendK8s(
-                    process_num=self.solve_process,
-                    is_gpu=self.is_gpu
+                    process_num=self.solve_process, is_gpu=self.is_gpu
                 )
         else:
-            self.geometry_backend = SalomeBackend(self.docker_client, is_gpu=self.is_gpu)
+            self.geometry_backend = SalomeBackend(
+                self.docker_client, is_gpu=self.is_gpu
+            )
             self.mesh_backend = SnappyHexBackend(
                 self.docker_client, process_num=self.mesh_process, is_gpu=self.is_gpu
             )
             if self.steady:
                 self.solver_backend = SteadySolverBackend(
-                    self.docker_client, process_num=self.solve_process, is_gpu=self.is_gpu
+                    self.docker_client,
+                    process_num=self.solve_process,
+                    is_gpu=self.is_gpu,
                 )
                 # use reduced-order simulation if POD mode is provided
                 if not self.run_cfd and self.pod_method is not None:
                     assert (
-                            self.object_mesh_index is not None
+                        self.object_mesh_index is not None
                     ), "object mesh index is required for POD simulation"
                     self.pod_backend = PODBackend.load(
                         self.room, self.object_mesh_index
@@ -203,8 +214,8 @@ class CFDManager:
             raise MeshBuildError("Failed to mesh geometry")
 
     def solve(
-            self,
-            stream: bool = False,
+        self,
+        stream: bool = False,
     ) -> None:
         """Solve the simulation
         :param stream: whether to stream the output
@@ -223,9 +234,9 @@ class CFDManager:
             raise FoamSolveError("Failed to solve the simulation")
 
     def _update_acu_boundaries(
-            self,
-            supply_air_temperatures: Dict,
-            supply_air_volume_flow_rates: Dict,
+        self,
+        supply_air_temperatures: Dict,
+        supply_air_volume_flow_rates: Dict,
     ) -> None:
         """Update ACU boundaries
         supply_air_temperatures: supply air temperature for each ACU
@@ -248,9 +259,9 @@ class CFDManager:
                     logger.critical(f"ACU {acu_uid} volume flow rate is missing")
 
     def _update_server_boundaries(
-            self,
-            server_powers: Dict,
-            server_volume_flow_rates: Dict,
+        self,
+        server_powers: Dict,
+        server_volume_flow_rates: Dict,
     ) -> None:
         """Update server boundaries
         server_powers: server power for each server
@@ -274,11 +285,11 @@ class CFDManager:
                         )
 
     def update_boundary_conditions(
-            self,
-            supply_air_temperatures: Dict = None,
-            supply_air_volume_flow_rates: Dict = None,
-            server_powers: Dict = None,
-            server_volume_flow_rates: Dict = None,
+        self,
+        supply_air_temperatures: Dict = None,
+        supply_air_volume_flow_rates: Dict = None,
+        server_powers: Dict = None,
+        server_volume_flow_rates: Dict = None,
     ) -> None:
         """Update boundary conditions for ACUs and servers"""
         self._update_acu_boundaries(
@@ -314,9 +325,11 @@ class CFDManager:
 
         return boundary_conditions
 
-    @staticmethod
     def _scale_server_flow_rate(
-            boundary_conditions: Dict, acu2server_flow_ratio: float = 0.8, expert_mode: bool = False
+        self,
+        boundary_conditions: Dict,
+        acu2server_flow_ratio: float = 0.8,
+        expert_mode: bool = False,
     ) -> Dict:
         """
         scale total server flow rate as a ratio of total supply air flow rate
@@ -329,20 +342,27 @@ class CFDManager:
         )
 
         logger.info(f"sum acu flow rate before scaling: {sum_acu_volume_flow_rate}")
-        logger.info(f"sum server flow rate before scaling: {sum_server_volume_flow_rate}")
+        logger.info(
+            f"sum server flow rate before scaling: {sum_server_volume_flow_rate}"
+        )
 
         scale_factor = (
-                sum_acu_volume_flow_rate
-                * acu2server_flow_ratio
-                / sum_server_volume_flow_rate
+            sum_acu_volume_flow_rate
+            * acu2server_flow_ratio
+            / sum_server_volume_flow_rate
         )
         # scale server flow rate
         for server_id, volume_flow_rate in boundary_conditions[
             "server_volume_flow_rates"
         ].items():
             boundary_conditions["server_volume_flow_rates"][server_id] = (
-                    volume_flow_rate * scale_factor
+                volume_flow_rate * scale_factor
             )
+
+        for rack_id, rack in self.room.constructions.racks.items():
+            for server_id, server in rack.constructions.servers.items():
+                if server.cooling.fan_type == "Variable":
+                    server.cooling.volume_flow_rate_ratio *= scale_factor
 
         sum_acu_volume_flow_rate_after = sum(
             boundary_conditions["supply_air_volume_flow_rates"].values()
@@ -351,8 +371,12 @@ class CFDManager:
             boundary_conditions["server_volume_flow_rates"].values()
         )
 
-        logger.info(f"sum acu flow rate after scaling: {sum_acu_volume_flow_rate_after}")
-        logger.info(f"sum server flow rate after scaling: {sum_server_volume_flow_rate_after}")
+        logger.info(
+            f"sum acu flow rate after scaling: {sum_acu_volume_flow_rate_after}"
+        )
+        logger.info(
+            f"sum server flow rate after scaling: {sum_server_volume_flow_rate_after}"
+        )
         if expert_mode:
             logger.info("please check the flow rates. Wait for 5 seconds...")
             time.sleep(5)
@@ -363,19 +387,19 @@ class CFDManager:
     def get_user_input():
         while True:
             user_input = input("Continue? (y/n): ")
-            if user_input.strip().lower() == 'y':
-                logger.info('Continue simulation...')
+            if user_input.strip().lower() == "y":
+                logger.info("Continue simulation...")
                 break
-            elif user_input.strip().lower() == 'n':
+            elif user_input.strip().lower() == "n":
                 logger.info("Unsatisfied results. Stop simulation and improve...")
                 sys.exit()
             else:
-                print('Please enter correct words...')
+                print("Please enter correct words...")
 
     @staticmethod
     def geom_check():
 
-        folder_path = config.cfd.case_dir.joinpath('constant/triSurface')
+        folder_path = config.cfd.case_dir.joinpath("constant/triSurface")
 
         # create a Mayavi scene
         mlab.figure()
@@ -386,7 +410,7 @@ class CFDManager:
         # search and load for .stl files
         for file in os.listdir(folder_path):
             file_path = os.path.join(folder_path, file)
-            if file_path.lower().endswith('.stl'):
+            if file_path.lower().endswith(".stl"):
                 stl_reader = vtk.vtkSTLReader()
                 stl_reader.SetFileName(file_path)
                 stl_reader.Update()
@@ -397,21 +421,27 @@ class CFDManager:
 
         # display the stl data in the Mayavi scene
         main_frame_surface = mlab.pipeline.add_dataset(append_filter.GetOutput())
-        surface = mlab.pipeline.surface(mlab.pipeline.add_dataset(append_filter.GetOutput()))
-        surface.actor.property.opacity = 0.5  # Set transparency (0.0: fully transparent, 1.0: fully opaque)
-        wireframe = mlab.pipeline.surface(main_frame_surface, representation='wireframe', color=(0, 0, 0))
+        surface = mlab.pipeline.surface(
+            mlab.pipeline.add_dataset(append_filter.GetOutput())
+        )
+        surface.actor.property.opacity = (
+            0.5  # Set transparency (0.0: fully transparent, 1.0: fully opaque)
+        )
+        wireframe = mlab.pipeline.surface(
+            main_frame_surface, representation="wireframe", color=(0, 0, 0)
+        )
         wireframe.actor.mapper.scalar_visibility = False
         mlab.show()
 
     @staticmethod
     def mesh_check():
 
-        data_path = config.cfd.case_dir.joinpath('case.foam')
+        data_path = config.cfd.case_dir.joinpath("case.foam")
         application_name = "paraview"
         system = platform.system()
 
-        if system == 'Windows':
-            executable_extensions = ['.exe']
+        if system == "Windows":
+            executable_extensions = [".exe"]
 
             # all drives
             partitions = psutil.disk_partitions()
@@ -423,30 +453,39 @@ class CFDManager:
                 for root, dirs, files in os.walk(install_dir):
                     for file in files:
                         # check application name
-                        if file.lower().startswith(application_name.lower()) and \
-                                any(file.endswith(ext) for ext in executable_extensions):
+                        if file.lower().startswith(application_name.lower()) and any(
+                            file.endswith(ext) for ext in executable_extensions
+                        ):
                             # get file path
                             file_path = os.path.join(root, file)
                             # try to open
                             try:
-                                logger.info(f"Application '{application_name}' searched. Path{file_path}. Try...")
-                                subprocess.run([file_path, "--data", data_path], check=True)
+                                logger.info(
+                                    f"Application '{application_name}' searched. Path{file_path}. Try..."
+                                )
+                                subprocess.run(
+                                    [file_path, "--data", data_path], check=True
+                                )
                                 valid_flag = True
                                 break
                             except Exception as e:
-                                logger.info(f"Error occurred while starting {file_path}: {e}")
+                                logger.info(
+                                    f"Error occurred while starting {file_path}: {e}"
+                                )
                                 valid_flag = False
                     if valid_flag:
                         break
                 if valid_flag:
                     break
             if not valid_flag:
-                logger.error(f"No application '{application_name}'. Please stop debugging and install...")
+                logger.error(
+                    f"No application '{application_name}'. Please stop debugging and install..."
+                )
                 sys.exit()
 
         elif system == "Linux":
             try:
-                command = ['whereis', 'paraview']
+                command = ["whereis", "paraview"]
                 result = subprocess.run(command, capture_output=True, text=True)
                 path = result.stdout.strip().split(": ")[1].split()[0]
                 logger.info(f"Application '{application_name}'. Try...")
@@ -456,7 +495,9 @@ class CFDManager:
                 logger.info(f"Error occurred while starting {application_name}: {e}")
                 valid_flag = False
             if not valid_flag:
-                logger.error(f"No application '{application_name}'. Please stop debugging and install...")
+                logger.error(
+                    f"No application '{application_name}'. Please stop debugging and install..."
+                )
                 sys.exit()
         elif system == "Darwin":
             try:
@@ -465,28 +506,30 @@ class CFDManager:
                 app_found = False
                 for file in os.listdir(apps_folder):
                     # Check if the file name contains the partial field
-                    if application_name.lower() in file.lower() and file.endswith('.app'):
+                    if application_name.lower() in file.lower() and file.endswith(
+                        ".app"
+                    ):
                         app_path = os.path.join(apps_folder, data_path)
                         # Open the application
-                        subprocess.run(['open', app_path])
+                        subprocess.run(["open", app_path])
                         print(f"Opened application: {file}")
                         app_found = True
                         break
                 if not app_found:
-                    print(f"No application containing \"{application_name}\" found")
+                    print(f'No application containing "{application_name}" found')
             except Exception as e:
                 print("An error occurred:", e)
 
     def run(
-            self,
-            case_idx: int = 1,
-            episode_idx: int = None,
-            save_mesh_index: bool = False,
-            save_boundary_conditions: bool = False,
-            save_simulation_results: bool = False,
-            return_sensor_results: bool = False,
-            expert_mode: bool = False,
-            **boundary_conditions,
+        self,
+        case_idx: int = 1,
+        episode_idx: int = None,
+        save_mesh_index: bool = False,
+        save_boundary_conditions: bool = False,
+        save_simulation_results: bool = False,
+        return_sensor_results: bool = False,
+        expert_mode: bool = False,
+        **boundary_conditions,
     ) -> Union[np.ndarray, torch.Tensor, Dict]:
         """Run the whole simulation: geometry -> mesh -> solve
         :param expert_mode: whether to do the step checking
@@ -511,13 +554,13 @@ class CFDManager:
             self.update_boundary_conditions(**boundary_conditions)
             boundary_conditions = self.format_boundary_conditions
 
-        # if self.scale_server_flow_rate or self.room.constructions.check_sealed:
-        if self.scale_server_flow_rate:
+        if self.scale_server_flow_rate or self.room.constructions.check_sealed:
             boundary_conditions = self._scale_server_flow_rate(
                 boundary_conditions=boundary_conditions,
                 acu2server_flow_ratio=self.acu2server_flow_ratio,
-                expert_mode=expert_mode
+                expert_mode=expert_mode,
             )
+            self.update_boundary_conditions(**boundary_conditions)
 
         if self.pod_backend is not None and not self.run_cfd:
             # use reduced-order CFD simulation if POD backend is provided
@@ -541,7 +584,7 @@ class CFDManager:
             if run_geometry:
                 self.build_geometry()
             if expert_mode:
-                logger.info('loading STL geometry files, please check...')
+                logger.info("loading STL geometry files, please check...")
                 self.geom_check()
                 self.get_user_input()
 
@@ -559,7 +602,7 @@ class CFDManager:
                         saved_dict=self.object_mesh_index,
                     )
             if expert_mode:
-                logger.info('Check mesh results...')
+                logger.info("Check mesh results...")
                 self.mesh_check()
                 self.get_user_input()
 

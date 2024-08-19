@@ -79,8 +79,7 @@ class IDFBuilder:
 
     def _make_actuators(self) -> None:
         self.actuator_builder.make_actuators(
-            self.building.constructions.plant, 
-            self.building.constructions.zones
+            self.building.constructions.plant, self.building.constructions.zones
         )
 
     def _make_schedule(self) -> None:
@@ -296,7 +295,7 @@ class IDFBuilder:
     ) -> None:
         if self.model is not None:
             # save idf
-            self.model.saveas(str(idf_save_path))
+            self.model.saveas(str(idf_save_path), encoding="utf-8")
             logger.info(f"Model saved to {idf_save_path}")
 
             # save device key map

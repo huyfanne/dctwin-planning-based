@@ -47,7 +47,6 @@ def generate_control_dict(
         Path(template_dir, f"foam/system/{system_folder}/fvSchemes"),
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
-
     if is_gpu:
         shutil.copy(
             Path(template_dir, f"foam/system/{system_folder}/fvSolution_gpu"),
@@ -110,6 +109,7 @@ def init_foam(is_gpu: bool = False):
         Path(template_dir, "foam/system/steady/fvSchemes"),
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
+
     if is_gpu:
         shutil.copy(
             Path(template_dir, f"foam/system/steady/fvSolution_gpu"),

@@ -80,7 +80,7 @@ WORKDIR /root/foam2csr
 RUN sed -i 's/NVARCH = 70/NVARCH = 75/g' "/root/foam2csr/Make/nvcc"
 RUN ["/bin/bash", "-c", "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && ./Allwmake -j"]
 
-# # # install PETSc4FOAM with AMGXWrapper support
+# install PETSc4FOAM with AMGXWrapper support
 WORKDIR /root
 RUN git clone --branch amgxwrapper https://develop.openfoam.com/modules/external-solver.git petsc4foam
 WORKDIR /root/petsc4foam
@@ -97,32 +97,132 @@ ENV PETSC_INC /opt/petsc/include
 RUN sed -i 's/-I$(FOAM2CSR_INC)/-I$(FOAM2CSR_INC) -I$(CUDA_INC)/' src/petsc4Foam/Make/options
 RUN ["/bin/bash", "-c", "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && ./Allwclean && ./Allwmake -j"]
 
-RUN rm -rf /opt/OpenFOAM/OpenFOAM-v2306/build
-RUN rm -rf /opt/OpenFOAM/ThirdParty-v2306/build
-RUN rm -rf /opt/OpenFOAM/ThirdParty-v2306/sources/
+RUN env | grep -v 'no_proxy' > /env.list
+
+WORKDIR /root
 
 FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
 
 COPY --from=builder1 /opt/openmpi-4.0.5 /opt/openmpi-4.0.5
 COPY --from=builder1 /opt/amgx /opt/amgx
-COPY --from=builder1 /opt/OpenFOAM/OpenFOAM-v2306 /opt/OpenFOAM/OpenFOAM-v2306
 COPY --from=builder1 /opt/OpenFOAM/ThirdParty-v2306 /opt/OpenFOAM/ThirdParty-v2306
 COPY --from=builder1 /opt/petsc /opt/petsc
+COPY --from=builder1 /opt/OpenFOAM/OpenFOAM-v2306 /opt/OpenFOAM/OpenFOAM-v2306
 
-COPY --from=builder1 /root/OpenFOAM /root/OpenFOAM
-COPY --from=builder1 /root/petsc/linux64GccDPInt32Opt /root/petsc/linux64GccDPInt32Opt
+COPY --from=builder1 /root/OpenFOAM/user-v2306 /root/OpenFOAM/user-v2306
+COPY --from=builder1 /root/amgx /root/amgx
+
 
 # Install ssh
 RUN apt-get update
 RUN apt-get install -y openssh-client
 
-RUN echo 'export PATH=$PATH:/opt/openmpi-4.0.5/bin' >> /etc/bash.bashrc
-RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/openmpi-4.0.5/lib' >> /etc/bash.bashrc
-ENV PATH $PATH:/opt/openmpi-4.0.5/bin
-ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/openmpi-4.0.5/lib
 ENV CPLUS_INCLUDE_PATH /opt/openmpi-4.0.5/include:$CPLUS_INCLUDE_PATH
-RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/amgx/lib' >> /etc/bash.bashrc
+ENV CPPLUS_INCLUDE_PATH /opt/openmpi-4.0.5/include:$CPPLUS_INCLUDE_PATH
 RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/petsc/lib' >> /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc
-RUN echo 'source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc' >> /etc/bash.bashrc
+RUN echo 'export CUBROOT=/root/amgx/thrust/dependencies/' >> /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc
+RUN echo 'export PETSC_INC=/opt/petsc/include' >> /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc
+RUN echo 'export PETSC_LIB_DIR=/opt/petsc/lib' >> /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc
+RUN echo 'export AMGX_INC=/opt/amgx/include' >> /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc
+RUN echo 'export AMGX_LIB=/opt/amgx/lib' >> /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc
+RUN echo 'export SPECTRUM_MPI_HOME=/opt/openmpi-4.0.5' >> /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/root/OpenFOAM/user-v2306/platforms/linux64GccDPInt32Opt/lib
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/OpenFOAM/OpenFOAM-v2306/site/2306/platforms/linux64GccDPInt32Opt/lib
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/OpenFOAM/OpenFOAM-v2306/platforms/linux64GccDPInt32Opt/lib/sys-openmpi
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/OpenFOAM/OpenFOAM-v2306/platforms/linux64GccDPInt32Opt/lib
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/OpenFOAM/ThirdParty-v2306/platforms/linux64GccDPInt32/lib/sys-openmpi
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/OpenFOAM/ThirdParty-v2306/platforms/linux64GccDPInt32/lib
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/OpenFOAM/ThirdParty-v2306/platforms/linux64Gcc/fftw-3.3.10/lib
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/OpenFOAM/ThirdParty-v2306/platforms/linux64Gcc/CGAL-4.14.3/lib64
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/OpenFOAM/ThirdParty-v2306/platforms/linux64Gcc/boost_1_74_0/lib64
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/openmpi-4.0.5/lib
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/OpenFOAM/OpenFOAM-v2306/platforms/linux64GccDPInt32Opt/lib/dummy
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/amgx/lib
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/petsc/lib
+
+ENV PATH $PATH:/root/OpenFOAM/user-v2306/platforms/linux64GccDPInt32Opt/bin
+ENV PATH $PATH:/opt/OpenFOAM/OpenFOAM-v2306/site/2306/platforms/linux64GccDPInt32Opt/bin
+ENV PATH $PATH:/opt/OpenFOAM/OpenFOAM-v2306/platforms/linux64GccDPInt32Opt/bin
+ENV PATH $PATH:/opt/OpenFOAM/OpenFOAM-v2306/bin
+ENV PATH $PATH:/opt/OpenFOAM/OpenFOAM-v2306/wmake
+ENV PATH $PATH:/opt/openmpi-4.0.5/bin/
+ENV PATH $PATH:/opt/openmpi-4.0.5/bin
+ENV PATH $PATH:/opt/cmake/bin
+
+
+
+ENV CUBROOT /root/amgx/thrust/dependencies/
+ENV FOAM2CSR_INC /root/foam2csr/src
+ENV AMGX_INC /opt/amgx/include
+ENV SPECTRUM_MPI_HOME /opt/openmpi-4.0.5
+RUN echo $SPECTRUM_MPI_HOME
+ENV PETSC_LIB_DIR /opt/petsc/lib
+ENV AMGX_LIB /opt/amgx/lib
+ENV CUDA_INC /usr/local/cuda/include
+ENV PETSC_ARCH_PATH /opt/petsc
+ENV PETSC_INC /opt/petsc/include
+ENV CGAL_ARCH_PATH /opt/OpenFOAM/ThirdParty-v2306/platforms/linux64Gcc/CGAL-4.14.3
+ENV FOAM_MPI sys-openmpi
+ENV WM_PRECISION_OPTION DP
+ENV WM_PROJECT_USER_DIR /root/OpenFOAM/user-v2306
+ENV WM_MPLIB SYSTEMOPENMPI
+ENV FOAM_RUN /root/OpenFOAM/user-v2306/run
+ENV FOAM_EXT_LIBBIN /opt/OpenFOAM/ThirdParty-v2306/platforms/linux64GccDPInt32/lib
+ENV WM_OPTIONS linux64GccDPInt32Opt
+ENV FFTW_ARCH_PATH /opt/OpenFOAM/ThirdParty-v2306/platforms/linux64Gcc/fftw-3.3.10
+ENV SPECTRUM_MPI_HOME /opt/openmpi-4.0.5
+ENV WM_LABEL_SIZE 32
+ENV WM_PROJECT OpenFOAM
+ENV FOAM_APPBIN /opt/OpenFOAM/OpenFOAM-v2306/platforms/linux64GccDPInt32Opt/bin
+ENV WM_THIRD_PARTY_DIR /opt/OpenFOAM/ThirdParty-v2306
+ENV WM_LABEL_OPTION Int32
+ENV FOAM_LIBBIN /opt/OpenFOAM/OpenFOAM-v2306/platforms/linux64GccDPInt32Opt/lib
+ENV FOAM_ETC /opt/OpenFOAM/OpenFOAM-v2306/etc
+ENV FOAM_UTILITIES /opt/OpenFOAM/OpenFOAM-v2306/applications/utilities
+ENV FOAM_SITE_LIBBIN /opt/OpenFOAM/OpenFOAM-v2306/site/2306/platforms/linux64GccDPInt32Opt/lib
+ENV AMGX_LIB /opt/amgx/lib
+ENV CPLUS_INCLUDE_PATH /opt/openmpi-4.0.5/include:/opt/openmpi-4.0.5/include:
+ENV ADIOS2_ARCH_PATH /opt/OpenFOAM/ThirdParty-v2306/platforms/linux64Gcc/ADIOS2-2.8.3
+ENV FOAM_SITE_APPBIN /opt/OpenFOAM/OpenFOAM-v2306/site/2306/platforms/linux64GccDPInt32Opt/bin
+ENV MPI_ARCH_PATH /opt/openmpi-4.0.5
+ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
+ENV FOAM_SRC /opt/OpenFOAM/OpenFOAM-v2306/src
+ENV SCOTCH_ARCH_PATH /opt/OpenFOAM/ThirdParty-v2306/platforms/linux64GccDPInt32/scotch_6.1.0
+ENV BOOST_ARCH_PATH /opt/OpenFOAM/ThirdParty-v2306/platforms/linux64Gcc/boost_1_74_0
+ENV PETSC_LIB_DIR /opt/petsc/lib
+ENV FOAM_USER_LIBBIN /root/OpenFOAM/user-v2306/platforms/linux64GccDPInt32Opt/lib
+ENV FOAM_APP /opt/OpenFOAM/OpenFOAM-v2306/applications
+ENV FOAM2CSR_INC /root/foam2csr/src
+ENV FOAM_API 2306
+ENV WM_COMPILE_OPTION Opt
+ENV PETSC_INC /opt/petsc/include
+ENV FOAM_SOLVERS /opt/OpenFOAM/OpenFOAM-v2306/applications/solvers
+ENV WM_PROJECT_DIR /opt/OpenFOAM/OpenFOAM-v2306
+ENV WM_COMPILER_TYPE system
+ENV FOAM_USER_APPBIN /root/OpenFOAM/user-v2306/platforms/linux64GccDPInt32Opt/bin
+ENV WM_COMPILER_LIB_ARCH 64
+ENV PETSC_ARCH_PATH /opt/petsc
+
+ENV WM_COMPILER Gcc
+ENV NV_NVML_DEV_VERSION 12.4.127-1
+ENV NV_LIBNCCL_DEV_PACKAGE libnccl-dev=2.21.5-1+cuda12.4
+ENV NV_LIBNCCL_DEV_PACKAGE_VERSION 2.21.5-1
+ENV NV_LIBCUBLAS_DEV_PACKAGE libcublas-dev-12-4=12.4.5.8-1
+ENV NV_CUDA_CUDART_DEV_VERSION 12.4.127-1
+ENV NV_NVPROF_DEV_PACKAGE cuda-nvprof-12-4=12.4.127-1
+ENV WM_ARCH linux64
+ENV NV_LIBNCCL_DEV_PACKAGE_NAME libnccl-dev
+ENV FOAM_TUTORIALS /opt/OpenFOAM/OpenFOAM-v2306/tutorials
+ENV NV_LIBCUBLAS_DEV_VERSION 12.4.5.8-1
+ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-dev-12-4
+ENV NV_CUDA_NSIGHT_COMPUTE_DEV_PACKAGE cuda-nsight-compute-12-4=12.4.1-1
+ENV NV_LIBNPP_DEV_PACKAGE libnpp-dev-12-4=12.2.5.30-1
+ENV NV_LIBNPP_DEV_VERSION 12.2.5.30-1
+ENV WM_PROJECT_VERSION v2306
+ENV WM_DIR /opt/OpenFOAM/OpenFOAM-v2306/wmake
+ENV NV_LIBCUSPARSE_DEV_VERSION 12.3.1.170-1
+ENV NV_CUDA_NSIGHT_COMPUTE_VERSION 12.4.1-1
+ENV PETSC_INC /opt/petsc/include
+ENV NV_NVPROF_VERSION 12.4.127-1
 
 WORKDIR /root

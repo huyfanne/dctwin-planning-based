@@ -42,11 +42,12 @@ class Builder:
         self.server_dict = server_dict
         self.last_state_case = last_state_case
         try:
-            # self.sealed = self.room.constructions.check_sealed
-            self.sealed = False
+            self.sealed = self.room.constructions.check_sealed
         except KeyError:
-            logger.error("Error: there is no -sealed- in the JSON -meta-, please refer the example in -tutorials- "
-                         "and add it...")
+            logger.error(
+                "Error: there is no -sealed- in the JSON -meta-, please refer the example in -tutorials- "
+                "and add it..."
+            )
             exit(-1)
 
     def run(self) -> None:
@@ -67,11 +68,15 @@ class Builder:
             )
             if self.sealed:
                 self.render(
-                    "U_pressure", "U", "".join(read_internal_field(Path(self.last_state_case, "U")))
+                    "U_pressure",
+                    "U",
+                    "".join(read_internal_field(Path(self.last_state_case, "U"))),
                 )
             else:
                 self.render(
-                    "U", "U", "".join(read_internal_field(Path(self.last_state_case, "U")))
+                    "U",
+                    "U",
+                    "".join(read_internal_field(Path(self.last_state_case, "U"))),
                 )
         else:
             self.render("T", "T")
@@ -98,7 +103,8 @@ class Builder:
                     init_temperature=24 + 273.15,
                     p_rgh=round(self.room_dz * 9.81, 10),
                     acu_boundaries=[
-                        ACUBoundary(key, acu, self.sealed) for key, acu in self.acu_dict.items()
+                        ACUBoundary(key, acu, self.sealed)
+                        for key, acu in self.acu_dict.items()
                     ],
                     server_boundaries=[
                         ServerBoundary(key, server, self.sealed)
@@ -119,7 +125,7 @@ class SolverBackendMixin:
     Backend for OpenFOAM solver. The class is inherited from the core Backend
     """
 
-    docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:0.0.1"
+    docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0"
 
     only_save_latest = True
     write_interval = 10
@@ -151,7 +157,9 @@ class SolverBackendMixin:
             command = [
                 "bash",
                 "-c",
-                (f"source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/amgx/lib && {self.solver}"),
+                (
+                    f"source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/amgx/lib && {self.solver}"
+                ),
             ]
         return command
 
@@ -198,6 +206,8 @@ class SolverBackendMixin:
                 )
             Path(config.cfd.case_dir, "case.foam").touch(exist_ok=True)
             time.sleep(1)
+
+        room.dump(config.cfd.case_dir / "model.json")
 
         if write_interval is not None:
             self.write_interval = write_interval
@@ -274,6 +284,7 @@ class TransientSolverBackend(SolverBackend):
             write_interval=self.write_interval,
             end_time=self.end_time,
             process_num=self.process_num,
+            is_gpu=self.is_gpu,
         )
 
 
@@ -296,6 +307,7 @@ class SteadySolverBackendK8s(SolverBackendK8s):
             write_interval=self.write_interval,
             end_time=self.end_time,
             process_num=self.process_num,
+            is_gpu=self.is_gpu,
         )
 
 
@@ -318,4 +330,5 @@ class TransientSolverBackendK8s(SolverBackendK8s):
             write_interval=self.write_interval,
             end_time=self.end_time,
             process_num=self.process_num,
+            is_gpu=self.is_gpu,
         )
