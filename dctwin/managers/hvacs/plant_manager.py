@@ -166,52 +166,19 @@ class PlantManager(nn.Module):
 
         return component_models
 
-    def collect(self, data: dict) -> None:
-        """
-        Collect the data from outside environment and store them into a buffer for learning purposes
-        :return:
-        """
-        # feed online data to the chilled water loop equipment models
-        for chw_loop_name, chw_loop_models in self.chw_loop_models.items():
-            # demand-side data collection
-            for demand_branch_name, demand_branch_models in chw_loop_models["demand_branches"].items():
-                if "pump" in demand_branch_models.keys():
-                    demand_branch_models["pump"].collect(data)
-                if "coil" in demand_branch_models.keys():
-                    demand_branch_models["coil"].collect(data)
-            # supply-side data collection
-            for supply_branch_name, supply_branch_models in chw_loop_models["supply_branches"].items():
-                if "pump" in supply_branch_models.keys():
-                    supply_branch_models["pump"].collect(data)
-                if "chiller" in supply_branch_models.keys():
-                    supply_branch_models["chiller"].collect(data)
-
-    def learn(self) -> None:
-        """
-        Learn device models from the collected data
-        :return:
-        """
-        # learn the chilled water loop equipment models
-        for chw_loop_name, chw_loop_models in self.chw_loop_models.items():
-            # learn the chiller performance model
-            for supply_branch_name, supply_branch_models in chw_loop_models["supply_branches"].items():
-                if "chiller" in supply_branch_models.keys():
-                    supply_branch_models["chiller"].learn()
-                if "pump" in supply_branch_models.keys():
-                    supply_branch_models["pump"].learn()
-            # learn the cooling coil performance model
-            for demand_branch_name, demand_branch_models in chw_loop_models["demand_branches"].items():
-                if "coil" in demand_branch_models.keys():
-                    demand_branch_models["coil"].learn()
-                if "pump" in demand_branch_models.keys():
-                    demand_branch_models["pump"].learn()
-
     @staticmethod
     def _determine_actual_mass_flow_rate(
         data: Batch,
         branch: Branch,
         requested_mass_flow_rate: torch.Tensor,
     ) -> torch.Tensor:
+        """
+        Determine the actual mass flow rate based on the requested mass flow rate and the pump on/off schedule
+        The actual mass flow rate is the minimum of the requested mass flow rate and the maximum mass flow rate of the pump
+        :param data: the data batch
+        :param branch: the branch object
+        :param requested_mass_flow_rate: the requested mass flow rate
+        """
         actual_mass_flow_rate = requested_mass_flow_rate
         if branch.components.pumps is not None:
             for component_id, component in branch.components.pumps.items():
@@ -221,12 +188,12 @@ class PlantManager(nn.Module):
                     maximum_mass_flow_rate = torch.tensor(
                         [component.cooling.design_maximum_flow_rate],
                         dtype=torch.float32,
+                        requires_grad=True,
                     )
                     actual_mass_flow_rate = torch.min(requested_mass_flow_rate, maximum_mass_flow_rate)
                 else:
                     actual_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
         return actual_mass_flow_rate
-
 
     @staticmethod
     def _set_branch_inlet_properties(
@@ -236,6 +203,9 @@ class PlantManager(nn.Module):
         loop_id: str,
         loop_side: str,
     ) -> None:
+        """
+        Set the branch inlet water temperature
+        """
         last_branch_id = list(last_branch.keys())[0]
         current_branch_id = list(current_branch.keys())[0]
         if len(data.acts[loop_id].supply_temperature_sp) != 0 and loop_side == "demand":
@@ -475,6 +445,9 @@ class PlantManager(nn.Module):
         branch_id: str,
         branch: Branch,
     ) -> None:
+        """
+        Solve the branch component models to update the plant loop properties
+        """
 
         if branch.components.pipes is not None:
             outlet_temperature = torch.zeros(1,)
@@ -532,6 +505,8 @@ class PlantManager(nn.Module):
                         mass_flow_rate=data.obs_next.plants[branch_id].water_mass_flow_rate,
                     )
                     data.obs_next.plants[component_id].power = pump_power
+                    data.obs_next.dc.facility_power += pump_power
+                    data.obs_next.dc.total_dc_power += pump_power
                 else:
                     data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
 
@@ -598,6 +573,8 @@ class PlantManager(nn.Module):
                         )
                         data.obs_next.plants[branch_id].outlet_temperature = data.acts[loop_id].supply_temperature_sp
                         data.obs_next.plants[component_id].power = chiller_power
+                        data.obs_next.dc.facility_power += chiller_power
+                        data.obs_next.dc.total_dc_power += chiller_power
                     elif loop_side == "demand":
                         requested_flow_rate = torch.tensor(
                             [component.cooling.reference_condenser_fluid_flow_rate * 1000.], dtype=torch.float32
@@ -640,6 +617,8 @@ class PlantManager(nn.Module):
                     data.obs_next.plants[branch_id].outlet_temperature = (
                         data.acts[loop_id].supply_temperature_sp
                     )
+                    data.obs_next.dc.facility_power += cooling_tower_power
+                    data.obs_next.dc.total_dc_power += cooling_tower_power
                 else:
                     data.obs_next.plants[branch_id].outlet_temperature = (
                         data.obs_next.plants[branch_id].inlet_temperature
@@ -711,6 +690,46 @@ class PlantManager(nn.Module):
             else:
                 raise logger.critical(f"Invalid branch side {branch.side}")
 
+    def collect(self, data: dict) -> None:
+        """
+        Collect the data from outside environment and store them into a buffer for learning purposes
+        :return:
+        """
+        # feed online data to the chilled water loop equipment models
+        for chw_loop_name, chw_loop_models in self.chw_loop_models.items():
+            # demand-side data collection
+            for demand_branch_name, demand_branch_models in chw_loop_models["demand_branches"].items():
+                if "pump" in demand_branch_models.keys():
+                    demand_branch_models["pump"].collect(data)
+                if "coil" in demand_branch_models.keys():
+                    demand_branch_models["coil"].collect(data)
+            # supply-side data collection
+            for supply_branch_name, supply_branch_models in chw_loop_models["supply_branches"].items():
+                if "pump" in supply_branch_models.keys():
+                    supply_branch_models["pump"].collect(data)
+                if "chiller" in supply_branch_models.keys():
+                    supply_branch_models["chiller"].collect(data)
+
+    def learn(self) -> None:
+        """
+        Learn device models from the collected data
+        :return:
+        """
+        # learn the chilled water loop equipment models
+        for chw_loop_name, chw_loop_models in self.chw_loop_models.items():
+            # learn the chiller performance model
+            for supply_branch_name, supply_branch_models in chw_loop_models["supply_branches"].items():
+                if "chiller" in supply_branch_models.keys():
+                    supply_branch_models["chiller"].learn()
+                if "pump" in supply_branch_models.keys():
+                    supply_branch_models["pump"].learn()
+            # learn the cooling coil performance model
+            for demand_branch_name, demand_branch_models in chw_loop_models["demand_branches"].items():
+                if "coil" in demand_branch_models.keys():
+                    demand_branch_models["coil"].learn()
+                if "pump" in demand_branch_models.keys():
+                    demand_branch_models["pump"].learn()
+
     def forward(
         self,
         data: Batch,
@@ -720,6 +739,9 @@ class PlantManager(nn.Module):
             self.plant.chilled_water_loops,
             self.plant.condenser_water_loops,
         ]:
+            if loops is None:
+                continue
+
             for loop_id, loop in loops.items():
                 # solve the demand side branches
                 self._solve_half_loop_side_branches(

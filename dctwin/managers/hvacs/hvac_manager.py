@@ -2,7 +2,6 @@ import csv
 from abc import ABC
 from typing import Dict, List
 from pathlib import Path
-
 import torch
 import numpy as np
 from copy import deepcopy
@@ -16,8 +15,8 @@ from dctwin.managers.base import BaseManager
 
 from .airloop_manager import AirLoopManager
 from .plant_manager import PlantManager
-from ..ds import ActionControlVariable
 from .ds import HVACData
+from ..ds import ActionControlVariable
 
 
 class HVACManager(BaseManager, ABC):
@@ -50,18 +49,13 @@ class HVACManager(BaseManager, ABC):
             plant=self._model.constructions.plant,
             time_step=self._time_step,
         )
-        # set up the result logging
-        self._pre_process(
-            log_dir=config.logging_config.log_dir
-        )
-        self._current_time = 0
 
     def _reset_data(self) -> None:
         acts = {}
         obs = Batch(
-            total_dc_power=(),
-            facility_power=(),
-            ite_demand_power=(),
+            total_dc_power=torch.tensor([0.], dtype=torch.float32,),
+            facility_power=torch.tensor([0.], dtype=torch.float32,),
+            ite_demand_power=torch.tensor([0.], dtype=torch.float32,),
         )
         zone_obs, plant_obs = {}, {}
         zone_obs, acts = self._ds.reset_zone_data(zone_obs, acts)
@@ -120,7 +114,7 @@ class HVACManager(BaseManager, ABC):
         for obj_name, obj in self.data.obs.plants.items():
             for key in obj.keys():
                 fieldnames.append(f"{obj_name}:{key}")
-        log_dir = Path(f"logs/{log_dir}")
+        log_dir = Path(f"log/{log_dir}")
         log_dir.mkdir(parents=True, exist_ok=True)
         self.file_handler = open(log_dir.joinpath("output.csv"), "wt", newline='')
         self.log_handler = csv.DictWriter(
@@ -167,7 +161,7 @@ class HVACManager(BaseManager, ABC):
     def format_actions(self, input_data: np.ndarray | torch.Tensor | List) -> Batch:
         _, acts = self._ds.reset_zone_data({}, {})
         _, acts = self._ds.reset_plant_data({}, acts)
-        self._reset_acts_required_grad()
+        self._reset_acts_require_grad()
         data = Batch(acts=acts)
         ptr = 0
         for act in self.actions:
@@ -232,38 +226,38 @@ class HVACManager(BaseManager, ABC):
                 raise ValueError(f"Unknown control variable {act.control_variable}")
 
             if variable.requires_grad:
-                self.acts_required_grad = torch.cat((self.acts_required_grad, variable))
+                self._acts_require_grad = torch.cat((self._acts_require_grad, variable))
 
             ptr += 1
-        self.acts_required_grad = self.acts_required_grad.view(-1, 1).detach().numpy()
-        self.acts_required_grad = torch.tensor(self.acts_required_grad, dtype=torch.float32, requires_grad=True)
+        self._acts_require_grad = self._acts_require_grad.view(-1, 1).detach().numpy()
+        self._acts_require_grad = torch.tensor(self._acts_require_grad, dtype=torch.float32, requires_grad=True)
         # re-assign the acts_required_grad to the data
         ptr = 0
         for act in self.actions:
             if act.control_variable == ActionControlVariable.On_Off_Supervisory:
                 if data.acts[act.device_unique_key].on_off_schedule.requires_grad:
-                    data.acts[act.device_unique_key].on_off_schedule = self.acts_required_grad[ptr]
+                    data.acts[act.device_unique_key].on_off_schedule = self._acts_require_grad[ptr]
                     ptr += 1
 
             elif act.control_variable == ActionControlVariable.Temperature_Setpoint:
                 if data.acts[act.device_unique_key].supply_temperature_sp.requires_grad:
-                    data.acts[act.device_unique_key].supply_temperature_sp = self.acts_required_grad[ptr]
+                    data.acts[act.device_unique_key].supply_temperature_sp = self._acts_require_grad[ptr]
                     ptr += 1
 
             elif (act.control_variable == ActionControlVariable.Fan_Air_Mass_Flow_Rate or
                   act.control_variable == ActionControlVariable.Pump_Mass_Flow_Rate):
                 if data.acts[act.device_unique_key].supply_mass_flow_rate_sp.requires_grad:
-                    data.acts[act.device_unique_key].supply_mass_flow_rate_sp = self.acts_required_grad[ptr]
+                    data.acts[act.device_unique_key].supply_mass_flow_rate_sp = self._acts_require_grad[ptr]
                     ptr += 1
 
             elif act.control_variable == ActionControlVariable.CPU_Utilization:
                 if data.acts[act.device_unique_key].cpu_load_utilization.requires_grad:
-                    data.acts[act.device_unique_key].cpu_load_utilization = self.acts_required_grad[ptr]
+                    data.acts[act.device_unique_key].cpu_load_utilization = self._acts_require_grad[ptr]
                     ptr += 1
 
             elif act.control_variable == ActionControlVariable.Tank_Source_Side_Mass_Flow_Rate:
                 if data.acts[act.device_unique_key].source_side_mass_flow_rate.requires_grad:
-                    data.acts[act.device_unique_key].source_side_mass_flow_rate = self.acts_required_grad[ptr]
+                    data.acts[act.device_unique_key].source_side_mass_flow_rate = self._acts_require_grad[ptr]
                     ptr += 1
 
         return data.acts
@@ -291,9 +285,10 @@ class HVACManager(BaseManager, ABC):
             )
         if self.air_loop_manager is not None:
             self.air_loop_manager.forward(
-                states=self.data.obs.zones,
-                states_next=self.data.obs_next.zones,
-                actions=self.data.acts
+                data=self.data,
+                # states=self.data.obs.zones,
+                # states_next=self.data.obs_next.zones,
+                # actions=self.data.acts
             )
         if self.plant_manager is not None:
             self.plant_manager.forward(

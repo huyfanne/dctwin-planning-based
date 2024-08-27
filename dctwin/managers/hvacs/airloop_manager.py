@@ -12,6 +12,7 @@ from dctwin.data import Batch
 
 
 class AirLoopManager(nn.Module):
+
     def __init__(
         self,
         zones: Dict[str, Room],
@@ -63,9 +64,10 @@ class AirLoopManager(nn.Module):
 
     def forward(
         self,
-        states: Batch,
-        states_next: Batch,
-        actions: Batch,
+        data: Batch,
+        # states: Batch,
+        # data.obs_next.zones: Batch,
+        # data.acts: Batch,
         **kwargs
     ):
         """
@@ -75,11 +77,11 @@ class AirLoopManager(nn.Module):
         for zone_name, zone in self.zones.items():
             # get the active acu ids
             active_acu_ids = [
-                acu_name for acu_name, acu in zone.constructions.acus.items() if actions[acu_name].on_off_schedule == 1
+                acu_name for acu_name, acu in zone.constructions.acus.items() if data.acts[acu_name].on_off_schedule == 1
             ]
             # uniform distribution of the heat load among active ACUs
             zone_acu_heat_load = {
-                active_acu_name: states_next[zone_name].sensible_heat_load / len(active_acu_ids)
+                active_acu_name: data.obs_next.zones[zone_name].sensible_heat_load / len(active_acu_ids)
                 for active_acu_name in active_acu_ids
             }
             weighted_return_temperature = 0
@@ -90,29 +92,29 @@ class AirLoopManager(nn.Module):
             zone_avg_ite_inlet_temperature = torch.zeros(1,)
             for acu_name, acu in zone.constructions.acus.items():
                 if acu_name in active_acu_ids:
-                    states_next[acu_name].supply_air_mass_flow_rate =\
-                        actions[acu_name].supply_mass_flow_rate_sp
-                    states_next[acu_name].supply_air_temperature =\
-                        actions[acu_name].supply_temperature_sp
-                    states_next[acu_name].fan_power = self.models[zone_name][acu_name](
-                        actions[acu_name].supply_mass_flow_rate_sp
+                    data.obs_next.zones[acu_name].supply_air_mass_flow_rate =\
+                        data.acts[acu_name].supply_mass_flow_rate_sp
+                    data.obs_next.zones[acu_name].supply_air_temperature =\
+                        data.acts[acu_name].supply_temperature_sp
+                    data.obs_next.zones[acu_name].fan_power = self.models[zone_name][acu_name](
+                        data.acts[acu_name].supply_mass_flow_rate_sp
                     )
                     acu_return_temperature = SteadyStateThermodynamics.sim(
-                        supply_air_temperature=actions[acu_name].supply_temperature_sp,
-                        supply_air_mass_flow_rate=actions[acu_name].supply_mass_flow_rate_sp,
+                        supply_air_temperature=data.acts[acu_name].supply_temperature_sp,
+                        supply_air_mass_flow_rate=data.acts[acu_name].supply_mass_flow_rate_sp,
                         sensible_heat_load=zone_acu_heat_load[acu_name],
                     )
-                    states_next[acu_name].return_air_temperature = acu_return_temperature
+                    data.obs_next.zones[acu_name].return_air_temperature = acu_return_temperature
                     # zone_avg_ite_inlet_temperature += (
                     #     0.9 * zone_acu_controls[acu_name].supply_air_temperature + 0.1 * acu_return_temperature
                     # )
                     weighted_return_temperature += (
-                        acu_return_temperature * actions[acu_name].supply_mass_flow_rate_sp
+                        acu_return_temperature * data.acts[acu_name].supply_mass_flow_rate_sp
                     )
-                    total_acu_air_mass_flow_rate += actions[acu_name].supply_mass_flow_rate_sp
+                    total_acu_air_mass_flow_rate += data.acts[acu_name].supply_mass_flow_rate_sp
 
             # update the zone air temperature
-            states_next[zone_name].zone_air_temperature = weighted_return_temperature / total_acu_air_mass_flow_rate
+            data.obs_next.zones[zone_name].zone_air_temperature = weighted_return_temperature / total_acu_air_mass_flow_rate
             # TODO: update zone humidity
             # TODO: calculate the zone ITE inlet temperature
 

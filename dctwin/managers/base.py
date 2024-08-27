@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from typing import Dict
 
 from loguru import logger
-from torch import nn
 
 from dctwin.utils import (
     DTEngineConfig,
@@ -46,9 +45,14 @@ class BaseManager(ABC):
         # reset observation and action data
         self._ds = ds
         self._reset_data()
+        # set up the result logging
+        self._pre_process(
+            log_dir=config.logging_config.log_dir
+        )
+        self._current_time = 0
 
-    def _reset_acts_required_grad(self):
-        self.acts_required_grad = torch.tensor([], requires_grad=True)
+    def _reset_acts_require_grad(self):
+        self._acts_require_grad = torch.tensor([], requires_grad=True)
 
     def _set_actions(self) -> None:
         self._actions = [Action(config=ac) for ac in self._config.actions]
@@ -80,8 +84,8 @@ class BaseManager(ABC):
         return self._actions
 
     @property
-    def act_requires_grad(self):
-        return self.acts_required_grad
+    def acts_require_grad(self):
+        return self._acts_require_grad
 
     @property
     def observations(self):
