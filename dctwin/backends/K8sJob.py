@@ -84,7 +84,7 @@ class K8sJob:
         container_additional_args = {}
         tmpl_spec_additional_args = {}
         tmpl_additional_args = {}
-        spec_additional_args = dict(backoff_limit=2, ttl_seconds_after_finished=60)
+        spec_additional_args = dict(backoff_limit=0, ttl_seconds_after_finished=60)
         job_additional_args = {}
         for k, v in job_params.items():
             if k.startswith("spec.template.spec.containers."):
