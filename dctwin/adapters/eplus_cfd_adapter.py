@@ -114,7 +114,7 @@ class EplusCFDAdapter:
         config.cfd.log_handler.writeheader()
         config.cfd.file_handler.flush()
 
-    def _post_processing(
+    def _post_process(
         self,
         temperature: Union[torch.Tensor, np.ndarray],
         server_powers: Dict,
@@ -242,7 +242,7 @@ class EplusCFDAdapter:
             save_mesh_index=True,
             **init_boundary_condition,
         )
-        self.cfd_sensor_obs, return_temp, _ = self._post_processing(
+        self.cfd_sensor_obs, return_temp, _ = self._post_process(
             temperature=cfd_obs, log_to_csv=False, **init_boundary_condition
         )
         return np.concatenate([eplus_obs, self.cfd_sensor_obs], axis=0), done
@@ -298,7 +298,7 @@ class EplusCFDAdapter:
             case_idx=self.step_idx, episode_idx=self.episode_idx, **boundary_conditions
         )
         # post-processing CFD/POD simulation result to obtain return temperature
-        self.cfd_sensor_obs, return_temp, zone_server_powers = self._post_processing(
+        self.cfd_sensor_obs, return_temp, zone_server_powers = self._post_process(
             temperature=temperature, **boundary_conditions
         )
         server_inlet_temperatures = self._compute_equivalent_inlet_temperature(

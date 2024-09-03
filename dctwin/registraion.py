@@ -22,7 +22,7 @@ def make_env(
     :param reward_fn: the callback reward function defined by the user
         We need the user to pass in a reward function
     :param schedule_fn: the callback facility workloads function defined by the user
-    :param paarse_obs_fn: the callback function to parse the observations returned by the environment
+    :param parse_obs_fn: the callback function to parse the observations returned by the environment
     :param map_boundary_condition_fn: the callback function to map the boundary conditions
         defined by the user, this is only used for co-simulation
         e.g., the format of the boundary conditions should be consistent with the CFDManger
@@ -31,6 +31,9 @@ def make_env(
             "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
             "server_powers": {}, "server_volume_flow_rates": {}
         }
+    :param map_cdu_inputs_fn: the callback function to map the CDU inputs
+        defined by the user, this is only used for eplus and liquid cooling co-simulation
+    :param building: the building object, this is only used for eplus and liquid cooling co-simulation
     :param is_k8s: whether the environment is running in k8s
     return: the gym-like environment instance
     """
