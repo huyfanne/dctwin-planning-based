@@ -8,6 +8,8 @@ from dctwin.utils import (
     ScalarDataItemConfig,
     EPlusObservationConfig,
     EPlusActionConfig,
+    CDUActionConfig,
+    CDUObservationConfig,
     CFDObservationConfig,
     DCTwinActionConfig,
     DCTwinObservationConfig,
@@ -94,12 +96,12 @@ class Observation(ScalarDataItem):
         self, config: DCTwinObservationConfig | EPlusObservationConfig | CFDObservationConfig,
     ) -> None:
         super().__init__(config)
+        self.exposed = config.exposed
         if type(config) == DCTwinObservationConfig:
             self.type = config.DESCRIPTOR.EnumValueName(
                 "ObservationType", config.observation_type
             )
         elif type(config) == EPlusObservationConfig:
-            self.exposed = config.exposed
             self.type = config.DESCRIPTOR.EnumValueName(
                 "ObservationType", config.observation_type
             )
@@ -116,7 +118,7 @@ class Action(ScalarDataItem):
     def __init__(self, config: EPlusActionConfig | DCTwinActionConfig) -> None:
         super().__init__(config)
 
-        if isinstance(config, DCTwinActionConfig):
+        if type(config) == DCTwinActionConfig:
             self.requires_grad: bool = config.requires_grad
             self.control_variable = config.control_variable
             self.device_unique_key = config.device_unique_key
@@ -126,7 +128,7 @@ class Action(ScalarDataItem):
                     f"set to be fixed but no default value was specified! "
                 )
 
-        elif isinstance(config, EPlusActionConfig):
+        elif type(config) == EPlusActionConfig or type(config) == CDUActionConfig:
             self.control_type = config.control_type
 
             self.debug_name = f"Action {self.variable_name}"
