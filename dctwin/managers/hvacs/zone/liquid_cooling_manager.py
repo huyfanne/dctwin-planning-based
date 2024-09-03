@@ -1,6 +1,6 @@
 from typing import Dict
 from CoolProp.CoolProp import PropsSI
-
+import torch
 from dclib import Room
 from dclib.data import Inputs
 
@@ -52,17 +52,17 @@ class LiquidCoolingManager:
         server_powers = {}
         server_mass_flow_rates = {}
         server_liquid_cooling_percentages = {}
-        cooling_water_supply_temperature_sp = self.inputs.cdus[cdu_name].cooling_water_supply_temperature_sp
-        chilled_water_supply_temperature = self.inputs.cdus[cdu_name].chilled_water_supply_temperature
+        cooling_water_supply_temperature_sp = torch.tensor(self.inputs.cdus[cdu_name].cooling_water_supply_temperature_sp).view(1)
+        chilled_water_supply_temperature = torch.tensor(self.inputs.cdus[cdu_name].chilled_water_supply_temperature).view(1)
         chilled_water_mass_flow_rate = None
         for rack_name in self.room.constructions.cdus[cdu_name].meta.racks:
             for server_name, server in self.room.constructions.racks[rack_name].constructions.servers.items():
                 server_powers[server_name] = \
-                    self.inputs.servers[server_name].input_power
+                    torch.tensor(self.inputs.servers[server_name].input_power).view(1)
                 server_mass_flow_rates[server_name] = \
-                    self.inputs.servers[server_name].liquid_mass_flow_rate
+                    torch.tensor(self.inputs.servers[server_name].liquid_mass_flow_rate).view(1)
                 server_liquid_cooling_percentages[server_name] = \
-                    self.inputs.servers[server_name].liquid_percentage
+                    torch.tensor(self.inputs.servers[server_name].liquid_percentage).view(1)
         return (
             server_powers,
             server_mass_flow_rates,
@@ -74,11 +74,11 @@ class LiquidCoolingManager:
 
     def sim(
         self,
-        server_powers: Dict[str, float],
-        server_mass_flow_rates: Dict[str, float],
-        server_liquid_cooling_percentages: Dict[str, float],
-        cooling_water_supply_temperature_sps: Dict[str, float],
-        chilled_water_supply_temperatures: Dict[str, float],
+        server_powers: Dict[str, torch.Tensor],
+        server_mass_flow_rates: Dict[str, torch.Tensor],
+        server_liquid_cooling_percentages: Dict[str, torch.Tensor],
+        cooling_water_supply_temperature_sps: Dict[str, torch.Tensor],
+        chilled_water_supply_temperatures: Dict[str, torch.Tensor],
     ):
         cdu_electrical_powers = {}
         cdu_chilled_water_supply_temperatures = {}

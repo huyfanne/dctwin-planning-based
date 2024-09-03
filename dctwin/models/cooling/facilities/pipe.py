@@ -1,4 +1,5 @@
-import math
+import torch
+import torch.nn as nn
 from loguru import logger
 from CoolProp.CoolProp import PropsSI
 import numpy as np
@@ -8,26 +9,29 @@ from dclib.cooling.room.facilities import Pipe
 from .utils.parameter_calc import reynolds_number
 
 
-class PipeModel:
+class PipeModel(nn.Module):
     gravity: float = 9.81
 
     def __init__(
         self,
         pipe: Pipe,
         sub_pipe_diameter: float = None
-    ):
-        self.pipe_diameter = pipe.geometry.pipe_diameter
-        self.pipe_length = pipe.geometry.pipe_length
+    ) -> None:
+        super().__init__()
+        self.pipe_diameter = torch.tensor(pipe.geometry.pipe_diameter)
+        self.pipe_length = torch.tensor(pipe.geometry.pipe_length)
         self.channel_type = pipe.geometry.channel_type
-        self.turning_radius = pipe.geometry.turning_radius  # for elbow
-        self.sub_pipe_diameter = sub_pipe_diameter  # for tee
+        self.turning_radius = torch.tensor(pipe.geometry.turning_radius)  # for elbow
+        self.sub_pipe_diameter = torch.tensor(sub_pipe_diameter) if sub_pipe_diameter else None  # for tee
         self.fluid_density = PropsSI('D', 'P', 101325, 'Q', 0, "water")
         self.fluid_viscosity = PropsSI('V', 'P', 101325, 'Q', 0, "water")
-        self.height_difference = pipe.geometry.height_difference
-        self.relative_roughness = pipe.geometry.roughness / pipe.geometry.pipe_diameter
+        self.fluid_density = torch.tensor(self.fluid_density)
+        self.fluid_viscosity = torch.tensor(self.fluid_viscosity)
+        self.height_difference = torch.tensor(pipe.geometry.height_difference)
+        self.relative_roughness = torch.tensor(pipe.geometry.roughness / pipe.geometry.pipe_diameter)
 
     # Reference: https://doi.org/10.1026/(ASCE)0733-9429(2008)134:9(1357)
-    def friction_factor(self, fluid_velocity: float | np.ndarray):
+    def friction_factor(self, fluid_velocity: torch.Tensor):
         """
         Calculate the dynamical friction factor of the pipe w.r.t. fluid velocity.
         """
@@ -40,21 +44,21 @@ class PipeModel:
         a = 1 / (1 + (reynold_number/2720)**9)
         b = 1 / (1 + (self.relative_roughness * reynold_number / 160) ** 2)
         c = (reynold_number / 64) ** a
-        d = (1.8 * math.log10(reynold_number / 6.8)) ** (2 * (1 - a) * b)
-        e = (2 * math.log10(3.7 / self.relative_roughness)) ** (2 * (1 - a) * (1 - b))
+        d = (1.8 * torch.log10(reynold_number / 6.8)) ** (2 * (1 - a) * b)
+        e = (2 * torch.log10(3.7 / self.relative_roughness)) ** (2 * (1 - a) * (1 - b))
         fr = 1 / (c * d * e)  # friction factor
         return fr
 
     # Reference: Code for designing of cooling tower for mechanical ventilation (GB/T 50352)
     def sim(
         self,
-        main_pipe_mass_flow_rate: float | np.ndarray,
-        sub_pipe_mass_flow_rate: float | np.ndarray = None,
+        main_pipe_mass_flow_rate: torch.Tensor,
+        sub_pipe_mass_flow_rate: torch.Tensor = None,
     ):
         """
         Simulate the pressure drop and mechanical power consumption of the pipe w.r.t. mass flow rate.
         """
-        fluid_velocity = main_pipe_mass_flow_rate / self.fluid_density / (math.pi * self.pipe_diameter ** 2 / 4)
+        fluid_velocity = main_pipe_mass_flow_rate / self.fluid_density / (torch.pi * self.pipe_diameter ** 2 / 4)
         if self.channel_type == 'straight':
             friction_factor = self.friction_factor(
                 fluid_velocity=fluid_velocity

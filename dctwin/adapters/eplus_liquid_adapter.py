@@ -3,6 +3,7 @@ from typing import Tuple, Union, List, Callable, Dict
 from pathlib import Path
 
 import numpy as np
+import torch
 from dclib import Building
 
 from dctwin.utils import config
@@ -82,16 +83,16 @@ class EplusLiquidAdapter:
 
     def _post_processing(
         self,
-        cdu_sim_results: Dict[str, Dict[str, Dict[str, float]]],
+        cdu_sim_results: Dict[str, Dict[str, Dict[str, torch.Tensor]]],
         log_to_csv: bool = True,
-    ):
+    ) -> None:
         self.cdu_obs = []
         
         cdu_log_dict = {}
         cdu_log_dict.update({"timestamp": config.eplus_cdu.timestamp})
-        total_cdu_power = 0
-        total_cdu_chilled_water_flow_rate = 0
-        total_cdu_cooling_water_flow_rate = 0
+        total_cdu_power = torch.zeros(1,)
+        total_cdu_chilled_water_flow_rate = torch.zeros(1,)
+        total_cdu_cooling_water_flow_rate = torch.zeros(1,)
 
         for manager_name, manager in self.liquid_managers.items():
             for cdu_name, cdu in manager.cdus.items():
@@ -127,59 +128,59 @@ class EplusLiquidAdapter:
                 # log CDU simulation results
                 cdu_log_dict.update(
                     {f"{cdu_name} Cooling Water Supply T (C)": round(
-                        cdu.config.cooling.operating.supply_side_supply_temperature, 3)
+                        float(cdu.config.cooling.operating.supply_side_supply_temperature), 3)
                     }
                 )
                 cdu_log_dict.update(
                     {f"{cdu_name} Cooling Water Supply M (kg/s)": round(
-                        cdu.config.cooling.operating.supply_side_mass_flow_rate, 3)
+                        float(cdu.config.cooling.operating.supply_side_mass_flow_rate), 3)
                     }
                 )
                 cdu_log_dict.update(
                     {f"{cdu_name} Cooling Water Return T (C)": round(
-                        cdu.config.cooling.operating.supply_side_return_temperature, 3)
+                        float(cdu.config.cooling.operating.supply_side_return_temperature), 3)
                     }
                 )
                 cdu_log_dict.update(
                     {f"{cdu_name} Chilled Water Supply T (C)": round(
-                        cdu.config.cooling.operating.demand_side_supply_temperature, 3)
+                        float(cdu.config.cooling.operating.demand_side_supply_temperature), 3)
                     }
                 )
                 cdu_log_dict.update(
                     {f"{cdu_name} Chilled Water Supply M (kg/s)": round(
-                        cdu.config.cooling.operating.demand_side_mass_flow_rate, 3)
+                        float(cdu.config.cooling.operating.demand_side_mass_flow_rate), 3)
                     }
                 )
                 cdu_log_dict.update(
                     {f"{cdu_name} Chilled Water Return T (C)": round(
-                        cdu.config.cooling.operating.demand_side_return_temperature, 3)
+                        float(cdu.config.cooling.operating.demand_side_return_temperature), 3)
                     }
                 )
                 cdu_log_dict.update({f"{cdu_name} Electricity Demand Rate (W)": round(
-                    cdu.config.constructions.pump.power.operating.pump_power, 3)}
+                    float(cdu.config.constructions.pump.power.operating.pump_power), 3)}
                 )
                 # cdu observations
-                self.cdu_obs.append(cdu.config.cooling.operating.supply_side_supply_temperature)
-                self.cdu_obs.append(cdu.config.cooling.operating.supply_side_return_temperature)
-                self.cdu_obs.append(cdu.config.cooling.operating.demand_side_supply_temperature)
-                self.cdu_obs.append(cdu.config.cooling.operating.demand_side_return_temperature)
-                self.cdu_obs.append(cdu.config.cooling.operating.demand_side_mass_flow_rate)
-                self.cdu_obs.append(cdu.config.constructions.pump.power.operating.pump_power)
+                self.cdu_obs.append(cdu.config.cooling.operating.supply_side_supply_temperature.detach().cpu().numpy())
+                self.cdu_obs.append(cdu.config.cooling.operating.supply_side_return_temperature.detach().cpu().numpy())
+                self.cdu_obs.append(cdu.config.cooling.operating.demand_side_supply_temperature.detach().cpu().numpy())
+                self.cdu_obs.append(cdu.config.cooling.operating.demand_side_return_temperature.detach().cpu().numpy())
+                self.cdu_obs.append(cdu.config.cooling.operating.demand_side_mass_flow_rate.detach().cpu().numpy())
+                self.cdu_obs.append(cdu.config.constructions.pump.power.operating.pump_power.detach().cpu().numpy())
 
                 # update total CDU power, cooling water mass flow rate and chilled water mass flow rate
                 total_cdu_power += cdu.config.constructions.pump.power.operating.pump_power
                 total_cdu_chilled_water_flow_rate += cdu.config.cooling.operating.demand_side_mass_flow_rate
                 total_cdu_cooling_water_flow_rate += cdu.config.cooling.operating.supply_side_mass_flow_rate
         # log aggregated
-        cdu_log_dict.update({"Total CDU Power (W)": round(total_cdu_power, 3)})
-        cdu_log_dict.update({"Total CDU Cooling Water M (kg/s)": round(total_cdu_cooling_water_flow_rate, 3)})
-        cdu_log_dict.update({"Total CDU Chilled Water M (kg/s)": round(total_cdu_chilled_water_flow_rate, 3)})
+        cdu_log_dict.update({"Total CDU Power (W)": round(float(total_cdu_power), 3)})
+        cdu_log_dict.update({"Total CDU Cooling Water M (kg/s)": round(float(total_cdu_cooling_water_flow_rate), 3)})
+        cdu_log_dict.update({"Total CDU Chilled Water M (kg/s)": round(float(total_cdu_chilled_water_flow_rate), 3)})
 
         # cdu observations aggregated
-        self.cdu_obs.append(total_cdu_power)
-        self.cdu_obs.append(total_cdu_cooling_water_flow_rate)
-        self.cdu_obs.append(total_cdu_chilled_water_flow_rate)
-
+        self.cdu_obs.append(total_cdu_power.detach().cpu().numpy())
+        self.cdu_obs.append(total_cdu_cooling_water_flow_rate.detach().cpu().numpy())
+        self.cdu_obs.append(total_cdu_chilled_water_flow_rate.detach().cpu().numpy())
+        self.cdu_obs = np.concatenate(self.cdu_obs, axis=0)
         if log_to_csv:
             config.cdu.log_handler.writerow(cdu_log_dict)
             config.cdu.file_handler.flush()
