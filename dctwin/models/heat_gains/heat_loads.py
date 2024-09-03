@@ -9,11 +9,16 @@ from dctwin.data import Batch
 
 
 class HeatLoadManager(nn.Module):
+    """
+    The manager class for the heat loads of the data center
+    Currently, it only simulates the heat loads of the CPU-based IT equipments
+    """
+
     def __init__(
         self,
         zones: Dict[str, Room],
         device_key_mapping: Dict
-    ):
+    ) -> None:
         super(HeatLoadManager, self).__init__()
         self.zones = zones
         self.device_key_mapping = device_key_mapping
@@ -23,7 +28,7 @@ class HeatLoadManager(nn.Module):
         """
         Initialize the learnable models for the zone equipments
         """
-        zone_models = {
+        ite_models = {
             "ites": {},
         }
         # get the model for each zone equipment of the building
@@ -31,13 +36,13 @@ class HeatLoadManager(nn.Module):
             # get the ITE equipments of the zone
             for ite_name, ite in zone.constructions.heat_gains.ites.items():
                 # get the model of the ITE
-                zone_models["ites"][ite.uid.lower()] = ITEModel(ite)
-                self.add_module(ite.uid, zone_models["ites"][ite.uid.lower()])
-        return zone_models
+                ite_models["ites"][ite.uid.lower()] = ITEModel(ite)
+                self.add_module(ite.uid, ite_models["ites"][ite.uid.lower()])
+        return ite_models
 
     def _sim_zone_ite_heat_gains(
         self, zone_cpu_load_schedules: Batch
-    ):
+    ) -> float:
         ite_heat_load = 0.0
         for ite_name, cpu_load_schedule in zone_cpu_load_schedules.items():
             ite_heat_load += self.models["ites"][ite_name.lower()](
@@ -46,27 +51,25 @@ class HeatLoadManager(nn.Module):
             )
         return ite_heat_load
 
-    def collect(self, data: dict):
+    def collect(self, data: dict) -> None:
         pass
 
-    def learn(self):
+    def learn(self) -> None:
         pass
 
     def forward(
         self,
-        states: Batch,
-        actions: Batch
-    ):
+        data: Batch,
+    ) -> None:
         """
         Simulate the building with the learned models and the given control signals (acts)
         :return:
         """
         for zone_name, zone in self.zones.items():
-            total_ite = 0.
             total_ite = torch.zeros(1,)
             for ite_name, ite in zone.constructions.heat_gains.ites.items():
                 total_ite += self.models["ites"][ite.uid.lower()](
-                    actions[ite_name].cpu_load_utilization,
+                    data.acts[ite_name].cpu_load_utilization,
                     None
                 )
-            states[zone_name].sensible_heat_load = total_ite
+            data.obs.zones[zone_name].sensible_heat_load = total_ite

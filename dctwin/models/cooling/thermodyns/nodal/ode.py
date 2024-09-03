@@ -13,7 +13,7 @@ class DifferentiableODE:
         method: str = 'dopri8',
         rtol: float = 1e-6,
         atol: float = 1e-6
-    ):
+    ) -> None:
         self.t_span = t_span
         self.zone_volume = zone_volume
         self.method = method
@@ -25,7 +25,7 @@ class DifferentiableODE:
         supply_air_temperature: torch.Tensor,
         supply_air_mass_flow_rate: torch.Tensor,
         sensible_load: torch.Tensor,
-    ):
+    ) -> callable:
         def func(t, T_z):
             dTzdt = ((1 / air_specific_heat / rho_air / self.zone_volume) *
                      (sensible_load + supply_air_mass_flow_rate * air_specific_heat * (supply_air_temperature - T_z)))
@@ -39,7 +39,7 @@ class DifferentiableODE:
         supply_air_temperature: torch.Tensor,
         supply_air_mass_flow_rate: torch.Tensor,
         sensible_load: torch.Tensor,
-    ):
+    ) -> torch.Tensor:
         with torch.no_grad():
             return odeint(
                 func=self._make_func(supply_air_temperature, supply_air_mass_flow_rate, sensible_load),

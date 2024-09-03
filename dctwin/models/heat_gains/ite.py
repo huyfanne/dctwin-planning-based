@@ -5,7 +5,7 @@ import torch.nn as nn
 
 from dclib.ite.composite import ITE
 
-from dctwin.models.curves import BiQuadraticCurve, QuadraticCurve
+from dctwin.models.utlis import BiQuadraticCurve, QuadraticCurve
 
 
 class ITEModel(nn.Module):
@@ -15,7 +15,7 @@ class ITEModel(nn.Module):
     """
     def __init__(
         self, config: ITE, learnable: bool = False
-    ):
+    ) -> None:
         super(ITEModel, self).__init__()
         self.config = config
         self.name = config.uid

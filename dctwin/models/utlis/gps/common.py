@@ -14,7 +14,7 @@ class BatchIndependentMultiTaskGPModel(gpytorch.models.ExactGP):
         train_y: torch.Tensor,
         likelihood: gpytorch.likelihoods.Likelihood,
         num_modes: int,
-    ):
+    ) -> None:
         super().__init__(train_x, train_y[:, :num_modes], likelihood)
         self.num_samples, self.num_features = train_x.size()
         self.num_modes = num_modes
@@ -34,7 +34,7 @@ class BatchIndependentMultiTaskGPModel(gpytorch.models.ExactGP):
             batch_shape=torch.Size([num_modes]),
         )
 
-    def get_normalized_target(self):
+    def get_normalized_target(self) -> torch.Tensor:
         return (self.train_targets - self.train_y_mean) / (self.train_y_std + 1e-6)
 
     def forward(

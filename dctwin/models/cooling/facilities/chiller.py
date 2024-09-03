@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from dclib.cooling.plant.facilities import Chiller
 
-from dctwin.models.curves import QuadraticCurve, BiQuadraticCurve
+from dctwin.models.utlis import QuadraticCurve, BiQuadraticCurve
 from dctwin.data import Batch, Buffer
 
 from loguru import logger

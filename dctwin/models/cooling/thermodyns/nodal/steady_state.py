@@ -14,7 +14,7 @@ class SteadyStateThermodynamics(nn.Module):
         supply_air_temperature: torch.Tensor,
         supply_air_mass_flow_rate: torch.Tensor,
         sensible_heat_load: torch.Tensor,
-    ):
+    ) -> torch.Tensor:
         """
         Simulate the steady-state return air temperature of the ACU
         :param supply_air_temperature: the supply air temperature of the ACU
