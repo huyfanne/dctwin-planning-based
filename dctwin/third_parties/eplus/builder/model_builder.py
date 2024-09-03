@@ -3,6 +3,7 @@ from dclib.models.composite import Model
 
 
 class ModelBuilder:
+
     def __init__(self, model: IDF):
         self.model = model
 

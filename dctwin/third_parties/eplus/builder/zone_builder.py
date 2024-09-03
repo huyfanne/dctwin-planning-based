@@ -21,6 +21,7 @@ from .utils import (
 
 
 class RoomBuilder:
+
     def __init__(self, model: IDF) -> None:
         self.model = model
 

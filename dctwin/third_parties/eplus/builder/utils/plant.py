@@ -344,7 +344,7 @@ def make_thermal_storage_tank(
     branch_component_idx,
     storage_tank: Tank,
     **kwargs,
-):
+) -> EpBunch:
     """
     Make the chiller object in the model. Now only support Electric:EIR chiller.
     :param model:
@@ -352,7 +352,7 @@ def make_thermal_storage_tank(
     :param branch_component_idx:
     :param chiller:
     :param kwargs:
-    :return:
+    :return: EpBunch
     """
     if kwargs["type_"] == "secondary" and kwargs["side"] == "supply":
         obj = model.newidfobject(
