@@ -1,6 +1,8 @@
+import csv
 from abc import abstractmethod, ABC
 from datetime import datetime, timedelta
 from typing import Dict
+from pathlib import Path
 
 from loguru import logger
 
@@ -9,7 +11,7 @@ from dctwin.utils import (
     config as base_env,
 )
 
-from dctwin.managers.ds import (
+from dctwin.data import (
     Action,
     Observation
 )
@@ -44,15 +46,24 @@ class BaseManager(ABC):
         self._set_simulation_time()
         # reset observation and action data
         self._ds = ds
-        self._reset_data()
-        # set up the result logging
-        self._pre_process(
-            log_dir=config.logging_config.log_dir
-        )
         self._current_time = 0
+        self._episode_idx = 0
+        self._fieldnames = ["Timestamp"]
 
     def _reset_acts_require_grad(self):
         self._acts_require_grad = torch.tensor([], requires_grad=True)
+
+    @abstractmethod
+    def _reset_data(self) -> None:
+        pass
+
+    def reset(self) -> None:
+        self._current_time = 0
+        self._episode_idx += 1
+        self._reset_data()
+        # set up the result logging
+        if self._episode_idx == 1:
+            self._pre_process()
 
     def _set_actions(self) -> None:
         self._actions = [Action(config=ac) for ac in self._config.actions]
@@ -73,11 +84,45 @@ class BaseManager(ABC):
                 minutes=int(60 / self._config.simulation_time_config.number_of_timesteps_per_hour)
             )
             self._timestamp = self._starting_timestamp
-            base_env.eplus_cfd.timestamp = self._timestamp
+            base_env.timestamp = self._timestamp
             self._use_simulation_time = True
         else:
             logger.info("Using real-world time")
             self._use_simulation_time = False
+
+    def _pre_process(self) -> None:
+        """
+        Create the log file for the simulation results
+        """
+        base_env.case_dir = Path(base_env.LOG_DIR).joinpath(
+            f"dctwin_output/episode-{self._episode_idx}"
+        )
+        Path(base_env.case_dir).mkdir(parents=True, exist_ok=True)
+        filename = Path(base_env.case_dir).joinpath("dctwin_output.csv")
+        base_env.file_handler = open(filename, "wt", newline="")
+        base_env.log_handler = csv.DictWriter(
+            base_env.file_handler,
+            fieldnames=self._fieldnames,
+        )
+        base_env.log_handler.writeheader()
+        base_env.file_handler.flush()
+
+    def _post_process(self, data: Dict) -> None:
+        """
+        Log the simulation results
+        """
+        log_dict = {}
+        log_dict.update(
+            {"Timestamp": self._current_time}
+        )
+        for obj_name, obj in data.items():
+            for key in obj.keys():
+                try:
+                    log_dict.update({f"{obj_name}:{key}": obj[key].item()})
+                except:
+                    log_dict.update({f"{obj_name}:{key}": 0.})
+        base_env.log_handler.writerow(log_dict)
+        base_env.file_handler.flush()
 
     @property
     def actions(self):
@@ -90,10 +135,6 @@ class BaseManager(ABC):
     @property
     def observations(self):
         return self._observations
-
-    @abstractmethod
-    def _reset_data(self) -> None:
-        pass
 
     @abstractmethod
     def format_actions(self, **kwargs) -> Batch:
