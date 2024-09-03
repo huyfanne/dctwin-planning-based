@@ -19,6 +19,8 @@ from .dt_engine_pb2 import (
     EplusCFDEnvConfig,
     EPlusActionConfig,
     EPlusObservationConfig,
+    CDUActionConfig,
+    CDUObservationConfig,
     ScalarDataItemConfig,
     SimulationTimeConfig,
     NormalizeConfig,
@@ -50,4 +52,6 @@ __all__ = [
     "CFDObservationConfig",
     "EplusCDUEnvConfig",
     "CDUEnvConfig",
+    "CDUActionConfig",
+    "CDUObservationConfig",
 ]

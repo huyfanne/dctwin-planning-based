@@ -302,15 +302,16 @@ message DCTwinObservationConfig {
     outlet = 1;
     self = 2;
   }
-  required string device_unique_key = 1;
-  required ObservationNode observation_node = 2;
-  required ObservationType observation_type = 3;
-  required string variable_name = 4;
+  optional bool exposed = 1 [default = false];
+  required string device_unique_key = 2;
+  required ObservationNode observation_node = 3;
+  required ObservationType observation_type = 4;
+  required string variable_name = 5;
   oneof value {
-    double default_normed_value = 5;
-    double default_unnormed_value = 6;
+    double default_normed_value = 6;
+    double default_unnormed_value = 7;
   }
-  optional NormalizeConfig normalize_config = 7;
+  optional NormalizeConfig normalize_config = 8;
 }
 
 // main engine configuration
