@@ -35,7 +35,7 @@ class CDUModel:
         self.config = cdu
         self.racks = racks
         self.heat_exchanger = HeatExchanger(
-            cdu_uid=cdu.uid,
+            config=cdu,
             tube_diameter=cdu.constructions.heat_exchanger.geometry.tube_diameter,
             tube_length=cdu.constructions.heat_exchanger.geometry.tube_length,
             tube_thickness=cdu.constructions.heat_exchanger.geometry.tube_wall_thickness,
@@ -44,7 +44,9 @@ class CDUModel:
             row_pitch=cdu.constructions.heat_exchanger.geometry.row_pitch,
             transverse_pitch=cdu.constructions.heat_exchanger.geometry.transverse_pitch,
             tube_roughness=cdu.constructions.heat_exchanger.geometry.tube_roughness,
-            thermal_conductivity=cdu.constructions.heat_exchanger.geometry.thermal_conductivity
+            thermal_conductivity=cdu.constructions.heat_exchanger.geometry.thermal_conductivity,
+            internal_fluid_name="water",
+            external_fluid_name="water"
         )
         self.pump = LiquidCoolingPump(cdu.constructions.pump)
         self.server_pipes, self.rack_supply_side_tee_pipes, self.rack_return_side_tee_pipes, self.bus_pipes = \
