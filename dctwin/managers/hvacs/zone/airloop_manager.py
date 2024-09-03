@@ -17,10 +17,12 @@ class AirLoopManager(nn.Module):
         self,
         zones: Dict[str, Room],
         device_key_mapping: Dict,
-    ):
+        time_step: float = None,
+    ) -> None:
         super().__init__()
         self.zones = zones
         self.device_key_mapping = device_key_mapping
+        self.time_step = time_step
         self.models = self._init_models()
 
     def _init_models(self):
@@ -65,11 +67,8 @@ class AirLoopManager(nn.Module):
     def forward(
         self,
         data: Batch,
-        # states: Batch,
-        # data.obs_next.zones: Batch,
-        # data.acts: Batch,
         **kwargs
-    ):
+    ) -> None:
         """
         Simulate the building with the learned models and the given control signals (acts)
         :return:
@@ -81,7 +80,7 @@ class AirLoopManager(nn.Module):
             ]
             # uniform distribution of the heat load among active ACUs
             zone_acu_heat_load = {
-                active_acu_name: data.obs_next.zones[zone_name].sensible_heat_load / len(active_acu_ids)
+                active_acu_name: data.obs.zones[zone_name].sensible_heat_load / len(active_acu_ids)
                 for active_acu_name in active_acu_ids
             }
             weighted_return_temperature = 0
@@ -120,7 +119,7 @@ class AirLoopManager(nn.Module):
 
     def save(
         self, save_path: Path
-    ):
+    ) -> None:
         # save the zone equipment models
         for zone_name, zone_models in self.models.items():
             # save the acu fan performance model

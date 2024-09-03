@@ -248,7 +248,7 @@ message CDUEnvConfig {
   optional bool use_unnormed_obs = 10 [default = false];
 }
 
-// co-simulation env config
+// eplus CFD co-simulation env config
 message EplusCFDEnvConfig {
     required string idf2room_map = 1; // path of facility map file
     required CFDEnvConfig cfd = 2; // cfd config
@@ -256,6 +256,7 @@ message EplusCFDEnvConfig {
     optional EnvParams env_params = 4; // co-simulation env config
 }
 
+// EnergyPlus and room liquid cooling env config
 message EplusCDUEnvConfig {
     required CDUEnvConfig cdu = 2; // cfd config
     required EPlusEnvConfig eplus = 3; // energyplus config
@@ -312,24 +313,20 @@ message DCTwinObservationConfig {
   optional NormalizeConfig normalize_config = 7;
 }
 
-message DCTwinConfig {
+// main engine configuration
+message DTEngineConfig {
   optional LoggingConfig logging_config = 1;
   optional SimulationTimeConfig simulation_time_config = 2;
   repeated DCTwinActionConfig actions = 3;
   optional bool use_unnormed_act = 4 [default = true];
   repeated DCTwinObservationConfig observations = 5;
   optional bool use_unnormed_obs = 6 [default = true];
-}
-
-// main engine configuration
-message DTEngineConfig {
-  optional LoggingConfig logging_config = 1;
+  // choose one of the following configurations for gym-like environment
   oneof EnvConfig {
-    EPlusEnvConfig eplus_env_config = 2;
-    CDUEnvConfig cdu_env_config = 3;
-    EplusCFDEnvConfig eplus_cfd_env_config = 4;
-    EplusCDUEnvConfig eplus_cdu_env_config = 5;
+    EPlusEnvConfig eplus_env_config = 7;
+    CDUEnvConfig cdu_env_config = 8;
+    EplusCFDEnvConfig eplus_cfd_env_config = 9;
+    EplusCDUEnvConfig eplus_cdu_env_config = 10;
+    CFDEnvConfig cfd_config = 11;
   }
-  optional CFDEnvConfig cfd_config = 6;
-  optional DCTwinConfig dctwin_config = 7;
 }

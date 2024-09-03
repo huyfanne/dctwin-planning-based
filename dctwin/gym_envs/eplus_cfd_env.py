@@ -18,7 +18,7 @@ from dctwin.utils import EPlusEnvConfig
 from dctwin.utils import config as eplus_cfd_env
 
 from .eplus_env import EPlusEnv
-from .ds import Observation
+from dctwin.data import Observation
 
 
 class EplusCFDEnv(EPlusEnv):

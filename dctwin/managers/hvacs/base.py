@@ -1,7 +1,5 @@
-import csv
 from abc import ABC
 from typing import Dict, List
-from pathlib import Path
 import torch
 import numpy as np
 from copy import deepcopy
@@ -9,14 +7,13 @@ from copy import deepcopy
 from dclib import Building
 
 from dctwin.data import Batch
+from dctwin.data.scalars import ActionControlVariable
 from dctwin.models.heat_gains import HeatLoadManager
 from dctwin.utils import DTEngineConfig
 from dctwin.managers.base import BaseManager
 
-from .airloop_manager import AirLoopManager
-from .plant_manager import PlantManager
-from .ds import HVACData
-from ..ds import ActionControlVariable
+from . import AirLoopManager, PlantManager
+from .data import HVACData
 
 
 class HVACManager(BaseManager, ABC):
@@ -38,11 +35,12 @@ class HVACManager(BaseManager, ABC):
         # set up managers for HVAC sub-systems
         self.heat_load_manager = HeatLoadManager(
             zones=self._model.constructions.zones,
-            device_key_mapping=self._device_key_mapping
+            device_key_mapping=self._device_key_mapping,
         )
         self.air_loop_manager = AirLoopManager(
             zones=self._model.constructions.zones,
-            device_key_mapping=self._device_key_mapping
+            device_key_mapping=self._device_key_mapping,
+            time_step=self._time_step,
         )
         self.plant_manager = PlantManager(
             device_key_mapping=self._device_key_mapping,
@@ -78,11 +76,20 @@ class HVACManager(BaseManager, ABC):
                 carbon_intensity=(),
             )
         )
+        #
+        for obj_name, obj in self.data.obs.zones.items():
+            for key in obj.keys():
+                self._fieldnames.append(f"{obj_name}:{key}")
+        for obj_name, obj in self.data.obs.plants.items():
+            for key in obj.keys():
+                self._fieldnames.append(f"{obj_name}:{key}")
 
     def _update_states(self):
         # overwrite the current states with the next states
         for device_name, device in self.data.obs_next.zones.items():
             for key, value in device.items():
+                if key == "sensible_heat_load":
+                    continue
                 if isinstance(value, torch.Tensor):
                     self.data.obs.zones[device_name][key] = deepcopy(value.detach())
                 else:
@@ -103,50 +110,6 @@ class HVACManager(BaseManager, ABC):
         # update time step
         self._current_time += self._time_step
 
-    def _pre_process(self, log_dir: str) -> None:
-        """
-        Create the log file for the simulation results
-        """
-        fieldnames = ["Timestamp"]
-        for obj_name, obj in self.data.obs.zones.items():
-            for key in obj.keys():
-                fieldnames.append(f"{obj_name}:{key}")
-        for obj_name, obj in self.data.obs.plants.items():
-            for key in obj.keys():
-                fieldnames.append(f"{obj_name}:{key}")
-        log_dir = Path(f"log/{log_dir}")
-        log_dir.mkdir(parents=True, exist_ok=True)
-        self.file_handler = open(log_dir.joinpath("output.csv"), "wt", newline='')
-        self.log_handler = csv.DictWriter(
-            self.file_handler,
-            fieldnames=fieldnames
-        )
-        self.log_handler.writeheader()
-        self.file_handler.flush()
-
-    def _post_processing(self, ):
-        """
-        Log the simulation results
-        """
-        log_dict = {}
-        log_dict.update(
-            {"Timestamp": self._current_time}
-        )
-        for obj_name, obj in self.data.obs.zones.items():
-            for key in obj.keys():
-                try:
-                    log_dict.update({f"{obj_name}:{key}": obj[key].item()})
-                except:
-                    log_dict.update({f"{obj_name}:{key}": 0.})
-        for obj_name, obj in self.data.obs.plants.items():
-            for key in obj.keys():
-                try:
-                    log_dict.update({f"{obj_name}:{key}": obj[key].item()})
-                except:
-                    log_dict.update({f"{obj_name}:{key}": 0.})
-        self.log_handler.writerow(log_dict)
-        self.file_handler.flush()
-
     @staticmethod
     def format_external_inputs(inps: Dict | Batch) -> Batch:
         data = Batch()
@@ -159,6 +122,11 @@ class HVACManager(BaseManager, ABC):
         return data
 
     def format_actions(self, input_data: np.ndarray | torch.Tensor | List) -> Batch:
+        """
+        Format the actuated actions to the required format for the simulation
+        :param input_data: (np.ndarray | torch.Tensor | List) input data
+        :return: (Batch) formatted data
+        """
         _, acts = self._ds.reset_zone_data({}, {})
         _, acts = self._ds.reset_plant_data({}, acts)
         self._reset_acts_require_grad()
@@ -231,6 +199,7 @@ class HVACManager(BaseManager, ABC):
             ptr += 1
         self._acts_require_grad = self._acts_require_grad.view(-1, 1).detach().numpy()
         self._acts_require_grad = torch.tensor(self._acts_require_grad, dtype=torch.float32, requires_grad=True)
+
         # re-assign the acts_required_grad to the data
         ptr = 0
         for act in self.actions:
@@ -266,29 +235,26 @@ class HVACManager(BaseManager, ABC):
         self,
         acts: Batch,
         obs:  Batch = None,
-        inps: Batch = None
+        inps: Batch = None,
     ) -> None:
         """
         Run the simulation with the
-        :param: states (Batch) current system states,
-        :param: actions (Batch) given control signals,
-        :return: next system states
+        :param: acts (Batch) given control signals,
+        :param: obs (Batch) current system states,
+        :param: inps (Batch) external inputs
+        :return: None
         """
         self.data.update(
             acts=acts,
-            inps=inps
+            inps=inps,
         )
         if self.heat_load_manager is not None:
             self.heat_load_manager.forward(
-                states=self.data.obs_next.zones,
-                actions=self.data.acts
+                data=self.data,
             )
         if self.air_loop_manager is not None:
             self.air_loop_manager.forward(
                 data=self.data,
-                # states=self.data.obs.zones,
-                # states_next=self.data.obs_next.zones,
-                # actions=self.data.acts
             )
         if self.plant_manager is not None:
             self.plant_manager.forward(
@@ -297,4 +263,4 @@ class HVACManager(BaseManager, ABC):
         # update the states
         self._update_states()
         # log the data
-        self._post_processing()
+        self._post_process({**self.data.obs.zones, **self.data.obs.plants})

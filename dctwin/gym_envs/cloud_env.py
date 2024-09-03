@@ -15,7 +15,7 @@ from typing import (
 )
 from pathlib import Path
 
-from .ds import Action
+from dctwin.data import Action
 
 from dctwin.adapters import EplusCloudAdapter
 from dctwin.utils import EplusCloudEnvConfig, ControlType

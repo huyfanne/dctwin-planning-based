@@ -15,7 +15,7 @@ from dctwin.adapters import EplusLiquidAdapter
 from dctwin.utils import CDUEnvConfig
 
 from .eplus_env import EPlusEnv
-from .ds import Observation, Action, ActionControlType
+from dctwin.data import Observation, Action, ActionControlType
 
 
 class EplusCDUEnv(EPlusEnv):

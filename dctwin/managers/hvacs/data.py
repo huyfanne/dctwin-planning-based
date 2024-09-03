@@ -7,6 +7,8 @@ from dctwin.data import Batch
 
 
 class HVACData:
+    """The class to reset the HVAC data for the environment, including zones and plant.
+    """
 
     def __init__(self, model: Building):
         self._model = model

@@ -18,7 +18,7 @@ class EplusConfig:
     """EnergyPlus configuration"""
 
     def __init__(self, base_config) -> None:
-        self.base_env: ThirdPartyConfig = base_config
+        self.base_config: DCTwinConfig = base_config
         self.output_path: Path = os.environ.get("EPLUS_OUTPUT_PATH", "")
         self.idf_file: Path = Path(os.environ.get("EPLUS_IDF_FILE", ""))
         self.weather_file: Path = os.environ.get("EPLUS_WEATHER", "")
@@ -48,7 +48,7 @@ class CFDConfig:
     SOLVER_TURBULENCE: bool
 
     def __init__(self, base_config, base_size: float = 0.18) -> None:
-        self.base_config: ThirdPartyConfig = base_config
+        self.base_config: DCTwinConfig = base_config
         self.geometry_file = Path(os.environ.get("GEOMETRY_FILE", ""))
         self.mesh_dir: Path = Path(os.environ.get("MESH_DIR", ""))
         self.object_mesh_index: Path = Path(
@@ -103,7 +103,7 @@ class CFDConfig:
 class CDUConfig:
 
     def __init__(self, base_config) -> None:
-        self.base_config: ThirdPartyConfig = base_config
+        self.base_config: DCTwinConfig = base_config
         self.case_dir: Path = Path(os.environ.get("CFD_CASE_DIR", ""))
 
         self.file_handler: TextIO = TextIO()
@@ -116,7 +116,7 @@ class EplusCFDConfig:
     """Co-simulation of E+ and CFD configuration"""
 
     def __init__(self, base_config) -> None:
-        self.base_config: ThirdPartyConfig = base_config
+        self.base_config: DCTwinConfig = base_config
         self.idf2room_map: Path = Path(os.environ.get("MAP_FILE", ""))
         self.timestamp: datetime.datetime = os.environ.get(
             "TIME_STEP", datetime.datetime.now()
@@ -131,7 +131,7 @@ class EplusCDUConfig:
     """Co-simulation of E+ and liquid cooling CDU configuration"""
 
     def __init__(self, base_config) -> None:
-        self.base_config: ThirdPartyConfig = base_config
+        self.base_config: DCTwinConfig = base_config
         self.timestamp: datetime.datetime = os.environ.get(
             "TIME_STEP", datetime.datetime.now()
         )  # time step to sync CFD and Eplus
@@ -148,31 +148,9 @@ class DCTwinConfig:
         self._environ = env
         # directory for experiment log, should be set by the user
         self.LOG_DIR = self._environ.get("LOG_DIR", Path("log").absolute())
-
-        self.file_handler: TextIO = TextIO()
-        self.log_handler: csv.DictWriter = csv.DictWriter(
-            self.file_handler, fieldnames=["time", "mode", "value"]
-        )
-
-    def set_log_dir(self, log_dir: typing.Union[str, Path]) -> None:
-        self.LOG_DIR = Path(log_dir)
-
-
-dctwin_config: DCTwinConfig = DCTwinConfig()
-
-
-class ThirdPartyConfig:
-    """Base configuration
-    :param env: environment variables
-    """
-
-    BACKEND_LOG_PRINT: bool
-
-    def __init__(self, env: typing.MutableMapping = os.environ) -> None:
-        self._environ = env
-        # directory for experiment log, should be set by the user
-        self.LOG_DIR = self._environ.get("LOG_DIR", Path("log").absolute())
         # directory for each simulation case or episode, subfolder of the log directory
+        self.case_dir: Path = Path(os.environ.get("OUTPUT_DIR", ""))
+
         # backend
         self.BACKEND_LOG_PRINT = (
             self._environ.get("BACKEND_LOG_PRINT", "true").lower() == "true"
@@ -184,11 +162,16 @@ class ThirdPartyConfig:
         self.eplus_cfd = EplusCFDConfig(self)
         self.eplus_cdu = EplusCDUConfig(self)
 
+        self.file_handler: TextIO = TextIO()
+        self.log_handler: csv.DictWriter = csv.DictWriter(
+            self.file_handler, fieldnames=["time", "mode", "value"]
+        )
+
     def set_log_dir(self, log_dir: typing.Union[str, Path]) -> None:
         self.LOG_DIR = Path(log_dir)
 
 
-config: ThirdPartyConfig = ThirdPartyConfig()
+config: DCTwinConfig = DCTwinConfig()
 
 
 def read_engine_config(
@@ -209,7 +192,7 @@ def read_engine_config(
 
 
 def setup_logging(
-    logging_config: LoggingConfig, engine_config: Union[Path, str] = "engine.prototxt"
+    logging_config: LoggingConfig, engine_config: Union[Path, str] = "engine.prototxt",
 ) -> None:
     """Set up the logging for the current experiment."""
     time_stamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")

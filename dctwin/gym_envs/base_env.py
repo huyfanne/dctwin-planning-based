@@ -12,7 +12,7 @@ from dctwin.utils import (
     config as base_env,
 )
 
-from .ds import (
+from dctwin.data import (
     ScalarDataItem,
     Action,
     Observation,

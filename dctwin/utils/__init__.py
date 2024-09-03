@@ -27,7 +27,6 @@ from .dt_engine_pb2 import (
     CDUEnvConfig,
     DCTwinActionConfig,
     DCTwinObservationConfig,
-    DCTwinConfig,
 )
 
 __all__ = [

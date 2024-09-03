@@ -734,6 +734,10 @@ class PlantManager(nn.Module):
         self,
         data: Batch,
     ) -> None:
+        """
+        The forward method of the PlantManager, which iteratively solves the plant by half-loop side branches
+        :param data: the data batch
+        """
         for loops in [
             self.plant.secondary_chilled_water_loops,
             self.plant.chilled_water_loops,
