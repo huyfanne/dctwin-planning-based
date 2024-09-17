@@ -55,6 +55,15 @@ message IDFOutputVariableConfig {
   optional string reporting_frequency = 3 [default = "timestep"];
 }
 
+message ScalarDataItemConfig {
+  required string variable_name = 2;
+  oneof value {
+    double default_normed_value = 3;
+    double default_unnormed_value = 4;
+  }
+  optional NormalizeConfig normalize_config = 5;
+}
+
 message EPlusActionConfig {
   enum ControlType {
     FIXED = 1;  // always a fixed value (i.e. default value), not exposed to the agent

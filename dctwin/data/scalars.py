@@ -7,11 +7,9 @@ from dctwin.utils import (
     NormalizeConfig,
     ScalarDataItemConfig,
     EPlusObservationConfig,
-    EPlusActionConfig,
-    CDUActionConfig,
-    CDUObservationConfig,
     CFDObservationConfig,
     DCTwinActionConfig,
+    DCTwinActuatorConfig,
     DCTwinObservationConfig,
 )
 from .resizers import LinearResizer
@@ -109,65 +107,57 @@ class Observation(ScalarDataItem):
             self.type = None
 
 
-ActionControlType = EPlusActionConfig.ControlType
-ActionControlVariable = DCTwinActionConfig.ControlVariable
+ActionControlType = DCTwinActionConfig.ControlType
+ActuatorControlType = DCTwinActuatorConfig.ControlType
 
 
 class Action(ScalarDataItem):
     # noinspection PyBroadException
-    def __init__(self, config: EPlusActionConfig | DCTwinActionConfig) -> None:
+    def __init__(self, config: DCTwinActionConfig) -> None:
         super().__init__(config)
 
-        if type(config) == DCTwinActionConfig:
-            self.requires_grad: bool = config.requires_grad
-            self.control_variable = config.control_variable
-            self.device_unique_key = config.device_unique_key
-            if not self.requires_grad and self.normed_value is None:
-                logger.warning(
-                    f"{self.device_unique_key} {self.control_variable} "
-                    f"set to be fixed but no default value was specified! "
-                )
+        self.requires_grad: bool = config.requires_grad
 
-        elif type(config) == EPlusActionConfig or type(config) == CDUActionConfig:
-            self.control_type = config.control_type
+        self.control_type = config.control_type
 
-            self.debug_name = f"Action {self.variable_name}"
-            if self.control_type == ActionControlType.FIXED and self.normed_value is None:
-                logger.warning(
-                    f"{self.debug_name} set to be fixed but no default value was specified! "
-                    f"Using {self.default_value} instead..."
-                )
-            elif (
-                self.control_type == ActionControlType.PRE_SCHEDULED
-                or self.control_type == ActionControlType.ACTUATOR_PRE_SCHEDULED
-            ):
-                try:
-                    self.input_source = config.input_source
+        self.debug_name = f"Action {self.variable_name}"
+        if self.control_type == ActionControlType.FIXED and self.normed_value is None:
+            logger.warning(
+                f"{self.debug_name} set to be fixed but no default value was specified! "
+                f"Using {self.default_value} instead..."
+            )
+        elif (
+            self.control_type == ActionControlType.PRE_SCHEDULED
+            or self.control_type == ActionControlType.ACTUATOR_PRE_SCHEDULED
+        ):
+            try:
+                self.input_source = config.input_source
+                assert (
+                    len(self.input_source) > 0
+                ), f"{self.debug_name} is pre_scheduled but input source was not specified!"
+                if not os.path.isabs(self.input_source):
+                    self.input_source = os.path.abspath(self.input_source)
+                with open(self.input_source, "r") as f:
+                    self.schedule = json.load(f)
+                    assert isinstance(self.schedule, list), (
+                        f"{self.debug_name}: " f"input source has to be a json list!"
+                    )
                     assert (
-                        len(self.input_source) > 0
-                    ), f"{self.debug_name} is pre_scheduled but input source was not specified!"
-                    if not os.path.isabs(self.input_source):
-                        self.input_source = os.path.abspath(self.input_source)
-                    with open(self.input_source, "r") as f:
-                        self.schedule = json.load(f)
-                        assert isinstance(self.schedule, list), (
-                            f"{self.debug_name}: " f"input source has to be a json list!"
-                        )
-                        assert (
-                            len(self.schedule) != 0
-                        ), f"{self.debug_name} has an input source of length 0!"
-                        self.schedule_idx = 0
-                except Exception:
-                    logger.exception("Failed to load input source!")
-            elif hasattr(config, "input_source") and config.HasField("input_source"):
-                logger.warning(
-                    f"{self.debug_name} is not pre_scheduled but input source was specified. "
-                    f"The source will be ignored."
-                )
-            elif self.control_type == ActionControlType.AGENT_CONTROLLED:
-                if hasattr(config, "masking_variable_name"):
-                    self.masking_variable_name = config.masking_variable_name
-                    self.mask = False
+                        len(self.schedule) != 0
+                    ), f"{self.debug_name} has an input source of length 0!"
+                    self.schedule_idx = 0
+            except Exception:
+                logger.exception("Failed to load input source!")
+        elif hasattr(config, "input_source") and config.HasField("input_source"):
+            logger.warning(
+                f"{self.debug_name} is not pre_scheduled but input source was specified. "
+                f"The source will be ignored."
+            )
+        elif self.control_type == ActionControlType.AGENT_CONTROLLED:
+            if hasattr(config, "masking_variable_name"):
+                self.masking_variable_name = config.masking_variable_name
+                self.mask = False
+        self.actuator_config = config.actuator_config if hasattr(config, "actuator_config") else None
 
     @validator
     def __iter__(self):
