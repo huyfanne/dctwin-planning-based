@@ -6,6 +6,7 @@ from loguru import logger
 from dctwin.utils import (
     NormalizeConfig,
     ScalarDataItemConfig,
+    EPlusActionConfig,
     EPlusObservationConfig,
     CFDObservationConfig,
     DCTwinActionConfig,
@@ -113,10 +114,11 @@ ActuatorControlType = DCTwinActuatorConfig.ControlType
 
 class Action(ScalarDataItem):
     # noinspection PyBroadException
-    def __init__(self, config: DCTwinActionConfig) -> None:
+    def __init__(self, config: DCTwinActionConfig | EPlusActionConfig) -> None:
         super().__init__(config)
 
-        self.requires_grad: bool = config.requires_grad
+        if type(config) == DCTwinActionConfig:
+            self.requires_grad: bool = config.requires_grad
 
         self.control_type = config.control_type
 
