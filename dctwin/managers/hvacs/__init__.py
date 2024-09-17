@@ -1,11 +1,11 @@
-from .zone import AirLoopManager, CFDManager, PODBuilder, LiquidCoolingManager
+from .zone import AirLoopManager, CFDManager, PODBuilder, LiquidLoopManager
 from .plant import PlantManager
 from .base import HVACManager
 
 
 __all__ = [
     "AirLoopManager",
-    "LiquidCoolingManager",
+    "LiquidLoopManager",
     "PlantManager",
     "HVACManager",
     "CFDManager",

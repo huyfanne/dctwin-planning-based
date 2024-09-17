@@ -7,7 +7,7 @@ from dclib.data import Inputs
 from dctwin.models.cooling.facilities.cdu import CDUModel
 
 
-class LiquidCoolingManager:
+class LiquidLoopManager:
     """
     Implement the liquid cooling manager to simulate the thermal properties and the electrical power consumption
     of a hybrid cooling system with the direct-to-chip cooling system and conventional force ventilation air cooling
