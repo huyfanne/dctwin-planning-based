@@ -55,15 +55,6 @@ message IDFOutputVariableConfig {
   optional string reporting_frequency = 3 [default = "timestep"];
 }
 
-message ScalarDataItemConfig {
-  required string variable_name = 2;
-  oneof value {
-    double default_normed_value = 3;
-    double default_unnormed_value = 4;
-  }
-  optional NormalizeConfig normalize_config = 5;
-}
-
 message EPlusActionConfig {
   enum ControlType {
     FIXED = 1;  // always a fixed value (i.e. default value), not exposed to the agent
@@ -104,29 +95,6 @@ message EPlusObservationConfig {
   optional ObservationType observation_type = 8 [default = EPLUS];
 }
 
-message CDUActionConfig {
-  enum ControlType {
-    FIXED = 1;
-    AGENT_CONTROLLED = 2;
-  }
-  optional ControlType control_type = 2 [default = AGENT_CONTROLLED];
-  required string variable_name = 5;
-  oneof value {
-    double default_normed_value = 6;
-    double default_unnormed_value = 7;
-  }
-  optional NormalizeConfig normalize_config = 10;
-}
-
-message CDUObservationConfig {
-  optional bool exposed = 2 [default = false];
-  required string variable_name = 3;
-  oneof value {
-    double default_normed_value = 4;
-    double default_unnormed_value = 5;
-  }
-  optional NormalizeConfig normalize_config = 7;
-}
 
 message CFDObservationConfig {
   optional bool exposed = 2 [default = true];
@@ -215,12 +183,6 @@ message CFDEnvConfig {
   optional bool run_cfd = 15 [default = false];
 }
 
-message CDUEnvConfig {
-  repeated CDUActionConfig actions = 7;
-  optional bool use_unnormed_act = 8 [default = false];
-  repeated CDUObservationConfig observations = 9;
-  optional bool use_unnormed_obs = 10 [default = false];
-}
 
 // eplus CFD co-simulation env config
 message EplusCFDEnvConfig {
@@ -230,12 +192,6 @@ message EplusCFDEnvConfig {
     optional EnvParams env_params = 4; // co-simulation env config
 }
 
-// EnergyPlus and room liquid cooling env config
-message EplusCDUEnvConfig {
-    required CDUEnvConfig cdu = 2; // cfd config
-    required EPlusEnvConfig eplus = 3; // energyplus config
-    optional EnvParams env_params = 4; // co-simulation env config
-}
 
 message DCTwinActuatorConfig {
   enum ComponentType {
@@ -332,9 +288,7 @@ message DTEngineConfig {
   // choose one of the following configurations for gym-like environment
   oneof EnvConfig {
     EPlusEnvConfig eplus_env_config = 9;
-    CDUEnvConfig cdu_env_config = 10;
     EplusCFDEnvConfig eplus_cfd_env_config = 11;
-    EplusCDUEnvConfig eplus_cdu_env_config = 12;
     CFDEnvConfig cfd_config = 13;
   }
 }

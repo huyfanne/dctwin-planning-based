@@ -12,7 +12,6 @@ def make_env(
     schedule_fn: Callable = None,
     parse_obs_fn: Callable = None,
     map_boundary_condition_fn: Callable = None,
-    map_cdu_inputs_fn: Callable = None,
     building: Building = None,
     is_k8s: bool = False,
     k8s_config: dict = None,
@@ -31,8 +30,6 @@ def make_env(
             "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
             "server_powers": {}, "server_volume_flow_rates": {}
         }
-    :param map_cdu_inputs_fn: the callback function to map the CDU inputs
-        defined by the user, this is only used for eplus and liquid cooling co-simulation
     :param building: the building object, this is only used for eplus and liquid cooling co-simulation
     :param is_k8s: whether the environment is running in k8s
     return: the gym-like environment instance
@@ -46,7 +43,6 @@ def make_env(
     if env_config_name == "eplus_cfd_env_config":
         env_params.update({"map_boundary_condition_fn": map_boundary_condition_fn})
     if env_config_name == "eplus_cdu_env_config":
-        env_params.update({"map_cdu_inputs_fn": map_cdu_inputs_fn})
         env_params.update({"building": building})
     env = gym.make(
         get_env_id(env_config_name),
