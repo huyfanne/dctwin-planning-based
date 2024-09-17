@@ -2,6 +2,7 @@ from typing import Tuple
 
 import torch
 import torch.nn as nn
+import numpy as np
 from loguru import logger
 
 from dclib.cooling.plant.facilities.tank import Tank
@@ -21,6 +22,7 @@ class ThermalStorageTankModel(nn.Module):
         config: Tank,
         key_mapping: dict,
         learnable: bool = True,
+        device: str | int | torch.device = "cpu",
     ) -> None:
         super(ThermalStorageTankModel, self).__init__()
         self.uid = config.uid
@@ -43,6 +45,7 @@ class ThermalStorageTankModel(nn.Module):
 
         self.buffer = Buffer(size=100)
         self.key_mapping = key_mapping
+        self.device = device
 
     def collect(self, data: dict) -> None:
         self.buffer.add(
@@ -87,13 +90,13 @@ class ThermalStorageTankModel(nn.Module):
 
     def forward(
         self,
-        T_tank_current: torch.Tensor,
-        T_outdoor: torch.Tensor,
-        T_use_in: torch.Tensor,
-        T_source_in: torch.Tensor,
-        m_use: torch.Tensor,
-        m_source: torch.Tensor,
-        time: torch.Tensor,
+        T_tank_current: np.ndarray | torch.Tensor,
+        T_outdoor: np.ndarray | torch.Tensor,
+        T_use_in: np.ndarray | torch.Tensor,
+        T_source_in: np.ndarray | torch.Tensor,
+        m_use: np.ndarray | torch.Tensor,
+        m_source: np.ndarray | torch.Tensor,
+        time: np.ndarray | torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Simulate the cooling tank temperature with the given use and source side mass flow rates and temperatures.
@@ -114,6 +117,42 @@ class ThermalStorageTankModel(nn.Module):
         :param time: the time step in seconds
         :return: the tank temperature at the next time step
         """
+        T_tank_current = torch.as_tensor(
+            T_tank_current,
+            device=self.device,
+            dtype=torch.float32
+        )
+        T_outdoor = torch.as_tensor(
+            T_outdoor,
+            device=self.device,
+            dtype=torch.float32
+        )
+        T_use_in = torch.as_tensor(
+            T_use_in,
+            device=self.device,
+            dtype=torch.float32
+        )
+        T_source_in = torch.as_tensor(
+            T_source_in,
+            device=self.device,
+            dtype=torch.float32
+        )
+        m_use = torch.as_tensor(
+            m_use,
+            device=self.device,
+            dtype=torch.float32
+        )
+        m_source = torch.as_tensor(
+            m_source,
+            device=self.device,
+            dtype=torch.float32
+        )
+        time = torch.as_tensor(
+            time,
+            device=self.device,
+            dtype=torch.float32
+        )
+
         a = self.tank_UA * T_outdoor / water_specific_heat + \
             self.epsilon_use * m_use * T_use_in + \
             self.epsilon_source * m_source * T_source_in

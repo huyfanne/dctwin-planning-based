@@ -93,7 +93,9 @@ class HeatExchanger(nn.Module):
         self.tube_kappa = nn.Parameter(
             torch.tensor(thermal_conductivity, dtype=torch.float32), requires_grad=False
         )
-        self.H_he = self.num_transverse * transverse_pitch + 2 * tube_diameter
+        self.H_he = torch.nn.Parameter(
+            (self.num_transverse * transverse_pitch + 2 * tube_diameter), requires_grad=False
+        )
         self.standard_atomos_pressure = 101325
 
         self.internal_fluid_name = internal_fluid_name

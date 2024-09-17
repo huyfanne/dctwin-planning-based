@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 
 from dclib.cooling.plant.facilities import Chiller
 
@@ -15,8 +16,12 @@ class ChillerModel(nn.Module):
     The power model is a quadratic function of the part load ratio which the parameters are learnable.
     """
     def __init__(
-        self, config: Chiller, key_mapping: dict, learnable: bool = True
-    ):
+        self,
+        config: Chiller,
+        key_mapping: dict,
+        learnable: bool = True,
+        device: str | int | torch.device = "cpu",
+    ) -> None:
         super(ChillerModel, self).__init__()
         self.config = config
         self.uid = config.uid
@@ -42,13 +47,17 @@ class ChillerModel(nn.Module):
         # define the replay buffer
         self.buffer = Buffer(size=100)
         self.key_mapping = key_mapping
+        self.device = device
 
     def forward(
         self,
-        chw_sp: torch.Tensor,
-        cw_sp: torch.Tensor,
-        cooling_load: torch.Tensor
-    ):
+        chw_sp: np.ndarray | torch.Tensor,
+        cw_sp: np.ndarray | torch.Tensor,
+        cooling_load: np.ndarray | torch.Tensor,
+    ) -> torch.Tensor:
+        chw_sp = torch.as_tensor(chw_sp, device=self.device, dtype=torch.float32)
+        cw_sp = torch.as_tensor(cw_sp, device=self.device, dtype=torch.float32)
+        cooling_load = torch.as_tensor(cooling_load, device=self.device, dtype=torch.float32)
         partial_load = cooling_load / self.config.cooling.reference_capacity
         return self.design_power * self.plr_curve(partial_load) * self.eir_curve(chw_sp, cw_sp)
 

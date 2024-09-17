@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 from loguru import logger
 
 from dclib.cooling.room.facilities.acu import ACU
@@ -20,7 +21,8 @@ class FanModel(nn.Module):
         self,
         config: ACU,
         key_mapping: dict,
-        learnable: bool = True
+        learnable: bool = True,
+        device: str | int | torch.device = "cpu",
     ) -> None:
         super(FanModel, self).__init__()
         self.config = config
@@ -53,6 +55,7 @@ class FanModel(nn.Module):
         # initialize the replay buffer
         self.buffer = Buffer(size=100)
         self.key_mapping = key_mapping
+        self.device = device
 
     def collect(self, data: dict):
         assert "air mass flow rate" in self.key_mapping.keys(), "The \"air mass flow rate\" key is not provided."
@@ -68,9 +71,10 @@ class FanModel(nn.Module):
             )
         )
 
-    def forward(self, mass_flow_rate: torch.Tensor):
+    def forward(self, mass_flow_rate: np.ndarray | torch.Tensor) -> torch.Tensor:
+        mass_flow_rate = torch.as_tensor(mass_flow_rate, device=self.device, dtype=torch.float32)
         flow_fraction = mass_flow_rate / (self.design_volume_flow_rate * rho_air)
-        # assert torch.all(flow_fraction <= 1), "The air mass flow rate must be positive."
+        assert torch.all(flow_fraction <= 1), "The air mass flow rate must be positive."
         return self.design_power * self.power_curve(flow_fraction)
 
     def learn(self):

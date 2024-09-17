@@ -16,8 +16,12 @@ class PumpModel(nn.Module):
     The power model is a quartic function of the mass flow rate which the parameters are learnable.
     """
     def __init__(
-        self, config: Pump, key_mapping: dict, learnable: bool = True
-    ):
+        self,
+        config: Pump,
+        key_mapping: dict,
+        learnable: bool = True,
+        device: str | int | torch.device = "cpu",
+    ) -> None:
         super(PumpModel, self).__init__()
         self.config = config
         self.uid = config.uid
@@ -37,6 +41,7 @@ class PumpModel(nn.Module):
         # initialize the replay buffer
         self.buffer = Buffer(size=100)
         self.key_mapping = key_mapping
+        self.device = device
 
     def collect(self, data: dict):
         self.buffer.add(
@@ -48,8 +53,9 @@ class PumpModel(nn.Module):
 
     def forward(
         self,
-        mass_flow_rate: torch.Tensor
-    ):
+        mass_flow_rate: np.ndarray | torch.Tensor,
+    ) -> torch.Tensor:
+        mass_flow_rate = torch.as_tensor(mass_flow_rate, device=self.device, dtype=torch.float32)
         flow_fraction = mass_flow_rate / (self.design_flow_rate * rho_water)
         flow_fraction = torch.clip(
             flow_fraction, 0, 1
