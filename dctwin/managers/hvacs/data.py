@@ -3,7 +3,19 @@ from typing import Any, Dict, Tuple
 
 from dclib import Building
 from dclib.cooling.plant.loops import Branch
+
 from dctwin.data import Batch
+from dctwin.data.scalars import ActuatorControlType
+
+
+actuator_control_type_dict = {
+    ActuatorControlType.On_Off_Supervisory: "on_off_schedule",
+    ActuatorControlType.Temperature_Setpoint: "supply_temperature_sp",
+    ActuatorControlType.Fan_Air_Mass_Flow_Rate: "supply_mass_flow_rate_sp",
+    ActuatorControlType.Pump_Mass_Flow_Rate: "supply_mass_flow_rate_sp",
+    ActuatorControlType.CPU_Utilization: "cpu_load_utilization",
+    ActuatorControlType.Tank_Source_Side_Mass_Flow_Rate: "source_side_mass_flow_rate",
+}
 
 
 class HVACData:

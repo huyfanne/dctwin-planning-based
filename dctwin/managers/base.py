@@ -17,7 +17,6 @@ from dctwin.data import (
 )
 
 from dctwin.data.batch import Batch
-from dclib import Building, Room
 import torch
 
 
@@ -28,15 +27,11 @@ class BaseManager(ABC):
     def __init__(
         self,
         config: DTEngineConfig,
-        model: Building | Room,
-        device_key_mapping: Dict = None,
-        ds=None,
+        log_results: bool = True,
     ) -> None:
         super().__init__()
         # set up basics
         self._config = config
-        self._model = model
-        self._device_key_mapping = device_key_mapping
         self._time_step = 1 / self._config.simulation_time_config.number_of_timesteps_per_hour * 3600  # in seconds
         # Set up actions
         self._set_actions()
@@ -45,10 +40,10 @@ class BaseManager(ABC):
         # set up simulation time
         self._set_simulation_time()
         # reset observation and action data
-        self._ds = ds
         self._current_time = 0
         self._episode_idx = 0
         self._fieldnames = ["Timestamp"]
+        self._log_results = log_results
 
     def _reset_acts_require_grad(self):
         self._acts_require_grad = torch.tensor([], requires_grad=True)
@@ -62,8 +57,9 @@ class BaseManager(ABC):
         self._episode_idx += 1
         self._reset_data()
         # set up the result logging
-        if self._episode_idx == 1:
+        if self._log_results:
             self._pre_process()
+        self.done = False
 
     def _set_actions(self) -> None:
         self._actions = [Action(config=ac) for ac in self._config.actions]
@@ -77,14 +73,18 @@ class BaseManager(ABC):
             begin_month = self._config.simulation_time_config.begin_month
             begin_day_of_month = self._config.simulation_time_config.begin_day_of_month
             year = datetime.now().year
+            end_month = self._config.simulation_time_config.end_month
+            end_day_of_month = self._config.simulation_time_config.end_day_of_month
             self._starting_timestamp = datetime(
                 year=year, month=begin_month, day=begin_day_of_month
+            )
+            self._ending_timestamp = datetime(
+                year=year, month=end_month, day=end_day_of_month
             )
             self._timestamp_interval = timedelta(
                 minutes=int(60 / self._config.simulation_time_config.number_of_timesteps_per_hour)
             )
             self._timestamp = self._starting_timestamp
-            base_env.timestamp = self._timestamp
             self._use_simulation_time = True
         else:
             logger.info("Using real-world time")
@@ -94,6 +94,7 @@ class BaseManager(ABC):
         """
         Create the log file for the simulation results
         """
+        logger.info(f"creating log file of episode-{self._episode_idx}")
         base_env.case_dir = Path(base_env.LOG_DIR).joinpath(
             f"dctwin_output/episode-{self._episode_idx}"
         )
@@ -113,14 +114,19 @@ class BaseManager(ABC):
         """
         log_dict = {}
         log_dict.update(
-            {"Timestamp": self._current_time}
+            {"Timestamp": datetime.fromtimestamp(
+                self._timestamp.timestamp() + self._current_time
+            ).strftime("%Y-%m-%d %H:%M:%S")}
         )
         for obj_name, obj in data.items():
-            for key in obj.keys():
-                try:
-                    log_dict.update({f"{obj_name}:{key}": obj[key].item()})
-                except:
-                    log_dict.update({f"{obj_name}:{key}": 0.})
+            try:
+                for key in obj.keys():
+                    try:
+                        log_dict.update({f"{obj_name}:{key}": obj[key].item()})
+                    except:
+                        log_dict.update({f"{obj_name}:{key}": 0.})
+            except AttributeError:
+                log_dict.update({f"{obj_name}": obj.item()})
         base_env.log_handler.writerow(log_dict)
         base_env.file_handler.flush()
 

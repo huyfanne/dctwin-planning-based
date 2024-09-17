@@ -49,32 +49,6 @@ message IDFXIScheduleConfig {
   optional string scheduled_hx_name = 12;
 }
 
-message IDFXIActuatorConfig {
-  enum ComponentType {
-      Fan = 0;
-      System_Node_Setpoint = 1;
-      PUMP = 2;
-      Schedule_Constant = 3;
-      Supply_Side_Branch = 4;
-      Demand_Side_Branch = 5;
-      Plant_Component_Pump_VariableSpeed = 6;
-      Plant_Component_Chiller_Electric_EIR = 7;
-  }
-  enum ControlType {
-      Fan_Air_Mass_Flow_Rate = 0;
-      Temperature_Setpoint = 1;
-      Pump_Mass_Flow_Rate = 2;
-      Schedule_Value = 3;
-      On_Off_Supervisory = 4;
-      Availability_Status = 5;
-      Humidity_Ratio_Setpoint = 6;
-  }
-  required string actuated_component_unique_name = 1;
-  required ComponentType actuated_component_type = 2;
-  required ControlType actuated_component_control_type = 3;
-  optional float initial_value = 4;
-}
-
 message IDFOutputVariableConfig {
   required string key_value = 1;
   required string variable_name = 2;
@@ -107,7 +81,7 @@ message EPlusActionConfig {
     double default_unnormed_value = 7;
   }
   oneof IDFConfig {
-    IDFXIActuatorConfig actuator_config = 8;
+    DCTwinActuatorConfig actuator_config = 8;
     IDFXIScheduleConfig schedule_config = 9;
   }
   optional NormalizeConfig normalize_config = 10;
@@ -263,28 +237,59 @@ message EplusCDUEnvConfig {
     optional EnvParams env_params = 4; // co-simulation env config
 }
 
+message DCTwinActuatorConfig {
+  enum ComponentType {
+      Fan = 0;
+      System_Node_Setpoint = 1;
+      PUMP = 2;
+      Schedule_Constant = 3;
+      Supply_Side_Branch = 4;
+      Demand_Side_Branch = 5;
+      Plant_Component_Pump_VariableSpeed = 6;
+      Plant_Component_Chiller_Electric_EIR = 7;
+      ACU = 8;
+      ITE = 9;
+      Chilled_Water_Loop = 10;
+      Condenser_Water_Loop = 11;
+  }
+  enum ControlType {
+      Fan_Air_Mass_Flow_Rate = 0;
+      Temperature_Setpoint = 1;
+      Pump_Mass_Flow_Rate = 2;
+      Schedule_Value = 3;
+      On_Off_Supervisory = 4;
+      Availability_Status = 5;
+      Humidity_Ratio_Setpoint = 6;
+      CPU_Utilization = 7;
+      Tank_Source_Side_Mass_Flow_Rate = 8;
+  }
+  required string actuated_component_unique_name = 1;
+  required ComponentType actuated_component_type = 2;
+  required ControlType actuated_component_control_type = 3;
+  optional float initial_value = 4;
+}
+
 
 message DCTwinActionConfig {
-  enum ControlVariable {
-    Fan_Air_Mass_Flow_Rate = 0;
-    Temperature_Setpoint = 1;
-    Pump_Mass_Flow_Rate = 2;
-    Schedule_Value = 3;
-    On_Off_Supervisory = 4;
-    Availability_Status = 5;
-    Humidity_Ratio_Setpoint = 6;
-    CPU_Utilization = 7;
-    Tank_Source_Side_Mass_Flow_Rate = 8;
+  enum ControlType {
+    FIXED = 1;  // always a fixed value (i.e. default value), not exposed to the agent
+    AGENT_CONTROLLED = 2;  // i.e. action in the common sense, included in the action space
+    PRE_SCHEDULED = 3;  // get from a specified picked list in round-robin manner
+    CUSTOMIZED = 4;  // user register a callable function to produce value, example will be provided
+    ACTUATOR_PRE_SCHEDULED = 5;
   }
-  optional bool requires_grad = 1 [default = true];
-  required ControlVariable control_variable = 2;
-  required string device_unique_key = 3;
-  required string variable_name = 4;
+  optional ControlType control_type = 2 [default = AGENT_CONTROLLED];
+  optional string input_source = 3;  // only required/used when control_type == PRE_SCHEDULED, otherwise ignored
+  // unless absolute path specified, input_source are considered under the `data/` folder
+  required string variable_name = 5;
+  optional bool requires_grad = 6 [default = true];
   oneof value {
-    double default_normed_value = 5;
-    double default_unnormed_value = 6;
+    double default_normed_value = 7;
+    double default_unnormed_value = 8;
   }
-  optional NormalizeConfig normalize_config = 7;
+  required DCTwinActuatorConfig actuator_config = 9;
+  optional NormalizeConfig normalize_config = 10;
+  optional string masking_variable_name = 11 [default = ""];
 }
 
 message DCTwinObservationConfig {
@@ -317,17 +322,19 @@ message DCTwinObservationConfig {
 // main engine configuration
 message DTEngineConfig {
   optional LoggingConfig logging_config = 1;
-  optional SimulationTimeConfig simulation_time_config = 2;
-  repeated DCTwinActionConfig actions = 3;
-  optional bool use_unnormed_act = 4 [default = true];
-  repeated DCTwinObservationConfig observations = 5;
-  optional bool use_unnormed_obs = 6 [default = true];
+  required string model_file = 2;
+  optional string device_key_map = 3;
+  optional SimulationTimeConfig simulation_time_config = 4;
+  repeated DCTwinActionConfig actions = 5;
+  optional bool use_unnormed_act = 6 [default = true];
+  repeated DCTwinObservationConfig observations = 7;
+  optional bool use_unnormed_obs = 8 [default = true];
   // choose one of the following configurations for gym-like environment
   oneof EnvConfig {
-    EPlusEnvConfig eplus_env_config = 7;
-    CDUEnvConfig cdu_env_config = 8;
-    EplusCFDEnvConfig eplus_cfd_env_config = 9;
-    EplusCDUEnvConfig eplus_cdu_env_config = 10;
-    CFDEnvConfig cfd_config = 11;
+    EPlusEnvConfig eplus_env_config = 9;
+    CDUEnvConfig cdu_env_config = 10;
+    EplusCFDEnvConfig eplus_cfd_env_config = 11;
+    EplusCDUEnvConfig eplus_cdu_env_config = 12;
+    CFDEnvConfig cfd_config = 13;
   }
 }

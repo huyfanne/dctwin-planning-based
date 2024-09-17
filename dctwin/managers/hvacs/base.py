@@ -1,19 +1,21 @@
 from abc import ABC
 from typing import Dict, List
+import json
 import torch
 import numpy as np
 from copy import deepcopy
+from datetime import datetime
 
 from dclib import Building
 
 from dctwin.data import Batch
-from dctwin.data.scalars import ActionControlVariable
+from dctwin.data.scalars import ActionControlType
 from dctwin.models.heat_gains import HeatLoadManager
 from dctwin.utils import DTEngineConfig
 from dctwin.managers.base import BaseManager
 
 from . import AirLoopManager, PlantManager
-from .data import HVACData
+from .data import HVACData, actuator_control_type_dict
 
 
 class HVACManager(BaseManager, ABC):
@@ -23,15 +25,19 @@ class HVACManager(BaseManager, ABC):
     def __init__(
         self,
         config: DTEngineConfig,
-        building: Building,
-        device_key_mapping: Dict = None
+        log_results: bool = True,
     ) -> None:
         super().__init__(
             config=config,
-            model=building,
-            device_key_mapping=device_key_mapping,
-            ds=HVACData(model=building)
+            log_results=log_results,
         )
+        self._model = Building.load(self._config.model_file)
+        if self._config.device_key_map:
+            with open(self._config.device_key_map, "r") as f:
+                self._device_key_mapping = json.load(f)
+        else:
+            self._device_key_mapping = None
+        self._ds = HVACData(model=self._model)
         # set up managers for HVAC sub-systems
         self.heat_load_manager = HeatLoadManager(
             zones=self._model.constructions.zones,
@@ -76,13 +82,14 @@ class HVACManager(BaseManager, ABC):
                 carbon_intensity=(),
             )
         )
-        #
         for obj_name, obj in self.data.obs.zones.items():
             for key in obj.keys():
                 self._fieldnames.append(f"{obj_name}:{key}")
         for obj_name, obj in self.data.obs.plants.items():
             for key in obj.keys():
                 self._fieldnames.append(f"{obj_name}:{key}")
+        for key in self.data.obs.dc.keys():
+            self._fieldnames.append(f"{key}")
 
     def _update_states(self):
         # overwrite the current states with the next states
@@ -109,6 +116,8 @@ class HVACManager(BaseManager, ABC):
                 self.data.obs.dc[key] = deepcopy(value)
         # update time step
         self._current_time += self._time_step
+        if self._ending_timestamp == datetime.fromtimestamp(self._timestamp.timestamp() + self._current_time):
+            self.done = True
 
     @staticmethod
     def format_external_inputs(inps: Dict | Batch) -> Batch:
@@ -133,65 +142,38 @@ class HVACManager(BaseManager, ABC):
         data = Batch(acts=acts)
         ptr = 0
         for act in self.actions:
-            if act.control_variable == ActionControlVariable.On_Off_Supervisory:
+            control_type = act.actuator_config.actuated_component_control_type
+            actuator_control_type_key = actuator_control_type_dict[control_type]
+            device_unique_name = act.actuator_config.actuated_component_unique_name
+            if act.control_type == ActionControlType.PRE_SCHEDULED:
                 variable = torch.tensor(
-                    [input_data[ptr]],
-                    dtype=torch.bool,
+                    [next(act)],
+                    dtype=torch.float32,
                     requires_grad=False
                 )
-                data.acts[act.device_unique_key].on_off_schedule = variable
+                data.acts[device_unique_name][actuator_control_type_key] = variable
+                ptr -= 1 # pre-scheduled actions do not require a pointer increment
 
-            elif act.control_variable == ActionControlVariable.Temperature_Setpoint:
-                if hasattr(data.acts[act.device_unique_key], 'on_off_schedule'):
+            elif act.control_type == ActionControlType.AGENT_CONTROLLED:
+                if hasattr(data.acts[device_unique_name], 'on_off_schedule'):
                     variable = torch.tensor(
-                        [input_data[ptr]] if data.acts[act.device_unique_key].on_off_schedule else [0],
+                        [input_data[ptr]] if data.acts[
+                            device_unique_name].on_off_schedule else [0],
                         dtype=torch.float32,
-                        requires_grad=True if act.requires_grad and data.acts[act.device_unique_key].on_off_schedule else False
+                        requires_grad=True if act.requires_grad and data.acts[
+                            device_unique_name].on_off_schedule else False
                     )
-                    data.acts[act.device_unique_key].supply_temperature_sp = variable
+                    data.acts[device_unique_name][actuator_control_type_key] = variable
                 else:
                     variable = torch.tensor(
                         [input_data[ptr]],
                         dtype=torch.float32,
                         requires_grad=True if act.requires_grad else False
                     )
-                    data.acts[act.device_unique_key].supply_temperature_sp = variable
-
-            elif (act.control_variable == ActionControlVariable.Fan_Air_Mass_Flow_Rate or
-                  act.control_variable == ActionControlVariable.Pump_Mass_Flow_Rate):
-                if hasattr(data.acts[act.device_unique_key], 'on_off_schedule'):
-                    variable = torch.tensor(
-                        [input_data[ptr]] if data.acts[act.device_unique_key].on_off_schedule else [0],
-                        dtype=torch.float32,
-                        requires_grad=True if act.requires_grad and data.acts[act.device_unique_key].on_off_schedule else False
-                    )
-                    data.acts[act.device_unique_key].supply_mass_flow_rate_sp = variable
-                else:
-                    variable = torch.tensor(
-                        [input_data[ptr]],
-                        dtype=torch.float32,
-                        requires_grad=True if act.requires_grad else False
-                    )
-                    data.acts[act.device_unique_key].supply_mass_flow_rate_sp = variable
-
-            elif act.control_variable == ActionControlVariable.CPU_Utilization:
-                variable = torch.tensor(
-                    [input_data[ptr]],
-                    dtype=torch.float32,
-                    requires_grad=True if act.requires_grad else False
-                )
-                data.acts[act.device_unique_key].cpu_load_utilization = variable
-
-            elif act.control_variable == ActionControlVariable.Tank_Source_Side_Mass_Flow_Rate:
-                variable = torch.tensor(
-                    [input_data[ptr]],
-                    dtype=torch.float32,
-                    requires_grad=True if act.requires_grad else False
-                )
-                data.acts[act.device_unique_key].source_side_mass_flow_rate = variable
+                    data.acts[device_unique_name][actuator_control_type_key] = variable
 
             else:
-                raise ValueError(f"Unknown control variable {act.control_variable}")
+                raise ValueError(f"Unknown control type {act.control_type}")
 
             if variable.requires_grad:
                 self._acts_require_grad = torch.cat((self._acts_require_grad, variable))
@@ -203,31 +185,12 @@ class HVACManager(BaseManager, ABC):
         # re-assign the acts_required_grad to the data
         ptr = 0
         for act in self.actions:
-            if act.control_variable == ActionControlVariable.On_Off_Supervisory:
-                if data.acts[act.device_unique_key].on_off_schedule.requires_grad:
-                    data.acts[act.device_unique_key].on_off_schedule = self._acts_require_grad[ptr]
-                    ptr += 1
-
-            elif act.control_variable == ActionControlVariable.Temperature_Setpoint:
-                if data.acts[act.device_unique_key].supply_temperature_sp.requires_grad:
-                    data.acts[act.device_unique_key].supply_temperature_sp = self._acts_require_grad[ptr]
-                    ptr += 1
-
-            elif (act.control_variable == ActionControlVariable.Fan_Air_Mass_Flow_Rate or
-                  act.control_variable == ActionControlVariable.Pump_Mass_Flow_Rate):
-                if data.acts[act.device_unique_key].supply_mass_flow_rate_sp.requires_grad:
-                    data.acts[act.device_unique_key].supply_mass_flow_rate_sp = self._acts_require_grad[ptr]
-                    ptr += 1
-
-            elif act.control_variable == ActionControlVariable.CPU_Utilization:
-                if data.acts[act.device_unique_key].cpu_load_utilization.requires_grad:
-                    data.acts[act.device_unique_key].cpu_load_utilization = self._acts_require_grad[ptr]
-                    ptr += 1
-
-            elif act.control_variable == ActionControlVariable.Tank_Source_Side_Mass_Flow_Rate:
-                if data.acts[act.device_unique_key].source_side_mass_flow_rate.requires_grad:
-                    data.acts[act.device_unique_key].source_side_mass_flow_rate = self._acts_require_grad[ptr]
-                    ptr += 1
+            control_type = act.actuator_config.actuated_component_control_type
+            actuator_control_type_key = actuator_control_type_dict[control_type]
+            device_unique_name = act.actuator_config.actuated_component_unique_name
+            if data.acts[device_unique_name][actuator_control_type_key].requires_grad:
+                data.acts[device_unique_name][actuator_control_type_key] = self._acts_require_grad[ptr]
+                ptr += 1
 
         return data.acts
 
@@ -263,4 +226,5 @@ class HVACManager(BaseManager, ABC):
         # update the states
         self._update_states()
         # log the data
-        self._post_process({**self.data.obs.zones, **self.data.obs.plants})
+        if self._log_results:
+            self._post_process({**self.data.obs.zones, **self.data.obs.plants, **self.data.obs.dc})
