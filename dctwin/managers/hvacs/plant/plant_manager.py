@@ -505,7 +505,7 @@ class PlantManager(nn.Module):
                         mass_flow_rate=data.obs_next.plants[branch_id].water_mass_flow_rate,
                     )
                     data.obs_next.plants[component_id].power = pump_power
-                    data.obs_next.dc.facility_power += pump_power
+                    data.obs_next.dc.total_facility_power += pump_power
                     data.obs_next.dc.total_dc_power += pump_power
                 else:
                     data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
@@ -573,7 +573,7 @@ class PlantManager(nn.Module):
                         )
                         data.obs_next.plants[branch_id].outlet_temperature = data.acts[loop_id].supply_temperature_sp
                         data.obs_next.plants[component_id].power = chiller_power
-                        data.obs_next.dc.facility_power += chiller_power
+                        data.obs_next.dc.total_facility_power += chiller_power
                         data.obs_next.dc.total_dc_power += chiller_power
                     elif loop_side == "demand":
                         requested_flow_rate = torch.tensor(
@@ -617,7 +617,7 @@ class PlantManager(nn.Module):
                     data.obs_next.plants[branch_id].outlet_temperature = (
                         data.acts[loop_id].supply_temperature_sp
                     )
-                    data.obs_next.dc.facility_power += cooling_tower_power
+                    data.obs_next.dc.total_facility_power += cooling_tower_power
                     data.obs_next.dc.total_dc_power += cooling_tower_power
                 else:
                     data.obs_next.plants[branch_id].outlet_temperature = (

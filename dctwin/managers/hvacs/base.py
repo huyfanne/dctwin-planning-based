@@ -58,8 +58,8 @@ class HVACManager(BaseManager, ABC):
         acts = {}
         obs = Batch(
             total_dc_power=torch.tensor([0.], dtype=torch.float32,),
-            facility_power=torch.tensor([0.], dtype=torch.float32,),
-            ite_demand_power=torch.tensor([0.], dtype=torch.float32,),
+            total_facility_power=torch.tensor([0.], dtype=torch.float32,),
+            total_ite_demand_power=torch.tensor([0.], dtype=torch.float32,),
         )
         zone_obs, plant_obs = {}, {}
         zone_obs, acts = self._ds.reset_zone_data(zone_obs, acts)
@@ -91,6 +91,12 @@ class HVACManager(BaseManager, ABC):
         for key in self.data.obs.dc.keys():
             self._fieldnames.append(f"{key}")
 
+    @staticmethod
+    def _reset_statistics(obs):
+        obs.dc.total_dc_power = torch.tensor([0.], dtype=torch.float32)
+        obs.dc.total_facility_power = torch.tensor([0.], dtype=torch.float32)
+        obs.dc.total_ite_demand_power = torch.tensor([0.], dtype=torch.float32)
+
     def _update_states(self):
         # overwrite the current states with the next states
         for device_name, device in self.data.obs_next.zones.items():
@@ -110,10 +116,13 @@ class HVACManager(BaseManager, ABC):
                     self.data.obs.plants[device_name][key] = deepcopy(value)
 
         for key, value in self.data.obs_next.dc.items():
-            if isinstance(value, torch.Tensor):
-                self.data.obs.dc[key] = deepcopy(value.detach())
+            if "total_ite_demand_power" in key:
+                continue
             else:
-                self.data.obs.dc[key] = deepcopy(value)
+                if isinstance(value, torch.Tensor):
+                    self.data.obs.dc[key] = deepcopy(value.detach())
+                else:
+                    self.data.obs.dc[key] = deepcopy(value)
         # update time step
         self._current_time += self._time_step
         if self._ending_timestamp == datetime.fromtimestamp(self._timestamp.timestamp() + self._current_time):
@@ -207,9 +216,11 @@ class HVACManager(BaseManager, ABC):
         :param: inps (Batch) external inputs
         :return: None
         """
+        self._reset_statistics(obs=obs if obs is not None else self.data.obs)
         self.data.update(
             acts=acts,
             inps=inps,
+            obs=obs if obs is not None else self.data.obs,
         )
         if self.heat_load_manager is not None:
             self.heat_load_manager.forward(

@@ -73,4 +73,4 @@ class HeatLoadManager(nn.Module):
                     None
                 )
             data.obs.zones[zone_name].sensible_heat_load = total_ite
-            data.obs.dc.ite_demand_power += total_ite
+            data.obs.dc.total_ite_demand_power += total_ite
