@@ -186,7 +186,7 @@ class PlantManager(nn.Module):
                     raise logger.critical("Only one pump is allowed in the middle branch")
                 if data.acts[component_id].on_off_schedule == 1:
                     maximum_mass_flow_rate = torch.tensor(
-                        [component.cooling.design_maximum_flow_rate],
+                        [component.cooling.design_maximum_flow_rate * 1000],
                         dtype=torch.float32,
                         requires_grad=True,
                     )
