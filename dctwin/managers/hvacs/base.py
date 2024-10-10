@@ -101,8 +101,6 @@ class HVACManager(BaseManager, ABC):
         # overwrite the current states with the next states
         for device_name, device in self.data.obs_next.zones.items():
             for key, value in device.items():
-                if key == "sensible_heat_load":
-                    continue
                 if isinstance(value, torch.Tensor):
                     self.data.obs.zones[device_name][key] = deepcopy(value.detach())
                 else:
@@ -116,13 +114,10 @@ class HVACManager(BaseManager, ABC):
                     self.data.obs.plants[device_name][key] = deepcopy(value)
 
         for key, value in self.data.obs_next.dc.items():
-            if "total_ite_demand_power" in key:
-                continue
+            if isinstance(value, torch.Tensor):
+                self.data.obs.dc[key] = deepcopy(value.detach())
             else:
-                if isinstance(value, torch.Tensor):
-                    self.data.obs.dc[key] = deepcopy(value.detach())
-                else:
-                    self.data.obs.dc[key] = deepcopy(value)
+                self.data.obs.dc[key] = deepcopy(value)
         # update time step
         self._current_time += self._time_step
         if self._ending_timestamp == datetime.fromtimestamp(self._timestamp.timestamp() + self._current_time):

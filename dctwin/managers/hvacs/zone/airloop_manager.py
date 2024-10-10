@@ -80,7 +80,7 @@ class AirLoopManager(nn.Module):
             ]
             # uniform distribution of the heat load among active ACUs
             zone_acu_heat_load = {
-                active_acu_name: data.obs.zones[zone_name].sensible_heat_load / len(active_acu_ids)
+                active_acu_name: data.obs_next.zones[zone_name].sensible_heat_load / len(active_acu_ids)
                 for active_acu_name in active_acu_ids
             }
             weighted_return_temperature = 0

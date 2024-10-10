@@ -72,5 +72,5 @@ class HeatLoadManager(nn.Module):
                     data.acts[ite_name].cpu_load_utilization,
                     None
                 )
-            data.obs.zones[zone_name].sensible_heat_load = total_ite
-            data.obs.dc.total_ite_demand_power += total_ite
+            data.obs_next.zones[zone_name].sensible_heat_load = total_ite
+            data.obs_next.dc.total_ite_demand_power += total_ite
