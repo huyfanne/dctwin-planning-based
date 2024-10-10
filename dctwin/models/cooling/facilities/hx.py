@@ -345,7 +345,7 @@ class HeatExchanger(nn.Module):
             if iteration == self.max_root_finding_iter:
                 logger.warning(
                     f"{self.config.uid}: root finding failed at iteration {iteration}."
-                    f" T_air_out = {T_air_out.item()}, T_air_sp= {T_air_out_sp.item()}."
+                    f" T_air_out = {T_air_out.item()}, T_air_sp= {T_air_out_sp.item()}, T_chw_in = {T_water_in.item()}"
                 )
         # insert gradient calculation
         m = m_water.clone().requires_grad_(requires_grad=True)

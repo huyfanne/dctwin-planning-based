@@ -18,13 +18,13 @@ class IDFBuilder:
 
     idd_path = (
         Path(__file__)
-        .parent.parent.joinpath("template")
+        .parent.parent.joinpath("templates")
         .joinpath("V9-5-0-Energy+.idd")
     )
     template_idf_path = (
         Path(__file__)
-        .parent.parent.joinpath("template")
-        .joinpath("template.idf")
+        .parent.parent.joinpath("templates")
+        .joinpath("templates.idf")
     )
 
     def __init__(

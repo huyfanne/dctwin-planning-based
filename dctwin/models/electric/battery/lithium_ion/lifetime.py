@@ -2,10 +2,9 @@ import torch
 import torch.nn as nn
 
 from enum import Enum
-from scipy.interpolate import griddata
-import numpy as np
 
-import logging
+from loguru import logger
+
 
 class cycle_state(Enum):
     LT_GET_DATA = 1
@@ -25,16 +24,11 @@ class NMCLifetimeModel(nn.Module):
     Rug = 8.314  # [J/mol-K] - Universal gas constant
     F = 96485  # [C/mol] - Faraday's constant
     T_ref = 298.15  # [K] - Reference temperature
-    
-    logging.basicConfig(level=logging.INFO)
 
-    def __init__(self, dt_hr: torch.Tensor):
+    def __init__(self, dt_hr: torch.Tensor | float):
         super().__init__()
         self.dt_hr = dt_hr
-        
-    #def __init__(    self,    dt_hr: torch.Tensor | float):
-    #    super().__init__()
-        # Initialize other parameters
+
         self.state = {
             'cycle': {
                 'rainflow_peaks': [],
@@ -51,7 +45,7 @@ class NMCLifetimeModel(nn.Module):
 
         # Initialize other variables and tensors
         self.q_relative = torch.tensor(100.0)  # total lifetime relative capacity %
-        logging.info(f"Initialized battery with q_relative: {self.q_relative}")
+        logger.info(f"Initialized battery with q_relative: {self.q_relative}")
 
         self.n_cycles = torch.tensor(1.0)  # number of cycles
         self.range = torch.tensor(0.0)  # %, range of the battery
@@ -183,7 +177,7 @@ class NMCLifetimeModel(nn.Module):
         Calculate the cycle degradation
         """
         dn_cycles = self.n_cycles - self.n_cycles_prev_day
-        logging.info(f"n_cycles: {self.n_cycles}")
+        logger.info(f"n_cycles: {self.n_cycles}")
 
         c0 = self.c0_dt
         c2 = self.c2_dt
@@ -264,22 +258,18 @@ class NMCLifetimeModel(nn.Module):
         self.c2_dt += c2_dt_el
         self.cum_dt += dt_day
 
-    def rainflow(self, dod):
+    def rainflow(self, dod: torch.Tensor | float):
         """
         Rainflow counting algorithm at the current depth-of-discharge (DOD) to determine cycle
+        :param dod: Depth of discharge at the current timestep
         """
         """
         The function processes new DOD values and updates internal state accordingly.
         """
-        #logging.info(f"Executing rainflow with DOD: {dod}")
-        #self.rainflow_peaks.append(torch.tensor(DOD, dtype=torch.float32))
-        logging.info(f"Executing rainflow with DOD: {dod}")
+        logger.info(f"Executing rainflow with DOD: {dod}")
         if not isinstance(dod, torch.Tensor):
             dod = torch.tensor(dod, dtype=torch.float32)
-        #logging.info(f"Peaks before: {self.rainflow_peaks}")
         self.rainflow_peaks.append(dod)
-        #logging.info(f"Peaks after: {self.rainflow_peaks}")
-
         while len(self.rainflow_peaks) >= 3:
             Xlt = torch.abs(self.rainflow_peaks[-3] - self.rainflow_peaks[-2])
             Ylt = torch.abs(self.rainflow_peaks[-2] - self.rainflow_peaks[-1])
@@ -306,7 +296,7 @@ class NMCLifetimeModel(nn.Module):
         """
         Run the NMC lifetime model to calculate the relative capacity of the battery
         """
-        logging.info(f"Run started with q_relative: {self.q_relative}, DOD change: {charge_changed}")
+        logger.info(f"Run started with q_relative: {self.q_relative}, DOD change: {charge_changed}")
         if prev_dod is None:
             prev_dod = 50  # Default value
         
@@ -322,7 +312,8 @@ class NMCLifetimeModel(nn.Module):
             # Handle the None case, perhaps set to a default value
             prev_dod = torch.tensor(0.0, dtype=torch.float32)  # default
         else:
-            prev_dod = torch.tensor(prev_dod, dtype=torch.float32) if not isinstance(prev_dod, torch.Tensor) else prev_dod
+            prev_dod = torch.tensor(prev_dod, dtype=torch.float32) \
+                if not isinstance(prev_dod, torch.Tensor) else prev_dod
 
         if dod is None:
             # Similarly, handle the None case for dod
@@ -334,10 +325,9 @@ class NMCLifetimeModel(nn.Module):
             self.rainflow(prev_dod)
         dt_day = 1/24. * self.dt_hr
         new_cum_dt = self.cum_dt + dt_day
-        #self.cum_dt += dt_day
 
-        logging.info(f"Culmulative Day: {self.cum_dt}")
-        logging.info(f"New Culmulative Day: {new_cum_dt}")
+        logger.debug(f"Cumulative Day: {self.cum_dt}")
+        logger.debug(f"New Cumulative Day: {new_cum_dt}")
 
         if new_cum_dt > 1 + 1e-7:
         #if self.cum_dt > 1 + 1e-7:
@@ -345,7 +335,7 @@ class NMCLifetimeModel(nn.Module):
             DOD_at_end_of_day = (dod - prev_dod) / dt_day * dt_day_to_end_of_day + prev_dod
             self.dod_max = torch.maximum(DOD_at_end_of_day, self.dod_max)
             self.day_age_of_battery += dt_day_to_end_of_day
-            logging.info(f"day_age_of_battery: {self.day_age_of_battery}")
+            logger.info(f"day_age_of_battery: {self.day_age_of_battery}")
             self.integrateDegParams(dt_day_to_end_of_day, DOD_at_end_of_day, T_battery)
             self.integrateDegLoss(DOD_at_end_of_day, T_battery)
             dt_day = new_cum_dt - 1
@@ -360,15 +350,4 @@ class NMCLifetimeModel(nn.Module):
         
         self.q_relative = torch.minimum(self.q_relative, q_last)
 
-        logging.info(f"Run completed with new q_relative: {self.q_relative}")
-
-        
-#logging.basicConfig(level=logging.INFO)
-#model = NMCLifetimeModel(dt_hr=72.0)
-# model.rainflow(10.0)
-# model.rainflow(20.0)
-# model.rainflow(15.0)
-# model.rainflow(30.0)
-#model.run(charge_changed=True, prev_dod=10.0, dod=15.0, T_battery=25.0)
-#print("Cycle damage estimate:", model.q_relative)
-
+        logger.info(f"Run completed with new q_relative: {self.q_relative}")

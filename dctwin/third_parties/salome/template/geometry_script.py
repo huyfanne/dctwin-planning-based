@@ -1,4 +1,3 @@
-# pylava:skip=1
 import json
 import logging
 
@@ -21,6 +20,7 @@ try:
     smesh = smeshBuilder.New()
 except Exception:
     raise ImportError("salome not found")
+
 
 # Init
 SRC_PATH = Path(os.getcwd(), "scripts/room.json")
@@ -337,7 +337,6 @@ class RackModel:
             )
             self.rack_top_blanking_box_mesh = util.mesh(rack_top_blanking_box, 0.05, 0.1)
             self.rack_bottom_blanking_box_mesh = util.mesh(rack_bottom_blanking_box, 0.05, 0.1)
-
         self.is_meshed = True
 
     def make(self, rack_id: str, placement: Dict, orientation: float) -> None:
@@ -377,9 +376,7 @@ class RackModel:
     ) -> None:
         if self.is_meshed is False:
             self.mesh()
-
         meshes = []
-
         slot_unit_and_actual_rack_height_difference = max(self.size["z"] - self.max_slot * self.slot_height, 0)
         for slot in slots:
             # 0.0015 is the gap between each slot, because 0.045 is full slot height and 0.042 is the actual height
@@ -613,7 +610,7 @@ class Builder:
                 )
 
     def make_servers(
-        self, rack_key: str, rack: Dict, rack_model: RackModel, server_models: Dict
+        self, rack: Dict, server_models: Dict
     ) -> Dict:
         available_slots = {}
         for slot in range(1, rack["geometry"]["slot"] + 1):
@@ -635,11 +632,10 @@ class Builder:
             )
             for server_slot in range(server_starting_slot, server_ending_slot):
                 available_slots[server_slot] = False
-
             server_height = (
                 rack["geometry"]["location"]["z"]
                 + rack["geometry"]["first_slot_offset"]
-                + slot_unit_and_actual_rack_height_difference/2
+                + slot_unit_and_actual_rack_height_difference / 2
                 + self.slot_height * (server_starting_slot - 1)
             )
             server_model.make(

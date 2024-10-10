@@ -194,8 +194,7 @@ class LithiumIonBattery(nn.Module):
         # run the capacity model to update the battery charge capacity given the charge current
         self.run_capacity_model(I)
         # update the lifetime model and losses model
-        ## self.run_lifetime_model()
-        # self.run_lifetime_model()
+        self.run_lifetime_model()
         # update all electrical states
         self.update_state(I)
 
@@ -328,7 +327,14 @@ if __name__ == "__main__":
     plt.legend()
     plt.show()
 """
-    def simulate_battery_cycle(model, discharge_power_kw, charge_power_kw, total_time_discharge, total_time_charge, num_cycles):
+    def simulate_battery_cycle(
+        model: LithiumIonBattery,
+        discharge_power_kw: float | torch.Tensor,
+        charge_power_kw: float | torch.Tensor,
+        total_time_discharge: float | torch.Tensor,
+        total_time_charge: float | torch.Tensor,
+        num_cycles: int
+    ):
         # Arrays to store results
         res_soc = []
         res_power = []
@@ -367,12 +373,13 @@ if __name__ == "__main__":
 
     # Run simulation
     res_soc, res_power, res_voltage, res_time = simulate_battery_cycle(
-    model, 
-    discharge_power_kw, 
-    charge_power_kw, 
-    total_time_discharge, 
-    total_time_charge, 
-    num_cycles)
+        model=model,
+        discharge_power_kw=discharge_power_kw,
+        charge_power_kw=charge_power_kw,
+        total_time_discharge=total_time_discharge,
+        total_time_charge=total_time_charge,
+        num_cycles=num_cycles
+    )
 
     # Plotting results
     time_steps = np.arange(len(res_soc)) * model.voltage_model.dt_hr  # Time in hours

@@ -24,7 +24,7 @@ from dctwin.utils import template_env, config
 
 class Builder:
     """
-    A class to render the template of the foam configuration file
+    A class to render the templates of the foam configuration file
 
     :param room: the room to be simulated
     :param last_state_case: the last state of the case, if it is None,
@@ -93,7 +93,7 @@ class Builder:
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_dict)
         with open(Path(config.cfd.case_dir, f"0/{write_filename}"), "w") as f:
             f.write(
-                template_env.get_template(f"foam/template/0/{source_filename}.j2").render(
+                template_env.get_template(f"foam/templates/0/{source_filename}.j2").render(
                     init_temperature=24 + 273.15,
                     p_rgh=round(self.room_dz * 9.81, 10),
                     acu_boundaries=[

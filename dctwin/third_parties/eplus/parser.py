@@ -20,7 +20,7 @@ from opyplus.exceptions import RecordDoesNotExistError
 
 class Eplus:
     """
-    Class for reading template Eplus .idf input file, getting meta info and equipment info of the input file, setting
+    Class for reading templates Eplus .idf input file, getting meta info and equipment info of the input file, setting
     user specified external schedule, actuator and output variables, and modifying the run period parameters for the
     simulation
     """

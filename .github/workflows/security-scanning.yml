@@ -85,7 +85,7 @@ jobs:
         uses: aquasecurity/trivy-action@2a2157eb22c08c9a1fac99263430307b8d1bc7a2
         with:
           image-ref: '${{ steps.repo_name.outputs.lowercase }}:${{ github.sha }}'
-          format: 'template'
+          format: 'templates'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
@@ -100,7 +100,7 @@ jobs:
         uses: aquasecurity/trivy-action@2a2157eb22c08c9a1fac99263430307b8d1bc7a2
         with:
           image-ref: '${{ steps.repo_name.outputs.lowercase }}:${{ github.sha }}'
-          format: 'template'
+          format: 'templates'
           template: '@/contrib/html.tpl'
           output: 'trivy-results.html'
           severity: 'CRITICAL,HIGH'
@@ -117,7 +117,7 @@ jobs:
         uses: aquasecurity/trivy-action@2a2157eb22c08c9a1fac99263430307b8d1bc7a2
         with:
           image-ref: '${{ steps.repo_name.outputs.lowercase }}:${{ github.sha }}'
-          format: 'template'
+          format: 'templates'
           template: '@/contrib/html.tpl'
           output: 'trivy-results-full.html'
           severity: 'CRITICAL,HIGH'
