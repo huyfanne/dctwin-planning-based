@@ -9,6 +9,7 @@ from dclib.cooling.room.facilities import Pump, Pipe, CDU
 from dclib.ite.racks import Rack
 
 from dctwin.utils.const import water_specific_heat
+
 from .hx import HeatExchanger
 from .pipe import PipeModel
 
@@ -31,6 +32,12 @@ class CDUModel(nn.Module):
         cpu_number_per_server: int = 8,
         num_turning: int = 3,
     ) -> None:
+        """
+        :param cdu: CDU object
+        :param racks: dictionary of rack objects
+        :param cpu_number_per_server: number of CPUs per server
+        :param num_turning: number of turning in the liquid cooling pipes
+        """
         super().__init__()
         # constant properties
         self.liquid_capacity = PropsSI('C', 'P', 101325, 'Q', 0, "water")
@@ -149,7 +156,8 @@ class CDUModel(nn.Module):
         # server total power
         server_friction_power = chip_total_friction_power * self.cpu_number_per_server
         liquid_outlet_temperature = inlet_temperature + power * liquid_percentage / (
-                    self.liquid_capacity * mass_flow_rate)
+            self.liquid_capacity * mass_flow_rate
+        )
         # empirical formula for the maximum temperature of the CPU based on chip-level CFD simulation
         cpu_max_temperature = \
             1.04 * inlet_temperature + 1.44 * chip_power * 0.0016 / (mass_flow_rate_chip * self.liquid_capacity)
@@ -185,8 +193,7 @@ class CDUModel(nn.Module):
                     server_name=server.uid,
                     mass_flow_rate=server_mass_flow_rates[server.uid]
                 )
-                outlet_temperature_times_mass_flow_rate += outlet_temperature_server * server_mass_flow_rates[
-                    server.uid]
+                outlet_temperature_times_mass_flow_rate += outlet_temperature_server*server_mass_flow_rates[server.uid]
                 total_mass_flow_rate += server_mass_flow_rates[server.uid]
                 total_server_friction_power += server_friction_power
                 total_electrical_power += server_powers[server.uid]
@@ -283,15 +290,15 @@ class CDUModel(nn.Module):
             friction_power=total_friction_power
         )
         cooling_water_mass_flow_rate = torch.tensor(list(server_mass_flow_rates.values())).sum()
-        chilled_water_mass_flow_rate, Q, cooling_water_supply_temperature = \
-            self._sim_hx(
-                cooling_water_return_temperature=cdu_return_temperature,
-                cooling_water_mass_flow_rate=cooling_water_mass_flow_rate,
-                chilled_water_supply_temperature=chilled_water_supply_temperature,
-                cooling_water_supply_temperature_sp=cooling_water_supply_temperature,
-            )
-        chilled_water_return_temperature = (chilled_water_supply_temperature +
-                                            Q / (chilled_water_mass_flow_rate * water_specific_heat))
+        chilled_water_mass_flow_rate, Q, cooling_water_supply_temperature = self._sim_hx(
+            cooling_water_return_temperature=cdu_return_temperature,
+            cooling_water_mass_flow_rate=cooling_water_mass_flow_rate,
+            chilled_water_supply_temperature=chilled_water_supply_temperature,
+            cooling_water_supply_temperature_sp=cooling_water_supply_temperature,
+        )
+        chilled_water_return_temperature = (
+            chilled_water_supply_temperature + Q / (chilled_water_mass_flow_rate * water_specific_heat)
+        )
         return (
             cdu_electrical_power,
             chilled_water_return_temperature,

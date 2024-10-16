@@ -14,7 +14,7 @@ from dctwin.models.heat_gains import HeatLoadManager
 from dctwin.utils import DTEngineConfig
 from dctwin.managers.base import BaseManager
 
-from . import AirLoopManager, PlantManager
+from . import AirLoopManager, PlantManager, LiquidLoopManager
 from .data import HVACData, actuator_control_type_dict
 
 
@@ -41,6 +41,10 @@ class HVACManager(BaseManager, ABC):
         # set up managers for HVAC sub-systems
         self.heat_load_manager = HeatLoadManager(
             zones=self._model.constructions.zones,
+            device_key_mapping=self._device_key_mapping,
+        )
+        self.liquid_loop_manager = LiquidLoopManager(
+            rooms=self._model.constructions.zones,
             device_key_mapping=self._device_key_mapping,
         )
         self.air_loop_manager = AirLoopManager(

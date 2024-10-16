@@ -29,7 +29,6 @@ class PlantManager(nn.Module):
     :param device_key_mapping: the mapping between the device name and the device key
     :param time_step: the time step of the simulation
     """
-
     def __init__(
         self,
         plant: Plant,
@@ -625,6 +624,9 @@ class PlantManager(nn.Module):
                     )
                     data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
                     data.obs_next.plants[component_id].fan_power = torch.tensor([0.], dtype=torch.float32)
+
+        # TODO: Add CDU component processing logic here, similar to the ACU component (also a HX :))
+
 
     def _solve_half_loop_side_branches(
         self,
