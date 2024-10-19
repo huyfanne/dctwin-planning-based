@@ -24,7 +24,7 @@ class IDFBuilder:
     template_idf_path = (
         Path(__file__)
         .parent.parent.joinpath("templates")
-        .joinpath("templates.idf")
+        .joinpath("template.idf")
     )
 
     def __init__(
@@ -99,17 +99,22 @@ class IDFBuilder:
             "thermal storage tanks": {},
         }
         # create chilled water loop device key mapping
-        chilled_water_loop_names = self.building.constructions.plant.chilled_water_loops
-        for chilled_water_loop_name in chilled_water_loop_names:
-            chilled_water_loop_obj = self.model.getobject(
-                key="PlantLoop".upper(), name=chilled_water_loop_name
-            )
-            self.device_key_map["chilled water loops"][chilled_water_loop_name] = {
-                "supply temperature": f"{chilled_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "return temperature": f"{chilled_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "supply flow rate": f"{chilled_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
-                "return flow rate": f"{chilled_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
-            }
+        if self.building.constructions.plant.chilled_water_loops is None:
+            chilled_water_loop_names = self.building.constructions.plant.chilled_water_loops
+            for chilled_water_loop_name in chilled_water_loop_names:
+                chilled_water_loop_obj = self.model.getobject(
+                    key="PlantLoop".upper(), name=chilled_water_loop_name
+                )
+                self.device_key_map["chilled water loops"][chilled_water_loop_name] = {
+                    "supply temperature": f"{chilled_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:"
+                                          f"System Node Temperature [C](TimeStep)",
+                    "return temperature": f"{chilled_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:"
+                                          f"System Node Temperature [C](TimeStep)",
+                    "supply flow rate": f"{chilled_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:"
+                                        f"System Node Mass Flow Rate [kg/s](TimeStep)",
+                    "return flow rate": f"{chilled_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:"
+                                        f"System Node Mass Flow Rate [kg/s](TimeStep)",
+                }
         if self.building.constructions.plant.secondary_chilled_water_loops is not None:
             secondary_chilled_water_loop_names = self.building.constructions.plant.secondary_chilled_water_loops
             for secondary_chilled_water_loop_name in secondary_chilled_water_loop_names:
@@ -117,25 +122,32 @@ class IDFBuilder:
                     key="PlantLoop".upper(), name=secondary_chilled_water_loop_name
                 )
                 self.device_key_map["secondary chilled water loops"][secondary_chilled_water_loop_name] = {
-                    "supply temperature": f"{secondary_chilled_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                    "return temperature": f"{secondary_chilled_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                    "supply flow rate": f"{secondary_chilled_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
-                    "return flow rate": f"{secondary_chilled_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                    "supply temperature": f"{secondary_chilled_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:"
+                                          f"System Node Temperature [C](TimeStep)",
+                    "return temperature": f"{secondary_chilled_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:"
+                                          f"System Node Temperature [C](TimeStep)",
+                    "supply flow rate": f"{secondary_chilled_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:"
+                                        f"System Node Mass Flow Rate [kg/s](TimeStep)",
+                    "return flow rate": f"{secondary_chilled_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:"
+                                        f"System Node Mass Flow Rate [kg/s](TimeStep)",
                 }
         # create condenser water loop device key mapping
-        condenser_water_loop_names = (
-            self.building.constructions.plant.condenser_water_loops
-        )
-        for condenser_water_loop_name in condenser_water_loop_names:
-            condenser_water_loop_obj = self.model.getobject(
-                key="PlantLoop".upper(), name=condenser_water_loop_name
-            )
-            self.device_key_map["condenser water loops"][condenser_water_loop_name] = {
-                "supply temperature": f"{condenser_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "return temperature": f"{condenser_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "supply flow rate": f"{condenser_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
-                "return flow rate": f"{condenser_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
-            }
+        condenser_water_loop_names = self.building.constructions.plant.condenser_water_loops
+        if condenser_water_loop_names is not None:
+            for condenser_water_loop_name in condenser_water_loop_names:
+                condenser_water_loop_obj = self.model.getobject(
+                    key="PlantLoop".upper(), name=condenser_water_loop_name
+                )
+                self.device_key_map["condenser water loops"][condenser_water_loop_name] = {
+                    "supply temperature": f"{condenser_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:"
+                                          f"System Node Temperature [C](TimeStep)",
+                    "return temperature": f"{condenser_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:"
+                                          f"System Node Temperature [C](TimeStep)",
+                    "supply flow rate": f"{condenser_water_loop_obj['Plant_Side_Outlet_Node_Name'].upper()}:"
+                                        f"System Node Mass Flow Rate [kg/s](TimeStep)",
+                    "return flow rate": f"{condenser_water_loop_obj['Plant_Side_Inlet_Node_Name'].upper()}:"
+                                        f"System Node Mass Flow Rate [kg/s](TimeStep)",
+                }
         # create zone device key mapping
         for zone_name in self.building.constructions.zones:
             self.device_key_map["zones"][zone_name] = {}
@@ -166,26 +178,41 @@ class IDFBuilder:
                 key="Fan:VariableVolume".upper(), name=f"{acu_name} fan"
             )
             self.device_key_map["acus"][acu_name]["fan"] = {
-                "air mass flow rate": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
-                "outlet air temperature": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "power": f"{fan_obj['Name'].upper()}:Fan Electricity Rate [W](TimeStep)",
-                "inlet air temperature": f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "outlet air relative humidity": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
-                "inlet air relative humidity": f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
-                "outlet air humidity ratio": f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Humidity Ratio [](TimeStep)",
-                "inlet air humidity ratio": f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Humidity Ratio [](TimeStep)",
+                "air mass flow rate":
+                    f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "outlet air temperature":
+                    f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "power":
+                    f"{fan_obj['Name'].upper()}:Fan Electricity Rate [W](TimeStep)",
+                "inlet air temperature":
+                    f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "outlet air relative humidity":
+                    f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
+                "inlet air relative humidity":
+                    f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
+                "outlet air humidity ratio":
+                    f"{fan_obj['Air_Outlet_Node_Name'].upper()}:System Node Humidity Ratio [](TimeStep)",
+                "inlet air humidity ratio":
+                    f"{fan_obj['Air_Inlet_Node_Name'].upper()}:System Node Humidity Ratio [](TimeStep)",
             }
             coil_obj = self.model.getobject(
                 key="Coil:Cooling:Water".upper(), name=f"{acu_name} cooling coil"
             )
             self.device_key_map["acus"][acu_name]["cooling coil"] = {
-                "inlet air temperature": f"{coil_obj['Air_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "air mass flow rate": f"{coil_obj['Air_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
-                "outlet air temperature": f"{coil_obj['Air_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "inlet water temperature": f"{coil_obj['Water_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "outlet water temperature": f"{coil_obj['Water_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "water mass flow rate": f"{coil_obj['Water_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
-                "cooling load": f"{coil_obj['Name'].upper()}:Cooling Coil Sensible Cooling Rate [W](TimeStep)",
+                "inlet air temperature":
+                    f"{coil_obj['Air_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "air mass flow rate":
+                    f"{coil_obj['Air_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "outlet air temperature":
+                    f"{coil_obj['Air_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "inlet water temperature":
+                    f"{coil_obj['Water_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "outlet water temperature":
+                    f"{coil_obj['Water_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "water mass flow rate":
+                    f"{coil_obj['Water_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "cooling load":
+                    f"{coil_obj['Name'].upper()}:Cooling Coil Sensible Cooling Rate [W](TimeStep)",
             }
         for dehumidifier_name in self.building.constructions.dehumidifier_keys:
             self.device_key_map["dehumidifiers"][dehumidifier_name] = {}
@@ -193,12 +220,18 @@ class IDFBuilder:
                 key="ZoneHVAC:Dehumidifier:DX".upper(), name=f"{dehumidifier_name}"
             )
             self.device_key_map["dehumidifiers"][dehumidifier_name] = {
-                "inlet air temperature": f"{dehumidifier_obj['Air_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "inlet air relative humidity": f"{dehumidifier_obj['Air_Inlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
-                "outlet air temperature": f"{dehumidifier_obj['Air_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "outlet air relative humidity": f"{dehumidifier_obj['Air_Outlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
-                "air mass flow rate": f"{dehumidifier_obj['Air_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
-                "removed water mass flow rate": f"{dehumidifier_obj['Name'].upper()}:Zone Dehumidifier Removed Water Mass Flow Rate [kg/s](TimeStep)",
+                "inlet air temperature":
+                    f"{dehumidifier_obj['Air_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "inlet air relative humidity":
+                    f"{dehumidifier_obj['Air_Inlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
+                "outlet air temperature":
+                    f"{dehumidifier_obj['Air_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "outlet air relative humidity":
+                    f"{dehumidifier_obj['Air_Outlet_Node_Name'].upper()}:System Node Relative Humidity [%](TimeStep)",
+                "air mass flow rate":
+                    f"{dehumidifier_obj['Air_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "removed water mass flow rate":
+                    f"{dehumidifier_obj['Name'].upper()}:Zone Dehumidifier Removed Water Mass Flow Rate [kg/s](TimeStep)",
                 "power": f"{dehumidifier_obj['Name'].upper()}:Zone Dehumidifier Electricity Rate [W](TimeStep)",
             }
         # create chilled water pump device key mapping
@@ -229,14 +262,21 @@ class IDFBuilder:
             )
             self.device_key_map["chillers"][chiller_name] = {
                 "cooling load": f"{chiller_obj['Name'].upper()}:Chiller Evaporator Cooling Rate [W](TimeStep)",
-                "chilled water supply temperature": f"{chiller_obj['Name'].upper()}:Chiller Evaporator Outlet Temperature [C](TimeStep)",
-                "chilled water return temperature": f"{chiller_obj['Name'].upper()}:Chiller Evaporator Inlet Temperature [C](TimeStep)",
-                "chilled water mass flow rate": f"{chiller_obj['Name'].upper()}:Chiller Evaporator Mass Flow Rate [kg/s](TimeStep)",
-                "condenser water return temperature": f"{chiller_obj['Name'].upper()}:Chiller Condenser Outlet Temperature [C](TimeStep)",
-                "condenser water supply temperature": f"{chiller_obj['Name'].upper()}:Chiller Condenser Inlet Temperature [C](TimeStep)",
-                "condenser water mass flow rate": f"{chiller_obj['Name'].upper()}:Chiller Condenser Mass Flow Rate [kg/s](TimeStep)",
+                "chilled water supply temperature": f"{chiller_obj['Name'].upper()}:"
+                                                    f"Chiller Evaporator Outlet Temperature [C](TimeStep)",
+                "chilled water return temperature": f"{chiller_obj['Name'].upper()}:"
+                                                    f"Chiller Evaporator Inlet Temperature [C](TimeStep)",
+                "chilled water mass flow rate": f"{chiller_obj['Name'].upper()}:"
+                                                f"Chiller Evaporator Mass Flow Rate [kg/s](TimeStep)",
+                "condenser water return temperature": f"{chiller_obj['Name'].upper()}:"
+                                                      f"Chiller Condenser Outlet Temperature [C](TimeStep)",
+                "condenser water supply temperature": f"{chiller_obj['Name'].upper()}:"
+                                                      f"Chiller Condenser Inlet Temperature [C](TimeStep)",
+                "condenser water mass flow rate": f"{chiller_obj['Name'].upper()}:"
+                                                  f"Chiller Condenser Mass Flow Rate [kg/s](TimeStep)",
                 "power": f"{chiller_obj['Name'].upper()}:Chiller Electricity Rate [W](TimeStep)",
-                "mass flow rate": f"{chiller_obj['Chilled_Water_Outlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "mass flow rate": f"{chiller_obj['Chilled_Water_Outlet_Node_Name'].upper()}:"
+                                  f"System Node Mass Flow Rate [kg/s](TimeStep)",
             }
         # create heat exchanger device key mapping
         heat_exchanger_names = self.building.constructions.heat_exchanger_keys
@@ -246,13 +286,20 @@ class IDFBuilder:
                 name=heat_exchanger_name
             )
             self.device_key_map["heat_exchangers"][heat_exchanger_name] = {
-                "cooling load": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Heat Transfer Rate [W](TimeStep)",
-                "chilled water supply temperature": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Supply Side Outlet Temperature [C](TimeStep)",
-                "chilled water return temperature": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Supply Side Inlet Temperature [C](TimeStep)",
-                "chilled water mass flow rate": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Supply Side Mass Flow Rate [kg/s](TimeStep)",
-                "condenser water supply temperature": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Demand Side Outlet Temperature [C](TimeStep)",
-                "condenser water return temperature": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Demand Side Inlet Temperature [C](TimeStep)",
-                "condenser water mass flow rate": f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Demand Side Mass Flow Rate [kg/s](TimeStep)",
+                "cooling load":
+                    f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Heat Transfer Rate [W](TimeStep)",
+                "chilled water supply temperature":
+                    f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Supply Side Outlet Temperature [C](TimeStep)",
+                "chilled water return temperature":
+                    f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Supply Side Inlet Temperature [C](TimeStep)",
+                "chilled water mass flow rate":
+                    f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Supply Side Mass Flow Rate [kg/s](TimeStep)",
+                "condenser water supply temperature":
+                    f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Demand Side Outlet Temperature [C](TimeStep)",
+                "condenser water return temperature":
+                    f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Demand Side Inlet Temperature [C](TimeStep)",
+                "condenser water mass flow rate":
+                    f"{hx_obj['Name'].upper()}:Fluid Heat Exchanger Loop Demand Side Mass Flow Rate [kg/s](TimeStep)",
             }
         # create thermal storage tank device key mapping
         tank_names = self.building.constructions.thermal_storage_tank_keys
@@ -261,15 +308,24 @@ class IDFBuilder:
                 key="ThermalStorage:ChilledWater:Mixed".upper(), name=tank_name
             )
             self.device_key_map["thermal storage tanks"][tank_name] = {
-                "tank temperature": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Tank Temperature [C](TimeStep)",
-                "use side mass flow rate": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Use Side Mass Flow Rate [kg/s](TimeStep)",
-                "use side inlet temperature": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Use Side Inlet Temperature [C](TimeStep)",
-                "use side outlet temperature": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Use Side Outlet Temperature [C](TimeStep)",
-                "use side heat transfer rate": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Use Side Heat Transfer Rate [W](TimeStep)",
-                "source side mass flow rate": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Source Side Mass Flow Rate [kg/s](TimeStep)",
-                "source side inlet temperature": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Source Side Inlet Temperature [C](TimeStep)",
-                "source side outlet temperature": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Source Side Outlet Temperature [C](TimeStep)",
-                "source side heat transfer rate": f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Source Side Heat Transfer Rate [W](TimeStep)",
+                "tank temperature":
+                    f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Tank Temperature [C](TimeStep)",
+                "use side mass flow rate":
+                    f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Use Side Mass Flow Rate [kg/s](TimeStep)",
+                "use side inlet temperature":
+                    f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Use Side Inlet Temperature [C](TimeStep)",
+                "use side outlet temperature":
+                    f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Use Side Outlet Temperature [C](TimeStep)",
+                "use side heat transfer rate":
+                    f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Use Side Heat Transfer Rate [W](TimeStep)",
+                "source side mass flow rate":
+                    f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Source Side Mass Flow Rate [kg/s](TimeStep)",
+                "source side inlet temperature":
+                    f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Source Side Inlet Temperature [C](TimeStep)",
+                "source side outlet temperature":
+                    f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Source Side Outlet Temperature [C](TimeStep)",
+                "source side heat transfer rate":
+                    f"{tank_obj['Name'].upper()}:Chilled Water Thermal Storage Source Side Heat Transfer Rate [W](TimeStep)",
             }
 
         # create secondary chilled water pump device key mapping
@@ -299,12 +355,18 @@ class IDFBuilder:
                 key="CoolingTower:VariableSpeed".upper(), name=tower_name
             )
             self.device_key_map["cooling towers"][tower_name] = {
-                "return water temperature": f"{tower_obj['Water_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "water mass flow rate": f"{tower_obj['Water_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
-                "supply water temperature": f"{tower_obj['Water_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
-                "air flow rate ratio": f"{tower_obj['Name'].upper()}:Cooling Tower Air Flow Rate Ratio [](TimeStep)",
-                "outside air wetbulb temperature": "Environment:Site Outdoor Air Wetbulb Temperature [C](TimeStep)",
-                "power": f"{tower_obj['Name'].upper()}:Cooling Tower Fan Electricity Rate [W](TimeStep)",
+                "return water temperature":
+                    f"{tower_obj['Water_Inlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "water mass flow rate":
+                    f"{tower_obj['Water_Inlet_Node_Name'].upper()}:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "supply water temperature":
+                    f"{tower_obj['Water_Outlet_Node_Name'].upper()}:System Node Temperature [C](TimeStep)",
+                "air flow rate ratio":
+                    f"{tower_obj['Name'].upper()}:Cooling Tower Air Flow Rate Ratio [](TimeStep)",
+                "outside air wetbulb temperature":
+                    "Environment:Site Outdoor Air Wetbulb Temperature [C](TimeStep)",
+                "power":
+                    f"{tower_obj['Name'].upper()}:Cooling Tower Fan Electricity Rate [W](TimeStep)",
             }
 
     def _make_room2ite_mapping(self) -> None:

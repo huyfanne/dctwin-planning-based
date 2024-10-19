@@ -223,15 +223,19 @@ class HVACManager(BaseManager, ABC):
         )
         if self.heat_load_manager is not None:
             self.heat_load_manager.forward(
-                data=self.data,
+                data=self.data
+            )
+        if self.liquid_loop_manager is not None:
+            self.liquid_loop_manager.forward(
+                data=self.data
             )
         if self.air_loop_manager is not None:
             self.air_loop_manager.forward(
-                data=self.data,
+                data=self.data
             )
         if self.plant_manager is not None:
             self.plant_manager.forward(
-                data=self.data,
+                data=self.data
             )
         # update the states
         self._update_states()

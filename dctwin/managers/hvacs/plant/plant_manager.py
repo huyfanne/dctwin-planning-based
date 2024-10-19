@@ -16,7 +16,7 @@ from dctwin.models.cooling.facilities import (
     ChillerModel,
     PumpModel,
     ThermalStorageTankModel,
-    CoolingTowerModel,
+    CoolingTowerModel
 )
 
 from dctwin.utils.const import water_specific_heat
@@ -112,6 +112,20 @@ class PlantManager(nn.Module):
                 else:
                     component.model = component_models[component_id]
 
+        if branch_components.cdu:
+            for component_id, component in branch_components.cdu.items():
+                if component_id not in component_models.keys():
+                    component.model = HeatExchanger(
+                        config=component.constructions.heat_exchanger,
+                        key_mapping=self.device_key_mapping,
+                        internal_fluid_name="water",
+                        external_fluid_name="water",
+                    )
+                    self.add_module(component_id, component.model)
+                    component_models[component_id] = component.model
+                else:
+                    component.model = component_models[component_id]
+
         if branch_components.chillers:
             for component_id, component in branch_components.chillers.items():
                 if component_id not in component_models.keys():
@@ -149,20 +163,6 @@ class PlantManager(nn.Module):
                 else:
                     component.model = component_models[component_id]
 
-        if branch_components.heat_exchangers:
-            for component_id, component in branch_components.heat_exchangers.items():
-                if component_id not in component_models.keys():
-                    component.model = HeatExchanger(
-                        config=component,
-                        key_mapping=self.device_key_mapping,
-                        internal_fluid_name="water",
-                        external_fluid_name="air",
-                    )
-                    self.add_module(component_id, component.model)
-                    component_models[component_id] = component.model
-                else:
-                    component.model = component_models[component_id]
-
         return component_models
 
     @staticmethod
@@ -173,7 +173,7 @@ class PlantManager(nn.Module):
     ) -> torch.Tensor:
         """
         Determine the actual mass flow rate based on the requested mass flow rate and the pump on/off schedule
-        The actual mass flow rate is the minimum of the requested mass flow rate and the maximum mass flow rate of the pump
+        The actual mass flow rate is the minimum of the requested mass flow rate and the maximum mass flow rate
         :param data: the data batch
         :param branch: the branch object
         :param requested_mass_flow_rate: the requested mass flow rate
@@ -331,26 +331,29 @@ class PlantManager(nn.Module):
                     if data.acts[component_id].on_off_schedule == 1:
                         active_devices.append(component_id)
                     else:
-                        data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
+                        data.obs_next.plants[branch_id].water_mass_flow_rate =\
+                            torch.tensor(data=[0.], dtype=torch.float32)
             if branch.components.tanks is not None:
                 for component_id, component in branch.components.tanks.items():
                     if data.acts[component_id].on_off_schedule == 1:
                         active_devices.append(component_id)
                     else:
-                        data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
+                        data.obs_next.plants[branch_id].water_mass_flow_rate =\
+                            torch.tensor(data=[0.], dtype=torch.float32)
             if branch.components.cooling_towers is not None:
                 for component_id, component in branch.components.cooling_towers.items():
                     if data.acts[component_id].on_off_schedule == 1:
                         active_devices.append(component_id)
                     else:
-                        data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
+                        data.obs_next.plants[branch_id].water_mass_flow_rate =\
+                            torch.tensor(data=[0.], dtype=torch.float32)
             if branch.components.pumps is not None:
                 for component_id, component in branch.components.pumps.items():
                     if data.acts[component_id].on_off_schedule == 1:
                         active_devices.append(component_id)
                     else:
-                        data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
-        # TODO: Add the rest of the components
+                        data.obs_next.plants[branch_id].water_mass_flow_rate =\
+                            torch.tensor(data=[0.], dtype=torch.float32)
 
         # perform load and mass flow distribution to each active device
         for branch_id, branch in middle_branches.items():
@@ -447,11 +450,10 @@ class PlantManager(nn.Module):
         """
         Solve the branch component models to update the plant loop properties
         """
-
         if branch.components.pipes is not None:
             outlet_temperature = torch.zeros(1,)
             for component_id, component in branch.components.pipes.items():
-                # TODO: add the pipe model
+                # TODO: add the pipe pressure drop model
                 temperature = data.obs_next.plants[branch_id].inlet_temperature
                 outlet_temperature += temperature
             outlet_temperature = outlet_temperature / len(branch.components.pipes)
@@ -625,8 +627,20 @@ class PlantManager(nn.Module):
                     data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
                     data.obs_next.plants[component_id].fan_power = torch.tensor([0.], dtype=torch.float32)
 
-        # TODO: Add CDU component processing logic here, similar to the ACU component (also a HX :))
-
+        if branch.components.cdu is not None:
+            for component_id, component in branch.components.cdu.items():
+                # if the CDU is active, the chilled water fluid states have already been simulated, direct copy the data
+                # to the plant loop side
+                if data.acts[component_id].on_off_schedule == 1:
+                    data.obs_next.plants[branch_id].outlet_temperature =\
+                        data.obs_next.zones[component.meta.zone].cdus[component_id].chilled_water_outlet_temperature
+                    data.obs_next.plants[branch_id].water_mass_flow_rate =\
+                        data.obs_next.zones[component.meta.zone].cdus[component_id].chilled_water_mass_flow_rate
+                else:
+                    data.obs_next.plants[branch_id].outlet_temperature = (
+                        data.obs_next.plants[branch_id].inlet_temperature
+                    )
+                    data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float)
 
     def _solve_half_loop_side_branches(
         self,
@@ -734,7 +748,7 @@ class PlantManager(nn.Module):
 
     def forward(
         self,
-        data: Batch,
+        data: Batch
     ) -> None:
         """
         The forward method of the PlantManager, which iteratively solves the plant by half-loop side branches
@@ -747,7 +761,6 @@ class PlantManager(nn.Module):
         ]:
             if loops is None:
                 continue
-
             for loop_id, loop in loops.items():
                 # solve the demand side branches
                 self._solve_half_loop_side_branches(

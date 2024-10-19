@@ -1,5 +1,4 @@
-from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
 import torch.nn as nn
 
@@ -66,8 +65,7 @@ class AirLoopManager(nn.Module):
 
     def forward(
         self,
-        data: Batch,
-        **kwargs
+        data: Batch
     ) -> None:
         """
         Simulate the building with the learned models and the given control signals (acts)
@@ -83,12 +81,8 @@ class AirLoopManager(nn.Module):
                 active_acu_name: data.obs_next.zones[zone_name].sensible_heat_load / len(active_acu_ids)
                 for active_acu_name in active_acu_ids
             }
-            weighted_return_temperature = 0
-            total_acu_air_mass_flow_rate = 0
-            zone_avg_ite_inlet_temperature = 0
             weighted_return_temperature = torch.zeros(1,)
             total_acu_air_mass_flow_rate = torch.zeros(1,)
-            zone_avg_ite_inlet_temperature = torch.zeros(1,)
             for acu_name, acu in zone.constructions.acus.items():
                 if acu_name in active_acu_ids:
                     data.obs_next.zones[acu_name].supply_air_mass_flow_rate =\
@@ -104,24 +98,14 @@ class AirLoopManager(nn.Module):
                         sensible_heat_load=zone_acu_heat_load[acu_name],
                     )
                     data.obs_next.zones[acu_name].return_air_temperature = acu_return_temperature
-                    # zone_avg_ite_inlet_temperature += (
-                    #     0.9 * zone_acu_controls[acu_name].supply_air_temperature + 0.1 * acu_return_temperature
-                    # )
                     weighted_return_temperature += (
                         acu_return_temperature * data.acts[acu_name].supply_mass_flow_rate_sp
                     )
                     total_acu_air_mass_flow_rate += data.acts[acu_name].supply_mass_flow_rate_sp
 
             # update the zone air temperature
-            data.obs_next.zones[zone_name].zone_air_temperature = weighted_return_temperature / total_acu_air_mass_flow_rate
+            data.obs_next.zones[zone_name].zone_air_temperature = (
+                weighted_return_temperature / total_acu_air_mass_flow_rate
+            )
             # TODO: update zone humidity
             # TODO: calculate the zone ITE inlet temperature
-
-    def save(
-        self, save_path: Path
-    ) -> None:
-        # save the zone equipment models
-        for zone_name, zone_models in self.models.items():
-            # save the acu fan performance model
-            for fan_name, fan_model in zone_models["fans"].items():
-                fan_model.save(save_path / f"{zone_name}_{fan_name}.pt")

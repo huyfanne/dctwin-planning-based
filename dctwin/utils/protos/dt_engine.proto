@@ -216,6 +216,7 @@ message DCTwinActuatorConfig {
       ITE = 9;
       Chilled_Water_Loop = 10;
       Condenser_Water_Loop = 11;
+      CDU = 12;
   }
   enum ControlType {
       Fan_Air_Mass_Flow_Rate = 0;

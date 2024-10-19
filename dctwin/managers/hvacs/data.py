@@ -14,7 +14,7 @@ actuator_control_type_dict = {
     ActuatorControlType.Fan_Air_Mass_Flow_Rate: "supply_mass_flow_rate_sp",
     ActuatorControlType.Pump_Mass_Flow_Rate: "supply_mass_flow_rate_sp",
     ActuatorControlType.CPU_Utilization: "cpu_load_utilization",
-    ActuatorControlType.Tank_Source_Side_Mass_Flow_Rate: "source_side_mass_flow_rate",
+    ActuatorControlType.Tank_Source_Side_Mass_Flow_Rate: "source_side_mass_flow_rate"
 }
 
 
@@ -45,6 +45,24 @@ class HVACData:
                 return_air_relative_humidity=(),
                 coil_sensible_heat_load=(),
                 fan_power=(),
+            )
+        return obs, acts
+
+    @staticmethod
+    def _reset_cdu_data(zone: Any, obs: dict, acts: dict) -> Tuple[dict, dict]:
+        for cdu_name, cdu in zone.constructions.cdus.items():
+            acts[cdu_name] = Batch(
+                supply_temperature_sp=(),
+                supply_mass_flow_rate_sp=(),
+            )
+            obs[cdu_name] = Batch(
+                electrical_power=(),
+                cooling_water_supply_temperature=(),
+                cooling_water_return_temperature=(),
+                chilled_water_supply_temperature=(),
+                chilled_water_return_temperature=(),
+                chilled_water_mass_flow_rate=(),
+                cooling_water_mass_flow_rate=(),
             )
         return obs, acts
 
@@ -132,8 +150,6 @@ class HVACData:
                 tank_water_temperature += obs[tank_id].tank_water_temperature
             obs[branch_id].outlet_temperature = tank_water_temperature / len(branch.components.tanks)
 
-        # TODO: add other components, like heat exchangers
-
         return obs, acts
 
     def _reset_half_loop_side_branches(
@@ -182,6 +198,7 @@ class HVACData:
             )
             # reset zone facility and IT equipment data
             self._reset_acu_data(zone, obs, acts)
+            self._reset_cdu_data(zone, obs, acts)
             self._reset_ite_data(zone, obs, acts)
         return obs, acts
 

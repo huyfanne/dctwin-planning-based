@@ -272,7 +272,7 @@ class CDUModel(nn.Module):
     def _sim_pump(self, friction_power: torch.Tensor) -> torch.Tensor:
         return self.pump.forward(friction_power)
 
-    def sim(
+    def forward(
         self,
         server_powers: dict[str, torch.Tensor],
         server_mass_flow_rates: dict[str, torch.Tensor],
@@ -305,6 +305,5 @@ class CDUModel(nn.Module):
             cooling_water_supply_temperature,
             cdu_return_temperature,
             chilled_water_mass_flow_rate,
-            cooling_water_mass_flow_rate,
-            {}
+            cooling_water_mass_flow_rate
         )

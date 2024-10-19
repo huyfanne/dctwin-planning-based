@@ -44,6 +44,8 @@ class BaseManager(ABC):
         self._episode_idx = 0
         self._fieldnames = ["Timestamp"]
         self._log_results = log_results
+        # initialize actions that require grad
+        self._acts_require_grad = torch.tensor([], requires_grad=True)
 
     def _reset_acts_require_grad(self):
         self._acts_require_grad = torch.tensor([], requires_grad=True)

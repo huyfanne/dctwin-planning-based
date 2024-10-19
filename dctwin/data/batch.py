@@ -182,8 +182,7 @@ class Batch:
 
     def __init__(
         self,
-        batch_dict: Optional[Union[dict, "Batch", Sequence[Union[dict, "Batch"]],
-                                   np.ndarray]] = None,
+        batch_dict: Optional[Union[dict, "Batch", Sequence[Union[dict, "Batch"]], np.ndarray]] = None,
         copy: bool = False,
         **kwargs: Any,
     ) -> None:

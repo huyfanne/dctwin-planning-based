@@ -59,7 +59,7 @@ class HeatLoadManager(nn.Module):
 
     def forward(
         self,
-        data: Batch,
+        data: Batch
     ) -> None:
         """
         Simulate the building with the learned models and the given control signals (acts)
