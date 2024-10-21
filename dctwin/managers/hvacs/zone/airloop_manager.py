@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Any
 
 import torch.nn as nn
 
@@ -24,14 +24,15 @@ class AirLoopManager(nn.Module):
         self.time_step = time_step
         self.models = self._init_models()
 
-    def _init_models(self):
+    def _init_models(self) -> Dict[str, Any]:
         """
         Initialize the learnable models for the zone equipments
         """
         zone_models = {}
         # get the model for each zone equipment of the building
         for zone_name, zone in self.zones.items():
-            zone_models[zone_name] = {}
+            zone_models[zone_name] = SteadyStateThermodynamics()
+            self.add_module(zone_name, zone_models[zone_name])
             # get the ACU equipments of the zone
             for acu_name, acu in zone.constructions.acus.items():
                 acu.model = FanModel(
@@ -92,7 +93,7 @@ class AirLoopManager(nn.Module):
                     data.obs_next.zones[acu_name].fan_power = self.models[zone_name][acu_name](
                         data.acts[acu_name].supply_mass_flow_rate_sp
                     )
-                    acu_return_temperature = SteadyStateThermodynamics.sim(
+                    acu_return_temperature = self.models[zone_name].forward(
                         supply_air_temperature=data.acts[acu_name].supply_temperature_sp,
                         supply_air_mass_flow_rate=data.acts[acu_name].supply_mass_flow_rate_sp,
                         sensible_heat_load=zone_acu_heat_load[acu_name],

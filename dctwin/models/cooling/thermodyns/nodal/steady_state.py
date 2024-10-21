@@ -9,8 +9,8 @@ class SteadyStateThermodynamics(nn.Module):
     def __init__(self):
         super(SteadyStateThermodynamics, self).__init__()
 
-    @staticmethod
-    def sim(
+    def forward(
+        self,
         supply_air_temperature: torch.Tensor,
         supply_air_mass_flow_rate: torch.Tensor,
         sensible_heat_load: torch.Tensor,
