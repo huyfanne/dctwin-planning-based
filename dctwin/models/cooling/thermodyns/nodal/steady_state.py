@@ -23,5 +23,5 @@ class SteadyStateThermodynamics(nn.Module):
         :return: the return air temperature of the ACU
         """
         return supply_air_temperature + sensible_heat_load / (
-                air_specific_heat * supply_air_mass_flow_rate
+            air_specific_heat * supply_air_mass_flow_rate
         )

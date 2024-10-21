@@ -28,20 +28,22 @@ class AirLoopManager(nn.Module):
         """
         Initialize the learnable models for the zone equipments
         """
-        zone_models = {}
         # get the model for each zone equipment of the building
         for zone_name, zone in self.zones.items():
-            zone_models[zone_name] = SteadyStateThermodynamics()
-            self.add_module(zone_name, zone_models[zone_name])
+            self.add_module(
+                f"{zone_name} thermodynamics",
+                SteadyStateThermodynamics()
+            )
             # get the ACU equipments of the zone
             for acu_name, acu in zone.constructions.acus.items():
-                acu.model = FanModel(
-                    config=acu,
-                    key_mapping=self.device_key_mapping["acus"][acu_name]["fan"],
+                self.add_module(
+                    f"{acu_name} fan",
+                    FanModel(
+                        config=acu,
+                        key_mapping=self.device_key_mapping["acus"][acu_name]["fan"],
+                    )
                 )
-                self.add_module(acu_name, acu.model)
-                zone_models[zone_name][acu.uid] = acu.model
-        return zone_models
+        return {k: v for k, v in dict(self.named_modules()).items() if k is not "" and "." not in k}
 
     def collect(self, data: Batch | Dict):
         """
@@ -81,6 +83,7 @@ class AirLoopManager(nn.Module):
             zone_acu_heat_load = {
                 active_acu_name: data.obs_next.zones[zone_name].sensible_heat_load / len(active_acu_ids)
                 for active_acu_name in active_acu_ids
+
             }
             weighted_return_temperature = torch.zeros(1,)
             total_acu_air_mass_flow_rate = torch.zeros(1,)
@@ -90,10 +93,10 @@ class AirLoopManager(nn.Module):
                         data.acts[acu_name].supply_mass_flow_rate_sp
                     data.obs_next.zones[acu_name].supply_air_temperature =\
                         data.acts[acu_name].supply_temperature_sp
-                    data.obs_next.zones[acu_name].fan_power = self.models[zone_name][acu_name](
+                    data.obs_next.zones[acu_name].fan_power = self.models[f"{acu_name} fan"](
                         data.acts[acu_name].supply_mass_flow_rate_sp
                     )
-                    acu_return_temperature = self.models[zone_name].forward(
+                    acu_return_temperature = self.models[f"{zone_name} thermodynamics"].forward(
                         supply_air_temperature=data.acts[acu_name].supply_temperature_sp,
                         supply_air_mass_flow_rate=data.acts[acu_name].supply_mass_flow_rate_sp,
                         sensible_heat_load=zone_acu_heat_load[acu_name],

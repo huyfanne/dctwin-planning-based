@@ -44,7 +44,7 @@ class HVACManager(BaseManager, ABC):
             device_key_mapping=self._device_key_mapping,
         )
         self.liquid_loop_manager = LiquidLoopManager(
-            rooms=self._model.constructions.zones,
+            zones=self._model.constructions.zones,
             device_key_mapping=self._device_key_mapping,
         )
         self.air_loop_manager = AirLoopManager(

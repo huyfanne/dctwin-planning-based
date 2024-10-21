@@ -5,7 +5,7 @@ from .pump import PumpModel
 from .fan import FanModel
 from .cooling_tower import CoolingTowerModel
 from .pipe import PipeModel
-from .cdu import CDUModel
+
 
 
 __all__ = [
@@ -15,6 +15,5 @@ __all__ = [
     "PumpModel",
     "FanModel",
     "CoolingTowerModel",
-    "PipeModel",
-    "CDUModel"
+    "PipeModel"
 ]

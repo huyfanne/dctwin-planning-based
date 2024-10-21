@@ -79,13 +79,3 @@ class PumpModel(nn.Module):
             else:
                 from loguru import logger
                 logger.warning(f"Insufficient data for learning the pump model of {self.uid}.")
-
-
-class CDUPump(nn.Module):
-
-    def __init__(self, pump: Pump):
-        super().__init__()
-        self.motor_efficiency = pump.power.motor_efficiency
-
-    def forward(self, kinetic_power: torch.Tensor):
-        return kinetic_power / self.motor_efficiency
