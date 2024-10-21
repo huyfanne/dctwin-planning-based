@@ -1,70 +1,26 @@
-from typing import Dict
-
 import torch
 import torch.nn as nn
 
-from CoolProp.CoolProp import PropsSI
+from typing import Dict, Tuple
 
-from dclib.cooling.room.facilities import Pump, Pipe, CDU
-from dclib.ite.racks import Rack
-
-from dctwin.utils.const import water_specific_heat
-
-from .hx import HeatExchanger
-from .pipe import PipeModel
+from dclib.cooling.room.facilities import Pipe
+from dctwin.models.cooling.facilities.pipe import PipeModel
 
 
-class LiquidCoolingPump(nn.Module):
-    def __init__(self, pump: Pump):
-        super().__init__()
-        self.motor_efficiency = pump.power.motor_efficiency
+class FlowNetwork(nn.Module):
 
-    def forward(self, kinetic_power: torch.Tensor):
-        return kinetic_power / self.motor_efficiency
+    def __init__(self):
+        super(FlowNetwork, self).__init__()
+        (
+            self.server_pipes,
+            self.rack_supply_side_tee_pipes,
+            self.rack_return_side_tee_pipes,
+            self.bus_pipes
+        ) = self._make_pipes()
 
-
-class CDUModel(nn.Module):
-
-    def __init__(
+    def _make_pipes(
         self,
-        cdu: CDU,
-        racks: Dict[str, Rack],
-        cpu_number_per_server: int = 8,
-        num_turning: int = 3,
-    ) -> None:
-        """
-        :param cdu: CDU object
-        :param racks: dictionary of rack objects
-        :param cpu_number_per_server: number of CPUs per server
-        :param num_turning: number of turning in the liquid cooling pipes
-        """
-        super().__init__()
-        # constant properties
-        self.liquid_capacity = PropsSI('C', 'P', 101325, 'Q', 0, "water")
-        self.cpu_number_per_server = cpu_number_per_server
-        self.num_turning = num_turning
-        # variable properties
-        self.config = cdu
-        self.racks = racks
-        self.heat_exchanger = HeatExchanger(
-            config=cdu,
-            tube_diameter=cdu.constructions.heat_exchanger.geometry.tube_diameter,
-            tube_length=cdu.constructions.heat_exchanger.geometry.tube_length,
-            tube_thickness=cdu.constructions.heat_exchanger.geometry.tube_wall_thickness,
-            row_number=cdu.constructions.heat_exchanger.geometry.row_number,
-            transverse_number=cdu.constructions.heat_exchanger.geometry.transverse_number,
-            row_pitch=cdu.constructions.heat_exchanger.geometry.row_pitch,
-            transverse_pitch=cdu.constructions.heat_exchanger.geometry.transverse_pitch,
-            tube_roughness=cdu.constructions.heat_exchanger.geometry.tube_roughness,
-            thermal_conductivity=cdu.constructions.heat_exchanger.geometry.thermal_conductivity,
-            internal_fluid_name="water",
-            external_fluid_name="water"
-        )
-        self.pump = LiquidCoolingPump(cdu.constructions.pump)
-        self.server_pipes, self.rack_supply_side_tee_pipes, self.rack_return_side_tee_pipes, self.bus_pipes = \
-            self._make_pipes()
-
-    def _make_pipes(self):
+    ) -> Tuple[Dict[str, PipeModel], Dict[str, PipeModel], Dict[str, PipeModel], Dict[str, PipeModel]]:
         server_pipes = {}
         rack_supply_side_tee_pipes = {}
         rack_return_side_tee_pipes = {}
@@ -93,6 +49,7 @@ class CDUModel(nn.Module):
                     pipe=pipe,
                     sub_pipe_diameter=sub_pipe_diameter
                 )
+
         # create bus pipes
         for rack_name in self.config.meta.racks:
             cdu2rack_dist = abs(self.config.geometry.location.x - self.racks[rack_name].geometry.location.x) + \
@@ -109,29 +66,6 @@ class CDUModel(nn.Module):
             )
         return server_pipes, rack_supply_side_tee_pipes, rack_return_side_tee_pipes, bus_pipe
 
-    def _sim_hx(
-        self,
-        cooling_water_return_temperature: torch.Tensor,
-        cooling_water_mass_flow_rate: torch.Tensor,
-        cooling_water_supply_temperature_sp: torch.Tensor,
-        chilled_water_supply_temperature: torch.Tensor,
-    ):
-        """
-        Simulate the heat exchanger performance according to the inner and outer fluid properties.
-        :param cooling_water_return_temperature: the temperature of return cooling water from server racks (C)
-        :param cooling_water_mass_flow_rate: the mass flow rate of return cooling water from server racks (kg/s)
-        :param chilled_water_supply_temperature: the temperature of supply chilled water to server racks (C)
-        :param cooling_water_supply_temperature_sp: the set point of supply cooling water to server racks (C)
-        :return: the outlet temperature of the inner and outer side of the heat exchanger (C) as well as the heat
-        transfer rate (W) and heat transfer coefficient (W/m2K)
-        """
-        return self.heat_exchanger.solve(
-            cooling_water_return_temperature,
-            cooling_water_mass_flow_rate,
-            chilled_water_supply_temperature,
-            cooling_water_supply_temperature_sp
-        )
-
     def _sim_server_pipes(
         self,
         inlet_temperature: torch.Tensor,
@@ -139,7 +73,7 @@ class CDUModel(nn.Module):
         liquid_percentage: torch.Tensor,
         server_name: str,
         mass_flow_rate: torch.Tensor
-    ):
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Simulate the server friction power due to the liquid cooling pipes installed in the chips.
         """
@@ -169,7 +103,7 @@ class CDUModel(nn.Module):
         server_powers: dict[str, torch.Tensor],
         server_mass_flow_rates: dict[str, torch.Tensor],
         server_liquid_cooling_percentages: dict[str, torch.Tensor],
-    ) -> tuple[torch.Tensor, dict[str, torch.Tensor], torch.Tensor, dict[str, torch.Tensor], dict[str, torch.Tensor]]:
+    ) -> Tuple[torch.Tensor, dict[str, torch.Tensor], torch.Tensor, dict[str, torch.Tensor], dict[str, torch.Tensor]]:
         """
         Simulate the liquid cooling thermal and mechanical processes inside each rack that is connected to the CDU.
         """
@@ -256,7 +190,7 @@ class CDUModel(nn.Module):
         server_mass_flow_rates: dict[str, torch.Tensor],
         server_liquid_cooling_percentages: dict[str, torch.Tensor],
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        (rack_pipe_friction_power, rack_electrical_power, cdu_return_temperature, rack_mass_flow_rate,
+        (rack_pipe_friction_power, rack_electrical_power, cdu_return_water_temperature, rack_mass_flow_rate,
          rack_outlet_temperature) = self._sim_rack_pipes(
             inlet_temperature=inlet_temperature,
             server_powers=server_powers,
@@ -267,43 +201,22 @@ class CDUModel(nn.Module):
             rack_mass_flow_rate=rack_mass_flow_rate
         )
         total_friction_power = rack_pipe_friction_power + bus_pipe_friction_power
-        return total_friction_power, cdu_return_temperature
-
-    def _sim_pump(self, friction_power: torch.Tensor) -> torch.Tensor:
-        return self.pump.forward(friction_power)
+        return total_friction_power, cdu_return_water_temperature
 
     def forward(
         self,
         server_powers: dict[str, torch.Tensor],
         server_mass_flow_rates: dict[str, torch.Tensor],
         server_liquid_cooling_percentages: dict[str, torch.Tensor],
-        cooling_water_supply_temperature: torch.Tensor,
-        chilled_water_supply_temperature: torch.Tensor,
-    ):
-        total_friction_power, cdu_return_temperature = self._sim_pipes(
-            inlet_temperature=cooling_water_supply_temperature,
+        cdu_supply_water_temperature: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        total_friction_power, cdu_return_water_temperature = self._sim_pipes(
+            inlet_temperature=cdu_supply_water_temperature,
             server_powers=server_powers,
             server_mass_flow_rates=server_mass_flow_rates,
             server_liquid_cooling_percentages=server_liquid_cooling_percentages,
         )
-        cdu_electrical_power = self._sim_pump(
-            friction_power=total_friction_power
-        )
-        cooling_water_mass_flow_rate = torch.tensor(list(server_mass_flow_rates.values())).sum()
-        chilled_water_mass_flow_rate, Q, cooling_water_supply_temperature = self._sim_hx(
-            cooling_water_return_temperature=cdu_return_temperature,
-            cooling_water_mass_flow_rate=cooling_water_mass_flow_rate,
-            chilled_water_supply_temperature=chilled_water_supply_temperature,
-            cooling_water_supply_temperature_sp=cooling_water_supply_temperature,
-        )
-        chilled_water_return_temperature = (
-            chilled_water_supply_temperature + Q / (chilled_water_mass_flow_rate * water_specific_heat)
-        )
         return (
-            cdu_electrical_power,
-            chilled_water_return_temperature,
-            cooling_water_supply_temperature,
-            cdu_return_temperature,
-            chilled_water_mass_flow_rate,
-            cooling_water_mass_flow_rate
+            total_friction_power,
+            cdu_return_water_temperature,
         )
