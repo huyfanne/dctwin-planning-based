@@ -215,7 +215,7 @@ class HVACManager(BaseManager, ABC):
         :param: inps (Batch) external inputs
         :return: None
         """
-        self._reset_statistics(obs=obs if obs is not None else self.data.obs)
+        self._reset_statistics(obs=obs if obs is not None else self.data.obs_next)
         self.data.update(
             acts=acts,
             inps=inps,

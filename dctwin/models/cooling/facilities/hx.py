@@ -303,68 +303,69 @@ class HeatExchanger(nn.Module):
 
     def solve(
         self,
-        T_air_in: torch.Tensor,
-        m_air: torch.Tensor,
-        T_water_in: torch.Tensor,
-        T_air_out_sp: torch.Tensor,
+        T_outside_fluid_inlet: torch.Tensor,
+        m_outside_fluid: torch.Tensor,
+        T_inside_fluid_inlet: torch.Tensor,
+        T_outside_fluid_sp: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
-        Calculate the chilled water mass flow rate that satisfies the supply air setpoint temperature
-        with Bisection method.
-        :param T_air_in:
-        :param m_air:
-        :param T_water_in:
-        :param T_air_out_sp:
+        Calculate the inside coolant fluid mass flow rate that satisfies the outside fluid outlet temperature setpoint
+        with Bisection root finding algorithm.
+        :param T_outside_fluid_inlet: outside fluid inlet temperature
+        :param m_outside_fluid: outside fluid mass flow rate
+        :param T_inside_fluid_inlet: inside fluid inlet temperature
+        :param T_outside_fluid_sp: outside fluid outlet temperature setpoint
         :return:
         """
         with torch.no_grad():
-            m_water_min = torch.tensor(0.0, dtype=torch.float32)
-            m_water_max = m_air.item()
-            m_water = (m_water_min + m_water_max) / 2
-            T_water_out, T_air_out, NTU, eff, Q, power = self.forward(
-                T_air_in=T_air_in,
-                m_air=m_air,
-                T_water_in=T_water_in,
-                m_water=m_water
+            m_inside_fluid_min = torch.tensor(0.0, dtype=torch.float32)
+            m_inside_fluid_max = m_outside_fluid.item()
+            m_inside_fluid = (m_inside_fluid_min + m_inside_fluid_max) / 2
+            T_inside_fluid_outlet, T_outside_fluid_out, NTU, eff, Q, power = self.forward(
+                T_air_in=T_outside_fluid_inlet,
+                m_air=m_outside_fluid,
+                T_water_in=T_inside_fluid_inlet,
+                m_water=m_inside_fluid
             )
             # bi-section main loop
             for iteration in range(1, self.max_root_finding_iter + 1):
-                if T_air_out > T_air_out_sp:
-                    m_water_min = m_water
+                if T_inside_fluid_outlet > T_outside_fluid_sp:
+                    m_inside_fluid_min = m_inside_fluid
                 else:
-                    m_water_max = m_water
-                m_water = (m_water_min + m_water_max) / 2
-                T_water_out, T_air_out, NTU, eff, Q, power = self.forward(
-                    T_air_in=T_air_in,
-                    m_air=m_air,
-                    T_water_in=T_water_in,
-                    m_water=m_water
+                    m_inside_fluid_max = m_inside_fluid
+                m_inside_fluid = (m_inside_fluid_min + m_inside_fluid_max) / 2
+                T_inside_fluid_outlet, T_outside_fluid_out, NTU, eff, Q, power = self.forward(
+                    T_air_in=T_outside_fluid_inlet,
+                    m_air=m_outside_fluid,
+                    T_water_in=T_inside_fluid_inlet,
+                    m_water=m_inside_fluid
                 )
-                if torch.abs(T_air_out - T_air_out_sp) < self.tol:
+                if torch.abs(T_outside_fluid_out - T_outside_fluid_sp) < self.tol:
                     break
             if iteration == self.max_root_finding_iter:
                 logger.warning(
                     f"{self.config.uid}: root finding failed at iteration {iteration}."
-                    f" T_air_out = {T_air_out.item()}, T_air_sp= {T_air_out_sp.item()}, T_chw_in = {T_water_in.item()}"
+                    f" T_outside_fluid_out = {T_outside_fluid_out.item()},"
+                    f" T_outside_fluid_sp = {T_outside_fluid_sp.item()},"
+                    f" T_inside_fluid_inlet = {T_inside_fluid_inlet.item()}"
                 )
         # insert gradient calculation
-        m = m_water.clone().requires_grad_(requires_grad=True)
-        T_water_out, T_air_out, _, _, Q, _ = self.forward(
-            T_air_in=T_air_in,
-            m_air=m_air,
-            T_water_in=T_water_in,
-            m_water=m
+        m_inside_fluid_star = m_inside_fluid.clone().requires_grad_(True)
+        T_inside_fluid_outlet, T_outside_fluid_out, NTU, eff, Q, power = self.forward(
+            T_air_in=T_outside_fluid_inlet,
+            m_air=m_outside_fluid,
+            T_water_in=T_inside_fluid_inlet,
+            m_water=m_inside_fluid
         )
-        g = T_air_out - T_air_out_sp  # g should be close to zero (up to tolerance)
-        J = torch.autograd.grad(
-            g,
-            m,
-            retain_graph=True
-        )[0]
+        # g = T_outside_fluid_out - T_outside_fluid_sp  # g should be close to zero (up to tolerance)
+        # J = torch.autograd.grad(
+        #     g,
+        #     m_inside_fluid_star,
+        #     retain_graph=True
+        # )[0]
         # reengage the gradient calculation by inserting the gradient into the computation graph
-        m = m - g
-        m.register_hook(
-            lambda grad: grad / J
-        )  # implicit gradient calculation
-        # m.backward(retain_graph=True)
-        return m, Q, T_air_out
+        # m_inside_fluid_star -= g
+        # m_inside_fluid_star.register_hook(
+        #     lambda grad: grad / J
+        # )  # implicit gradient calculation
+        return m_inside_fluid_star, Q, T_outside_fluid_out

@@ -57,6 +57,7 @@ class HVACData:
             )
             obs[cdu_name] = Batch(
                 electrical_power=(),
+                coil_sensible_heat_load=(),
                 cooling_water_supply_temperature=(),
                 cooling_water_return_temperature=(),
                 chilled_water_supply_temperature=(),
