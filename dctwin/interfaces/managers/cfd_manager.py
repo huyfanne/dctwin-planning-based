@@ -10,13 +10,9 @@ from typing import Optional, Union, Dict
 import numpy as np
 import docker
 import torch
-import vtk
-from mayavi import mlab
 from loguru import logger
 
 from dctwin.backends import (
-    SalomeBackend,
-    SalomeBackendK8s,
     SnappyHexBackend,
     SnappyHexBackendK8s,
     SteadySolverBackend,
@@ -39,11 +35,11 @@ from .utils import (
 
 from dctwin.utils import config
 from dctwin.utils.errors import (
-    GeometryBuildError,
     MeshBuildError,
     FoamSolveError,
 )
 from dclib.room import Room
+from ...backends.foam.utils import init_foam
 
 
 class CFDManager:
@@ -84,14 +80,15 @@ class CFDManager:
         pod_method: str = "GP",
         docker_client: docker.DockerClient = None,
         is_k8s: bool = False,
-        k8s_config: Dict = {},
+        k8s_config: Dict = None,
         scale_server_flow_rate: bool = False,
         acu2server_flow_ratio: float = 0.8,
         is_gpu: bool = False,
     ) -> None:
+        if k8s_config is None:
+            k8s_config = {}
         if not is_k8s:
             self.docker_client = docker_client if docker_client else docker.from_env()
-        self.geometry_backend: Optional[Union[SalomeBackend, SalomeBackendK8s]] = None
         self.mesh_backend: Optional[Union[SnappyHexBackend, SnappyHexBackendK8s]] = None
         self.solver_backend: Union[
             None,
@@ -113,7 +110,7 @@ class CFDManager:
         self.steady = steady
         self.pod_method = pod_method
         self.isk8s = is_k8s
-        self.k8s_config = k8s_config
+        self.k8s_config = k8s_config if k8s_config is not None else {}
         self.scale_server_flow_rate = scale_server_flow_rate
         self.acu2server_flow_ratio = acu2server_flow_ratio
         self.is_gpu = is_gpu
@@ -130,16 +127,12 @@ class CFDManager:
         reduced-order solver: POD
         """
         if self.isk8s:
-            self.k8s_config["k8s_resources"] = self.k8s_config["k8s_meshing_resources"]
-            self.k8s_config["k8s_taint"] = self.k8s_config["k8s_cpu_taint"]
-            self.geometry_backend = SalomeBackendK8s(
-                k8s_config=self.k8s_config, is_gpu=self.is_gpu
-            )
             self.mesh_backend = SnappyHexBackendK8s(
-                process_num=self.mesh_process,
                 k8s_config=self.k8s_config,
                 is_gpu=self.is_gpu,
             )
+            self.k8s_config["k8s_resources"] = self.k8s_config["k8s_meshing_resources"]
+            self.k8s_config["k8s_taint"] = self.k8s_config["k8s_cpu_taint"]
             if self.steady:
                 self.k8s_config["k8s_resources"] = self.k8s_config[
                     "k8s_solving_resources"
@@ -168,11 +161,8 @@ class CFDManager:
                     process_num=self.solve_process, is_gpu=self.is_gpu
                 )
         else:
-            self.geometry_backend = SalomeBackend(
-                self.docker_client, is_gpu=self.is_gpu
-            )
             self.mesh_backend = SnappyHexBackend(
-                self.docker_client, process_num=self.mesh_process, is_gpu=self.is_gpu
+                self.docker_client, is_gpu=self.is_gpu
             )
             if self.steady:
                 self.solver_backend = SteadySolverBackend(
@@ -193,22 +183,13 @@ class CFDManager:
                     self.docker_client, process_num=self.solve_process
                 )
 
-    def build_geometry(self) -> None:
-        """Build geometry from room model"""
-        try:
-            logger.info("start building geometry ...")
-            self.geometry_backend.run(room=self.room)
-        except Exception:
-            raise GeometryBuildError("Failed to build geometry")
-
     def mesh(self) -> None:
         """Mesh the geometry"""
         try:
             logger.info("start meshing geometry ...")
             self.mesh_backend.run(
                 room=self.room,
-                process_num=self.mesh_process,
-                field_config=self.field_config,
+                case_dir=config.cfd.case_dir,
             )
         except Exception:
             raise MeshBuildError("Failed to mesh geometry")
@@ -397,43 +378,6 @@ class CFDManager:
                 print("Please enter correct words...")
 
     @staticmethod
-    def geom_check():
-
-        folder_path = config.cfd.case_dir.joinpath("constant/triSurface")
-
-        # create a Mayavi scene
-        mlab.figure()
-
-        # create vtkAppendPolyData object
-        append_filter = vtk.vtkAppendPolyData()
-
-        # search and load for .stl files
-        for file in os.listdir(folder_path):
-            file_path = os.path.join(folder_path, file)
-            if file_path.lower().endswith(".stl"):
-                stl_reader = vtk.vtkSTLReader()
-                stl_reader.SetFileName(file_path)
-                stl_reader.Update()
-                append_filter.AddInputData(stl_reader.GetOutput())
-
-        # combine stl data
-        append_filter.Update()
-
-        # display the stl data in the Mayavi scene
-        main_frame_surface = mlab.pipeline.add_dataset(append_filter.GetOutput())
-        surface = mlab.pipeline.surface(
-            mlab.pipeline.add_dataset(append_filter.GetOutput())
-        )
-        surface.actor.property.opacity = (
-            0.5  # Set transparency (0.0: fully transparent, 1.0: fully opaque)
-        )
-        wireframe = mlab.pipeline.surface(
-            main_frame_surface, representation="wireframe", color=(0, 0, 0)
-        )
-        wireframe.actor.mapper.scalar_visibility = False
-        mlab.show()
-
-    @staticmethod
     def mesh_check():
 
         data_path = config.cfd.case_dir.joinpath("case.foam")
@@ -574,21 +518,14 @@ class CFDManager:
                 **boundary_conditions,
             )
         else:
-            run_geometry, run_mesh = check_base_dir(
+            run_mesh = check_base_dir(
                 episode_idx=episode_idx,
                 case_idx=case_idx,
             )
 
             # use full-fledged CFD simulation
-            # step 1: build geometry
-            if run_geometry:
-                self.build_geometry()
-            if expert_mode:
-                logger.info("loading STL geometry files, please check...")
-                self.geom_check()
-                self.get_user_input()
-
-            # step 2: mesh geometry
+            init_foam(is_gpu=self.is_gpu)
+            # step 1: mesh geometry
             if run_mesh:
                 self.mesh()
                 if save_mesh_index:
@@ -606,7 +543,7 @@ class CFDManager:
                 self.mesh_check()
                 self.get_user_input()
 
-            # step 3: solve
+            # step 2: solve
             self.solve(stream=False)
 
             all_dirs = [d for d in os.listdir(config.cfd.case_dir)]
@@ -623,10 +560,11 @@ class CFDManager:
                 if not self.steady
                 else None
             )
-            # step 4: read results
+
+            # step 3: read results
             results = read_temperature(config.cfd.case_dir, str(largest_num))
 
-            if not config.cfd.PRESERVE_FOAM_LOG and not run_mesh and not run_geometry:
+            if not config.cfd.PRESERVE_FOAM_LOG and not run_mesh:
                 shutil.rmtree(config.cfd.case_dir)
 
         sensor_results = (
