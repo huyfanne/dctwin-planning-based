@@ -441,57 +441,49 @@ class ServerModel:
         self._make_outlet_face()
 
     def _make_box(self):
-        server_slot = self.config.geometry.slot_position
-        server_slot_occupation = self.config.geometry.slot_occupation
-        server_height = server_slot_occupation * self.slot_height
-        server_location = Vertex(
-            x=self.v_min.x,
-            y=self.v_min.y,
-            z=self.v_min.z + server_slot * self.slot_height
-        )
-        server_size = Vertex(
-            x=self.config.geometry.width,
-            y=self.config.geometry.depth,
-            z=server_height
-        )
         self.box = BoxModel(
             name=f'server_wall_{self.config.uid}',
             v_min=[
-                server_location.x,
-                server_location.y,
-                server_location.z
+                self.v_min.x,
+                self.v_min.y,
+                self.v_min.z,
             ],
             v_max=[
-                server_location.x + server_size.x,
-                server_location.y + server_size.y,
-                server_location.z + server_size.z
+                self.v_max.x,
+                self.v_max.y,
+                self.v_max.z,
             ],
             is_refinement_box=False
         )
 
     def _make_inlet_face(self):
         orientation = self.config.geometry.orientation
-        server_inlet_face = self.config.geometry.inlet_face
-        server_height = self.config.geometry.slot_occupation * self.slot_height
-        server_size = Vertex(
-            x=self.config.geometry.width,
-            y=self.config.geometry.depth,
-            z=server_height
-        )
-        if (server_inlet_face == 'front' or server_inlet_face is None) and orientation == 0:
+        if orientation == 0 or orientation == 180:
+            y = self.v_min.y if orientation == 0 else self.v_max.y
             bounding_box_min = [
                 self.v_min.x,
-                self.v_min.y - 0.1 * self.refine_size,
+                y - 0.1 * self.refine_size,
                 self.v_min.z
             ]
             bounding_box_max = [
-                self.box.v_min[0] + server_size.x,
-                self.box.v_min[1] + 0.1 * self.refine_size,
-                self.box.v_min[2] + server_size.z
+                self.v_max.x,
+                y + 0.1 * self.refine_size,
+                self.v_max.z
+            ]
+        elif orientation == 90 or orientation == 270:
+            x = self.v_min.x if orientation == 90 else self.v_max.x
+            bounding_box_min = [
+                x - 0.1 * self.refine_size,
+                self.v_min.y,
+                self.v_min.z
+            ]
+            bounding_box_max = [
+                x + 0.1 * self.refine_size,
+                self.v_max.y,
+                self.v_max.z
             ]
         else:
-            bounding_box_min = []
-            bounding_box_max = []
+            raise ValueError(f"Invalid orientation: {orientation} for server '{self.config.uid}'")
         self.inlet_face = PatchModel(
             name=f"server_inlet_{self.config.uid}",
             neighbour_patch_name=f"server_outlet_{self.config.uid}",
@@ -501,27 +493,32 @@ class ServerModel:
 
     def _make_outlet_face(self):
         orientation = self.config.geometry.orientation
-        server_outlet_face = self.config.geometry.outlet_face
-        server_height = self.config.geometry.slot_occupation * self.slot_height
-        server_size = Vertex(
-            x=self.config.geometry.width,
-            y=self.config.geometry.depth,
-            z=server_height
-        )
-        if (server_outlet_face == 'rear' or server_outlet_face is None) and orientation == 0:
+        if orientation == 0 or orientation == 180:
+            y = self.v_max.y if orientation == 0 else self.v_min.y
             bounding_box_min = [
                 self.v_min.x,
-                self.v_min.y + server_size.y - 0.1 * self.refine_size,
+                y - 0.1 * self.refine_size,
                 self.v_min.z
             ]
             bounding_box_max = [
-                self.box.v_min[0] + server_size.x,
-                self.box.v_min[1] + server_size.y + 0.1 * self.refine_size,
-                self.box.v_min[2] + server_size.z
+                self.v_max.x,
+                y + 0.1 * self.refine_size,
+                self.v_max.z
+            ]
+        elif orientation == 90 or orientation == 270:
+            x = self.v_max.x if orientation == 90 else self.v_min.x
+            bounding_box_min = [
+                x - 0.1 * self.refine_size,
+                self.v_min.y,
+                self.v_min.z
+            ]
+            bounding_box_max = [
+                x + 0.1 * self.refine_size,
+                self.v_max.y,
+                self.v_max.z
             ]
         else:
-            bounding_box_min = []
-            bounding_box_max = []
+            raise ValueError(f"Invalid orientation: {orientation} for server '{self.config.uid}'")
         self.outlet_face = PatchModel(
             name=f"server_outlet_{self.config.uid}",
             neighbour_patch_name=f"server_inlet_{self.config.uid}",
@@ -631,12 +628,24 @@ class RackModel:
 
     def _make_servers(self):
         for server_name, server in self.config.constructions.servers.items():
-            server_v_min = self.v_min
+            server_v_min = Vertex(
+                x=self.v_min.x,
+                y=self.v_min.y,
+                z=self.v_min.z + server.geometry.slot_position * 0.05
+            )
             server_v_max = Vertex(
-                x=self.v_min.x + server.geometry.width,
-                y=self.v_min.y + server.geometry.depth,
+                x=self.v_min.x + server.geometry.width
+                if self.config.geometry.orientation == 0 or self.config.geometry.orientation == 180
+                else self.v_min.x + server.geometry.depth,
+                y=self.v_min.y + server.geometry.depth
+                if self.config.geometry.orientation == 0 or self.config.geometry.orientation == 180
+                else self.v_min.y + server.geometry.width,
                 z=self.v_min.z + (server.geometry.slot_position + server.geometry.slot_occupation) * 0.05
             )
+            if server.geometry.orientation != self.config.geometry.orientation:
+                server.geometry.orientation = self.config.geometry.orientation
+                logger.warning(f"Server '{server_name}' orientation is changed to {self.config.geometry.orientation}, "
+                               f"because it is not the same as the rack orientation")
             self.servers.append(
                 ServerModel(
                     config=server,
@@ -731,40 +740,15 @@ class MeshBuilder:
 
     @property
     def command(self) -> list[str]:
-        if self.process_num > 1:
-            topo_set_command = ""
-            # if len(self.perforated_openings) > 0:
-            #     topo_set_command = "topoSet &&"
-
-            command = [
-                "bash",
-                "-c",
-                (
-                    "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
-                    "blockMesh && surfaceFeatureExtract && "
-                    "decomposePar -copyZero -force && "
-                    "mpirun --use-hwthread-cpus --allow-run-as-root -np "
-                    f"{self.process_num} snappyHexMesh -parallel -overwrite && "
-                    "reconstructParMesh -constant -mergeTol 6 && "
-                    f"{topo_set_command}"
-                    "createPatch -overwrite && "
-                    "rm -rf /data/constant/triSurface/*.eMesh && "
-                    "rm -rf /data/processor* &&"
-                    "checkMesh -allGeometry -allTopology"
-                ),
-            ]
-            # command=["bash", "-c", f"sleep infinity"]
-        else:
-            command = [
-                "bash",
-                "-c",
-                (
-                    "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
-                    "blockMesh && snappyHexMesh -overwrite && createBaffles -overwrite && topoSet && "
-                    "createPatch -overwrite"
-                ),
-            ]
-
+        command = [
+            "bash",
+            "-c",
+            (
+                "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
+                "blockMesh && snappyHexMesh -overwrite && createBaffles -overwrite && topoSet && "
+                "createPatch -overwrite"
+            ),
+        ]
         return command
 
     def _align_geometry(self):
@@ -775,7 +759,7 @@ class MeshBuilder:
         for plane in self.room.geometry.plane:
             plane.x = round_to_base(plane.x, self.base_size)
             plane.y = round_to_base(plane.y, self.base_size)
-            logger.debug(f"plane, location = ({plane.x}, {plane.y})")
+            logger.debug(f"room_plane, location = ({plane.x}, {plane.y})")
 
         for box in self.room.constructions.boxes.values():
             box.geometry.location.x = round_to_base(box.geometry.location.x, self.base_size)

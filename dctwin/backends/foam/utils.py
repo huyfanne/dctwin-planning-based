@@ -1,9 +1,8 @@
 import os
 import math
 import shutil
-from typing import List, Dict
+from typing import List
 from dclib.room import Room
-from dclib.ite.racks.rack import Rack
 from dctwin.utils import (
     template_env,
     template_dir,
