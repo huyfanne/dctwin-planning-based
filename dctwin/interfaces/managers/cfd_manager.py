@@ -185,14 +185,14 @@ class CFDManager:
 
     def mesh(self) -> None:
         """Mesh the geometry"""
-        # try:
-        #     logger.info("start meshing geometry ...")
-        self.mesh_backend.run(
-            room=self.room,
-            case_dir=config.cfd.case_dir,
-        )
-        # except Exception:
-        #     raise MeshBuildError("Failed to mesh geometry")
+        try:
+            logger.info("start meshing geometry ...")
+            self.mesh_backend.run(
+                room=self.room,
+                case_dir=config.cfd.case_dir,
+            )
+        except Exception:
+            raise MeshBuildError("Failed to mesh geometry")
 
     def solve(
         self,

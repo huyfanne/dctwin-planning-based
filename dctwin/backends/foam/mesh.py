@@ -1016,7 +1016,7 @@ class MeshBuilder:
                 PlaneModel(
                     name=f"{name}_panel",
                     origin=[v_min.x, v_min.y, plane.geometry.height],
-                    span=[v_max.x, v_max.y, 0],
+                    span=[v_max.x - v_min.x, v_max.y - v_min.y, 0],
                 )
             )
             for opening_name, opening in plane.geometry.openings.items():
@@ -1024,7 +1024,7 @@ class MeshBuilder:
                     PlaneModel(
                         name=f"opening_{name}_{opening_name}",
                         origin=[opening.location.x, opening.location.y, plane.geometry.height],
-                        span= [opening.location.x + opening.size.x, opening.location.y + opening.size.y, 0],
+                        span= [opening.size.x, opening.size.y, 0],
                     )
                 )
         return main_panel_list, opening_face_list
