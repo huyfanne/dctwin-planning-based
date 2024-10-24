@@ -44,22 +44,26 @@ boundaryField
         value           uniform {{ acu_k }};
     }
 
-    "pillar_.*"
+    "raised_floor_.*"
     {
         type            kqRWallFunction;
         value           uniform {{ acu_k }};
     }
 
-    "floor_.*"
+    "opening_raised_floor_.*"
+    {
+        type           cyclic;
+    }
+
+    "false_ceiling_.*"
     {
         type            kqRWallFunction;
         value           uniform {{ acu_k }};
     }
 
-    "ceiling_.*"
+    "opening_false_ceiling_.*"
     {
-        type            kqRWallFunction;
-        value           uniform {{ acu_k }};
+        type           cyclic;
     }
 
     "box_.*"
@@ -68,11 +72,6 @@ boundaryField
         value           uniform {{ acu_k }};
     }
 
-    "partition_wall_.*"
-    {
-        type            kqRWallFunction;
-        value           uniform {{ acu_k }};
-    }
 
     "rack_wall_.*"
     {

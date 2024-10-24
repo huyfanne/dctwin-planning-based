@@ -27,22 +27,27 @@ boundaryField
         value           uniform 0;
     }
 
-    "pillar_.*"
+
+    "raised_floor_.*"
     {
         type            nutkWallFunction;
         value           uniform 0;
     }
 
-    "floor_.*"
+    "opening_raised_floor_.*"
+    {
+        type           cyclic;
+    }
+
+    "false_ceiling_.*"
     {
         type            nutkWallFunction;
         value           uniform 0;
     }
 
-    "ceiling_.*"
+    "opening_false_ceiling_.*"
     {
-        type            nutkWallFunction;
-        value           uniform 0;
+        type           cyclic;
     }
 
     "box_.*"
@@ -51,22 +56,15 @@ boundaryField
         value           uniform 0;
     }
 
-    "partition_wall_.*"
-    {
-        type            nutkWallFunction;
-        value           uniform 0;
-    }
 
     "acu_supply_.*"
     {
-        type            calculated;
-        value           uniform 0;
+       type            zeroGradient;
     }
 
     "acu_return_.*"
     {
-        type            calculated;
-        value           uniform 0;
+        type            zeroGradient;
     }
 
     "acu_wall_.*"
@@ -95,14 +93,12 @@ boundaryField
 
     "server_inlet_.*"
     {
-        type            calculated;
-        value           uniform 0;
+        type            zeroGradient;
     }
 
     "server_outlet_.*"
     {
-        type            calculated;
-        value           uniform 0;
+       type            zeroGradient;
     }
 }
 

@@ -20,9 +20,35 @@ solvers
     p_rgh
     {
         solver          PCG;
-        preconditioner  DIC;
+        preconditioner
+        {
+        	preconditioner GAMG;
+        	tolerance       1e-08;
+        	relTol          0.01;
+        	nVcycles	2;
+        	smoother DICGaussSeidel;
+        	nPreSweeps	2;
+        }
         tolerance       1e-08;
         relTol          0.01;
+        maxIter 	100;
+    }
+
+    p_rghFinal
+    {
+        solver          PCG;
+        preconditioner
+        {
+        	preconditioner GAMG;
+        	tolerance       2e-09;
+        	relTol          0;
+        	nVcycles	2;
+        	smoother DICGaussSeidel;
+        	nPreSweeps	2;
+        }
+        tolerance       1e-09;
+        relTol          0;
+        maxIter 	100;
     }
 
     "(U|T|k|epsilon)"
@@ -42,7 +68,7 @@ solvers
 
 SIMPLE
 {
-    nNonOrthogonalCorrectors 2;
+    nNonOrthogonalCorrectors 0;
     pRefCell    0;
     pRefValue    0;
     residualControl

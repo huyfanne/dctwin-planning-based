@@ -1,6 +1,6 @@
 from dclib.ite.servers.server import Server
 from utils import rotate_rectangular
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from pathlib import Path
 from loguru import logger
 from jinja2 import Environment, FileSystemLoader
@@ -92,7 +92,30 @@ class PlaneModel:
 
     @property
     def createBaffles_cmd(self):
-        return f"""
+        _createBaffles_cmd = f"""
+        {self.name}
+        {{
+            type        searchableSurface;
+            surface     searchablePlate;
+            origin      ({self.origin[0]} {self.origin[1]} {self.origin[2]});
+            span        ({self.span[0]} {self.span[1]} {self.span[2]});
+            patches
+            {{
+                master
+                {{
+                    name            {self.name}_master_patches;
+                    type            cyclic;
+                    neighbourPatch  {self.name}_slave_patches;
+                }}
+                slave
+                {{
+                    name            {self.name}_slave_patches;
+                    type            cyclic;
+                    neighbourPatch  {self.name}_master_patches;
+                }}
+            }}
+        }}
+        """ if "opening" in self.name else f"""
         {self.name}
         {{
             type        searchableSurface;
@@ -114,6 +137,8 @@ class PlaneModel:
             }}
         }}
         """
+
+        return _createBaffles_cmd
 
 class PatchModel:
     name: str
@@ -173,16 +198,18 @@ class PatchModel:
             constructFrom set;
             set {self.face_set_name};
         }}
-        {{
-            name {self.patch_name};
-            patchInfo
-            {{
-                type cyclic;
-            }}
-            constructFrom set;
-            set {self.face_set_name};
-        }}
         """
+    """
+{{
+    name {self.patch_name};
+    patchInfo
+    {{
+        type patch;
+    }}
+    constructFrom set;
+    set {self.face_set_name};
+}}
+    """
 
 
 class ACUModel:
@@ -246,7 +273,7 @@ class ACUModel:
         v_max.z = self.config.geometry.location.z + self.config.geometry.size.z
         # create a box object that represents the ACU
         self.box = BoxModel(
-            name=f"acu_box_{self.config.uid}",
+            name=f"acu_wall_{self.config.uid}",
             v_min=[v_min.x, v_min.y, v_min.z],
             v_max=[v_max.x, v_max.y, v_max.z],
             is_refinement_box=False
@@ -256,7 +283,7 @@ class ACUModel:
         acu_supply_face = self.config.geometry.supply_face
         bounding_box_min, bounding_box_max = self._get_supply_or_return_face_bounding_box(face=acu_supply_face)
         self.supply_face = PatchModel(
-            name=f"acu_supply_face_{self.config.uid}",
+            name=f"acu_supply_{self.config.uid}",
             bounding_box_min=bounding_box_min,
             bounding_box_max=bounding_box_max
         )
@@ -265,7 +292,7 @@ class ACUModel:
         acu_return_face = self.config.geometry.return_face
         bounding_box_min, bounding_box_max = self._get_supply_or_return_face_bounding_box(face=acu_return_face)
         self.return_face = PatchModel(
-            name=f"acu_return_face_{self.config.uid}",
+            name=f"acu_return_{self.config.uid}",
             bounding_box_min=bounding_box_min,
             bounding_box_max=bounding_box_max
         )
@@ -283,7 +310,7 @@ class ACUModel:
                     self.box.v_min[0] + face.offset.x + face.width,
                     self.box.v_min[1] + face.offset.y + face.length,
                     self.box.v_min[2] + 0.1 * self.base_size if face.side.name == "bottom"
-                    else self.box.v_min[2] + self.config.geometry.size.z - 0.1 * self.base_size
+                    else self.box.v_min[2] + self.config.geometry.size.z + 0.1 * self.base_size
                 ]
             else:
                 bounding_box_min = [
@@ -296,7 +323,7 @@ class ACUModel:
                     self.box.v_min[0] + face.offset.y + face.length,
                     self.box.v_min[1] + face.offset.x + face.width,
                     self.box.v_min[2] + 0.1 * self.base_size if face.side.name == "bottom"
-                    else self.box.v_min[2] + self.config.geometry.size.z - 0.1 * self.base_size
+                    else self.box.v_min[2] + self.config.geometry.size.z + 0.1 * self.base_size
                 ]
         elif face.side.name == "left" or face.side.name == "right":
             if self.config.geometry.orientation == 0 or self.config.geometry.orientation == 180:
@@ -428,7 +455,7 @@ class ServerModel:
             z=server_height
         )
         self.box = BoxModel(
-            name=f'server_box_{self.config.uid}',
+            name=f'server_wall_{self.config.uid}',
             v_min=[
                 server_location.x,
                 server_location.y,
@@ -997,7 +1024,7 @@ class MeshBuilder:
         v_min: Vertex,
         v_max: Vertex,
         name: str
-    ) -> tuple[List[PlaneModel], List[PatchModel]]:
+    ) -> tuple[list[PlaneModel], list[PlaneModel]]:
         main_panel_list = []
         opening_face_list = []
         if plane is not None:
@@ -1010,18 +1037,10 @@ class MeshBuilder:
             )
             for opening_name, opening in plane.geometry.openings.items():
                 opening_face_list.append(
-                    PatchModel(
+                    PlaneModel(
                         name=f"opening_{name}_{opening_name}",
-                        bounding_box_min=[
-                            opening.location.x,
-                            opening.location.y,
-                            plane.geometry.height - 0.1 * self.base_size
-                        ],
-                        bounding_box_max=[
-                            opening.location.x + opening.size.x,
-                            opening.location.y + opening.size.y,
-                            plane.geometry.height + 0.1 * self.base_size
-                        ]
+                        origin=[opening.location.x, opening.location.y, plane.geometry.height],
+                        span= [opening.location.x + opening.size.x, opening.location.y + opening.size.y, 0],
                     )
                 )
         return main_panel_list, opening_face_list
@@ -1084,7 +1103,7 @@ class MeshBuilder:
 
     def write_createPatch_dict(
         self,
-        patch_list: List[PatchModel]
+        patch_list: List[ACUModel | RackModel]
     ):
         patches_cmd = ""
         for patch in patch_list:
@@ -1099,7 +1118,7 @@ class MeshBuilder:
 
     def write_topoSet_dict(
         self,
-        face_set_list: List[PatchModel]
+        face_set_list: List[ACUModel | RackModel]
     ):
         face_set_cmd = ""
         for face_set in face_set_list:
@@ -1162,15 +1181,16 @@ class MeshBuilder:
         )
         # write createBaffles dict
         self.write_createBaffles_dict(
-            plane_list=raised_floor + false_ceiling + box_plane_list + rack_list,
+            plane_list=raised_floor + false_ceiling + box_plane_list + rack_list +
+                       false_ceiling_opening_face_list + raised_floor_opening_face_list,
         )
         # write topoSet dict
         self.write_topoSet_dict(
-            face_set_list=acu_list + raised_floor_opening_face_list + false_ceiling_opening_face_list + rack_list,
+            face_set_list=acu_list + rack_list,
         )
         # write createPatch dict
         self.write_createPatch_dict(
-            patch_list=acu_list + raised_floor_opening_face_list + false_ceiling_opening_face_list + rack_list
+            patch_list=acu_list + rack_list
         )
 
         self.run_container(user=0, case_dir=self.case_dir)
