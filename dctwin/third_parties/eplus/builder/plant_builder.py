@@ -3,12 +3,14 @@ from loguru import logger
 
 from eppy.modeleditor import IDF
 
-from dclib.cooling.plant.loops import (
+from dclib.cooling.plant.plant_loops import (
     ChilledWaterLoops,
     CondenserWaterLoops,
     SecondaryChilledWaterLoops,
-    Branch,
-    MetaPlant,
+    MetaLoop
+)
+from dclib.cooling.common.loop import (
+    Branch
 )
 from dclib.cooling.plant.plant import Plant
 
@@ -173,7 +175,7 @@ class PlantBuilder:
             )
         return branches
 
-    def _init_plant_loop(self, loop_name, meta: MetaPlant):
+    def _init_plant_loop(self, loop_name, meta: MetaLoop):
         plant_loop = self.model.newidfobject("PlantLoop", Name=loop_name)
         plant_loop["Plant_Side_Inlet_Node_Name"] = f"{loop_name} supply inlet node"
         plant_loop["Plant_Side_Outlet_Node_Name"] = f"{loop_name} supply outlet node"
@@ -289,7 +291,7 @@ class PlantBuilder:
     def _make_plant_loop(
         self,
         loop_name: str,
-        meta: MetaPlant,
+        meta: MetaLoop,
         supply_loop_branches: Dict[str, Branch],
         demand_loop_branches: Dict[str, Branch],
         type_: str = "chilled",

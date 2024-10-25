@@ -1,14 +1,12 @@
 from typing import Dict, Tuple
-
-from dclib.cooling.plant.loops import ChilledWaterLoops, CondenserWaterLoops, SecondaryChilledWaterLoops, Branch
 from loguru import logger
 
 import torch
 import torch.nn as nn
 
 from dclib.building import Plant
-
-from dclib.cooling.plant.facilities import Components
+from dclib.cooling.common.loop import Branch, Components
+from dclib.cooling.plant.plant_loops import ChilledWaterLoops, CondenserWaterLoops, SecondaryChilledWaterLoops
 
 from dctwin.data.batch import Batch
 from dctwin.models.cooling.facilities import (
@@ -18,7 +16,6 @@ from dctwin.models.cooling.facilities import (
     ThermalStorageTankModel,
     CoolingTowerModel
 )
-
 from dctwin.utils.const import water_specific_heat
 
 
@@ -123,8 +120,8 @@ class PlantManager(nn.Module):
                 else:
                     component.model = component_models[component_id]
 
-        if branch_components.cdu:
-            for component_id, component in branch_components.cdu.items():
+        if branch_components.heat_exchangers:
+            for component_id, component in branch_components.heat_exchangers.items():
                 if component_id not in component_models.keys():
                     self.add_module(
                         name=component_id,
@@ -482,7 +479,6 @@ class PlantManager(nn.Module):
         if branch.components.pipes is not None:
             outlet_temperature = torch.zeros(1,)
             for component_id, component in branch.components.pipes.items():
-                # TODO: add the pipe pressure drop model
                 temperature = data.obs_next.plants[branch_id].inlet_temperature
                 outlet_temperature += temperature
             outlet_temperature = outlet_temperature / len(branch.components.pipes)
@@ -520,8 +516,8 @@ class PlantManager(nn.Module):
                     data.obs_next.plants[branch_id].outlet_temperature = data.obs_next.plants[branch_id].inlet_temperature
                     data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
 
-        if branch.components.cdu is not None:
-            for component_id, component in branch.components.cdu.items():
+        if branch.components.cdus is not None:
+            for component_id, component in branch.components.cdus.items():
                 if data.acts[component_id].on_off_schedule == 1:
                     coil_requested_mass_flow_rate, coil_heat_transfer_rate, _ = self.models[component_id].solve(
                         T_outside_fluid_inlet=data.obs_next.zones[component_id].cooling_water_return_temperature,

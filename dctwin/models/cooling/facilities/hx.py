@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from loguru import logger
 from dclib.cooling.room.facilities import ACU, CDU
-from dclib.cooling.plant.facilities.heat_exchanger import HeatExchanger as HX
+from dclib.cooling.common import HeatExchanger as HX
 from dctwin.data import Batch, Buffer
 
 from tqdm import tqdm

@@ -1,5 +1,5 @@
 from eppy.modeleditor import IDF
-from dclib.models.composite import Model
+from dclib.models.composite import Models
 
 
 class ModelBuilder:
@@ -7,7 +7,7 @@ class ModelBuilder:
     def __init__(self, model: IDF):
         self.model = model
 
-    def _make_materials(self, model_config: Model):
+    def _make_materials(self, model_config: Models):
 
         for material_name, material_config in model_config.material_models.items():
             material = self.model.newidfobject(key="Material".upper())
@@ -35,5 +35,5 @@ class ModelBuilder:
     def _make_curves(self):
         pass
 
-    def make_models(self, model_config: Model):
+    def make_models(self, model_config: Models):
         self._make_materials(model_config=model_config)

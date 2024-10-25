@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch
 
 from dctwin.data import Batch
-from dctwin.models.cooling.facilities.pump import PumpModel
 from dctwin.models.cooling.thermodyns.nodal.liquid_flow_network import FlowNetwork
 
 
@@ -30,23 +29,17 @@ class LiquidLoopManager(nn.Module):
         including the CDUs and liquid network
         """
         for zone_name, zone in self.zones.items():
-            if zone.constructions.cdus is not None:
-                for cdu_name, cdu in zone.constructions.cdus.items():
+            if zone.constructions.liquid_flow_networks is not None:
+                for liquid_network_name, liquid_network in zone.constructions.liquid_flow_networks.items():
                     self.add_module(
-                        name=f"{cdu_name} flow network",
+                        name=liquid_network_name,
                         module=FlowNetwork(
-                            cdu=cdu
-                        )
-                    )
-                    self.add_module(
-                        name=f"{cdu_name} pump",
-                        module=PumpModel(
-                            config=cdu.constructions.pump,
+                            liquid_network=liquid_network,
                             key_mapping=self.device_key_mapping,
                             learnable=True
                         )
                     )
-        return {k: v for k, v in dict(self.named_modules()).items() if k is not ""}
+        return {k: v for k, v in dict(self.named_modules()).items() if k is not "" and "." not in k}
 
     def learn(self) -> None:
         """
@@ -54,19 +47,16 @@ class LiquidLoopManager(nn.Module):
         :return:
         """
         # learn the zone equipment models
-        for zone_name, zone_cdus in self.cdus.items():
-            for cdu_name, cdu in zone_cdus.items():
-                cdu.learn()
+        for model_name, model in self.models.items():
+            model.learn()
 
     def collect(self, data: Batch | Dict) -> None:
         """
         Collect the data from outside environment and store them into a buffer for learning purposes
         :return:
         """
-        # feed online data to the zone equipment models
-        for zone_name, zone_cdus in self.cdus.items():
-            for cdu_name, cdu in zone_cdus.items():
-                cdu.collect(data)
+        for model_name, model in self.models.items():
+            model.collect(data)
 
     def forward(
         self,
@@ -75,24 +65,46 @@ class LiquidLoopManager(nn.Module):
         for zone_name, zone in self.zones.items():
             zone_cdu_liquid_cooled_power = torch.zeros(1,)
             num_servers = 0
-            for cdu_name, cdu in zone.constructions.cdus.items():
-                for server_name, server in cdu.constructions.connected_servers.items():
-                    num_servers += 1
-            for cdu_name, cdu in zone.constructions.cdus.items():
+            for liquid_flow_networks_name, liquid_flow_network in zone.constructions.liquid_flow_networks.items():
+                # compute the total mass flow rate supplied by the CDUs
+                cdu_total_mass_flow_rate = torch.zeros(1,)
+                cdu_supply_temperature = torch.zeros(1,)
+                for supply_branch_name, supply_branch in liquid_flow_network.supply_branches.items():
+                    if supply_branch.components.cdus is not None:
+                        for cdu_name, cdu in supply_branch.components.cdus.items():
+                            cdu_total_mass_flow_rate += data.acts[cdu_name].supply_mass_flow_rate_sp
+                            cdu_supply_temperature += (
+                                data.acts[cdu_name].supply_temperature_sp * data.acts[cdu_name].supply_mass_flow_rate_sp
+                            )
+                            # cdu_pump_power = self.models[liquid_flow_networks_name]
+                            # data.obs_next.zones[cdu_name].electrical_power = cdu_pump_power
+                            data.obs_next.zones[cdu_name].cooling_water_supply_temperature = (
+                                data.acts[cdu_name].supply_temperature_sp
+                            )
+                            data.obs_next.zones[cdu_name].cooling_water_mass_flow_rate = (
+                                data.acts[cdu_name].supply_mass_flow_rate_sp
+                            )
+                cdu_supply_temperature /= cdu_total_mass_flow_rate
+                # compute server power, mass flow rate, and liquid cooling percentage
                 server_powers = {}
                 server_mass_flow_rates = {}
                 server_liquid_cooling_percentages = {}
-                # solve demand side of the liquid cooling network
-                for server_name, server in cdu.constructions.connected_servers.items():
-                    server_powers[server_name] = (
-                        data.obs_next.zones[zone_name].sensible_heat_load / num_servers
-                    )
-                    server_mass_flow_rates[server_name] = (
-                        data.acts[cdu_name].supply_mass_flow_rate_sp / num_servers
-                    )
-                    server_liquid_cooling_percentages[server_name] = torch.tensor(
-                        [1.0], dtype=torch.float32
-                    )
+                for demand_branch_name, demand_branch in liquid_flow_network.demand_branches.items():
+                    if demand_branch.components.servers is not None:
+                        for server_name, server in demand_branch.components.servers.items():
+                            num_servers += 1
+                for demand_branch_name, demand_branch in liquid_flow_network.demand_branches.items():
+                    if demand_branch.components.servers is not None:
+                        for server_name, server in demand_branch.components.servers.items():
+                            server_powers[server_name] = (
+                                data.obs_next.zones[zone_name].sensible_heat_load / num_servers
+                            )
+                            server_mass_flow_rates[server_name] = (
+                                cdu_total_mass_flow_rate / num_servers
+                            )
+                            server_liquid_cooling_percentages[server_name] = torch.tensor(
+                                [1.0], dtype=torch.float32
+                            )
                 # simulate the supply side liquid flow network
                 (
                     liquid_outlet_temperatures,
@@ -100,19 +112,17 @@ class LiquidLoopManager(nn.Module):
                     cdu_return_temperature,
                     cdu_mass_flow_rate,
                     cdu_liquid_cooled_power
-                ) = self.models[f"{cdu_name} flow network"].forward(
+                ) = self.models[liquid_flow_networks_name].forward(
                     server_powers=server_powers,
                     inlet_liquid_mass_flow_rates=server_mass_flow_rates,
-                    inlet_liquid_temperature=data.acts[cdu_name].supply_temperature_sp,
+                    inlet_liquid_temperature=cdu_supply_temperature,
                     liquid_cooling_percentages=server_liquid_cooling_percentages,
                 )
-                # simulate the pump power consumption given the total cooling water mass flow rate
-                cdu_pump_power = self.models[f"{cdu_name} pump"].forward(data.acts[cdu_name].supply_mass_flow_rate_sp)
                 # update cdu simulation results
-                data.obs_next.zones[cdu_name].electrical_power = cdu_pump_power
-                data.obs_next.zones[cdu_name].cooling_water_supply_temperature = data.acts[cdu_name].supply_temperature_sp
-                data.obs_next.zones[cdu_name].cooling_water_return_temperature = cdu_return_temperature
-                data.obs_next.zones[cdu_name].cooling_water_mass_flow_rate = cdu_mass_flow_rate
+                for supply_branch_name, supply_branch in liquid_flow_network.supply_branches.items():
+                    if supply_branch.components.cdus is not None:
+                        for cdu_name, cdu in supply_branch.components.cdus.items():
+                            data.obs_next.zones[cdu_name].cooling_water_return_temperature = cdu_return_temperature
                 zone_cdu_liquid_cooled_power += cdu_liquid_cooled_power
             # deduct zone sensible heat load from liquid cooled
             data.obs_next.zones[zone_name].sensible_heat_load -= zone_cdu_liquid_cooled_power

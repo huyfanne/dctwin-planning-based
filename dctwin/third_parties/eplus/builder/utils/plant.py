@@ -8,8 +8,9 @@ To add a new HVAC system component, you need to add a new make function here and
 from eppy.modeleditor import IDF
 from eppy.bunch_subclass import EpBunch
 
-from dclib.cooling.plant.facilities import Chiller, Pump, Pipe, CoolingTower, HeatExchanger, Tank
-from dclib.cooling.plant.loops import SizingPlant
+from dclib.cooling.plant.facilities import Chiller, CoolingTower, Tank
+from dclib.cooling.common import Pump, Pipe, HeatExchanger
+from dclib.cooling.plant.plant_loops import SizingPlant
 from dclib.cooling.room.facilities.acu import ACU
 
 from .utlis import fill_info, fill_inlet_outlet

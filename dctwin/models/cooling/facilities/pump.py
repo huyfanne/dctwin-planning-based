@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from dclib.cooling.plant.facilities import Pump
+from dclib.cooling.common import Pump
 
 from dctwin.models.utlis import CubicCurve
 

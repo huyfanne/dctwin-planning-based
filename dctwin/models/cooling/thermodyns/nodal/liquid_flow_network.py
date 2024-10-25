@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from typing import Dict, Tuple
 
-from dclib.cooling.room.facilities import CDU
+from dclib.cooling.room.liquid_loops import LiquidFlowLoops
 
 from dctwin.utils.const import water_specific_heat
 
@@ -12,11 +12,16 @@ class FlowNetwork(nn.Module):
 
     def __init__(
         self,
-        cdu: CDU
+        liquid_network: LiquidFlowLoops,
+        key_mapping: dict,
+        learnable: bool = True,
+        device: str | int | torch.device = "cpu",
     ):
         super(FlowNetwork, self).__init__()
-        self.cdu = cdu
-
+        self.liquid_network = liquid_network
+        self.key_mapping = key_mapping
+        self.learnable = learnable
+        self.device = device
 
     def _sim_servers(
         self,
@@ -47,24 +52,25 @@ class FlowNetwork(nn.Module):
         liquid_cooling_percentages: Dict[str, torch.Tensor],
         inlet_liquid_temperature: torch.Tensor
     ) -> Tuple[Dict[str, torch.Tensor], Dict[str,torch.Tensor], torch.Tensor, torch.Tensor, torch.Tensor]:
-
         liquid_outlet_temperatures = {}
         chip_max_temperatures = {}
         cdu_return_temperature = torch.zeros(1,)
         cdu_total_mass_flow_rate = torch.zeros(1,)
         cdu_total_liquid_cooled_power = torch.zeros(1,)
-        for server_name, server in self.cdu.constructions.connected_servers.items():
-            liquid_outlet_temperature, chip_max_temperature, liquid_cooled_power = self._sim_servers(
-                server_power=server_powers[server_name],
-                inlet_liquid_temperature=inlet_liquid_temperature,
-                inlet_liquid_mass_flow_rate=inlet_liquid_mass_flow_rates[server_name],
-                liquid_cooling_percentage=liquid_cooling_percentages[server_name]
-            )
-            liquid_outlet_temperatures[server_name] = liquid_outlet_temperature
-            chip_max_temperatures[server_name] = chip_max_temperature
-            cdu_return_temperature += liquid_outlet_temperature * inlet_liquid_mass_flow_rates[server_name]
-            cdu_total_mass_flow_rate += inlet_liquid_mass_flow_rates[server_name]
-            cdu_total_liquid_cooled_power += liquid_cooled_power
+        for demand_branch_name, demand_branch in self.liquid_network.demand_branches.items():
+            if demand_branch.components.servers is not None:
+                for server_name, server in demand_branch.components.servers.items():
+                    liquid_outlet_temperature, chip_max_temperature, liquid_cooled_power = self._sim_servers(
+                        server_power=server_powers[server_name],
+                        inlet_liquid_temperature=inlet_liquid_temperature,
+                        inlet_liquid_mass_flow_rate=inlet_liquid_mass_flow_rates[server_name],
+                        liquid_cooling_percentage=liquid_cooling_percentages[server_name]
+                    )
+                    liquid_outlet_temperatures[server_name] = liquid_outlet_temperature
+                    chip_max_temperatures[server_name] = chip_max_temperature
+                    cdu_return_temperature += liquid_outlet_temperature * inlet_liquid_mass_flow_rates[server_name]
+                    cdu_total_mass_flow_rate += inlet_liquid_mass_flow_rates[server_name]
+                    cdu_total_liquid_cooled_power += liquid_cooled_power
 
         # compute the cdu return temperature as weighted average of all server outlet temperature
         cdu_return_temperature /= cdu_total_mass_flow_rate

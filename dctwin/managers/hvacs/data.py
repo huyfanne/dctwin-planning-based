@@ -1,8 +1,8 @@
 import torch
 from typing import Any, Dict, Tuple
 
-from dclib import Building
-from dclib.cooling.plant.loops import Branch
+from dclib import Building, Room
+from dclib.cooling.common.loop import Branch
 
 from dctwin.data import Batch
 from dctwin.data.scalars import ActuatorControlType
@@ -49,22 +49,26 @@ class HVACData:
         return obs, acts
 
     @staticmethod
-    def _reset_cdu_data(zone: Any, obs: dict, acts: dict) -> Tuple[dict, dict]:
-        for cdu_name, cdu in zone.constructions.cdus.items():
-            acts[cdu_name] = Batch(
-                supply_temperature_sp=(),
-                supply_mass_flow_rate_sp=(),
-            )
-            obs[cdu_name] = Batch(
-                electrical_power=(),
-                coil_sensible_heat_load=(),
-                cooling_water_supply_temperature=(),
-                cooling_water_return_temperature=(),
-                chilled_water_supply_temperature=(),
-                chilled_water_return_temperature=(),
-                chilled_water_mass_flow_rate=(),
-                cooling_water_mass_flow_rate=(),
-            )
+    def _reset_cdu_data(zone: Room, obs: dict, acts: dict) -> Tuple[dict, dict]:
+        for fluid_network_name, fluid_network in zone.constructions.liquid_flow_networks.items():
+            for supply_branch_name, supply_branch in fluid_network.supply_branches.items():
+                if supply_branch.components.cdus is not None:
+                    for cdu_name, cdu in supply_branch.components.cdus.items():
+                        acts[cdu_name] = Batch(
+                            supply_temperature_sp=(),
+                            supply_mass_flow_rate_sp=(),
+                            on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
+                        )
+                        obs[cdu_name] = Batch(
+                            coil_sensible_heat_load=(),
+                            cooling_water_supply_temperature=(),
+                            cooling_water_return_temperature=(),
+                            chilled_water_supply_temperature=(),
+                            chilled_water_return_temperature=(),
+                            chilled_water_mass_flow_rate=(),
+                            cooling_water_mass_flow_rate=(),
+                            electrical_power=()
+                        )
         return obs, acts
 
     @staticmethod
@@ -128,8 +132,8 @@ class HVACData:
                 if len(branch.components.tanks) > 1:
                     raise ValueError("Only one tank is allowed in a branch")
                 acts[tank_id] = Batch(
-                    # supply_temperature_sp=(),
-                    # use_side_inlet_temperature_sp=(),
+                    supply_temperature_sp=(),
+                    use_side_inlet_temperature_sp=(),
                     source_side_mass_flow_rate=(),
                     on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
                 )
