@@ -339,7 +339,7 @@ class ACUModel:
                     self.box.v_min[0] + 0.1 * self.base_size
                     if (face.side.name == "left" and self.config.geometry.orientation == 0) or
                        (face.side.name == "right" and self.config.geometry.orientation == 180)
-                    else self.box.v_min[0] + self.config.geometry.size.x - 0.1 * self.base_size,
+                    else self.box.v_min[0] + self.config.geometry.size.x + 0.1 * self.base_size,
                     self.box.v_min[1] + face.offset.x + face.width,
                     self.box.v_min[2] + face.offset.y + face.length
                 ]
@@ -357,7 +357,7 @@ class ACUModel:
                     self.box.v_min[1] + 0.1 * self.base_size
                     if (face.side.name == "left" and self.config.geometry.orientation == 270) or
                        (face.side.name == "right" and self.config.geometry.orientation == 90)
-                    else self.box.v_min[1] + self.config.geometry.size.y - 0.1 * self.base_size,
+                    else self.box.v_min[1] + self.config.geometry.size.y + 0.1 * self.base_size,
                     self.box.v_min[2] + face.offset.y + face.length
                 ]
         else:   # face.side.name == "front" or face.side.name == "rear":
@@ -375,7 +375,7 @@ class ACUModel:
                     self.box.v_min[1] + 0.1 * self.base_size
                     if (face.side.name == "front" and self.config.geometry.orientation == 0)
                        or (face.side.name == "rear" and self.config.geometry.orientation == 180)
-                    else self.box.v_min[1] + self.config.geometry.size.y - 0.1 * self.base_size,
+                    else self.box.v_min[1] + self.config.geometry.size.y + 0.1 * self.base_size,
                     self.box.v_min[2] + face.offset.y + face.length
                 ]
             else:
@@ -391,7 +391,7 @@ class ACUModel:
                     self.box.v_min[0] + 0.1 * self.base_size
                     if (face.side.name == "front" and self.config.geometry.orientation == 90)
                        or (face.side.name == "rear" and self.config.geometry.orientation == 270)
-                    else self.box.v_min[0] + self.config.geometry.size.x - 0.1 * self.base_size,
+                    else self.box.v_min[0] + self.config.geometry.size.x + 0.1 * self.base_size,
                     self.box.v_min[1] + face.offset.x + face.width,
                     self.box.v_min[2] + face.offset.y + face.length
                 ]
@@ -782,6 +782,16 @@ class MeshBuilder:
             acu.geometry.size.x = round_to_base(acu.geometry.size.x, self.base_size)
             acu.geometry.size.y = round_to_base(acu.geometry.size.y, self.base_size)
             acu.geometry.size.z = round_to_base(acu.geometry.size.z, self.base_size)
+            acu.geometry.supply_face.width = round_to_base(acu.geometry.supply_face.width, self.base_size)
+            acu.geometry.supply_face.length = round_to_base(acu.geometry.supply_face.length, self.base_size)
+            acu.geometry.supply_face.offset.x = round_to_base(acu.geometry.supply_face.offset.x, self.base_size)
+            acu.geometry.supply_face.offset.y = round_to_base(acu.geometry.supply_face.offset.y, self.base_size)
+            acu.geometry.supply_face.offset.z = round_to_base(acu.geometry.supply_face.offset.z, self.base_size)
+            acu.geometry.return_face.width = round_to_base(acu.geometry.return_face.width, self.base_size)
+            acu.geometry.return_face.length = round_to_base(acu.geometry.return_face.length, self.base_size)
+            acu.geometry.return_face.offset.x = round_to_base(acu.geometry.return_face.offset.x, self.base_size)
+            acu.geometry.return_face.offset.y = round_to_base(acu.geometry.return_face.offset.y, self.base_size)
+            acu.geometry.return_face.offset.z = round_to_base(acu.geometry.return_face.offset.z, self.base_size)
             logger.debug(
                 f"{acu.uid},"
                 f" location = ({acu.geometry.location.x}, {acu.geometry.location.y}, {acu.geometry.location.z}),"
@@ -810,10 +820,27 @@ class MeshBuilder:
             for opening_id, opening in enumerate(raised_floor.geometry.openings.values()):
                 opening.location.x = round_to_base(opening.location.x, self.base_size)
                 opening.location.y = round_to_base(opening.location.y, self.base_size)
+                opening.location.z = round_to_base(opening.location.z, self.base_size)
                 opening.size.x = round_to_base(opening.size.x, self.base_size)
                 opening.size.y = round_to_base(opening.size.y, self.base_size)
                 logger.debug(
                     f"opening-{opening_id} @ {raised_floor.uid},"
+                    f" location = ({opening.location.x}, {opening.location.y}),"
+                    f" size = ({opening.size.x}, {opening.size.y})"
+                )
+
+        if self.room.constructions.false_ceiling:
+            false_ceiling = self.room.constructions.false_ceiling
+            false_ceiling.geometry.height = round_to_base(false_ceiling.geometry.height, self.base_size)
+            logger.debug(f"false_ceiling, height = {false_ceiling.geometry.height}")
+            for opening_id, opening in enumerate(false_ceiling.geometry.openings.values()):
+                opening.location.x = round_to_base(opening.location.x, self.base_size)
+                opening.location.y = round_to_base(opening.location.y, self.base_size)
+                opening.location.z = round_to_base(opening.location.z, self.base_size)
+                opening.size.x = round_to_base(opening.size.x, self.base_size)
+                opening.size.y = round_to_base(opening.size.y, self.base_size)
+                logger.debug(
+                    f"opening-{opening_id} @ {false_ceiling.uid},"
                     f" location = ({opening.location.x}, {opening.location.y}),"
                     f" size = ({opening.size.x}, {opening.size.y})"
                 )
