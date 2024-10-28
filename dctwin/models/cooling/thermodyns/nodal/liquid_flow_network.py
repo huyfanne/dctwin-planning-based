@@ -100,7 +100,7 @@ class FlowNetwork(nn.Module):
                             server_power=data.inps[server_name],
                             inlet_liquid_temperature=cdu_supply_temperature,
                             inlet_liquid_mass_flow_rate=cdu_total_mass_flow_rate / self.num_servers,
-                            liquid_cooling_percentage=torch.tensor([1.0], dtype=torch.float32)
+                            # liquid_cooling_percentage=torch.tensor([1.0], dtype=torch.float32)
                         )
                     total_sensible_heat_load += (
                         data.inps[server_name] - liquid_cooled_power
