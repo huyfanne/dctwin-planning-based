@@ -264,10 +264,8 @@ class PlantManager(nn.Module):
 
     @staticmethod
     def _reset_demand_side_data(data: Batch, loop_id: str) -> None:
-        data.obs_next.plants[loop_id].demand_side_total_cooling_load =\
-            torch.tensor([0.], dtype=torch.float32)
-        data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate =\
-            torch.tensor([0.], dtype=torch.float32)
+        data.obs_next.plants[loop_id].demand_side_total_cooling_load = torch.tensor([0.], dtype=torch.float32)
+        data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
 
     @staticmethod
     def _set_main_branch_mass_flow_rate(
