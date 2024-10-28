@@ -33,6 +33,8 @@ class HeatLoadManager(nn.Module):
         }
         # get the model for each zone equipment of the building
         for zone_name, zone in self.zones.items():
+            if zone.constructions.heat_gains is None:
+                continue
             # get the ITE equipments of the zone
             for ite_name, ite in zone.constructions.heat_gains.ites.items():
                 # get the model of the ITE
@@ -67,6 +69,8 @@ class HeatLoadManager(nn.Module):
         """
         for zone_name, zone in self.zones.items():
             total_ite = torch.zeros(1,)
+            if zone.constructions.heat_gains is None or zone.constructions.heat_gains.ites is None:
+                continue
             for ite_name, ite in zone.constructions.heat_gains.ites.items():
                 total_ite += self.models["ites"][ite.uid.lower()](
                     data.acts[ite_name].cpu_load_utilization,

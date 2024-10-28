@@ -26,6 +26,22 @@ class HVACData:
         self._model = model
 
     @staticmethod
+    def _reset_d2c_server_data(zone: Room, obs: dict, acts: dict) -> Tuple[dict, dict]:
+        if zone.constructions.liquid_flow_networks is None:
+            return obs, acts
+        for fluid_network_name, fluid_network in zone.constructions.liquid_flow_networks.items():
+            for demand_branch_name, demand_branch in fluid_network.demand_branches.items():
+                if demand_branch.components.servers is not None:
+                    for server_name, server in demand_branch.components.servers.items():
+                        obs[server_name] = Batch(
+                            max_chip_temperature=(),
+                            liquid_inlet_temperature=(),
+                            liquid_outlet_temperature=(),
+                            power=(),
+                        )
+        return obs, acts
+
+    @staticmethod
     def _reset_acu_data(zone: Any, obs: dict, acts: dict) -> Tuple[dict, dict]:
         for acu_name, acu in zone.constructions.acus.items():
             acts[acu_name] = Batch(
@@ -75,6 +91,8 @@ class HVACData:
 
     @staticmethod
     def _reset_ite_data(zone: Any, zone_obs: dict, acts: dict) -> Tuple[dict, dict]:
+        if zone.constructions.heat_gains is None or zone.constructions.heat_gains.ites is None:
+            return zone_obs, acts
         for ite_name, ite in zone.constructions.heat_gains.ites.items():
             acts[ite_name] = Batch(
                 cpu_load_utilization=(),
@@ -204,6 +222,7 @@ class HVACData:
                 sensible_heat_load=(),
             )
             # reset zone facility and IT equipment data
+            self._reset_d2c_server_data(zone, obs, acts)
             self._reset_acu_data(zone, obs, acts)
             self._reset_cdu_data(zone, obs, acts)
             self._reset_ite_data(zone, obs, acts)

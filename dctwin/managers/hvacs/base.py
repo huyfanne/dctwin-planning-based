@@ -202,6 +202,16 @@ class HVACManager(BaseManager, ABC):
 
         return data.acts
 
+    def collect(self, data: dict):
+        self.liquid_loop_manager.collect(data)
+        self.air_loop_manager.collect(data)
+        self.plant_manager.collect(data)
+
+    def learn(self):
+        self.liquid_loop_manager.learn()
+        self.air_loop_manager.learn()
+        self.plant_manager.learn()
+
     def run(
         self,
         acts: Batch,

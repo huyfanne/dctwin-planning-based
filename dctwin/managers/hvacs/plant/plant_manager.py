@@ -120,6 +120,22 @@ class PlantManager(nn.Module):
                 else:
                     component.model = component_models[component_id]
 
+        if branch_components.cdus:
+            for component_id, component in branch_components.cdus.items():
+                if component_id not in component_models.keys():
+                    self.add_module(
+                        name=component_id,
+                        module=HeatExchanger(
+                            config=component.constructions.heat_exchanger,
+                            key_mapping=self.device_key_mapping,
+                            internal_fluid_name="water",
+                            external_fluid_name="water",
+                        )
+                    )
+                    component_models[component_id] = component.model
+                else:
+                    component.model = component_models[component_id]
+
         if branch_components.heat_exchangers:
             for component_id, component in branch_components.heat_exchangers.items():
                 if component_id not in component_models.keys():
