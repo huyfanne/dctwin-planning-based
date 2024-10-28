@@ -35,7 +35,7 @@ class HeatExchanger(nn.Module):
         max_root_finding_iter: int = 100,
         max_learning_iter: int = 500,
         min_loss: float = 0.002
-    ):
+    ) -> None:
         """
         A PIML-based model for cooling coil inside an ACU. It leverages the geometry information of the cooling coil as
         well as the physical property of the internal and external fluids to calculate the outlet temperatures of the
@@ -110,7 +110,7 @@ class HeatExchanger(nn.Module):
         self.min_loss = min_loss
         self.max_root_finding_iter = max_root_finding_iter
 
-    def _correct_nusselt_number(self, nu: torch.Tensor):
+    def _correct_nusselt_number(self, nu: torch.Tensor) -> torch.Tensor:
         if self.num_row < 20:
             N_list = torch.tensor([1, 2, 3, 4, 5, 7, 10, 13, 16])  # row number list
             N_list = torch.abs(N_list - torch.tensor(self.num_row))  # difference between row number and row number list
@@ -124,7 +124,7 @@ class HeatExchanger(nn.Module):
         self,
         T_water_in: torch.Tensor,
         T_air_in: torch.Tensor
-    ):
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         rho_i = torch.zeros(T_water_in.shape)
         Cp_i = torch.zeros(T_water_in.shape)
         k_i = torch.zeros(T_water_in.shape)
@@ -178,13 +178,13 @@ class HeatExchanger(nn.Module):
             )
         return rho_i, Cp_i, k_i, miu_i, Pr_i, rho_o, Cp_o, k_o, miu_o, Pr_o
 
-    def _project_ws(self):
+    def _project_ws(self) -> None:
         """Make sure the A and B are positive as they are physical quantities."""
         self.num_row.data = torch.clamp(self.num_row.data, 0, torch.inf)
         self.num_transverse.data = torch.clamp(self.num_transverse.data, 0, torch.inf)
         self.tube_length.data = torch.clamp(self.tube_length.data, 0, torch.inf)
 
-    def collect(self, data: dict):
+    def collect(self, data: dict) -> None:
         self.buffer.add(
             Batch(
                 cooling_coil_inlet_air_temperature=data[self.key_mapping["inlet air temperature"]],
@@ -195,7 +195,7 @@ class HeatExchanger(nn.Module):
             )
         )
 
-    def learn(self):
+    def learn(self) -> None:
         if self.learnable:
             batch, _ = self.buffer.sample(batch_size=256)  # sample all data from the buffer
             mask = batch.cooling_coil_air_mass_flow_rate > 0
@@ -242,7 +242,7 @@ class HeatExchanger(nn.Module):
         m_air: torch.Tensor,
         T_water_in: torch.Tensor,
         m_water: torch.Tensor
-    ):
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Calculate the outlet temperatures of the cooling coil
         :param T_air_in: inlet air temperature
@@ -321,7 +321,7 @@ class HeatExchanger(nn.Module):
             m_inside_fluid_min = torch.tensor(0.0, dtype=torch.float32)
             m_inside_fluid_max = m_outside_fluid.item()
             m_inside_fluid = (m_inside_fluid_min + m_inside_fluid_max) / 2
-            T_inside_fluid_outlet, T_outside_fluid_out, NTU, eff, Q, power = self.forward(
+            T_inside_fluid_outlet, T_outside_fluid_outlet, NTU, eff, Q, power = self.forward(
                 T_air_in=T_outside_fluid_inlet,
                 m_air=m_outside_fluid,
                 T_water_in=T_inside_fluid_inlet,
@@ -329,29 +329,29 @@ class HeatExchanger(nn.Module):
             )
             # bi-section main loop
             for iteration in range(1, self.max_root_finding_iter + 1):
-                if T_inside_fluid_outlet > T_outside_fluid_sp:
+                if T_outside_fluid_outlet > T_outside_fluid_sp:
                     m_inside_fluid_min = m_inside_fluid
                 else:
                     m_inside_fluid_max = m_inside_fluid
                 m_inside_fluid = (m_inside_fluid_min + m_inside_fluid_max) / 2
-                T_inside_fluid_outlet, T_outside_fluid_out, NTU, eff, Q, power = self.forward(
+                T_inside_fluid_outlet, T_outside_fluid_outlet, NTU, eff, Q, power = self.forward(
                     T_air_in=T_outside_fluid_inlet,
                     m_air=m_outside_fluid,
                     T_water_in=T_inside_fluid_inlet,
                     m_water=m_inside_fluid
                 )
-                if torch.abs(T_outside_fluid_out - T_outside_fluid_sp) < self.tol:
+                if torch.abs(T_outside_fluid_outlet - T_outside_fluid_sp) < self.tol:
                     break
             if iteration == self.max_root_finding_iter:
                 logger.warning(
                     f"{self.config.uid}: root finding failed at iteration {iteration}."
-                    f" T_outside_fluid_out = {T_outside_fluid_out.item()},"
+                    f" T_outside_fluid_out = {T_outside_fluid_outlet.item()},"
                     f" T_outside_fluid_sp = {T_outside_fluid_sp.item()},"
                     f" T_inside_fluid_inlet = {T_inside_fluid_inlet.item()}"
                 )
         # insert gradient calculation
         m_inside_fluid_star = m_inside_fluid.clone().requires_grad_(True)
-        T_inside_fluid_outlet, T_outside_fluid_out, NTU, eff, Q, power = self.forward(
+        T_inside_fluid_outlet, T_outside_fluid_outlet, NTU, eff, Q, power = self.forward(
             T_air_in=T_outside_fluid_inlet,
             m_air=m_outside_fluid,
             T_water_in=T_inside_fluid_inlet,
@@ -368,4 +368,4 @@ class HeatExchanger(nn.Module):
         # m_inside_fluid_star.register_hook(
         #     lambda grad: grad / J
         # )  # implicit gradient calculation
-        return m_inside_fluid_star, Q, T_outside_fluid_out
+        return m_inside_fluid_star, Q, T_outside_fluid_outlet
