@@ -50,6 +50,8 @@ class HVACData:
 
     @staticmethod
     def _reset_cdu_data(zone: Room, obs: dict, acts: dict) -> Tuple[dict, dict]:
+        if zone.constructions.liquid_flow_networks is None:
+            return obs, acts
         for fluid_network_name, fluid_network in zone.constructions.liquid_flow_networks.items():
             for supply_branch_name, supply_branch in fluid_network.supply_branches.items():
                 if supply_branch.components.cdus is not None:

@@ -113,7 +113,7 @@ class PlantManager(nn.Module):
                             config=component,
                             key_mapping=self.device_key_mapping,
                             internal_fluid_name="water",
-                            external_fluid_name="air"
+                            external_fluid_name="air",
                         )
                     )
                     component_models[component_id] = component.model
@@ -130,6 +130,15 @@ class PlantManager(nn.Module):
                             key_mapping=self.device_key_mapping,
                             internal_fluid_name="water",
                             external_fluid_name="water",
+                            tube_length=component.geometry.tube_length,
+                            tube_diameter=component.geometry.tube_diameter,
+                            tube_thickness=component.geometry.tube_thickness,
+                            transverse_number=component.geometry.transverse_number,
+                            transverse_pitch=component.geometry.transverse_pitch,
+                            row_number=component.geometry.row_number,
+                            row_pitch=component.geometry.row_pitch,
+                            tube_roughness=component.geometry.tube_roughness,
+                            thermal_conductivity=component.cooling.thermal_conductivity,
                         )
                     )
                     component_models[component_id] = component.model
@@ -188,7 +197,7 @@ class PlantManager(nn.Module):
                 else:
                     component.model = component_models[component_id]
 
-        return {k: v for k, v in dict(self.named_modules()).items() if k is not "" and "." not in k}
+        return {k: v for k, v in dict(self.named_modules()).items() if k != "" and "." not in k}
 
     @staticmethod
     def _determine_actual_mass_flow_rate(

@@ -39,7 +39,7 @@ class LiquidLoopManager(nn.Module):
                             learnable=True
                         )
                     )
-        return {k: v for k, v in dict(self.named_modules()).items() if k is not "" and "." not in k}
+        return {k: v for k, v in dict(self.named_modules()).items() if k != "" and "." not in k}
 
     def learn(self) -> None:
         """
@@ -65,6 +65,8 @@ class LiquidLoopManager(nn.Module):
         for zone_name, zone in self.zones.items():
             zone_cdu_liquid_cooled_power = torch.zeros(1,)
             num_servers = 0
+            if zone.constructions.liquid_flow_networks is None:
+                continue
             for liquid_flow_networks_name, liquid_flow_network in zone.constructions.liquid_flow_networks.items():
                 # compute the total mass flow rate supplied by the CDUs
                 cdu_total_mass_flow_rate = torch.zeros(1,)
