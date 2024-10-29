@@ -1,9 +1,8 @@
 from dclib.ite.servers.server import Server
 from utils import rotate_rectangular
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from pathlib import Path
 from loguru import logger
-from jinja2 import Environment, FileSystemLoader
 from dclib import Room
 from dclib.construction.surfaces import Panel
 from dclib.cooling.room.facilities import ACU
@@ -13,8 +12,6 @@ from dclib.models.geometry import Vertex
 from utils import is_closed, round_to_base
 from dctwin.utils import (
     template_env,
-    template_dir,
-    config,
 )
 from dctwin.backends.core import Backend
 from dctwin.backends.core_k8s import BackendK8s
@@ -298,33 +295,28 @@ class ACUModel:
         )
 
     def _get_supply_or_return_face_bounding_box(self, face):
+        orientation = int(self.config.geometry.orientation)
         if face.side.name == "bottom" or face.side.name == "top":
-            if self.config.geometry.orientation == 0 or self.config.geometry.orientation == 180:
-                bounding_box_min = [
-                    self.box.v_min[0] + face.offset.x,
-                    self.box.v_min[1] + face.offset.y,
-                    self.box.v_min[2] - 0.1 * self.base_size if face.side.name == "bottom"
-                    else self.box.v_min[2] + self.config.geometry.size.z - 0.1 * self.base_size
-                ]
-                bounding_box_max = [
-                    self.box.v_min[0] + face.offset.x + face.width,
-                    self.box.v_min[1] + face.offset.y + face.length,
-                    self.box.v_min[2] + 0.1 * self.base_size if face.side.name == "bottom"
-                    else self.box.v_min[2] + self.config.geometry.size.z + 0.1 * self.base_size
-                ]
-            else:
-                bounding_box_min = [
-                    self.box.v_min[0] + face.offset.y,
-                    self.box.v_min[1] + face.offset.x,
-                    self.box.v_min[2] - 0.1 * self.base_size if face.side.name == "bottom"
-                    else self.box.v_min[2] + self.config.geometry.size.z - 0.1 * self.base_size
-                ]
-                bounding_box_max = [
-                    self.box.v_min[0] + face.offset.y + face.length,
-                    self.box.v_min[1] + face.offset.x + face.width,
-                    self.box.v_min[2] + 0.1 * self.base_size if face.side.name == "bottom"
-                    else self.box.v_min[2] + self.config.geometry.size.z + 0.1 * self.base_size
-                ]
+            bounding_box_min = [
+                self.box.v_min[0] + face.offset.x
+                if orientation in [0, 180] else self.box.v_min[0] + face.offset.y,
+
+                self.box.v_min[1] + face.offset.y
+                if orientation in [0, 180] else self.box.v_min[1] + face.offset.x,
+
+                self.box.v_min[2] - 0.1 * self.base_size if face.side.name == "bottom"
+                else self.box.v_min[2] + self.config.geometry.size.z - 0.1 * self.base_size
+            ]
+            bounding_box_max = [
+                self.box.v_min[0] + face.offset.x + face.width
+                if orientation in [0, 180] else self.box.v_min[0] + face.offset.y + face.length,
+
+                self.box.v_min[1] + face.offset.y + face.length
+                if orientation in [0, 180] else self.box.v_min[1] + face.offset.x + face.width,
+
+                self.box.v_min[2] + 0.1 * self.base_size if face.side.name == "bottom"
+                else self.box.v_min[2] + self.config.geometry.size.z + 0.1 * self.base_size
+            ]
         elif face.side.name == "left" or face.side.name == "right":
             if self.config.geometry.orientation == 0 or self.config.geometry.orientation == 180:
                 bounding_box_min = [
@@ -380,18 +372,18 @@ class ACUModel:
                 ]
             else:
                 bounding_box_min = [
-                    self.box.v_min[0] - 0.1 * self.base_size
+                    self.box.v_min[0] + self.config.geometry.size.y - 0.1 * self.base_size
                     if (face.side.name == "front" and self.config.geometry.orientation == 90)
                        or (face.side.name == "rear" and self.config.geometry.orientation == 270)
-                    else self.box.v_min[0] + self.config.geometry.size.x - 0.1 * self.base_size,
+                    else self.box.v_min[0] - 0.1 * self.base_size,
                     self.box.v_min[1] + face.offset.x,
                     self.box.v_min[2] + face.offset.y
                 ]
                 bounding_box_max = [
-                    self.box.v_min[0] + 0.1 * self.base_size
+                    self.box.v_min[0] + self.config.geometry.size.y + 0.1 * self.base_size
                     if (face.side.name == "front" and self.config.geometry.orientation == 90)
                        or (face.side.name == "rear" and self.config.geometry.orientation == 270)
-                    else self.box.v_min[0] + self.config.geometry.size.x + 0.1 * self.base_size,
+                    else self.box.v_min[0] + 0.1 * self.base_size,
                     self.box.v_min[1] + face.offset.x + face.width,
                     self.box.v_min[2] + face.offset.y + face.length
                 ]
@@ -437,8 +429,7 @@ class ServerModel:
         self.base_size = base_size
         self.refine_size = base_size / (2**scale)
         self._make_box()
-        self._make_inlet_face()
-        self._make_outlet_face()
+        self._make_inlet_outlet_face()
 
     def _make_box(self):
         self.box = BoxModel(
@@ -456,10 +447,9 @@ class ServerModel:
             is_refinement_box=False
         )
 
-    def _make_inlet_face(self):
-        orientation = self.config.geometry.orientation
+    def _get_bounding_box_min_max(self, x:int = None, y:int = None):
+        orientation = int(self.config.geometry.orientation)
         if orientation == 0 or orientation == 180:
-            y = self.v_min.y if orientation == 0 else self.v_max.y
             bounding_box_min = [
                 self.v_min.x,
                 y - 0.1 * self.refine_size,
@@ -471,7 +461,6 @@ class ServerModel:
                 self.v_max.z
             ]
         elif orientation == 90 or orientation == 270:
-            x = self.v_min.x if orientation == 90 else self.v_max.x
             bounding_box_min = [
                 x - 0.1 * self.refine_size,
                 self.v_min.y,
@@ -484,6 +473,23 @@ class ServerModel:
             ]
         else:
             raise ValueError(f"Invalid orientation: {orientation} for server '{self.config.uid}'")
+
+        return bounding_box_min, bounding_box_max
+
+    def _make_inlet_outlet_face(self):
+        orientation = int(self.config.geometry.orientation)
+        if orientation in [0, 180]:
+            y_inlet_face = self.v_min.y if orientation == 0 else self.v_max.y
+            y_outlet_face = self.v_max.y if orientation == 0 else self.v_min.y
+            x_inlet_face = None
+            x_outlet_face = None
+        else: # orientation in [90, 270]
+            y_inlet_face = None
+            y_outlet_face = None
+            x_inlet_face = self.v_max.x if orientation == 90 else self.v_min.x
+            x_outlet_face = self.v_min.x if orientation == 90 else self.v_max.x
+
+        bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(x=x_inlet_face, y=y_inlet_face)
         self.inlet_face = PatchModel(
             name=f"server_inlet_{self.config.uid}",
             neighbour_patch_name=f"server_outlet_{self.config.uid}",
@@ -491,34 +497,7 @@ class ServerModel:
             bounding_box_min=bounding_box_min
         )
 
-    def _make_outlet_face(self):
-        orientation = self.config.geometry.orientation
-        if orientation == 0 or orientation == 180:
-            y = self.v_max.y if orientation == 0 else self.v_min.y
-            bounding_box_min = [
-                self.v_min.x,
-                y - 0.1 * self.refine_size,
-                self.v_min.z
-            ]
-            bounding_box_max = [
-                self.v_max.x,
-                y + 0.1 * self.refine_size,
-                self.v_max.z
-            ]
-        elif orientation == 90 or orientation == 270:
-            x = self.v_max.x if orientation == 90 else self.v_min.x
-            bounding_box_min = [
-                x - 0.1 * self.refine_size,
-                self.v_min.y,
-                self.v_min.z
-            ]
-            bounding_box_max = [
-                x + 0.1 * self.refine_size,
-                self.v_max.y,
-                self.v_max.z
-            ]
-        else:
-            raise ValueError(f"Invalid orientation: {orientation} for server '{self.config.uid}'")
+        bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(x=x_outlet_face, y=y_outlet_face)
         self.outlet_face = PatchModel(
             name=f"server_outlet_{self.config.uid}",
             neighbour_patch_name=f"server_inlet_{self.config.uid}",
@@ -558,6 +537,8 @@ class RackModel:
         self.servers = []
         self.surrounding_planes = []
         self.blanking_panel = None
+        self.slot_height = 0.05
+        self.cheek_config()
         # compute the absolute coordinates of the rack object
         self.v_min, self.v_max = rotate_rectangular(
             abs_vertex_1=Vertex(
@@ -594,96 +575,130 @@ class RackModel:
         # make the refinement region of the rack
         self._make_refinement_region()
 
+    def cheek_config(self):
+        if not (self.config.geometry.orientation == 0 or self.config.geometry.orientation == 90 or
+                self.config.geometry.orientation == 180 or self.config.geometry.orientation == 270):
+            raise ValueError(f"Invalid orientation: {self.config.geometry.orientation} for rack '{self}'")
+
+        if self.config.geometry.size.z < self.config.geometry.slot * self.slot_height:
+            raise ValueError(f"Invalid Rack '{self.config.uid}' height: {self.config.geometry.size.z}. "
+                             f"{self.config.geometry.size.z} < self.config.geometry.slot * self.slot_height "
+                             f"({self.config.geometry.slot} * {self.slot_height} = "
+                             f"{self.config.geometry.slot * self.slot_height})")
+
     def _make_surrounding_plane(self):
-        self.surrounding_planes = [
-            PlaneModel(
-                name=f"rack_wall_{self.config.uid}_left_plane",
-                origin=[self.v_min.x, self.v_min.y, self.v_min.z],
-                span=[0, self.config.geometry.size.y, self.config.geometry.size.z],
-            ),
-            PlaneModel(
-                name=f"rack_wall_{self.config.uid}_right_plane",
-                origin=[self.v_max.x, self.v_min.y, self.v_min.z],
-                span=[0, self.config.geometry.size.y, self.config.geometry.size.z],
-            ),
-            PlaneModel(
-                name=f"rack_wall_{self.config.uid}_top_plane",
-                origin=[self.v_min.x, self.v_min.y, self.v_min.z + self.config.geometry.size.z],
-                span=[self.config.geometry.size.x, self.config.geometry.size.y, 0],
-            )
-        ]
+        orientation = self.config.geometry.orientation
+        if orientation == 0 or orientation == 180:
+            self.surrounding_planes = [
+                PlaneModel(
+                    name=f"rack_wall_{self.config.uid}_left_plane",
+                    origin=[self.v_min.x if orientation == 0 else self.v_max.x, self.v_min.y, self.v_min.z],
+                    span=[0, self.config.geometry.size.y, self.config.geometry.size.z],
+                ),
+                PlaneModel(
+                    name=f"rack_wall_{self.config.uid}_right_plane",
+                    origin=[self.v_max.x if orientation == 0 else self.v_min.x, self.v_min.y, self.v_min.z],
+                    span=[0, self.config.geometry.size.y, self.config.geometry.size.z],
+                ),
+                PlaneModel(
+                    name=f"rack_wall_{self.config.uid}_top_plane",
+                    origin=[self.v_min.x, self.v_min.y, self.v_min.z + self.config.geometry.size.z],
+                    span=[self.config.geometry.size.x, self.config.geometry.size.y, 0],
+                )
+            ]
+        elif orientation == 90 or orientation == 270:
+            self.surrounding_planes = [
+                PlaneModel(
+                    name=f"rack_wall_{self.config.uid}_left_plane",
+                    origin=[self.v_min.x, self.v_min.y if orientation == 90 else self.v_max.y, self.v_min.z],
+                    span=[self.config.geometry.size.y, 0, self.config.geometry.size.z],
+                ),
+                PlaneModel(
+                    name=f"rack_wall_{self.config.uid}_right_plane",
+                    origin=[self.v_min.x, self.v_max.y if orientation == 90 else self.v_min.y, self.v_min.z],
+                    span=[self.config.geometry.size.y, 0, self.config.geometry.size.z],
+                ),
+                PlaneModel(
+                    name=f"rack_wall_{self.config.uid}_top_plane",
+                    origin=[self.v_min.x, self.v_min.y, self.v_min.z + self.config.geometry.size.z],
+                    span=[self.config.geometry.size.y, self.config.geometry.size.x, 0],
+                )
+            ]
 
     def _make_blanking_plane(self):
-        if self.config.geometry.orientation in [0, 180]:
+        orientation = self.config.geometry.orientation
+        if orientation in [0, 180]:
+            origin = [self.v_min.x, self.v_min.y if orientation == 0 else self.v_max.y, self.v_min.z]
             span = [self.config.geometry.size.x, 0, self.config.geometry.size.z]
-        elif self.config.geometry.orientation in [90, 270]:
-            span = [0, self.config.geometry.size.y, self.config.geometry.size.z]
+        elif orientation in [90, 270]:
+            origin = [self.v_max.x if orientation == 90 else self.v_min.x, self.v_min.y, self.v_min.z]
+            span = [0, self.config.geometry.size.x, self.config.geometry.size.z]
         else:
-            raise ValueError(f"Got invalid rack orientation {self.config.geometry.orientation}")
+            raise ValueError(f"Got invalid rack orientation {orientation}")
         self.blanking_panel = PlaneModel(
             name=f"rack_panel_{self.config.uid}_blanking_panel",
-            origin=[self.v_min.x, self.v_min.y, self.v_min.z],
+            origin=origin,
             span=span
         )
 
     def _make_servers(self):
         for server_name, server in self.config.constructions.servers.items():
-            server_v_min = Vertex(
-                x=self.v_min.x,
-                y=self.v_min.y,
-                z=self.v_min.z + server.geometry.slot_position * 0.05
-            )
-            server_v_max = Vertex(
-                x=self.v_min.x + server.geometry.width
-                if self.config.geometry.orientation == 0 or self.config.geometry.orientation == 180
-                else self.v_min.x + server.geometry.depth,
-                y=self.v_min.y + server.geometry.depth
-                if self.config.geometry.orientation == 0 or self.config.geometry.orientation == 180
-                else self.v_min.y + server.geometry.width,
-                z=self.v_min.z + (server.geometry.slot_position + server.geometry.slot_occupation) * 0.05
-            )
             if server.geometry.orientation != self.config.geometry.orientation:
                 server.geometry.orientation = self.config.geometry.orientation
                 logger.warning(f"Server '{server_name}' orientation is changed to {self.config.geometry.orientation}, "
                                f"because it is not the same as the rack orientation")
+            orientation = server.geometry.orientation
+            if orientation == 0 or orientation == 270:
+                server_v_min = Vertex(
+                    x=self.v_min.x,
+                    y=self.v_min.y,
+                    z=self.v_min.z + server.geometry.slot_position * self.slot_height
+                )
+                server_v_max = Vertex(
+                    x=self.v_min.x + server.geometry.width
+                    if self.config.geometry.orientation == 0 else self.v_min.x + server.geometry.depth,
+
+                    y=self.v_min.y + server.geometry.depth
+                    if self.config.geometry.orientation == 0 else self.v_min.y + server.geometry.width,
+
+                    z=self.v_min.z + (server.geometry.slot_position + server.geometry.slot_occupation) * 0.05
+                )
+            else: # orientation == 90 or orientation == 180:
+                server_v_min = Vertex(
+                    x=self.v_max.x - server.geometry.depth
+                    if orientation == 90 else self.v_min.x,
+
+                    y=self.v_min.y if orientation == 90 else self.v_max.y - server.geometry.depth,
+                    z=self.v_min.z + server.geometry.slot_position * self.slot_height
+                )
+                server_v_max = Vertex(
+                    x=self.v_max.x,
+                    y=self.v_max.y,
+                    z=self.v_min.z + (server.geometry.slot_position + server.geometry.slot_occupation) * 0.05
+                )
+
             self.servers.append(
                 ServerModel(
                     config=server,
                     v_min=server_v_min,
                     v_max=server_v_max,
-                    base_size=self.base_size
+                    base_size=self.base_size,
+                    slot_height=self.slot_height,
                 )
             )
 
     def _make_refinement_region(self):
-        if self.config.geometry.orientation == 0 or self.config.geometry.orientation == 180:
-            _v_min = [
-                self.config.geometry.location.x,
-                self.config.geometry.location.y - self.base_size,
-                self.config.geometry.location.z
-            ]
-            _v_max = [
-                self.config.geometry.location.x + self.config.geometry.size.x,
-                self.config.geometry.location.y + self.config.geometry.size.y + self.base_size,
-                self.config.geometry.location.z + self.config.geometry.size.z
-            ]
-        elif self.config.geometry.orientation == 90 or self.config.geometry.orientation == 270:
-            _v_min = [
-                self.config.geometry.location.x - self.base_size,
-                self.config.geometry.location.y,
-                self.config.geometry.location.z
-            ]
-            _v_max = [
-                self.config.geometry.location.x + self.config.geometry.size.x + self.base_size,
-                self.config.geometry.location.y + self.config.geometry.size.y,
-                self.config.geometry.location.z + self.config.geometry.size.z
-            ]
-        else:
-            _v_min = []
-            _v_max = []
-            raise ValueError(
-                f"Invalid orientation: {self.config.geometry.orientation} for rack '{self}'")
-
+        orientation = int(self.config.geometry.orientation)
+        _v_min = [
+            self.v_min.x if orientation in [0, 180] else self.v_min.x - self.base_size,
+            self.v_min.y - self.base_size if orientation in [0, 180] else self.v_min.y,
+            self.v_min.z
+        ]
+        _v_max = [
+            self.v_max.x if orientation in [0, 180] else self.v_max.x + self.base_size,
+            self.v_max.y + self.base_size if orientation in [0, 180] else self.v_max.y,
+            self.v_max.z
+        ]
         self.refine_region = BoxModel(
             name=f"{self.config.uid}_box",
             v_min=_v_min,
