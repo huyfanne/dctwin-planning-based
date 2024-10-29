@@ -50,10 +50,9 @@ class AirLoopManager(nn.Module):
         Collect the data from outside environment and store them into a buffer for learning purposes
         :return:
         """
-        # feed online data to the zone equipment models
-        for zone_name, zone_models in self.models.items():
-            for fan_name, fan_model in zone_models.items():
-                fan_model.collect(data)
+        for model_name, model in self.models.items():
+            if model_name.endswith("fan"):
+                model.collect(data)
 
     def learn(self):
         """
@@ -61,10 +60,9 @@ class AirLoopManager(nn.Module):
         :return:
         """
         # learn the zone equipment models
-        for zone_name, zone_models in self.models.items():
-            # learn the acu fan performance model
-            for fan_name, fan_model in zone_models.items():
-                fan_model.learn()
+        for model_name, model in self.models.items():
+            if model_name.endswith("fan"):
+                model.learn()
 
     def forward(
         self,

@@ -1,4 +1,4 @@
-from .hx import HeatExchanger
+from .hx import HeatExchangerModel
 from .chiller import ChillerModel
 from .tank import ThermalStorageTankModel
 from .pump import PumpModel
@@ -10,7 +10,7 @@ from .pipe import PipeModel
 
 __all__ = [
     "ChillerModel",
-    "HeatExchanger",
+    "HeatExchangerModel",
     "ThermalStorageTankModel",
     "PumpModel",
     "FanModel",

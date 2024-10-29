@@ -99,7 +99,7 @@ class ChillerModel(nn.Module):
                     ),
                     y=torch.tensor(
                         power_fraction, dtype=torch.float32
-                    ),
+                    )
                 )
             else:
                 logger.warning(

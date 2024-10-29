@@ -1694,7 +1694,7 @@ class ConfigBuilder:
                 observation_type=2,
             )
 
-    def save(self, path: Path = Path("configs/eplus.prototxt")) -> None:
+    def save(self, path: Path) -> None:
         with open(path, "w") as f:
             f.write(text_format.MessageToString(self.model))
 
@@ -1892,7 +1892,7 @@ class CDUConfigBuilder:
                         default_unnormed_value=device_values.get(f"{cdu.uid}", {}).get("default_unnormed_value", default_unnormed_value),
                     ) if device_values.get(f"{cdu.uid}", {}).get("disable", disable) == False else None
 
-    def save(self, path: Path = Path("configs/cdu.prototxt")) -> None:
+    def save(self, path: Path) -> None:
         with open(path, "w") as f:
             f.write(text_format.MessageToString(self.model))
 

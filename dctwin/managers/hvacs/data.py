@@ -117,10 +117,10 @@ class HVACData:
                 obs[chiller_id] = Batch(
                     power=(),
                     cooling_load=(),
-                    evaporator_inlet_node_temperature=(),
-                    evaporator_outlet_node_temperature=(),
-                    condenser_inlet_node_temperature=(),
-                    condenser_outlet_node_temperature=(),
+                    evaporator_inlet_temperature=(),
+                    evaporator_outlet_temperature=(),
+                    condenser_inlet_temperature=(),
+                    condenser_outlet_temperature=(),
                 )
         if branch.components.pumps:
             for pump_id, pump in branch.components.pumps.items():
@@ -129,9 +129,7 @@ class HVACData:
                     on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
                 )
                 obs[pump_id] = Batch(
-                    power=(),
-                    outlet_temperature=(),
-                    outlet_water_mass_flow_rate=(),
+                    power=()
                 )
         if branch.components.cooling_towers:
             for tower_id, tower in branch.components.cooling_towers.items():
@@ -144,7 +142,9 @@ class HVACData:
                     cooling_load=(),
                     inlet_temperature=(),
                     outlet_temperature=(),
-                    mass_flow_rate=(),
+                    water_mass_flow_rate=(),
+                    air_mass_flow_rate=(),
+                    heat_transfer_rate=()
                 )
         if branch.components.tanks:
             tank_water_temperature = torch.zeros(1,)

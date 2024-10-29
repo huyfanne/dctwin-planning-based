@@ -4,55 +4,114 @@ import torch.nn as nn
 
 from dclib.ite.servers.server import Server
 from dctwin.data import Buffer
-from dctwin.utils.const import water_specific_heat
+from dctwin.utils.const import water_specific_heat, air_specific_heat
 
 
 class ChipThermoModel(nn.Module):
     def __init__(
         self,
+        chip_heat_transfer_area: float | torch.Tensor = 0.26*0.11,  # length of the chip
+        chip_thickness: float | torch.Tensor = 0.03,  # for typical Intel CPU chip
+        conductivity_silicon: float | torch.Tensor = 148.,  # for copper
+        alpha: float | torch.Tensor = 1.0,
         learnable: bool = True,
-        a: float = 1.04,
-        b: float = 1.44 * 0.0016
     ) -> None:
         super(ChipThermoModel, self).__init__()
-        self.a = nn.Parameter(torch.tensor(a))
-        self.b = nn.Parameter(torch.tensor(b))
-        self.learnable = learnable
+        self.alpha = nn.Parameter(
+            torch.tensor(alpha), requires_grad=learnable
+        )
+        self.chip_thickness = nn.Parameter(
+            torch.tensor(chip_thickness), requires_grad=learnable
+        )
+        self.chip_heat_transfer_area = nn.Parameter(
+            torch.tensor(chip_heat_transfer_area), requires_grad=learnable
+        )
+        self.conductivity_silicon = conductivity_silicon
+
 
     def forward(
         self,
         T_in: torch.Tensor,
         power: torch.Tensor,
-        mass_flow_rate: torch.Tensor
+        liquid_mass_flow_rate: torch.Tensor,
+        h_water: torch.Tensor,
     ) -> torch.Tensor:
         """
-        Simulate the maximum temperature of the server chip based on the empirical formula.
+        Simulate the maximum temperature of the server chip based on the empirical formula:
+
+                        T_chip,max = Tw,in + alpha * P / S * (1/h_w + L / k_s + S / (m_w * Cp,w))
+
+        where:
+        Tw,in: the inlet temperature of the liquid cooling system
+        alpha: the empirical coefficient for correcting the maximum temperature
+        P: the power consumption of the server
+        S: the heat transfer area of the chip
+        h_w: the convective heat transfer coefficient of the liquid cooling system
+        L: the thickness of the chip
+        k_s: the thermal conductivity of the silicon
+        m_w: the mass flow rate of the liquid cooling system
+        Cp,w: the specific heat capacity of the liquid cooling system
+
+        The model is validated with the experimental data from the following article:
+        TODO: check the model output with the experimental data
         """
-        return self.a * T_in + self.b * power / (mass_flow_rate * water_specific_heat)
+        assert liquid_mass_flow_rate.item() > 1e-6, ValueError(
+            f"Invalid liquid mass flow rate: {liquid_mass_flow_rate.item()}"
+        )
+        T_max = (
+            T_in +
+            self.alpha * power / self.chip_heat_transfer_area * (
+                1/h_water + self.chip_thickness/self.conductivity_silicon +
+                self.chip_heat_transfer_area/(liquid_mass_flow_rate * water_specific_heat)
+            )
+        )
+        return T_max
+
 
 class HybridCoolingLoadDistributionModel(nn.Module):
     def __init__(
         self,
-        learnable: bool = True,
-        a: float = 0.009633,
-        b: float = -0.07046,
-        c: float =-0.002658,
-        d: float = 0.07515,
-        e: float = -0.001991,
-        f: float =-0.0003291
+        num_turn: int = 4,
+        air_heat_transfer_multiplication_factor: float | torch.Tensor = 5.0,
+        pipe_diameter: float | torch.Tensor = 0.05,  # pipe diameter of the liquid cooling system
+        chip_characteristic_length: float | torch.Tensor = 0.04,  # length of the chip
+        cold_plate_thickness: float | torch.Tensor = 0.01,
+        conductivity_solid: float | torch.Tensor = 400.,  # for copper
+        air_ventilation_area: float | torch.Tensor = 0.04 * 1.0,
+        learnable: bool = True
     ) -> None:
         """
         Simulate the dynamic cooling load distribution of the air-side and water-side. The model is based on the
-        empirical formula obtained from server level CFD simulation
+        thermal resistance network analysis of the hybrid cooling system. The thermal resistance is derived from the
+        conductive and convective heat transfer principles considering the server and cold plate geometry. The results
+        are comparable with the experimental data from the following article:
+
+        [1] Shalom Simon, et.al. CFD analysis of Heat capture ratio in a hybrid cooled server. In International Electronic Packaging Technical Conference and Exhibition (Vol. 86557, p. V001T01A013). American Society of Mechanical Engineers.
         """
         super(HybridCoolingLoadDistributionModel, self).__init__()
-        self.a = nn.Parameter(torch.tensor(a))
-        self.b = nn.Parameter(torch.tensor(b))
-        self.c = nn.Parameter(torch.tensor(c))
-        self.d = nn.Parameter(torch.tensor(d))
-        self.e = nn.Parameter(torch.tensor(e))
-        self.f = nn.Parameter(torch.tensor(f))
-        self.learnable = learnable
+        self.num_turn = num_turn
+        self.air_heat_transfer_multiplication_factor = nn.Parameter(
+            torch.tensor(air_heat_transfer_multiplication_factor), requires_grad=learnable
+        )
+        self.pipe_diameter = nn.Parameter(
+            torch.tensor(pipe_diameter), requires_grad=learnable
+        )
+        self.chip_characteristic_length = nn.Parameter(
+            torch.tensor(chip_characteristic_length)
+        )
+        self.cold_plate_thickness = nn.Parameter(
+            torch.tensor(cold_plate_thickness)
+        )
+        self.air_ventilation_area = air_ventilation_area
+
+        # constant numbers
+        self.conductivity_solid = conductivity_solid
+        self.viscosity_air = 185 * 10 ** (-7)
+        self.prandtl_air = 0.7
+        self.conductivity_air = 26 * 10 ** (-3)
+        self.viscosity_water = 900 * 10 ** (-6)
+        self.prandtl_water = 6.62
+        self.conductivity_water = 0.6
 
     def forward(
         self,
@@ -61,16 +120,36 @@ class HybridCoolingLoadDistributionModel(nn.Module):
         T_air_in: torch.Tensor,
         m_air_in: torch.Tensor,
         power: torch.Tensor
-    ) -> torch.Tensor:
-        """
-        ((𝑎+𝑏𝑚_𝑎^(−0.6)−𝑐𝑚_𝑎^(−1) )𝑄+𝑇_(𝑤,𝑖)−𝑇_(𝑎,𝑖))/(𝑏𝑚_𝑎^(−0.6)−𝑐𝑚_𝑎^(−1)+𝑑+𝑒𝑚_𝑤^(−0.8)−𝑓𝑚_𝑤^(−1) )𝑄
-        """
-        eta_nominator = (self.a + self.b * m_air_in**(-0.6) - self.c * m_air_in**(-1)) * power + T_water_in - T_air_in
-        eta_denominator = (
-            self.b * m_air_in**(-0.6) - self.c * m_water_in**(-1) + self.d +
-            self.e * m_water_in**(-0.8) - self.f * m_water_in**(-1)
-        ) * power
-        return eta_nominator / (eta_denominator+1e-9)
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        reynolds_air = (
+            (m_air_in / self.air_ventilation_area * self.chip_characteristic_length) / self.viscosity_air
+        )
+        nu_air = 0.664 * reynolds_air**0.6 * self.prandtl_air ** (1/3)  # 0
+        reynolds_water = (
+            (m_water_in / (torch.pi * self.pipe_diameter**2 / 4) * self.pipe_diameter) / self.viscosity_water
+        )
+        nu_water = 0.023 * reynolds_water**0.8 * self.prandtl_water**(1/3)
+
+        h_air = nu_air * self.conductivity_air / self.chip_characteristic_length
+        h_water = nu_water * self.conductivity_water / self.pipe_diameter
+        heat_transfer_area_water = torch.pi * self.pipe_diameter * self.chip_characteristic_length * self.num_turn
+        heat_transfer_area_air = self.chip_characteristic_length**2 * self.air_heat_transfer_multiplication_factor
+
+        M = (
+            self.cold_plate_thickness*0.5 / (self.conductivity_solid * heat_transfer_area_water) +
+            1.0 / (h_water * heat_transfer_area_water)
+        )
+        N = (
+            self.cold_plate_thickness / (self.conductivity_solid * heat_transfer_area_air) +
+            1. / (h_air * heat_transfer_area_air)
+        )
+        eta_nominator = (-T_water_in + T_air_in) + power * N + power / (m_water_in * air_specific_heat)
+        eta_denominator = power * (
+            M + N + 1.0 / (m_water_in * water_specific_heat) + 1.0 / (m_air_in * air_specific_heat)
+        )
+        eta = eta_nominator / (eta_denominator + 1e-9)
+        assert 0. <= eta.item() <= 1., ValueError(f"Invalid eta value: {eta.item()}")
+        return eta, h_air, h_water
 
 class D2CServerModel(nn.Module):
     """
@@ -109,12 +188,12 @@ class D2CServerModel(nn.Module):
         inlet_liquid_temperature: torch.Tensor,
         inlet_liquid_mass_flow_rate: torch.Tensor,
         inlet_air_temperature: torch.Tensor = 25.,
-        inlet_air_mass_flow_rate: torch.Tensor = 0.5,
+        inlet_air_mass_flow_rate: torch.Tensor = 0.05,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Simulate the server friction power due to the liquid cooling pipes installed in the chips.
         """
-        eta = self.models["cooling_load_distribution_model"].forward(
+        eta, h_air, h_water = self.models["cooling_load_distribution_model"].forward(
             T_water_in=inlet_liquid_temperature,
             m_water_in=inlet_liquid_mass_flow_rate,
             T_air_in=inlet_air_temperature,
@@ -130,7 +209,8 @@ class D2CServerModel(nn.Module):
         cpu_max_temperature = self.models["chip_max_temperature_model"].forward(
             T_in=inlet_liquid_temperature,
             power=liquid_cooled_power,
-            mass_flow_rate=inlet_liquid_mass_flow_rate
+            liquid_mass_flow_rate=inlet_liquid_mass_flow_rate,
+            h_water=h_water
         )
         return liquid_outlet_temperature, cpu_max_temperature, liquid_cooled_power
 
@@ -139,30 +219,3 @@ class D2CServerModel(nn.Module):
 
     def learn(self):
         pass
-
-
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    T_water = np.linspace(25, 40, 100)
-    m_water = 0.05
-    T_air = 25
-    m_air = 0.5
-    power = 1000
-
-    eta_nominator = (
-        (0.009633 + -0.07046 * m_air**(-0.6) - -0.002658 * m_air**(-1)) * power + T_water - T_air
-    )
-    eta_denominator = (
-        -0.07046 * m_air**(-0.6) - -0.002658 * m_water**(-1) + 0.07515 +
-        -0.001991 * m_water**(-0.8) - -0.0003291 * m_water**(-1)
-    ) * power
-    eta = eta_nominator / (eta_denominator+1e-9)
-
-    plt.plot(T_water, eta)
-    plt.xlabel("Water temperature")
-    plt.ylabel("Eta")
-    plt.show()
-
-
