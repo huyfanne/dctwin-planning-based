@@ -3,7 +3,7 @@ from .chiller import ChillerModel
 from .tank import ThermalStorageTankModel
 from .pump import PumpModel
 from .fan import FanModel
-from .cooling_tower import CoolingTowerModel
+from .cooling_tower import VariableSpeedCoolingTowerModel
 from .pipe import PipeModel
 
 
@@ -14,6 +14,6 @@ __all__ = [
     "ThermalStorageTankModel",
     "PumpModel",
     "FanModel",
-    "CoolingTowerModel",
+    "VariableSpeedCoolingTowerModel",
     "PipeModel"
 ]

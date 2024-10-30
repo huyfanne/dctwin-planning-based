@@ -4,7 +4,7 @@ import torch.nn as nn
 
 from dclib.cooling.common import Pump
 
-from dctwin.models.utlis import CubicCurve
+from dctwin.models.utils import CubicCurve
 
 from dctwin.data import Batch, Buffer
 from dctwin.utils.const import rho_water

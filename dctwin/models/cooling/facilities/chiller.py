@@ -4,7 +4,7 @@ import numpy as np
 
 from dclib.cooling.plant.facilities import Chiller
 
-from dctwin.models.utlis import QuadraticCurve, BiQuadraticCurve
+from dctwin.models.utils import QuadraticCurve, BiQuadraticCurve
 from dctwin.data import Batch, Buffer
 
 from loguru import logger

@@ -14,7 +14,7 @@ from dctwin.models.cooling.facilities import (
     ChillerModel,
     PumpModel,
     ThermalStorageTankModel,
-    CoolingTowerModel
+    VariableSpeedCoolingTowerModel,
 )
 from dctwin.utils.const import water_specific_heat
 
@@ -196,14 +196,14 @@ class PlantManager(nn.Module):
         if branch_components.cooling_towers:
             for component_id, component in branch_components.cooling_towers.items():
                 if component_id not in component_models.keys():
-                    component.model = CoolingTowerModel(
+                    component.model = VariableSpeedCoolingTowerModel(
                         config=component,
                         key_mapping=self.device_key_mapping,
                         learnable=False  # TODO: add learnable cooling tower models
                     )
                     self.add_module(
                         name=component_id,
-                        module=CoolingTowerModel(
+                        module=VariableSpeedCoolingTowerModel(
                             config=component,
                             key_mapping=self.device_key_mapping,
                             learnable=False  # TODO: add learnable cooling tower models
@@ -391,13 +391,6 @@ class PlantManager(nn.Module):
                             torch.tensor(data=[0.], dtype=torch.float32)
             if branch.components.cooling_towers is not None:
                 for component_id, component in branch.components.cooling_towers.items():
-                    if data.acts[component_id].on_off_schedule == 1:
-                        active_devices.append(component_id)
-                    else:
-                        data.obs_next.plants[branch_id].water_mass_flow_rate =\
-                            torch.tensor(data=[0.], dtype=torch.float32)
-            if branch.components.pumps is not None:
-                for component_id, component in branch.components.pumps.items():
                     if data.acts[component_id].on_off_schedule == 1:
                         active_devices.append(component_id)
                     else:
@@ -682,18 +675,16 @@ class PlantManager(nn.Module):
         if branch.components.cooling_towers is not None:
             for component_id, component in branch.components.cooling_towers.items():
                 if data.acts[component_id].on_off_schedule == 1:
-                    cooling_tower_power = self.models[component_id].forward(
-                        cw_return_water_temperature=data.obs.plants[branch_id].inlet_temperature,
-                        cw_return_water_mass_flow_rate=data.acts[loop_id].supply_temperature_sp,
-                        cw_supply_water_temperature=data.obs_next.plants[branch_id].outlet_temperature,
-                        outside_air_wetbulb_temperature=data.inps.outdoor_temperature,
+                    fan_power, outlet_water_temp = self.models[component_id].solve(
+                        cw_return_water_temp=data.obs_next.plants[branch_id].inlet_temperature,
+                        cw_supply_temp_setpoint=data.acts[loop_id].supply_temperature_sp,
+                        water_mass_flow_rate=data.obs_next.plants[branch_id].water_mass_flow_rate,
+                        outside_air_wet_bulb_temp=data.inps.outdoor_temperature,
                     )
-                    data.obs_next.plants[component_id].fan_power = cooling_tower_power
-                    data.obs_next.plants[branch_id].outlet_temperature = (
-                        data.acts[loop_id].supply_temperature_sp
-                    )
-                    data.obs_next.dc.total_facility_power += cooling_tower_power
-                    data.obs_next.dc.total_dc_power += cooling_tower_power
+                    data.obs_next.plants[component_id].fan_power = fan_power
+                    data.obs_next.plants[branch_id].outlet_temperature = outlet_water_temp
+                    data.obs_next.dc.total_facility_power += fan_power
+                    data.obs_next.dc.total_dc_power += fan_power
                 else:
                     data.obs_next.plants[branch_id].outlet_temperature = (
                         data.obs_next.plants[branch_id].inlet_temperature

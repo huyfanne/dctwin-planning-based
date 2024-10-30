@@ -5,7 +5,7 @@ import torch.nn as nn
 
 from dclib.ite.composite import ITE
 
-from dctwin.models.utlis import BiQuadraticCurve, QuadraticCurve
+from dctwin.models.utils import BiQuadraticCurve, QuadraticCurve
 
 
 class ITEModel(nn.Module):

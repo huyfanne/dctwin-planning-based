@@ -17,7 +17,7 @@ from .utils import (
     read_temperature_fields,
     read_boundary_conditions,
 )
-from dctwin.models.utlis.gps import BatchIndependentMultiTaskGPModel
+from dctwin.models.utils.gps import BatchIndependentMultiTaskGPModel
 
 
 class PODBuilder:

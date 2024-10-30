@@ -5,7 +5,7 @@ from loguru import logger
 
 from dclib.cooling.room.facilities.acu import ACU
 
-from dctwin.models.utlis import CubicCurve
+from dctwin.models.utils import CubicCurve
 from dctwin.data import Batch, Buffer
 
 from dctwin.utils.const import rho_air

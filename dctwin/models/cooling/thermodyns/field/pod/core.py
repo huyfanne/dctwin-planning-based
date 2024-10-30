@@ -14,7 +14,7 @@ from dctwin.third_parties.docker_backend import DockerBackend
 from dctwin.third_parties.k8s_backend import K8sBackend
 from dctwin.utils import config
 
-from dctwin.models.utlis.gps import BatchIndependentMultiTaskGPModel
+from dctwin.models.utils.gps import BatchIndependentMultiTaskGPModel
 
 
 class PODBackendMixin:
