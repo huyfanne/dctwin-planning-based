@@ -945,22 +945,31 @@ class RoomBuilder:
                 dehumidifiers=config.constructions.dehumidifiers,
                 sizing=config.sizing.sizing_system,
             )
-            self._make_ites(
-                zone_name=room_name,
-                ites=config.constructions.heat_gains.ites
-            )
-            self._make_occupancy(
-                zone_name=room_name,
-                config=config.constructions.heat_gains.people
-            )
-            self._make_lightning(
-                zone_name=room_name,
-                config=config.constructions.heat_gains.light
-            )
-            self._make_electrical_equipment(
-                zone_name=room_name,
-                config=config.constructions.heat_gains.electric_equipment
-            )
+            if config.constructions.heat_gains is not None and config.constructions.heat_gains.ites is not None:
+                self._make_ites(
+                    zone_name=room_name,
+                    ites=config.constructions.heat_gains.ites
+                )
+            if config.constructions.heat_gains is not None and config.constructions.heat_gains.light is not None:
+                self._make_lightning(
+                    zone_name=room_name,
+                    config=config.constructions.heat_gains.light
+                )
+            if config.constructions.heat_gains is not None and config.constructions.heat_gains.people is not None:
+                self._make_occupancy(
+                    zone_name=room_name,
+                    config=config.constructions.heat_gains.people
+                )
+            if config.constructions.heat_gains is not None and config.constructions.heat_gains.light is not None:
+                self._make_lightning(
+                    zone_name=room_name,
+                    config=config.constructions.heat_gains.light
+                )
+            if config.constructions.heat_gains is not None and config.constructions.heat_gains.electric_equipment is not None:
+                self._make_electrical_equipment(
+                    zone_name=room_name,
+                    config=config.constructions.heat_gains.electric_equipment
+                )
             self._make_zone_sizing(
                 zone_name=room_name,
                 config=config.sizing.sizing_zone

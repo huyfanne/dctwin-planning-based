@@ -122,10 +122,28 @@ class HVACManager(BaseManager, ABC):
                 self.data.obs.dc[key] = deepcopy(value.detach())
             else:
                 self.data.obs.dc[key] = deepcopy(value)
+
         # update time step
         self._current_time += self._time_step
         if self._ending_timestamp == datetime.fromtimestamp(self._timestamp.timestamp() + self._current_time):
             self.done = True
+
+        # reset plant loop demand side total cooling load and mass flow rate as zero before the next time step begins
+        for loops in [
+            self.plant_manager.plant.secondary_chilled_water_loops,
+            self.plant_manager.plant.chilled_water_loops,
+            self.plant_manager.plant.condenser_water_loops,
+        ]:
+            if loops is None:
+                continue
+            for loop_id, loop in loops.items():
+                self.data.obs_next.plants[loop_id].demand_side_total_cooling_load = (
+                    torch.zeros((1,), dtype=torch.float32)
+                )
+                self.data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate = (
+                    torch.zeros((1,), dtype=torch.float32)
+                )
+
 
     @staticmethod
     def format_external_inputs(inps: Dict | Batch) -> Batch:

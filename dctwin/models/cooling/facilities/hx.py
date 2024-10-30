@@ -4,8 +4,7 @@ from CoolProp.CoolProp import PropsSI
 import torch
 import torch.nn as nn
 from loguru import logger
-from dclib.cooling.room.facilities import ACU, CDU
-from dclib.cooling.common import HeatExchanger as HX
+from dclib.cooling.common import HeatExchanger
 from dctwin.data import Batch, Buffer
 
 from tqdm import tqdm
@@ -13,11 +12,11 @@ from tqdm import tqdm
 from .utils.parameter_calc import NTUHE, nusseltCoefficient, nusseltNumberIn
 
 
-class HeatExchanger(nn.Module):
+class HeatExchangerModel(nn.Module):
 
     def __init__(
         self,
-        config: ACU | CDU | HX,
+        config: HeatExchanger,
         internal_fluid_name: str,
         external_fluid_name: str,
         key_mapping: dict = None,
@@ -197,7 +196,7 @@ class HeatExchanger(nn.Module):
 
     def learn(self) -> None:
         if self.learnable:
-            batch, _ = self.buffer.sample(batch_size=256)  # sample all data from the buffer
+            batch, _ = self.buffer.sample(batch_size=32)  # sample all data from the buffer
             mask = batch.cooling_coil_air_mass_flow_rate > 0
             batch = batch[mask]
             if len(batch) > 10:
@@ -226,7 +225,7 @@ class HeatExchanger(nn.Module):
                     )
                     loss.backward(retain_graph=True)
                     self.opt.step()
-                    # self._project_ws()  # project the parameters to the positive region to make them feasible
+                    self._project_ws()  # project the parameters to the positive region to make them feasible
                     pbar.set_description(f"Loss: {loss.item():.4f}")
                     if loss.item() < self.min_loss:
                         break
