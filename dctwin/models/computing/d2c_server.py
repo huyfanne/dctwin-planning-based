@@ -8,9 +8,11 @@ from dctwin.utils.const import water_specific_heat, air_specific_heat
 
 
 class ChipThermoModel(nn.Module):
+
+
     def __init__(
         self,
-        chip_heat_transfer_area: float | torch.Tensor = 0.26*0.11,  # length of the chip
+        chip_heat_transfer_area: float | torch.Tensor = 0.26*0.11,  # heat transfer area of the chip
         chip_thickness: float | torch.Tensor = 0.03,  # for typical Intel CPU chip
         conductivity_silicon: float | torch.Tensor = 148.,  # for copper
         alpha: float | torch.Tensor = 1.0,
@@ -21,10 +23,12 @@ class ChipThermoModel(nn.Module):
             torch.tensor(alpha), requires_grad=learnable
         )
         self.chip_thickness = nn.Parameter(
-            torch.tensor(chip_thickness), requires_grad=learnable
+            torch.tensor(chip_thickness),
+            requires_grad=learnable
         )
         self.chip_heat_transfer_area = nn.Parameter(
-            torch.tensor(chip_heat_transfer_area), requires_grad=learnable
+            torch.tensor(chip_heat_transfer_area),
+            requires_grad=learnable
         )
         self.conductivity_silicon = conductivity_silicon
 
@@ -86,7 +90,7 @@ class HybridCoolingLoadDistributionModel(nn.Module):
         conductive and convective heat transfer principles considering the server and cold plate geometry. The results
         are comparable with the experimental data from the following article:
 
-        [1] Shalom Simon, et.al. CFD analysis of Heat capture ratio in a hybrid cooled server. In International Electronic Packaging Technical Conference and Exhibition (Vol. 86557, p. V001T01A013). American Society of Mechanical Engineers.
+        [1] Shalom Simon, et al. CFD analysis of Heat capture ratio in a hybrid cooled server. In International Electronic Packaging Technical Conference and Exhibition (Vol. 86557, p. V001T01A013). American Society of Mechanical Engineers.
         """
         super(HybridCoolingLoadDistributionModel, self).__init__()
         self.num_turn = num_turn
@@ -143,12 +147,13 @@ class HybridCoolingLoadDistributionModel(nn.Module):
             self.cold_plate_thickness / (self.conductivity_solid * heat_transfer_area_air) +
             1. / (h_air * heat_transfer_area_air)
         )
+
         eta_nominator = (-T_water_in + T_air_in) + power * N + power / (m_water_in * air_specific_heat)
         eta_denominator = power * (
             M + N + 1.0 / (m_water_in * water_specific_heat) + 1.0 / (m_air_in * air_specific_heat)
         )
         eta = eta_nominator / (eta_denominator + 1e-9)
-        assert 0. <= eta.item() <= 1., ValueError(f"Invalid eta value: {eta.item()}")
+        assert 0. <= eta.item() <= 1., ValueError(f"Invalid eta value {eta.item()} found, eta should be in [0, 1] !")
         return eta, h_air, h_water
 
 class D2CServerModel(nn.Module):
@@ -161,7 +166,7 @@ class D2CServerModel(nn.Module):
         config: Server,
         key_mapping: dict,
         learnable: bool = True,
-        device: str | int | torch.device = "cpu",
+        device: str | torch.device = "cpu",
     ) -> None:
         super(D2CServerModel, self).__init__()
         self.config = config
