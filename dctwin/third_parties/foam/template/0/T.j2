@@ -21,7 +21,46 @@ internalField   {{ 'uniform {}'.format(init_temperature) if not internal_field e
 boundaryField
 {
 
-    {{ room_boundary.T }}
+{#    {{ room_boundary.T }}#}
+    "room_wall_.*"
+    {
+        type            zeroGradient;
+    }
+
+    "raised_floor_.*"
+    {
+        type            zeroGradient;
+    }
+
+    "opening_raised_floor_.*"
+    {
+        type           cyclic;
+    }
+
+    "false_ceiling_.*"
+    {
+        type            zeroGradient;
+    }
+
+    "opening_false_ceiling_.*"
+    {
+        type           cyclic;
+    }
+
+    "box_.*"
+    {
+        type            zeroGradient;
+    }
+
+    "rack_wall_.*"
+    {
+        type            zeroGradient;
+    }
+
+    "rack_panel_.*"
+    {
+        type            zeroGradient;
+    }
 
     {% for acu_boundary in acu_boundaries %}
     {{ acu_boundary.T }}

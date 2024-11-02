@@ -18,7 +18,7 @@ class K8sJob:
         "ephemeral-storage": "100Mi",
     }
     DEFAULT_VOLUME_MOUNT = {
-       "mount_path": "/tm-data",
+        "mount_path": "/tm-data",
         "sub_path": "",
     }
     DEFAULT_K8S_TAINT = ""
@@ -41,13 +41,14 @@ class K8sJob:
         env_vars={},
         worker_name=None,
         is_local_k8s=False,
-        local_volume_path=None, # The local path to the volume, must set if is_local_k8s is True
-        k8s_taint=DEFAULT_K8S_TAINT, # The taint for the job, e.g. "key:value
+        local_volume_path=None,  # The local path to the volume, must set if is_local_k8s is True
+        k8s_taint=DEFAULT_K8S_TAINT,  # The taint for the job, e.g. "key:value
         volume_mount=DEFAULT_VOLUME_MOUNT,  # The volume mount for the job. If None, the default volume is used
         additional_params=None,  # Additional parameters for the job, e.g. ttl_seconds_after_finished
     ) -> None:
         self._core_api_ins = None
         self._batch_api_ins = None
+        self._apps_api_ins = None
 
         self.image = image
         self.command = command
@@ -83,7 +84,7 @@ class K8sJob:
         container_additional_args = {}
         tmpl_spec_additional_args = {}
         tmpl_additional_args = {}
-        spec_additional_args = dict(backoff_limit=2, ttl_seconds_after_finished=60)
+        spec_additional_args = dict(backoff_limit=0, ttl_seconds_after_finished=60)
         job_additional_args = {}
         for k, v in job_params.items():
             if k.startswith("spec.templates.spec.containers."):
@@ -179,6 +180,7 @@ class K8sJob:
                 time.sleep(1)
 
     def clean(self):
+        core_api = self._core_api
         batch_api = self._batch_api
         try:
             batch_api.delete_namespaced_job(
@@ -190,6 +192,10 @@ class K8sJob:
             )
         except Exception as e:
             logging.debug(f"Cannot delete job {self.full_name}: {str(e)}")
+        if self.need_service:
+            core_api.delete_namespaced_service(
+                name=self.service_name, namespace=self.namespace
+            )
 
         # wait for the job to be deleted
         while True:
@@ -218,6 +224,12 @@ class K8sJob:
         if not self._batch_api_ins:
             self._batch_api_ins = client.BatchV1Api()
         return self._batch_api_ins
+
+    @property
+    def _apps_api(self):
+        if not self._apps_api_ins:
+            self._apps_api_ins = client.AppsV1Api()
+        return self._apps_api_ins
 
     @property
     def full_name(self):
@@ -284,15 +296,18 @@ class K8sJob:
 
         tolerations = []
         if self.k8s_taint != "":
-            key, value, effect = self.k8s_taint.split(":")
-            toleration = client.V1Toleration(
-                effect=effect, key=key, operator="Equal", value=value
-            )
-            tolerations.append(toleration)
+            for taint in self.k8s_taint.split(","):
+                key, value, operator, effect = taint.split(":")
+                toleration = client.V1Toleration(
+                    effect=effect, key=key, operator=operator, value=value
+                )
+                tolerations.append(toleration)
         tmpl_spec_args["tolerations"] = tolerations
 
         if self.resources is not None:
-            final_resources = client.V1ResourceRequirements(requests=self.resources,limits=self.resources)
+            final_resources = client.V1ResourceRequirements(
+                requests=self.resources, limits=self.resources
+            )
             container_args["resources"] = final_resources
 
         if self.need_service:

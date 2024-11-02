@@ -1,6 +1,6 @@
 eplus_env_config {
-  weather_file: "data/weather/SGP_Singapore.486980_IWEC.epw"
-  model_file: "models/idf/building.idf"
+  weather_file: "data\\weather\\SGP_Singapore.486980_IWEC.epw"
+  model_file: "models\\idf\\building.idf"
   simulation_time_config {
     begin_month: 9
     begin_day_of_month: 1
@@ -13,7 +13,7 @@ eplus_env_config {
     input_source: "data/schedule/workloads/ite_1.json"
     variable_name: "ite_1 cpu loading schedule"
     schedule_config {
-      initial_value: 1.0
+      initial_value: 0.5
       lb: 0.0
       ub: 1.0
       schedule_type: ITE

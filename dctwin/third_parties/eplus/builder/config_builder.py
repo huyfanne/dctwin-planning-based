@@ -1328,13 +1328,23 @@ class ConfigBuilder:
                 actuated_component_unique_name=f"{acu_name} air loop supply air temperature schedule".lower(),
                 actuated_component_type=3,
                 actuated_component_control_type=3,
-                control_type=device_values.get(acu_name, {}).get("control_type", control_type),
-                default_unnormed_value=device_values.get(acu_name, {}).get("default_unnormed_value", default_unnormed_value),
-                method=device_values.get(acu_name, {}).get("normalize_method", normalize_method),
+                control_type=device_values.get(acu_name, {}).get(
+                    "control_type", control_type
+                ),
+                default_unnormed_value=device_values.get(acu_name, {}).get(
+                    "default_unnormed_value", default_unnormed_value
+                ),
+                method=device_values.get(acu_name, {}).get(
+                    "normalize_method", normalize_method
+                ),
                 lb=device_values.get(acu_name, {}).get("lb", lb),
                 ub=device_values.get(acu_name, {}).get("ub", ub),
-                masking_variable_name=device_values.get(acu_name, {}).get("masking_variable_name", masking_variable_name),
-            ) if device_values.get(acu_name, {}).get("disable", disable) is False else None
+                masking_variable_name=device_values.get(acu_name, {}).get(
+                    "masking_variable_name", masking_variable_name
+                ),
+            ) if device_values.get(acu_name, {}).get(
+                "disable", disable
+            ) is False else None
 
     def make_acu_supply_air_flow_rate_actions(
         self,
@@ -1357,13 +1367,23 @@ class ConfigBuilder:
                 actuated_component_unique_name=f"{acu_name} fan".lower(),
                 actuated_component_type=0,
                 actuated_component_control_type=0,
-                control_type=device_values.get(acu_name, {}).get("control_type", control_type),
-                default_unnormed_value=device_values.get(acu_name, {}).get("default_unnormed_value", default_unnormed_value),
-                method=device_values.get(acu_name, {}).get("normalize_method", normalize_method),
+                control_type=device_values.get(acu_name, {}).get(
+                    "control_type", control_type
+                ),
+                default_unnormed_value=device_values.get(acu_name, {}).get(
+                    "default_unnormed_value", default_unnormed_value
+                ),
+                method=device_values.get(acu_name, {}).get(
+                    "normalize_method", normalize_method
+                ),
                 lb=device_values.get(acu_name, {}).get("lb", lb),
                 ub=device_values.get(acu_name, {}).get("ub", ub),
-                masking_variable_name=device_values.get(acu_name, {}).get("masking_variable_name", masking_variable_name),
-            ) if device_values.get(acu_name, {}).get("disable", disable) is False else None
+                masking_variable_name=device_values.get(acu_name, {}).get(
+                    "masking_variable_name", masking_variable_name
+                ),
+            ) if device_values.get(acu_name, {}).get(
+                "disable", disable
+            ) is False else None
 
     def make_chilled_water_loop_supply_temperature_actions(
         self,
@@ -1381,12 +1401,20 @@ class ConfigBuilder:
                 actuated_component_unique_name=f"{loop_name} exit temperature setpoint schedule",
                 actuated_component_type=3,
                 actuated_component_control_type=3,
-                control_type=device_values.get(loop_name, {}).get("control_type", control_type),
-                default_unnormed_value=device_values.get(loop_name, {}).get("default_unnormed_value", default_unnormed_value),
-                method=device_values.get(loop_name, {}).get("normalize_method", normalize_method),
+                control_type=device_values.get(loop_name, {}).get(
+                    "control_type", control_type
+                ),
+                default_unnormed_value=device_values.get(loop_name, {}).get(
+                    "default_unnormed_value", default_unnormed_value
+                ),
+                method=device_values.get(loop_name, {}).get(
+                    "normalize_method", normalize_method
+                ),
                 lb=device_values.get(loop_name, {}).get("lb", lb),
                 ub=device_values.get(loop_name, {}).get("ub", ub),
-            ) if device_values.get(loop_name, {}).get("disable", disable) is False else None
+            ) if device_values.get(loop_name, {}).get(
+                "disable", disable
+            ) is False else None
 
     def make_condensed_water_loop_supply_temperature_actions(
         self,
@@ -1404,12 +1432,20 @@ class ConfigBuilder:
                 actuated_component_unique_name=f"{loop_name} exit temperature setpoint schedule",
                 actuated_component_type=3,
                 actuated_component_control_type=3,
-                control_type=device_values.get(loop_name, {}).get("control_type", control_type),
-                default_unnormed_value=device_values.get(loop_name, {}).get("default_unnormed_value", default_unnormed_value),
-                method=device_values.get(loop_name, {}).get("normalize_method", normalize_method),
+                control_type=device_values.get(loop_name, {}).get(
+                    "control_type", control_type
+                ),
+                default_unnormed_value=device_values.get(loop_name, {}).get(
+                    "default_unnormed_value", default_unnormed_value
+                ),
+                method=device_values.get(loop_name, {}).get(
+                    "normalize_method", normalize_method
+                ),
                 lb=device_values.get(loop_name, {}).get("lb", lb),
                 ub=device_values.get(loop_name, {}).get("ub", ub),
-            ) if device_values.get(loop_name, {}).get("disable", disable) is False else None
+            ) if device_values.get(loop_name, {}).get(
+                "disable", disable
+            ) is False else None
 
     def make_chilled_water_pump_flow_rates_actions(
         self,
@@ -1427,12 +1463,20 @@ class ConfigBuilder:
                 actuated_component_unique_name=f"{pump_name}",
                 actuated_component_type=2,
                 actuated_component_control_type=2,
-                control_type=device_values.get(pump_name, {}).get("control_type", control_type),
-                default_unnormed_value=device_values.get(pump_name, {}).get("default_unnormed_value", default_unnormed_value),
-                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
+                control_type=device_values.get(pump_name, {}).get(
+                    "control_type", control_type
+                ),
+                default_unnormed_value=device_values.get(pump_name, {}).get(
+                    "default_unnormed_value", default_unnormed_value
+                ),
+                method=device_values.get(pump_name, {}).get(
+                    "normalize_method", normalize_method
+                ),
                 lb=device_values.get(pump_name, {}).get("lb", lb),
                 ub=device_values.get(pump_name, {}).get("ub", ub),
-            ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
+            ) if device_values.get(pump_name, {}).get(
+                "disable", disable
+            ) is False else None
 
     def make_secondary_chilled_water_pump_flow_rates_actions(
         self,
@@ -1450,12 +1494,20 @@ class ConfigBuilder:
                 actuated_component_unique_name=f"{pump_name}",
                 actuated_component_type=2,
                 actuated_component_control_type=2,
-                control_type=device_values.get(pump_name, {}).get("control_type", control_type),
-                default_unnormed_value=device_values.get(pump_name, {}).get("default_unnormed_value", default_unnormed_value),
-                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
+                control_type=device_values.get(pump_name, {}).get(
+                    "control_type", control_type
+                ),
+                default_unnormed_value=device_values.get(pump_name, {}).get(
+                    "default_unnormed_value", default_unnormed_value
+                ),
+                method=device_values.get(pump_name, {}).get(
+                    "normalize_method", normalize_method
+                ),
                 lb=device_values.get(pump_name, {}).get("lb", lb),
                 ub=device_values.get(pump_name, {}).get("ub", ub),
-            ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
+            ) if device_values.get(pump_name, {}).get(
+                "disable", disable
+            ) is False else None
 
     def make_condenser_water_pump_flow_rates_actions(
         self,
@@ -1473,12 +1525,20 @@ class ConfigBuilder:
                 actuated_component_unique_name=f"{pump_name}",
                 actuated_component_type=2,
                 actuated_component_control_type=2,
-                control_type=device_values.get(pump_name, {}).get("control_type", control_type),
-                default_unnormed_value=device_values.get(pump_name, {}).get("default_unnormed_value", default_unnormed_value),
-                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
+                control_type=device_values.get(pump_name, {}).get(
+                    "control_type", control_type
+                ),
+                default_unnormed_value=device_values.get(pump_name, {}).get(
+                    "default_unnormed_value", default_unnormed_value
+                ),
+                method=device_values.get(pump_name, {}).get(
+                    "normalize_method", normalize_method
+                ),
                 lb=device_values.get(pump_name, {}).get("lb", lb),
                 ub=device_values.get(pump_name, {}).get("ub", ub),
-            ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
+            ) if device_values.get(pump_name, {}).get(
+                "disable", disable
+            ) is False else None
 
     def make_chilled_water_supply_branch_on_off_actions_prescheduled(
         self,
@@ -1520,11 +1580,15 @@ class ConfigBuilder:
                 actuated_component_type=2,
                 actuated_component_control_type=2,
                 control_type=5,
-                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
+                method=device_values.get(pump_name, {}).get(
+                    "normalize_method", normalize_method
+                ),
                 lb=device_values.get(pump_name, {}).get("lb", lb),
                 ub=device_values.get(pump_name, {}).get("ub", ub),
                 input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
-            ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
+            ) if device_values.get(pump_name, {}).get(
+                "disable", disable
+            ) is False else None
 
     def make_secondary_chilled_water_pump_flow_rates_actions_prescheduled(
         self,
@@ -1544,11 +1608,15 @@ class ConfigBuilder:
                 actuated_component_type=2,
                 actuated_component_control_type=2,
                 control_type=5,
-                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
+                method=device_values.get(pump_name, {}).get(
+                    "normalize_method", normalize_method
+                ),
                 lb=device_values.get(pump_name, {}).get("lb", lb),
                 ub=device_values.get(pump_name, {}).get("ub", ub),
                 input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
-            ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
+            ) if device_values.get(pump_name, {}).get(
+                "disable", disable
+            ) is False else None
 
     def make_condenser_water_pump_flow_rates_actions_prescheduled(
         self,
@@ -1566,11 +1634,15 @@ class ConfigBuilder:
                 actuated_component_type=2,
                 actuated_component_control_type=2,
                 control_type=5,
-                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
+                method=device_values.get(pump_name, {}).get(
+                    "normalize_method", normalize_method
+                ),
                 lb=device_values.get(pump_name, {}).get("lb", lb),
                 ub=device_values.get(pump_name, {}).get("ub", ub),
                 input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
-            ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
+            ) if device_values.get(pump_name, {}).get(
+                "disable", disable
+            ) is False else None
 
     def make_acu_on_off_schedules(
         self,
@@ -1612,8 +1684,9 @@ class ConfigBuilder:
             ).replace(
                 "\\", "/"
             )  # convert to unix style path
-            action.schedule_config.initial_value = device_values.get(ite_name, {})\
-                .get("initial_value", initial_value)
+            action.schedule_config.initial_value = device_values.get(ite_name, {}).get(
+                "initial_value", initial_value
+            )
             action.schedule_config.lb = device_values.get(ite_name, {}).get("lb", lb)
             action.schedule_config.ub = device_values.get(ite_name, {}).get("ub", ub)
             action.schedule_config.schedule_type = 0
@@ -1635,8 +1708,10 @@ class ConfigBuilder:
                 schedule_dir.joinpath(f"{hx_name.lower()}.json")
             ).replace(
                 "\\", "/"
-            ) # convert to unix style path
-            action.schedule_config.initial_value = device_values.get(hx_name, {}).get("initial_value", initial_value)
+            )  # convert to unix style path
+            action.schedule_config.initial_value = device_values.get(hx_name, {}).get(
+                "initial_value", initial_value
+            )
             action.schedule_config.lb = device_values.get(hx_name, {}).get("lb", lb)
             action.schedule_config.ub = device_values.get(hx_name, {}).get("ub", ub)
             action.schedule_config.schedule_type = 7

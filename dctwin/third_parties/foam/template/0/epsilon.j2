@@ -17,7 +17,7 @@ FoamFile
 
 dimensions      [0 2 -3 0 0 0 0];
 
-internalField   uniform 9.5e-4;
+internalField   uniform 9.5e-2;
 
 boundaryField
 {
@@ -27,23 +27,26 @@ boundaryField
         value           uniform {{ acu_epsilon }};
     }
 
-    "pillar_.*"
+    "raised_floor_.*"
     {
         type            epsilonWallFunction;
         value           uniform {{ acu_epsilon }};
     }
 
+    "opening_raised_floor_.*"
+    {
+        type           cyclic;
+    }
 
-    "floor_.*"
+    "false_ceiling_.*"
     {
         type            epsilonWallFunction;
         value           uniform {{ acu_epsilon }};
     }
 
-    "ceiling_.*"
+    "opening_false_ceiling_.*"
     {
-        type            epsilonWallFunction;
-        value           uniform {{ acu_epsilon }};
+        type           cyclic;
     }
 
     "box_.*"
@@ -52,11 +55,6 @@ boundaryField
         value           uniform {{ acu_epsilon }};
     }
 
-    "partition_wall_.*"
-    {
-        type            epsilonWallFunction;
-        value           uniform {{ acu_epsilon }};
-    }
 
     "acu_supply_.*"
     {

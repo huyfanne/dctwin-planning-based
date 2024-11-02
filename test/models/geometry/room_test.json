@@ -284,7 +284,7 @@
                     "location": {
                         "x": 4.8,
                         "y": 1.8,
-                        "z": 0.0
+                        "z": 0.9
                     }
                 },
                 "cooling": {
@@ -299,7 +299,7 @@
                     "location": {
                         "x": 1.2,
                         "y": 10.2,
-                        "z": 0.0
+                        "z": 0.9
                     },
                     "orientation": -90,
                     "hasBlankingPanel": true
@@ -516,7 +516,7 @@
         "acus": {
             "ACU1": {
                 "supplyAirTemperature": 23.0,
-                "supplyAirVolumeFlowRate": 19.0964
+                "supplyAirVolumeFlowRate": 2.0964
             }
         },
         "servers": {

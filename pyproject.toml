@@ -27,25 +27,27 @@ docker = "^6.1.2"
 scipy = "^1.10.1"
 kubernetes = "^27.2.0"
 eppy = "^0.5.63"
-#dclib = {git = "https://github.com/cap-dcwiz/dclib.git", tag="1.4.1"}
+#dclib = {git = "https://github.com/cap-dcwiz/dclib.git", tag="v1.2.5"}
 sh = "^2.0.6"
 coolprop = "^6.6.0"
 torchdiffeq = "^0.2.3"
 psutil = "5.9.8"
 vtk = "9.3.0"
-mayavi = "^4.8.1"
+requests = ">2.32"
+mayavi = "^4.8.2"
+configobj = "^5.0.8" # DO NOT DELETE: apptools which is a dependency of mayavi removed configobj as a required dependency so we need to manually install configobj https://github.com/enthought/apptools/pull/351
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
 isort = "^5.10.1"
 pylava = "^0.3.0"
-black = "^22.10.0"
+black = "^24.3.0"
 mkdocs = "^1.4.2"
 mkdocstrings = "^0.19.0"
 mkdocs-autorefs = "^0.4.1"
 mkdocs-gen-files = "^0.4.0"
 mkdocs-literate-nav = "^0.5.0"
-mkdocs-material = "^8.5.10"
+mkdocs-material = "^9.5.5"
 mkdocs-material-extensions = "^1.1"
 mkdocs-section-index = "^0.3.4"
 
