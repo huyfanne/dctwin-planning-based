@@ -217,6 +217,7 @@ message DCTwinActuatorConfig {
       Chilled_Water_Loop = 10;
       Condenser_Water_Loop = 11;
       CDU = 12;
+      Dehumidifier = 13;
   }
   enum ControlType {
       Fan_Air_Mass_Flow_Rate = 0;
@@ -228,6 +229,7 @@ message DCTwinActuatorConfig {
       Humidity_Ratio_Setpoint = 6;
       CPU_Utilization = 7;
       Tank_Source_Side_Mass_Flow_Rate = 8;
+      Relative_Humidity_Setpoint = 9;
   }
   required string actuated_component_unique_name = 1;
   required ComponentType actuated_component_type = 2;

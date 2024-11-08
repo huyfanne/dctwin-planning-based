@@ -18,7 +18,7 @@ class FlowNetwork(nn.Module):
         key_mapping: dict,
         learnable: bool = True,
         device: str | int | torch.device = "cpu",
-    ):
+    ) -> None:
         super(FlowNetwork, self).__init__()
         self.liquid_flow_loop = liquid_flow_loop
         self.key_mapping = key_mapping
@@ -63,7 +63,7 @@ class FlowNetwork(nn.Module):
         self,
         data: Batch,
         zone_name: str
-    ):
+    ) -> None:
         # compute the total mass flow rate supplied by the CDUs
         cdu_total_mass_flow_rate = torch.zeros(1, )
         cdu_supply_temperature = torch.zeros(1, )

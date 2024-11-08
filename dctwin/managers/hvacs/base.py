@@ -81,7 +81,10 @@ class HVACManager(BaseManager, ABC):
                 plants=deepcopy(plant_obs),
             ),
             inps=Batch(
-                outdoor_temperature=(),
+                outdoor_air_dry_bulb_temperature=(),
+                outdoor_air_wet_bulb_temperature=(),
+                outdoor_air_humidity_ratio=(),
+                outdoor_air_relative_humidity=(),
                 electrical_price=(),
                 carbon_intensity=(),
             )

@@ -6,6 +6,7 @@ from CoolProp.CoolProp import PropsSI
 from loguru import logger
 
 from dclib.cooling.plant.facilities import CoolingTower
+
 from dctwin.data import Batch, Buffer
 from dctwin.models.utils import solve_root, CubicCurve
 
@@ -17,10 +18,13 @@ class VariableSpeedCoolingTowerModel(nn.Module):
     def __init__(
         self,
         config: CoolingTower,
-        key_mapping: dict,
+        key_mapping: dict = None,
         learnable: bool = True,
         max_root_finding_iter: int = 1000,
         tol: float = 1e-3,
+        max_learning_iter: int = 500,
+        min_loss: float = 0.002,
+        device: str | int | torch.device = "cpu",
     ) -> None:
         super(VariableSpeedCoolingTowerModel, self).__init__()
         self.config = config
@@ -31,6 +35,8 @@ class VariableSpeedCoolingTowerModel(nn.Module):
         self.single_setpoint = True
         self.max_root_finding_iter = max_root_finding_iter
         self.tol = tol
+        self.max_learning_iter = max_learning_iter
+        self.device = device
         # YorkCalc coefficients and suitable ranges for the empirical model
         self.min_inlet_air_wb_temp = torch.tensor(-34.4, dtype=torch.float32)
         self.max_inlet_air_wb_temp = torch.tensor(29.4444, dtype=torch.float32)
@@ -256,9 +262,19 @@ class VariableSpeedCoolingTowerModel(nn.Module):
 
     def learn(self) -> None:
         if self.learnable:
-            raise NotImplementedError("Learnable cooling tower model is not implemented yet !")
-        else:
-            pass
+            batch, _ = self.buffer.sample(batch_size=0)
+            mask = batch.cooling_tower_air_flow_rate_ratio > 0
+            batch = batch[mask]
+            if len(batch) > 3:
+                self.fan_power_of_air_flow_curve.learn(
+                    x=batch.cooling_tower_air_flow_rate_ratio,
+                    y=batch.cooling_tower_fan_power
+                )
+            else:
+                logger.warning(
+                    f"Insufficient data for learning the cooling tower model @ {self.uid}."
+                    f"Only {len(batch)} valid data points are available."
+                )
 
     @staticmethod
     def get_fluid_property(
@@ -296,7 +312,8 @@ class VariableSpeedCoolingTowerModel(nn.Module):
         m_water_flow_rate_ratio: torch.Tensor,
         outside_air_wet_bulb_temp: torch.Tensor,
         cw_return_water_temp: torch.Tensor,
-    ) -> torch.Tensor:
+        num_cell_on: int,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         PURPOSE OF THIS Method:
             To calculate the leaving water temperature of the variable speed cooling tower.
@@ -344,7 +361,21 @@ class VariableSpeedCoolingTowerModel(nn.Module):
                 # Run the tower at full capacity (flat out)
                 outlet_water_temp = cw_return_water_temp - self.max_range_temp
 
-        return outlet_water_temp  # Return the calculated outlet water temperature
+        if self.fan_power_f_air_flow_curve == 0:
+            fan_power = (
+                    m_air_flow_rate_ratio ** 3 * self.config.power.design_fan_power * num_cell_on /
+                    self.number_of_cells
+            )
+        else:
+            fan_curve_value = self.fan_power_of_air_flow_curve(m_air_flow_rate_ratio)
+            fan_power = torch.maximum(
+                torch.tensor(
+                    0.0,
+                    dtype=torch.float32),
+                (self.config.power.design_fan_power * fan_curve_value)
+            ) * num_cell_on / self.config.cooling.number_of_cells
+
+        return outlet_water_temp, fan_power  # Return the calculated outlet water temperature
 
     def solve(
         self,
@@ -449,11 +480,12 @@ class VariableSpeedCoolingTowerModel(nn.Module):
             outlet_water_temp_off = cw_return_water_temp
             outlet_water_temp = outlet_water_temp_off
             free_convection_cap_frac = self.config.cooling.fraction_of_tower_capacity_in_free_convection_regime
-            outlet_water_temp_on = self.forward(
-                air_flow_rate_ratio,
-                water_flow_rate_ratio_capped,
-                outside_air_wet_bulb_temp_capped,
-                cw_return_water_temp,
+            outlet_water_temp_on, fan_power = self.forward(
+                m_air_flow_rate_ratio=air_flow_rate_ratio,
+                m_water_flow_rate_ratio=water_flow_rate_ratio_capped,
+                outside_air_wet_bulb_temp=outside_air_wet_bulb_temp_capped,
+                cw_return_water_temp=cw_return_water_temp,
+                num_cell_on=num_cell_on,
             )
             if outlet_water_temp_on > cw_supply_temp_setpoint:
                 fan_power = self.config.power.design_fan_power * num_cell_on / self.config.cooling.number_of_cells
@@ -479,30 +511,16 @@ class VariableSpeedCoolingTowerModel(nn.Module):
             if outlet_water_temp_off > cw_supply_temp_setpoint:
                 # Set point was not met, turn on cooling tower fan at minimum fan speed
                 air_flow_rate_ratio = torch.tensor(self.config.cooling.minimum_air_flow_rate_ratio, dtype=torch.float32)
-
                 # Outlet water temperature with fan at minimum speed (C)
-                outlet_water_temp_min = self.forward(
-                    air_flow_rate_ratio,
-                    water_flow_rate_ratio_capped,
-                    outside_air_wet_bulb_temp_capped,
-                    cw_return_water_temp
+                outlet_water_temp_min, fan_power = self.forward(
+                    m_air_flow_rate_ratio=air_flow_rate_ratio,
+                    m_water_flow_rate_ratio=water_flow_rate_ratio_capped,
+                    outside_air_wet_bulb_temp=outside_air_wet_bulb_temp_capped,
+                    cw_return_water_temp=cw_return_water_temp,
+                    num_cell_on=num_cell_on,
                 )
                 if outlet_water_temp_min < cw_supply_temp_setpoint:
                     # if set point was exceeded, cycle the fan at minimum air flow to meet the set point temperature
-                    if self.fan_power_f_air_flow_curve == 0:
-                        fan_power = (
-                            air_flow_rate_ratio ** 3 * self.config.power.design_fan_power * num_cell_on /
-                            self.number_of_cells
-                        )
-                    else:
-                        fan_curve_value = self.fan_power_of_air_flow_curve(air_flow_rate_ratio)
-                        fan_power = torch.maximum(
-                            torch.tensor(
-                                0.0,
-                                dtype=torch.float32),
-                                (self.config.power.design_fan_power * fan_curve_value)
-                        ) * num_cell_on / self.config.cooling.number_of_cells
-
                     fan_cycling_ratio = (
                         (outlet_water_temp_off - cw_supply_temp_setpoint) /
                         (outlet_water_temp_off - outlet_water_temp_min)
@@ -536,8 +554,8 @@ class VariableSpeedCoolingTowerModel(nn.Module):
 
                     if self.fan_power_f_air_flow_curve == 0:
                         fan_power = (
-                                air_flow_rate_ratio ** 3 * self.config.power.design_fan_power * num_cell_on /
-                                self.number_of_cells
+                            air_flow_rate_ratio ** 3 * self.config.power.design_fan_power *
+                            num_cell_on / self.number_of_cells
                         )
                     else:
                         fan_curve_value = self.fan_power_of_air_flow_curve(air_flow_rate_ratio)

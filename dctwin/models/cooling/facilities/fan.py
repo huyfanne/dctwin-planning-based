@@ -20,9 +20,10 @@ class FanModel(nn.Module):
     def __init__(
         self,
         config: ACU,
-        key_mapping: dict,
+        key_mapping: dict = None,
         learnable: bool = True,
         device: str | int | torch.device = "cpu",
+        max_learning_iter: int = 500,
     ) -> None:
         super(FanModel, self).__init__()
         self.config = config

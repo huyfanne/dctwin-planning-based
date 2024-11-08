@@ -14,7 +14,8 @@ actuator_control_type_dict = {
     ActuatorControlType.Fan_Air_Mass_Flow_Rate: "supply_mass_flow_rate_sp",
     ActuatorControlType.Pump_Mass_Flow_Rate: "supply_mass_flow_rate_sp",
     ActuatorControlType.CPU_Utilization: "cpu_load_utilization",
-    ActuatorControlType.Tank_Source_Side_Mass_Flow_Rate: "source_side_mass_flow_rate"
+    ActuatorControlType.Tank_Source_Side_Mass_Flow_Rate: "source_side_mass_flow_rate",
+    ActuatorControlType.Relative_Humidity_Setpoint: "relative_humidity_sp",
 }
 
 
@@ -61,6 +62,28 @@ class HVACData:
                 return_air_relative_humidity=(),
                 coil_sensible_heat_load=(),
                 fan_power=(),
+            )
+        return obs, acts
+
+    @staticmethod
+    def _reset_dehumidifier_data(zone: Any, obs: dict, acts: dict) -> Tuple[dict, dict]:
+        if zone.constructions.dehumidifiers is None:
+            return obs, acts
+        for dehumidifier_name, dehumidifier in zone.constructions.dehumidifiers.items():
+            acts[dehumidifier_name] = Batch(
+                on_off_schedule=torch.tensor([False], dtype=torch.bool, requires_grad=False),
+                relative_humidity_sp=(),
+            )
+            obs[dehumidifier_name] = Batch(
+                inlet_air_temperature=(),
+                outlet_air_temperature=(),
+                supply_air_mass_flow_rate=(),
+                inlet_air_relative_humidity=(),
+                outlet_air_relative_humidity=(),
+                inlet_air_humidity_ratio=(),
+                outlet_air_humidity_ratio=(),
+                water_removal_rate=(),
+                power=(),
             )
         return obs, acts
 
@@ -218,12 +241,21 @@ class HVACData:
                     dtype=torch.float32,
                     requires_grad=False,
                 ),
-                zone_air_relative_humidity=(),
+                zone_air_relative_humidity=(
+                    torch.tensor(
+                        [0.6], # initial relative humidity
+                        dtype=torch.float32,
+                        requires_grad=False,
+                    )
+                ),
+                zone_air_humidity_ratio=(),
                 sensible_heat_load=(),
+                zone_moisture=(),
             )
             # reset zone facility and IT equipment data
             self._reset_d2c_server_data(zone, obs, acts)
             self._reset_acu_data(zone, obs, acts)
+            self._reset_dehumidifier_data(zone, obs, acts)
             self._reset_cdu_data(zone, obs, acts)
             self._reset_ite_data(zone, obs, acts)
         return obs, acts
