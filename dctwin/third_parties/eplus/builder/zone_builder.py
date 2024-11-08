@@ -5,7 +5,7 @@ from eppy.modeleditor import IDF
 
 from dclib.ite.composite import ITE
 from dclib.electrical.room.electrical_device import ElectricEquipment, Light, People
-from dclib.room import Room, Thermostats, Humidistats, RoomStateControl
+from dclib.room import Room, Thermostats, Humidistats, RoomStateControl, RoomMeta
 from dclib.cooling.room.facilities.acu import ACU, ACUOutdoorAir
 from dclib.cooling.room.facilities.dehumidifier import Dehumidifier
 
@@ -535,6 +535,7 @@ class RoomBuilder:
         zone_name: str,
         acus: Dict[str, ACU],
         dehumidifiers: Dict[str, Dehumidifier],
+        meta: RoomMeta,
     ) -> None:
         """
         Build the ZoneHVAC equipment for a thermal zone
@@ -715,7 +716,7 @@ class RoomBuilder:
         zone_equipment_list = self.model.newidfobject(
             key="ZoneHVAC:EquipmentList".upper(),
             Name=f"{zone_name} equipment list",
-            Load_Distribution_Scheme="UniformLoad",
+            Load_Distribution_Scheme=meta.load_distribution_scheme,
         )
         # step 2.1 make air distribution units
         make_air_distribution_units(
@@ -925,6 +926,7 @@ class RoomBuilder:
         acus: Dict[str, ACU],
         dehumidifiers: Dict[str, Dehumidifier],
         sizing: SizingSystem,
+        meta: RoomMeta,
     ) -> None:
         """
         The HVAC system (air side) mainly consists of two parts:
@@ -933,7 +935,7 @@ class RoomBuilder:
         (2) airloops system
         https://bigladdersoftware.com/epx/docs/9-5/input-output-reference/group-air-distribution.html#airloophvac
         """
-        self._make_zone_hvac_equipment(zone_name=zone_name, acus=acus, dehumidifiers=dehumidifiers)
+        self._make_zone_hvac_equipment(zone_name=zone_name, acus=acus, dehumidifiers=dehumidifiers, meta=meta)
         self._make_zone_hvac_airloops(zone_name=zone_name, acus=acus, sizing=sizing)
 
     def make_rooms(self, rooms: Dict[str, Room]) -> None:
@@ -944,6 +946,7 @@ class RoomBuilder:
                 acus=config.constructions.acus,
                 dehumidifiers=config.constructions.dehumidifiers,
                 sizing=config.sizing.sizing_system,
+                meta=config.meta,
             )
             if config.constructions.heat_gains is not None and config.constructions.heat_gains.ites is not None:
                 self._make_ites(

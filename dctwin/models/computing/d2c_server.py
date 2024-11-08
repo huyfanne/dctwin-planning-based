@@ -8,6 +8,7 @@ from dctwin.utils.const import water_specific_heat, air_specific_heat
 
 
 class ChipThermoModel(nn.Module):
+
     def __init__(
         self,
         chip_heat_transfer_area: float | torch.Tensor = 0.26*0.11,  # length of the chip
@@ -69,6 +70,7 @@ class ChipThermoModel(nn.Module):
 
 
 class HybridCoolingLoadDistributionModel(nn.Module):
+
     def __init__(
         self,
         num_turn: int = 4,
@@ -150,6 +152,7 @@ class HybridCoolingLoadDistributionModel(nn.Module):
         eta = eta_nominator / (eta_denominator + 1e-9)
         assert 0. <= eta.item() <= 1., ValueError(f"Invalid eta value: {eta.item()}")
         return eta, h_air, h_water
+
 
 class D2CServerModel(nn.Module):
     """

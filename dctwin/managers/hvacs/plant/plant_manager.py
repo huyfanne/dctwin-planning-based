@@ -177,10 +177,6 @@ class PlantManager(nn.Module):
         if branch_components.tanks:
             for component_id, component in branch_components.tanks.items():
                 if component_id not in component_models.keys():
-                    component.model = ThermalStorageTankModel(
-                        config=component,
-                        key_mapping=self.device_key_mapping,
-                    )
                     self.add_module(
                         name=component_id,
                         module=ThermalStorageTankModel(
@@ -580,7 +576,7 @@ class PlantManager(nn.Module):
                     if loop_side == "supply":
                         tank_temperature, requested_cooling_load, supply_cooling_load = self.models[component_id].forward(
                             T_tank_current=data.obs.plants[component_id].tank_water_temperature,
-                            T_outdoor=data.inps.outdoor_temperature,
+                            T_outdoor=data.inps.outdoor_air_dry_bulb_temperature,
                             T_use_in=data.obs_next.plants[branch_id].inlet_temperature,
                             T_source_in=data.acts[component.other_loop_side].supply_temperature_sp,
                             m_use=data.obs_next.plants[branch_id].water_mass_flow_rate,
@@ -621,7 +617,7 @@ class PlantManager(nn.Module):
                     if loop_side == "supply":
                         cw_sp = data.acts[component.other_loop_side].supply_temperature_sp \
                             if data.acts[component.other_loop_side].supply_temperature_sp \
-                            else data.inps.outdoor_temperature
+                            else data.inps.outdoor_air_dry_bulb_temperature
                         chiller_power = self.models[component_id].forward(
                             cooling_load=data.obs_next.plants[component_id].cooling_load,
                             chw_sp=data.acts[loop_id].supply_temperature_sp,  # All chillers share the same sp
@@ -679,8 +675,9 @@ class PlantManager(nn.Module):
                         cw_return_water_temp=data.obs_next.plants[branch_id].inlet_temperature,
                         cw_supply_temp_setpoint=data.acts[loop_id].supply_temperature_sp,
                         water_mass_flow_rate=data.obs_next.plants[branch_id].water_mass_flow_rate,
-                        outside_air_wet_bulb_temp=data.inps.outdoor_temperature,
+                        outside_air_wet_bulb_temp=data.inps.outdoor_air_wet_bulb_temperature,
                     )
+                    data.obs_next.plants[component_id].fan_power = fan_power
                     data.obs_next.plants[component_id].inlet_temperature = (
                         data.obs_next.plants[branch_id].inlet_temperature
                     )

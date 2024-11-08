@@ -235,7 +235,7 @@ class ConfigBuilder:
                 ub=ub
             ) if variable_names is None or "supply side mass flow rate" in variable_names else None
 
-    def make_pue_observations(
+    def make_building_observations(
         self,
         exposed: bool = True,
         normalize_method: int = None,
@@ -265,7 +265,7 @@ class ConfigBuilder:
         ) if variable_names is None or "total power" in variable_names else None
         self._make_observation(
             exposed=exposed,
-            variable_name="building power",
+            variable_name="total IT power",
             key_value="Whole Building",
             output_variable_name="Facility Total Building Electricity Demand Rate",
             reporting_frequency="timestep",
@@ -748,14 +748,14 @@ class ConfigBuilder:
         ub: float = None,
         variable_names: Union[str, List[str]] = None
     ) -> None:
-        for chw_pump_name, chw_pump in self.device_key_map[
-            "chilled water pumps"
+        for pump_name, pump in self.device_key_map[
+            "pumps"
         ].items():
             # observe chilled water pump mass flow rate
             self._make_observation(
                 exposed=exposed,
-                variable_name=f"{chw_pump_name} mass flow rate".lower(),
-                key_value=chw_pump["mass flow rate"].split(":")[0],
+                variable_name=f"{pump_name} mass flow rate".lower(),
+                key_value=pump["mass flow rate"].split(":")[0],
                 output_variable_name="System Node Mass Flow Rate",
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
@@ -765,92 +765,14 @@ class ConfigBuilder:
             # observe chilled water pump power consumption
             self._make_observation(
                 exposed=exposed,
-                variable_name=f"{chw_pump_name} power consumption".lower(),
-                key_value=chw_pump["power"].split(":")[0],
+                variable_name=f"{pump_name} power consumption".lower(),
+                key_value=pump["power"].split(":")[0],
                 output_variable_name="Pump Electricity Rate",
                 reporting_frequency="timestep",
                 normalize_method=normalize_method,
                 lb=lb,
                 ub=ub,
             ) if variable_names is None or "power" in variable_names else None
-
-        for sec_chw_pump_name, sec_chw_pump in self.device_key_map[
-            "secondary chilled water pumps"
-        ].items():
-            # observe secondary chilled water pump mass flow rate
-            self._make_observation(
-                exposed=exposed,
-                variable_name=f"{sec_chw_pump_name} mass flow rate".lower(),
-                key_value=sec_chw_pump["mass flow rate"].split(":")[0],
-                output_variable_name="System Node Mass Flow Rate",
-                reporting_frequency="timestep",
-                normalize_method=normalize_method,
-                lb=lb,
-                ub=ub,
-            ) if variable_names is None or "mass flow rate" in variable_names else None
-            # observe secondary chilled water pump power consumption
-            self._make_observation(
-                exposed=exposed,
-                variable_name=f"{sec_chw_pump_name} power consumption".lower(),
-                key_value=sec_chw_pump["power"].split(":")[0],
-                output_variable_name="Pump Electricity Rate",
-                reporting_frequency="timestep",
-                normalize_method=normalize_method,
-                lb=lb,
-                ub=ub,
-            ) if variable_names is None or "power" in variable_names else None
-
-        for cw_pump_name, cw_pump in self.device_key_map[
-            "condenser water pumps"
-        ].items():
-            # observe condenser water pump mass flow rate
-            self._make_observation(
-                exposed=exposed,
-                variable_name=f"{cw_pump_name} mass flow rate".lower(),
-                key_value=cw_pump["mass flow rate"].split(":")[0],
-                output_variable_name="System Node Mass Flow Rate",
-                reporting_frequency="timestep",
-                normalize_method=normalize_method,
-                lb=lb,
-                ub=ub,
-            ) if variable_names is None or "mass flow rate" in variable_names else None
-            # observe condenser water pump power consumption
-            self._make_observation(
-                exposed=exposed,
-                variable_name=f"{cw_pump_name} power consumption".lower(),
-                key_value=cw_pump["power"].split(":")[0],
-                output_variable_name="Pump Electricity Rate",
-                reporting_frequency="timestep",
-                normalize_method=normalize_method,
-                lb=lb,
-                ub=ub,
-            ) if variable_names is None or "power" in variable_names else None
-        if "secondary chilled water pumps" in self.device_key_map:
-            for schw_pump_name, schw_pump in self.device_key_map[
-                "secondary chilled water pumps"
-            ].items():
-                # observe secondary chilled water pump mass flow rate
-                self._make_observation(
-                    exposed=exposed,
-                    variable_name=f"{schw_pump_name} mass flow rate".lower(),
-                    key_value=schw_pump["mass flow rate"].split(":")[0],
-                    output_variable_name="System Node Mass Flow Rate",
-                    reporting_frequency="timestep",
-                    normalize_method=normalize_method,
-                    lb=lb,
-                    ub=ub,
-                ) if variable_names is None or "mass flow rate" in variable_names else None
-                # observe secondary chilled water pump power consumption
-                self._make_observation(
-                    exposed=exposed,
-                    variable_name=f"{schw_pump_name} power consumption".lower(),
-                    key_value=schw_pump["power"].split(":")[0],
-                    output_variable_name="Pump Electricity Rate",
-                    reporting_frequency="timestep",
-                    normalize_method=normalize_method,
-                    lb=lb,
-                    ub=ub,
-                ) if variable_names is None or "power" in variable_names else None
 
     def make_chiller_observations(
         self,
@@ -1411,8 +1333,9 @@ class ConfigBuilder:
                 ub=device_values.get(loop_name, {}).get("ub", ub),
             ) if device_values.get(loop_name, {}).get("disable", disable) is False else None
 
-    def make_chilled_water_pump_flow_rates_actions(
+    def make_pump_flow_rates_actions(
         self,
+        pump_name: str,
         control_type: int = 2,
         normalize_method: int = None,
         lb: float = None,
@@ -1421,64 +1344,40 @@ class ConfigBuilder:
         device_values: dict = {},
         disable: bool = False,
     ) -> None:
-        for pump_name, pump in self.device_key_map["chilled water pumps"].items():
-            self._make_actions(
-                variable_name=f"{pump_name} mass flow rate".lower(),
-                actuated_component_unique_name=f"{pump_name}",
-                actuated_component_type=2,
-                actuated_component_control_type=2,
-                control_type=device_values.get(pump_name, {}).get("control_type", control_type),
-                default_unnormed_value=device_values.get(pump_name, {}).get("default_unnormed_value", default_unnormed_value),
-                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
-                lb=device_values.get(pump_name, {}).get("lb", lb),
-                ub=device_values.get(pump_name, {}).get("ub", ub),
-            ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
+        self._make_actions(
+            variable_name=f"{pump_name} mass flow rate".lower(),
+            actuated_component_unique_name=f"{pump_name}",
+            actuated_component_type=2,
+            actuated_component_control_type=2,
+            control_type=device_values.get(pump_name, {}).get("control_type", control_type),
+            default_unnormed_value=device_values.get(pump_name, {}).get("default_unnormed_value",
+                                                                        default_unnormed_value),
+            method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
+            lb=device_values.get(pump_name, {}).get("lb", lb),
+            ub=device_values.get(pump_name, {}).get("ub", ub),
+        ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
 
-    def make_secondary_chilled_water_pump_flow_rates_actions(
+    def make_pump_flow_rates_action_prescheduled(
         self,
-        control_type: int = 2,
-        normalize_method: int = None,
-        lb: float = None,
-        ub: float = None,
-        default_unnormed_value: float = None,
+        pump_name: str,
+        schedule_dir: Path = Path("data/schedule/pumps"),
+        normalize_method: int = 1,
+        lb: float = 0.0,
+        ub: float = 100.0,
         device_values: dict = {},
         disable: bool = False,
     ) -> None:
-        for pump_name, pump in self.device_key_map["secondary chilled water pumps"].items():
-            self._make_actions(
-                variable_name=f"{pump_name} mass flow rate".lower(),
-                actuated_component_unique_name=f"{pump_name}",
-                actuated_component_type=2,
-                actuated_component_control_type=2,
-                control_type=device_values.get(pump_name, {}).get("control_type", control_type),
-                default_unnormed_value=device_values.get(pump_name, {}).get("default_unnormed_value", default_unnormed_value),
-                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
-                lb=device_values.get(pump_name, {}).get("lb", lb),
-                ub=device_values.get(pump_name, {}).get("ub", ub),
-            ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
-
-    def make_condenser_water_pump_flow_rates_actions(
-        self,
-        control_type: int = 2,
-        normalize_method: int = None,
-        lb: float = None,
-        ub: float = None,
-        default_unnormed_value: float = None,
-        device_values: dict = {},
-        disable: bool = False,
-    ) -> None:
-        for pump_name, pump in self.device_key_map["condenser water pumps"].items():
-            self._make_actions(
-                variable_name=f"{pump_name} mass flow rate".lower(),
-                actuated_component_unique_name=f"{pump_name}",
-                actuated_component_type=2,
-                actuated_component_control_type=2,
-                control_type=device_values.get(pump_name, {}).get("control_type", control_type),
-                default_unnormed_value=device_values.get(pump_name, {}).get("default_unnormed_value", default_unnormed_value),
-                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
-                lb=device_values.get(pump_name, {}).get("lb", lb),
-                ub=device_values.get(pump_name, {}).get("ub", ub),
-            ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
+        self._make_actions(
+            variable_name=f"{pump_name} mass flow rate".lower(),
+            actuated_component_unique_name=f"{pump_name}",
+            actuated_component_type=2,
+            actuated_component_control_type=2,
+            control_type=5,
+            method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
+            lb=device_values.get(pump_name, {}).get("lb", lb),
+            ub=device_values.get(pump_name, {}).get("ub", ub),
+            input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
+        ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
 
     def make_chilled_water_supply_branch_on_off_actions_prescheduled(
         self,
@@ -1503,74 +1402,6 @@ class ConfigBuilder:
                         f"{branch_name}.json"
                     ),
                 ) if branch.side == "middle" else None
-
-    def make_chilled_water_pump_flow_rates_actions_prescheduled(
-        self,
-        schedule_dir: Path = Path("data/schedule/pumps"),
-        normalize_method: int = 1,
-        lb: float = 0.0,
-        ub: float = 100.0,
-        device_values: dict = {},
-        disable: bool = False,
-    ) -> None:
-        for pump_name, pump in self.device_key_map["chilled water pumps"].items():
-            self._make_actions(
-                variable_name=f"{pump_name} mass flow rate".lower(),
-                actuated_component_unique_name=f"{pump_name}",
-                actuated_component_type=2,
-                actuated_component_control_type=2,
-                control_type=5,
-                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
-                lb=device_values.get(pump_name, {}).get("lb", lb),
-                ub=device_values.get(pump_name, {}).get("ub", ub),
-                input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
-            ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
-
-    def make_secondary_chilled_water_pump_flow_rates_actions_prescheduled(
-        self,
-        schedule_dir: Path = Path("data/schedule/pumps"),
-        normalize_method: int = 1,
-        lb: float = 0.0,
-        ub: float = 100.0,
-        device_values: dict = {},
-        disable: bool = False,
-    ) -> None:
-        for pump_name, pump in self.device_key_map[
-            "secondary chilled water pumps"
-        ].items():
-            self._make_actions(
-                variable_name=f"{pump_name} mass flow rate".lower(),
-                actuated_component_unique_name=f"{pump_name}",
-                actuated_component_type=2,
-                actuated_component_control_type=2,
-                control_type=5,
-                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
-                lb=device_values.get(pump_name, {}).get("lb", lb),
-                ub=device_values.get(pump_name, {}).get("ub", ub),
-                input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
-            ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
-
-    def make_condenser_water_pump_flow_rates_actions_prescheduled(
-        self,
-        schedule_dir: Path = Path("data/schedule/pumps"),
-        normalize_method: int = 1,
-        lb: float = 0.0,
-        ub: float = 100.0,
-        device_values: dict = {},
-        disable: bool = False,
-    ) -> None:
-        for pump_name, pump in self.device_key_map["condenser water pumps"].items():
-            self._make_actions(
-                variable_name=f"{pump_name} mass flow rate".lower(),
-                actuated_component_unique_name=f"{pump_name}",
-                actuated_component_type=2,
-                actuated_component_control_type=2,
-                control_type=5,
-                method=device_values.get(pump_name, {}).get("normalize_method", normalize_method),
-                lb=device_values.get(pump_name, {}).get("lb", lb),
-                ub=device_values.get(pump_name, {}).get("ub", ub),
-                input_source=schedule_dir.joinpath(f"{pump_name.lower()}.json"),
-            ) if device_values.get(pump_name, {}).get("disable", disable) is False else None
 
     def make_acu_on_off_schedules(
         self,
