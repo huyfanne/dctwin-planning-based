@@ -1,4 +1,3 @@
-from .snappyhex import SnappyHexDockerBackend, SnappyHexK8SBackend
 from .solver import (
     SolverDockerBackend,
     SolverK8SBackend,
@@ -7,11 +6,12 @@ from .solver import (
     SteadySolverK8sBackend,
     TransientSolverK8sBackend,
 )
+from .mesh import SnappyHexBackend, SnappyHexK8sBackend
 
 
 __all__ = [
-    "SnappyHexDockerBackend",
-    "SnappyHexK8SBackend",
+    "SnappyHexBackend",
+    "SnappyHexK8sBackend",
     "SolverDockerBackend",
     "SolverK8SBackend",
     "SteadySolverDockerBackend",

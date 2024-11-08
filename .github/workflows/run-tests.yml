@@ -6,7 +6,8 @@ on:
 
 jobs:
   run-cfd:
-    runs-on: ubuntu-latest
+    runs-on:
+      labels: large_4c
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -29,8 +30,8 @@ jobs:
 
       - name: Pull Docker images
         run: |
-          docker pull ghcr.io/cap-dcwiz/openfoam-v1912-centos72:latest
           docker pull ghcr.io/cap-dcwiz/salome-9-debian10:latest
+          docker pull ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0
 
       - name: Install dependencies with Poetry
         env:
@@ -40,10 +41,11 @@ jobs:
           poetry install
 
       - name: Run python script
-        run: cd test && poetry run python test_cfd.py
+        run: cd test && poetry run python run_cfd.py
 
   run-cosim:
-    runs-on: ubuntu-latest
+    runs-on:
+      labels: large_4c
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -66,8 +68,9 @@ jobs:
 
       - name: Pull Docker images
         run: |
-          docker pull ghcr.io/cap-dcwiz/openfoam-v1912-centos72:latest
           docker pull ghcr.io/cap-dcwiz/salome-9-debian10:latest
+          docker pull ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0
+          docker pull ghcr.io/cap-dcwiz/energyplus-9-5-0:latest
 
       - name: Install dependencies with Poetry
         env:

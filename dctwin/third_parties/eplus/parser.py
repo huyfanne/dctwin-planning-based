@@ -98,7 +98,7 @@ class Eplus:
         for plant_loop in plant_loops:
             plant_loop_names.add(plant_loop.name)
         return plant_loop_names
-    
+
     def _get_thermostat_setpoints_name(self):
         """
         Get the name for all Thermostat:DualSetpoints object name in EnergyPlus

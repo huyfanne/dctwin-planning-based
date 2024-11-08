@@ -20,7 +20,46 @@ internalField   {{ 'uniform (0 0 0)' if not internal_field else internal_field }
 
 boundaryField
 {
-    {{ room_boundary.U }}
+{#    {{ room_boundary.U }}#}
+    "room_wall_.*"
+    {
+        type             noSlip;
+    }
+
+    "raised_floor_.*"
+    {
+        type             noSlip;
+    }
+
+    "opening_raised_floor_.*"
+    {
+        type             cyclic;
+    }
+    
+     "false_ceiling_.*"
+    {
+        type            zeroGradient;
+    }
+    
+    "opening_false_ceiling_.*"
+    {
+        type           cyclic;
+    }
+
+        "box_.*"
+    {
+        type             noSlip;
+    }
+
+        "rack_wall_.*"
+    {
+        type             noSlip;
+    }
+
+        "rack_panel_.*"
+    {
+        type             noSlip;
+    }
 
     {% for acu_boundary in acu_boundaries %}
     {{ acu_boundary.U }}

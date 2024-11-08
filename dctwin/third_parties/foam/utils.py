@@ -1,29 +1,17 @@
-import os
 import math
 import shutil
-from typing import List, Dict
-from dataclasses import dataclass
-
+from typing import List
 from dclib.room import Room
-from dclib.models.geometry.basics import Vertex
-from dclib.ite.racks.rack import Rack
 from dctwin.utils import (
     template_env,
     template_dir,
     config,
 )
-
 from pathlib import Path
 from typing import Optional, Union
-
-
-@dataclass
-class Mesh:
-    name: str
-    level: int
-    type: str
-    refine_level: str
-    face_type: Optional[str] = None
+import numpy as np
+from dclib.construction.entities import Box
+from dclib.models.geometry import Vertex
 
 
 def generate_control_dict(
@@ -33,6 +21,7 @@ def generate_control_dict(
     write_interval: int = 100,
     end_time: int = 500,
     process_num: int = 1,
+    is_gpu: bool = False,
 ) -> None:
     if steady is False:
         delta_t = float("1e-5")
@@ -43,17 +32,23 @@ def generate_control_dict(
     if steady is False:
         system_folder = "transient"
     shutil.copy(
-        Path(template_dir, f"foam/templates/system/{system_folder}/fvSchemes"),
+        Path(template_dir, f"foam/template/system/{system_folder}/fvSchemes"),
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
-    shutil.copy(
-        Path(template_dir, f"foam/templates/system/{system_folder}/fvSolution"),
-        Path(config.cfd.case_dir, "system/fvSolution"),
-    )
+    if is_gpu:
+        shutil.copy(
+            Path(template_dir, f"foam/template/system/{system_folder}/fvSolution_gpu"),
+            Path(config.cfd.case_dir, "system/fvSolution"),
+        )
+    else:
+        shutil.copy(
+            Path(template_dir, f"foam/template/system/{system_folder}/fvSolution_cpu"),
+            Path(config.cfd.case_dir, "system/fvSolution"),
+        )
     with open(Path(config.cfd.case_dir, "system/controlDict"), "w") as f:
         f.write(
             template_env.get_template(
-                f"foam/templates/system/{system_folder}/controlDict.j2"
+                f"foam/template/system/{system_folder}/controlDict.j2"
             ).render(
                 delta_t=delta_t,
                 write_interval=write_interval,
@@ -67,45 +62,52 @@ def generate_control_dict(
             process_num = 64
         with open(Path(config.cfd.case_dir, "system/decomposeParDict"), "w") as f:
             f.write(
-                template_env.get_template("foam/templates/system/decomposeParDict.j2").render(
+                template_env.get_template("foam/template/system/decomposeParDict.j2").render(
                     process_num=process_num
                 )
             )
 
 
-def init_foam():
+def init_foam(is_gpu: bool = False) -> None:
     Path(config.cfd.case_dir, "0").mkdir(parents=True, exist_ok=True)
-    Path(config.cfd.case_dir, "constant/triSurface").mkdir(parents=True, exist_ok=True)
+    Path(config.cfd.case_dir, "constant").mkdir(parents=True, exist_ok=True)
     Path(config.cfd.case_dir, "system").mkdir(parents=True, exist_ok=True)
     Path(config.cfd.case_dir, "case.foam").touch(exist_ok=True)
 
     shutil.copy(
-        Path(template_dir, "foam/templates/constant/g"), Path(config.cfd.case_dir, "constant/g")
+        Path(template_dir, "foam/template/constant/g"), Path(config.cfd.case_dir, "constant/g")
     )
     shutil.copy(
-        Path(template_dir, "foam/templates/constant/thermophysicalProperties"),
+        Path(template_dir, "foam/template/constant/thermophysicalProperties"),
         Path(config.cfd.case_dir, "constant/thermophysicalProperties"),
     )
     shutil.copy(
-        Path(template_dir, "foam/templates/constant/transportProperties"),
+        Path(template_dir, "foam/template/constant/transportProperties"),
         Path(config.cfd.case_dir, "constant/transportProperties"),
     )
 
     with open(Path(config.cfd.case_dir, "constant/turbulenceProperties"), "w") as f:
         f.write(
-            template_env.get_template("foam/templates/constant/turbulenceProperties.j2").render(
+            template_env.get_template("foam/template/constant/turbulenceProperties.j2").render(
                 turbulence=("on" if config.cfd.SOLVER_TURBULENCE else "off")
             )
         )
 
     shutil.copy(
-        Path(template_dir, "foam/templates/system/steady/fvSchemes"),
+        Path(template_dir, "foam/template/system/steady/fvSchemes"),
         Path(config.cfd.case_dir, "system/fvSchemes"),
     )
-    shutil.copy(
-        Path(template_dir, "foam/templates/system/steady/fvSolution"),
-        Path(config.cfd.case_dir, "system/fvSolution"),
-    )
+
+    if is_gpu:
+        shutil.copy(
+            Path(template_dir, f"foam/template/system/steady/fvSolution_gpu"),
+            Path(config.cfd.case_dir, "system/fvSolution"),
+        )
+    else:
+        shutil.copy(
+            Path(template_dir, f"foam/template/system/steady/fvSolution_cpu"),
+            Path(config.cfd.case_dir, "system/fvSolution"),
+        )
 
     generate_control_dict()
 
@@ -142,7 +144,7 @@ def generate_block_dict(room: Room) -> None:
     v_max.y += 0.1
     v_max.z += 0.1
 
-    template = template_env.get_template("foam/templates/mesh/blockMeshDict.j2")
+    template = template_env.get_template("foam/template/mesh/blockMeshDict.j2")
     with open(Path(config.cfd.case_dir, "system/blockMeshDict"), "w") as f:
         f.write(
             template.render(
@@ -153,134 +155,6 @@ def generate_block_dict(room: Room) -> None:
                 z_cells=z_cells,
             )
         )
-
-
-def generate_snappy_dict(
-    room: Room,
-    perforated_openings: Dict,
-    process_num: int = 1,
-    field_config: Optional[dict] = None,
-) -> None:
-    """Generate the snappyHexMeshDict file"""
-    files = os.listdir(Path(config.cfd.geometry_dir))
-    files.sort()
-    files = list(filter(lambda x: ".stl" in x, files))
-    new_field_config = {
-        "room_wall": {"type": "wall", "level": 1, "refine_level": "(0 1)"},
-        "pillar": {"type": "wall", "level": 1, "refine_level": "(0 1)"},
-        "acu_wall": {"type": "wall", "level": 2, "refine_level": "(0 2)"},
-        "acu_return": {"type": "patch", "level": 2, "refine_level": "(0 2)"},
-        "acu_supply": {"type": "patch", "level": 2, "refine_level": "(0 2)"},
-        "server_inlet": {"type": "patch", "level": 2, "refine_level": "(0 3)"},
-        "server_outlet": {"type": "patch", "level": 2, "refine_level": "(0 3)"},
-        "server_wall": {"type": "wall", "level": 2, "refine_level": "(0 3)"},
-        "rack_wall": {
-            "type": "wall",
-            "level": 1,
-            "refine_level": "(0 1)",
-            "faceType": "baffle",
-        },
-        "rack_panel": {
-            "type": "wall",
-            "level": 2,
-            "refine_level": "(0 2)",
-            "faceType": "baffle",
-        },
-        "ceiling": {
-            "type": "wall",
-            "level": 1,
-            "refine_level": "(0 1)",
-            "faceType": "baffle",
-        },
-        "floor": {
-            "type": "wall",
-            "level": 1,
-            "refine_level": "(0 1)",
-            "faceType": "baffle",
-        },
-        "box": {
-            "type": "wall",
-            "level": 1,
-            "refine_level": "(0 1)",
-            "faceType": "baffle",
-        },
-    }
-    if field_config:
-        new_field_config = {**new_field_config, **field_config}
-    mesh_list = []
-    baffle_faces = []
-    for filename in files:
-        mesh_name = filename.split(".")[0]
-        mesh_category = None
-        for k, v in new_field_config.items():
-            if mesh_name.startswith(k):
-                mesh_category = v
-                break
-        if mesh_category is None:
-            print(mesh_name)
-            raise ValueError("No field config for snappyHex")
-        mesh = Mesh(
-            name=str(mesh_name),
-            level=mesh_category["level"],
-            type=mesh_category["type"],
-            refine_level=mesh_category["refine_level"],
-        )
-        if mesh_category.get("faceType"):
-            mesh.face_type = mesh_category["faceType"]
-            baffle_faces.append(mesh)
-        mesh_list.append(mesh)
-
-    assert len(mesh_list) == len(files)
-    with open(Path(config.cfd.case_dir, "system/surfaceFeatureExtractDict"), "w") as f:
-        f.write(
-            template_env.get_template("foam/templates/mesh/surfaceFeatureExtractDict.j2").render(
-                files=files
-            )
-        )
-
-    first_rack: Rack = list(room.constructions.racks.values())[0]
-    location = Vertex(
-        x=first_rack.geometry.location.x,
-        y=first_rack.geometry.location.y,
-        z=(room.geometry.height + first_rack.geometry.size.z) / 2,
-    )
-    with open(Path(config.cfd.case_dir, "system/snappyHexMeshDict"), "w") as f:
-        f.write(
-            template_env.get_template("foam/templates/mesh/snappyHexMeshDict.j2").render(
-                mesh_list=mesh_list, location=location
-            )
-        )
-    with open(Path(config.cfd.case_dir, "system/createPatchDict"), "w") as f:
-        f.write(
-            template_env.get_template("foam/templates/mesh/createPatchDict.j2").render(
-                baffle_faces=baffle_faces
-            )
-        )
-    if process_num > 1:
-        process_num = 2 ** int(math.log(process_num, 2))
-        with open(Path(config.cfd.case_dir, "system/decomposeParDict"), "w") as f:
-            f.write(
-                template_env.get_template("foam/templates/system/decomposeParDict.j2").render(
-                    process_num=process_num
-                )
-            )
-
-    if len(perforated_openings) > 0:
-        with open(Path(config.cfd.case_dir, "system/fvOptions"), "w") as f:
-            f.write(
-                template_env.get_template(f"foam/templates/system/steady/fvOptions.j2").render(
-                    perforated_openings=perforated_openings,
-                )
-            )
-        with open(Path(config.cfd.case_dir, "system/topoSetDict"), "w") as f:
-            f.write(
-                template_env.get_template(f"foam/templates/system/steady/topoSetDict.j2").render(
-                    perforated_openings=perforated_openings,
-                    min_floor_height=room.constructions.raised_floor.geometry.height
-                    - 0.05,
-                    max_floor_height=room.constructions.raised_floor.geometry.height,
-                )
-            )
 
 
 def read_internal_field(filename: Union[str, Path]):
@@ -297,3 +171,66 @@ def read_internal_field(filename: Union[str, Path]):
                     return
             else:
                 continue
+
+
+def is_closed(box: Box):
+    if (
+        box.geometry.faces.bottom and
+        box.geometry.faces.top and
+        box.geometry.faces.left and
+        box.geometry.faces.right and
+        box.geometry.faces.front and
+        box.geometry.faces.rear
+    ):
+        return True
+    return False
+
+
+def round_to_base(value: float, base: float) -> float:
+    """
+    Round the value to the nearest base
+    """
+    return round(base * np.round(value / base), 3)
+
+
+def rotate_vertex(
+    origin: Vertex,
+    vertex_to_be_rotated: Vertex,
+    angle: float
+):
+    qx = origin.x + np.cos(angle) * (vertex_to_be_rotated.x - origin.x) - np.sin(angle) * (vertex_to_be_rotated.y - origin.y)
+    qy = origin.y + np.sin(angle) * (vertex_to_be_rotated.x - origin.x) + np.cos(angle) * (vertex_to_be_rotated.y - origin.y)
+    return Vertex(
+        x=qx,
+        y=qy,
+        z=vertex_to_be_rotated.z
+    )
+
+
+def rotate_rectangular(
+    abs_vertex_1: Vertex,
+    abs_vertex_2: Vertex,
+    abs_vertex_3: Vertex,
+    abs_vertex_4: Vertex,
+    angle: float,
+):
+    angle = np.deg2rad(angle)
+    rotated_vertex_1 = rotate_vertex(abs_vertex_1, abs_vertex_1, angle)
+    rotated_vertex_2 = rotate_vertex(abs_vertex_1, abs_vertex_2, angle)
+    rotated_vertex_3 = rotate_vertex(abs_vertex_1, abs_vertex_3, angle)
+    rotated_vertex_4 = rotate_vertex(abs_vertex_1, abs_vertex_4, angle)
+
+    # find the minimum and maximum x, y, and z coordinates of the ACU
+    rotated_vertices = [rotated_vertex_1, rotated_vertex_2, rotated_vertex_3, rotated_vertex_4]
+    min_x = min([v.x for v in rotated_vertices])
+    min_y = min([v.y for v in rotated_vertices])
+    min_z = min([v.z for v in rotated_vertices])
+
+    max_x = max([v.x for v in rotated_vertices])
+    max_y = max([v.y for v in rotated_vertices])
+    max_z = max([v.z for v in rotated_vertices])
+
+    v_min = Vertex(x=min_x, y=min_y, z=min_z)
+    v_max = Vertex(x=max_x, y=max_y, z=max_z)
+
+    return v_min, v_max

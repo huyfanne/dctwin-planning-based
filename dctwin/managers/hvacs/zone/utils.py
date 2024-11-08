@@ -204,7 +204,7 @@ def calc_object_mesh_index(room: Room, mesh_points: np.ndarray) -> Dict:
     return object_mesh_index
 
 
-def check_base_dir(case_idx: int, episode_idx: int = None) -> Tuple[bool, bool]:
+def check_base_dir(case_idx: int, episode_idx: int = None) -> Tuple[bool]:
     if config.cfd.mesh_dir != Path(""):
         base_case_path = Path(config.cfd.mesh_dir)
         assert Path.is_dir(base_case_path), "mesh is not a directory"
@@ -222,13 +222,13 @@ def check_base_dir(case_idx: int, episode_idx: int = None) -> Tuple[bool, bool]:
             config.cfd.case_dir = Path(config.LOG_DIR).joinpath("base")
     else:
         if Path.is_dir(Path(config.LOG_DIR).joinpath("base/constant/polyMesh")):
-            run_geometry, run_mesh = False, False
+            run_mesh = False
         else:
-            run_geometry, run_mesh = True, True
+            run_mesh = True
         config.cfd.case_dir = Path(config.LOG_DIR).joinpath("base")
         config.cfd.mesh_dir = config.cfd.case_dir
 
-    return run_geometry, run_mesh
+    return run_mesh
 
 
 def save_json_file(path: Union[Path, str], saved_dict: Dict) -> None:

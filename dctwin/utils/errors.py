@@ -23,13 +23,6 @@ class PODConfigError(DCTwinError):
         pass
 
 
-class GeometryBuildError(OSError):
-    """File not found."""
-
-    def __init__(self, *args, **kwargs):  # real signature unknown
-        pass
-
-
 class MeshBuildError(OSError):
     """File not found."""
 

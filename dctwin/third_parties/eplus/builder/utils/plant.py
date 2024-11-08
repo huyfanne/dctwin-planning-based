@@ -418,7 +418,9 @@ def make_heat_exchanger(
     :return:
     """
     if kwargs["type_"] == "chilled" and kwargs["side"] == "supply":
-        obj = model.newidfobject("HeatExchanger:FluidToFluid".upper(), Name=hx.uid.lower())
+        obj = model.newidfobject(
+            "HeatExchanger:FluidToFluid".upper(), Name=hx.uid.lower()
+        )
         obj["Availability_Schedule_Name"] = "ALWAYS ON"
         obj = fill_inlet_outlet(
             branch_component_idx=branch_component_idx,
@@ -428,20 +430,33 @@ def make_heat_exchanger(
             inlet_key_name="Loop_Supply_Side_Inlet_Node_Name",
             outlet_key_name="Loop_Supply_Side_Outlet_Node_Name",
         )
-        obj["Loop_Demand_Side_Design_Flow_Rate"] = hx.cooling.loop_demand_side_design_flow_rate
-        obj["Loop_Supply_Side_Design_Flow_Rate"] = hx.cooling.loop_supply_side_design_flow_rate
+        obj[
+            "Loop_Demand_Side_Design_Flow_Rate"
+        ] = hx.cooling.loop_demand_side_design_flow_rate
+        obj[
+            "Loop_Supply_Side_Design_Flow_Rate"
+        ] = hx.cooling.loop_supply_side_design_flow_rate
         obj["Heat_Exchange_Model_Type"] = hx.cooling.heat_exchanger_model_type
-        obj["Heat_Exchanger_UFactor_Times_Area_Value"] =\
-            hx.cooling.heat_exchanger_u_factor_times_area_value
+        obj[
+            "Heat_Exchanger_UFactor_Times_Area_Value"
+        ] = hx.cooling.heat_exchanger_u_factor_times_area_value
         obj["Control_Type"] = hx.cooling.control_type
-        obj["Minimum_Temperature_Difference_to_Activate_Heat_Exchanger"] =\
-            hx.cooling.minimum_temperature_difference_to_activate_heat_exchanger
-        obj["Heat_Transfer_Metering_End_Use_Type"] = hx.cooling.heat_transfer_metering_end_use_type
-        obj["Component_Override_Cooling_Control_Temperature_Mode"] =\
-            hx.cooling.component_override_cooling_control_temperature_mode
+        obj[
+            "Minimum_Temperature_Difference_to_Activate_Heat_Exchanger"
+        ] = hx.cooling.minimum_temperature_difference_to_activate_heat_exchanger
+        obj[
+            "Heat_Transfer_Metering_End_Use_Type"
+        ] = hx.cooling.heat_transfer_metering_end_use_type
+        obj[
+            "Component_Override_Cooling_Control_Temperature_Mode"
+        ] = hx.cooling.component_override_cooling_control_temperature_mode
         obj["Sizing_Factor"] = hx.cooling.sizing_factor
-        obj["Operation_Minimum_Temperature_Limit"] = hx.cooling.operation_minimum_temperature_limit
-        obj["Operation_Maximum_Temperature_Limit"] = hx.cooling.operation_maximum_temperature_limit
+        obj[
+            "Operation_Minimum_Temperature_Limit"
+        ] = hx.cooling.operation_minimum_temperature_limit
+        obj[
+            "Operation_Maximum_Temperature_Limit"
+        ] = hx.cooling.operation_maximum_temperature_limit
 
     elif kwargs["type_"] == "condenser" and kwargs["side"] == "demand":
         obj = model.getobject("HeatExchanger:FluidToFluid".upper(), hx.uid.lower())

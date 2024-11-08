@@ -14,51 +14,26 @@ FoamFile
     object snappyHexMeshDict;
 }
 
-castellatedMesh true;
-snap true;
-addLayers false;
+castellatedMesh on;
+snap off;
+addLayers off;
 geometry
 {
-    {% for mesh in mesh_list %}
-    {{ mesh.name + '.stl' }}
-    {
-        type triSurfaceMesh;
-        name {{ mesh.name }};
-        appendRegionName false;
-    }
-    {% endfor %}
+    {{ snappy_obj_cmd }}
 }
 
 castellatedMeshControls
 {
     features
-    ({% for mesh in mesh_list %}
-        {
-            file 	 "{{ mesh.name }}.eMesh";
-            level    {{ mesh.level }};
-        }{% endfor %}
+    (
     );
-
     refinementSurfaces
     {
-    {% for mesh in mesh_list %}
-        {{ mesh.name }}
-        {
-            level {{ mesh.refine_level }};
-            patchInfo
-            {
-                type {{ mesh.type }};
-            }
-        {% if mesh.face_type %}
-            faceZone {{ mesh.name }};
-            faceType {{ mesh.face_type }};
-        {% endif %}
-        }
-    {% endfor %}
+        {{ refinement_surfaces_cmd }}
     }
-
     refinementRegions
     {
+        {{ refinement_regions_cmd }}
     }
 
     locationInMesh ( {{ location.x }} {{ location.y }} {{ location.z }} );
@@ -135,7 +110,6 @@ meshQualityControls
     {
         maxNonOrtho 60;
     }
-
 }
 
 debug 0;

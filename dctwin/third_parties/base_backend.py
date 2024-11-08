@@ -16,6 +16,9 @@ class BaseBackend(ABC):
         self.process_num = process_num
         self.container = None
 
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
     @property
     @abstractmethod
     def docker_image(self) -> str:
