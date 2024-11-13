@@ -230,7 +230,7 @@ class PlantManager(nn.Module):
                     )
                     actual_mass_flow_rate = torch.min(requested_mass_flow_rate, maximum_mass_flow_rate)
                 else:
-                    actual_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
+                    actual_mass_flow_rate = torch.zeros(1,)
         return actual_mass_flow_rate
 
     @staticmethod
@@ -515,7 +515,7 @@ class PlantManager(nn.Module):
                 else:
                     # if the ACU is off, the mass flow rate is 0
                     data.obs_next.plants[branch_id].outlet_temperature = data.obs_next.plants[branch_id].inlet_temperature
-                    data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
+                    data.obs_next.plants[branch_id].water_mass_flow_rate = torch.zeros(1,)
 
         if branch.components.cdus is not None:
             for component_id, component in branch.components.cdus.items():
@@ -560,7 +560,7 @@ class PlantManager(nn.Module):
                     data.obs_next.dc.total_facility_power += pump_power
                     data.obs_next.dc.total_dc_power += pump_power
                 else:
-                    data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
+                    data.obs_next.plants[branch_id].water_mass_flow_rate = torch.zeros(1,)
 
         if branch.components.tanks is not None:
             for component_id, component in branch.components.tanks.items():
@@ -609,7 +609,7 @@ class PlantManager(nn.Module):
                     data.obs_next.plants[branch_id].outlet_temperature =\
                         data.obs_next.plants[branch_id].inlet_temperature
                     data.obs_next.plants[branch_id].water_mass_flow_rate =\
-                        torch.tensor([0.], dtype=torch.float32)
+                        torch.zeros(1,)
 
         if branch.components.chillers is not None:
             for component_id, component in branch.components.chillers.items():
@@ -662,11 +662,11 @@ class PlantManager(nn.Module):
                         raise logger.critical(f"Loop side should be either demand or supply, not {loop_side}")
 
                 else:
-                    data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
+                    data.obs_next.plants[branch_id].water_mass_flow_rate = torch.zeros(1,)
                     data.obs_next.plants[branch_id].outlet_temperature = (
                         data.obs_next.plants[branch_id].inlet_temperature
                     )
-                    data.obs_next.plants[component_id].power = torch.tensor([0.], dtype=torch.float32)
+                    data.obs_next.plants[component_id].power = torch.zeros(1,)
 
         if branch.components.cooling_towers is not None:
             for component_id, component in branch.components.cooling_towers.items():
@@ -696,8 +696,8 @@ class PlantManager(nn.Module):
                     data.obs_next.plants[branch_id].outlet_temperature = (
                         data.obs_next.plants[branch_id].inlet_temperature
                     )
-                    data.obs_next.plants[branch_id].water_mass_flow_rate = torch.tensor([0.], dtype=torch.float32)
-                    data.obs_next.plants[component_id].fan_power = torch.tensor([0.], dtype=torch.float32)
+                    data.obs_next.plants[branch_id].water_mass_flow_rate = torch.zeros(1,)
+                    data.obs_next.plants[component_id].fan_power = torch.zeros(1,)
 
     def _solve_half_loop_side_branches(
         self,
