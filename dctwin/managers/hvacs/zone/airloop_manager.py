@@ -29,7 +29,7 @@ class AirLoopManager(nn.Module):
         self.zone_air_leakage_rate = nn.Parameter(
             torch.tensor(0.0, dtype=torch.float32),
             requires_grad=True,
-        )
+        ) # kg/s
 
     def _init_models(self) -> Dict[str, Any]:
         """
@@ -112,7 +112,7 @@ class AirLoopManager(nn.Module):
 
     @staticmethod
     def get_humid_air_property(
-        relative_humidity: float | torch.Tensor,
+        humidity: float | torch.Tensor,
         temperature: float | torch.Tensor,
         property_type: str,
     ) -> float:
@@ -141,7 +141,7 @@ class AirLoopManager(nn.Module):
             prop = HAPropsSI(
                 property_map[property_type],
                 property_map[known_property],
-                relative_humidity,
+                humidity,
                 'T',
                 temperature_k,
                 'P',
@@ -157,6 +157,15 @@ class AirLoopManager(nn.Module):
         zone: Room,
         data: Batch,
     ) -> None:
+        # get the current zone air humidity ratio
+        zone_air_humidity_ratio = data.obs.zones[zone_name].zone_air_humidity_ratio
+        zone_air_relative_humidity = self.get_humid_air_property(
+            humidity=zone_air_humidity_ratio.item(),
+            temperature=data.obs.zones[zone_name].zone_air_temperature.item(),
+            property_type='relative_humidity'
+        )
+        zone_air_relative_humidity = torch.tensor(zone_air_relative_humidity)
+        data.obs.zones[zone_name].zone_air_relative_humidity = zone_air_relative_humidity
         # get the active acu ids
         active_acu_ids = [
             acu_name for acu_name, acu in zone.constructions.acus.items()
@@ -170,11 +179,18 @@ class AirLoopManager(nn.Module):
         weighted_return_temperature = torch.zeros(1, )
         total_acu_air_mass_flow_rate = torch.zeros(1, )
         for acu_name, acu in zone.constructions.acus.items():
+            data.obs_next.zones[acu_name].supply_air_temperature = \
+                data.acts[acu_name].supply_temperature_sp
+            supply_air_relative_humidity = self.get_humid_air_property(
+                humidity=zone_air_humidity_ratio.item(),
+                temperature=data.obs_next.zones[acu_name].supply_air_temperature.item(),
+                property_type='relative_humidity'
+            )
+            data.obs_next.zones[acu_name].supply_air_relative_humidity = torch.tensor(supply_air_relative_humidity)
             if acu_name in active_acu_ids:
                 data.obs_next.zones[acu_name].supply_air_mass_flow_rate = \
                     data.acts[acu_name].supply_mass_flow_rate_sp
-                data.obs_next.zones[acu_name].supply_air_temperature = \
-                    data.acts[acu_name].supply_temperature_sp
+                # calculate the fan power and the return air temperature
                 data.obs_next.zones[acu_name].fan_power = self.models[f"{acu_name} fan"](
                     data.acts[acu_name].supply_mass_flow_rate_sp
                 )
@@ -188,11 +204,31 @@ class AirLoopManager(nn.Module):
                     acu_return_temperature * data.acts[acu_name].supply_mass_flow_rate_sp
                 )
                 total_acu_air_mass_flow_rate += data.acts[acu_name].supply_mass_flow_rate_sp
+            else:
+                data.obs_next.zones[acu_name].supply_air_mass_flow_rate = torch.zeros(1, )
+                data.obs_next.zones[acu_name].fan_power = torch.zeros(1, )
+                data.obs_next.zones[acu_name].return_air_temperature = (
+                    data.obs_next.zones[acu_name].supply_air_temperature
+                )
+            return_air_relative_humidity = self.get_humid_air_property(
+                humidity=zone_air_humidity_ratio.item(),
+                temperature=data.obs_next.zones[acu_name].return_air_temperature.item(),
+                property_type='relative_humidity'
+            )
+            data.obs_next.zones[acu_name].return_air_relative_humidity = torch.tensor(return_air_relative_humidity)
 
-        # update the zone air temperature
+        # update the next zone air temperature and humidity ratio
         data.obs_next.zones[zone_name].zone_air_temperature = (
             weighted_return_temperature / total_acu_air_mass_flow_rate
         )
+        zone_air_relative_humidity = self.get_humid_air_property(
+            humidity=zone_air_humidity_ratio.item(),
+            temperature=data.obs_next.zones[zone_name].zone_air_temperature.item(),
+            property_type='relative_humidity'
+        )
+        zone_air_relative_humidity = torch.tensor(zone_air_relative_humidity)
+        data.obs_next.zones[zone_name].zone_air_relative_humidity = zone_air_relative_humidity
+        data.obs_next.zones[zone_name].zone_air_humidity_ratio = zone_air_humidity_ratio
 
     def _sim_dehumidifier(
         self,
@@ -205,48 +241,63 @@ class AirLoopManager(nn.Module):
             temperature=data.obs.zones[zone_name].zone_air_temperature.item(),
             property_type='density',
         )
-        zone_air_humidity_ratio = self.get_humid_air_property(
-            relative_humidity=data.obs.zones[zone_name].zone_air_relative_humidity.item(),
-            temperature=data.obs.zones[zone_name].zone_air_temperature.item(),
-            property_type='humidity',
-        )
-        zone_air_humidity_ratio = torch.tensor(zone_air_humidity_ratio)
-        zone_air_relative_humidity = data.obs.zones[zone_name].zone_air_relative_humidity
+        zone_air_humidity_ratio = data.obs.zones[zone_name].zone_air_humidity_ratio
         zone_moisture = zone_air_humidity_ratio * rho_air * zone.geometry.volume  # kg water
+        # update the zone moisture based on the outdoor air humidity ratio and leakage rate
+        zone_moisture += (
+            data.inps.outdoor_air_humidity_ratio - zone_air_humidity_ratio
+        ) * zone.geometry.volume * rho_air * self.zone_air_leakage_rate * self.time_step
         data.obs.zones[zone_name].zone_moisture = zone_moisture
+        # get the active dehumidifier ids
         active_dehumidifier_ids = [
             dehumidifier_name for dehumidifier_name, dehumidifier in zone.constructions.dehumidifiers.items()
             if data.acts[dehumidifier_name].on_off_schedule == 1
         ]
         for dehumidifier_name, dehumidifier in zone.constructions.dehumidifiers.items():
+            data.obs.zones[dehumidifier_name].inlet_air_temperature = \
+                data.obs.zones[zone_name].zone_air_temperature
+            data.obs.zones[dehumidifier_name].inlet_air_relative_humidity = \
+                data.obs.zones[zone_name].zone_air_relative_humidity
             if dehumidifier_name in active_dehumidifier_ids:
-                data.obs_next.zones[dehumidifier_name].inlet_air_temperature = \
-                    data.obs_next.zones[zone_name].zone_air_temperature
-                data.obs_next.zones[dehumidifier_name].inlet_air_relative_humidity = \
-                    data.obs_next.zones[zone_name].zone_air_relative_humidity
-                power, outlet_temp, outlet_rh, water_removal_rate, air_mass_flow_rate = self.models[f"{dehumidifier_name}"](
-                    inlet_dry_bulb_temperature=data.obs_next.zones[dehumidifier_name].inlet_air_temperature,
-                    inlet_relative_humidity=data.obs_next.zones[dehumidifier_name].inlet_air_relative_humidity,
+                # dehumidifier is on
+                power, outlet_temp, outlet_rh, water_removal_rate, supply_air_mass_flow_rate = self.models[f"{dehumidifier_name}"](
+                    inlet_dry_bulb_temperature=data.obs.zones[dehumidifier_name].inlet_air_temperature,
+                    inlet_relative_humidity=data.obs.zones[dehumidifier_name].inlet_air_relative_humidity,
                     relative_humidity_setpoint=data.acts[dehumidifier_name].relative_humidity_sp,
                 )
-                data.obs_next.zones[dehumidifier_name].power = power
-                data.obs_next.zones[dehumidifier_name].outlet_air_temperature = outlet_temp
-                data.obs_next.zones[dehumidifier_name].outlet_air_relative_humidity = outlet_rh
-                data.obs_next.zones[dehumidifier_name].water_removal_rate = water_removal_rate
-                data.obs_next.zones[dehumidifier_name].supply_air_mass_flow_rate = air_mass_flow_rate
                 # calculate room humidity ratio and relative humidity
                 zone_moisture = (
-                    data.obs.zones[zone_name].zone_moisture - water_removal_rate * self.time_step +
-                    (data.inps.outdoor_air_humidity_ratio - zone_air_humidity_ratio) *
-                    zone.geometry.volume * rho_air * self.zone_air_leakage_rate * self.time_step
+                    zone_moisture - water_removal_rate * self.time_step
                 )
                 zone_air_humidity_ratio = zone_moisture / (zone.geometry.volume * rho_air)
-                zone_air_relative_humidity = self.get_humid_air_property(
-                    relative_humidity=zone_air_humidity_ratio.item(),
-                    temperature=data.obs_next.zones[zone_name].zone_air_temperature.item(),
-                    property_type='relative_humidity'
+            else:
+                # dehumidifier is off
+                power, water_removal_rate, supply_air_mass_flow_rate = (
+                    torch.zeros(1, ), torch.zeros(1, ), torch.zeros(1, )
                 )
-                zone_air_relative_humidity = torch.tensor(zone_air_relative_humidity)
+                outlet_temp = data.obs.zones[dehumidifier_name].inlet_air_temperature
+                outlet_rh = data.obs.zones[dehumidifier_name].inlet_air_relative_humidity
+                zone_air_humidity_ratio = zone_moisture / (zone.geometry.volume * rho_air)
+            # update the next dehumidifier states
+            data.obs_next.zones[dehumidifier_name].power = power
+            data.obs_next.zones[dehumidifier_name].outlet_air_temperature = outlet_temp
+            data.obs_next.zones[dehumidifier_name].outlet_air_relative_humidity = outlet_rh
+            data.obs_next.zones[dehumidifier_name].water_removal_rate = water_removal_rate
+            data.obs_next.zones[dehumidifier_name].supply_air_mass_flow_rate = supply_air_mass_flow_rate
+            data.obs_next.zones[dehumidifier_name].inlet_air_temperature = \
+                data.obs_next.zones[zone_name].zone_air_temperature
+            data.obs_next.zones[dehumidifier_name].inlet_air_relative_humidity = \
+                data.obs_next.zones[zone_name].zone_air_relative_humidity
+            data.obs_next.zones[dehumidifier_name].outlet_air_temperature = outlet_temp
+            data.obs_next.zones[dehumidifier_name].outlet_air_relative_humidity = outlet_rh
+
+        # update the next zone air temperature and humidity ratio
+        zone_air_relative_humidity = self.get_humid_air_property(
+            humidity=zone_air_humidity_ratio.item(),
+            temperature=data.obs_next.zones[zone_name].zone_air_temperature.item(),
+            property_type='relative_humidity'
+        )
+        zone_air_relative_humidity = torch.tensor(zone_air_relative_humidity)
         data.obs_next.zones[zone_name].zone_air_humidity_ratio = zone_air_humidity_ratio
         data.obs_next.zones[zone_name].zone_air_relative_humidity = zone_air_relative_humidity
         data.obs_next.zones[zone_name].zone_moisture = zone_moisture
