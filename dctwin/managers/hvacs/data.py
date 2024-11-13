@@ -80,8 +80,6 @@ class HVACData:
                 supply_air_mass_flow_rate=(),
                 inlet_air_relative_humidity=(),
                 outlet_air_relative_humidity=(),
-                inlet_air_humidity_ratio=(),
-                outlet_air_humidity_ratio=(),
                 water_removal_rate=(),
                 power=(),
             )
@@ -241,14 +239,14 @@ class HVACData:
                     dtype=torch.float32,
                     requires_grad=False,
                 ),
-                zone_air_relative_humidity=(
+                zone_air_relative_humidity=(),
+                zone_air_humidity_ratio=(
                     torch.tensor(
-                        [0.6], # initial relative humidity
+                        [0.01],  # initial humidity ratio
                         dtype=torch.float32,
                         requires_grad=False,
                     )
                 ),
-                zone_air_humidity_ratio=(),
                 sensible_heat_load=(),
                 zone_moisture=(),
             )
