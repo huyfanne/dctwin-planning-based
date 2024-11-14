@@ -19,7 +19,8 @@ from .data import HVACData, actuator_control_type_dict
 
 
 class HVACManager(BaseManager, ABC):
-    """ Base class for all data center environments.
+    """
+    Base class for all data center environments.
     """
 
     def __init__(
@@ -252,12 +253,12 @@ class HVACManager(BaseManager, ABC):
             inps=inps,
             obs=obs if obs is not None else self.data.obs,
         )
-        if self.heat_load_manager is not None:
-            self.heat_load_manager.forward(
-                data=self.data
-            )
         if self.liquid_loop_manager is not None:
             self.liquid_loop_manager.forward(
+                data=self.data
+            )
+        if self.heat_load_manager is not None:
+            self.heat_load_manager.forward(
                 data=self.data
             )
         if self.air_loop_manager is not None:
