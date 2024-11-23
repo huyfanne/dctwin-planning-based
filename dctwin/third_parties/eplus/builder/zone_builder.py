@@ -5,7 +5,7 @@ from eppy.modeleditor import IDF
 
 from dclib.ite.composite import ITE
 from dclib.electrical.room.electrical_device import ElectricEquipment, Light, People
-from dclib.room import Room, Thermostats, Humidistats, RoomStateControl, RoomMeta
+from dclib.room import Room, Thermostats, Humidistats, RoomStateControl
 from dclib.cooling.room.facilities.acu import ACU, ACUOutdoorAir
 from dclib.cooling.room.facilities.dehumidifier import Dehumidifier
 
@@ -535,7 +535,7 @@ class RoomBuilder:
         zone_name: str,
         acus: Dict[str, ACU],
         dehumidifiers: Dict[str, Dehumidifier],
-        meta: RoomMeta,
+        meta: OrderedDict[str, str],
     ) -> None:
         """
         Build the ZoneHVAC equipment for a thermal zone
@@ -716,7 +716,7 @@ class RoomBuilder:
         zone_equipment_list = self.model.newidfobject(
             key="ZoneHVAC:EquipmentList".upper(),
             Name=f"{zone_name} equipment list",
-            Load_Distribution_Scheme=meta.load_distribution_scheme,
+            Load_Distribution_Scheme=meta["load_distribution_scheme"],
         )
         # step 2.1 make air distribution units
         make_air_distribution_units(
@@ -926,7 +926,7 @@ class RoomBuilder:
         acus: Dict[str, ACU],
         dehumidifiers: Dict[str, Dehumidifier],
         sizing: SizingSystem,
-        meta: RoomMeta,
+        meta: OrderedDict[str, str],
     ) -> None:
         """
         The HVAC system (air side) mainly consists of two parts:

@@ -58,7 +58,7 @@ class AirLoopManager(nn.Module):
                         key_mapping=self.device_key_mapping["dehumidifiers"][dehumidifier_name],
                     )
                 )
-        return {k: v for k, v in dict(self.named_modules()).items() if k is not "" and "." not in k}
+        return {k: v for k, v in dict(self.named_modules()).items() if k != "" and "." not in k}
 
     def collect(self, data: Batch | Dict):
         """
