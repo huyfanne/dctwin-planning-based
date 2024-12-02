@@ -186,24 +186,14 @@ class VariableSpeedCoolingTowerModel(nn.Module):
         self.tower_nominal_capacity = (
             (rho * self.config.cooling.design_water_flow_rate) * cp * self.config.cooling.design_range_temperature
         )
-        logger.info(
-            f"Tower Nominal Capacity: {self.tower_nominal_capacity:.5} [W]"
-        )
 
         self.free_conv_air_flow_rate = self.config.cooling.minimum_air_flow_rate_ratio * self.config.cooling.design_air_flow_rate
-        logger.info(
-            f"Air Flow Rate in free convection "
-            f"regime {self.free_conv_air_flow_rate:.5f} [m3/s]."
-        )
 
         self.tower_free_conv_nom_cap = (
             self.tower_nominal_capacity *
             self.config.cooling.fraction_of_tower_capacity_in_free_convection_regime
         )
-        logger.info(
-            f"Tower capacity in free convection regime at "
-            f"design conditions {self.tower_free_conv_nom_cap:.5f} [W]"
-        )
+
 
     def _calc_approach_temp(
         self,
