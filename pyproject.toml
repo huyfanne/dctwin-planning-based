@@ -30,7 +30,6 @@ dclib = {git = "https://github.com/cap-dcwiz/dclib.git", tag="v1.2.5"}
 sh = "^2.0.6"
 psutil = "5.9.8"
 requests = ">2.32"
-mayavi = "^4.8.2"
 configobj = "^5.0.8" # DO NOT DELETE: apptools which is a dependency of mayavi removed configobj as a required dependency so we need to manually install configobj https://github.com/enthought/apptools/pull/351
 
 [tool.poetry.group.dev.dependencies]
@@ -46,6 +45,7 @@ mkdocs-literate-nav = "^0.5.0"
 mkdocs-material = "^9.5.5"
 mkdocs-material-extensions = "^1.1"
 mkdocs-section-index = "^0.3.4"
+mayavi = "^4.8.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

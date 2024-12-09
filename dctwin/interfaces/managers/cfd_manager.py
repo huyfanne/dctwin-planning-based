@@ -11,7 +11,6 @@ import numpy as np
 import docker
 import torch
 import vtk
-from mayavi import mlab
 from loguru import logger
 
 from dctwin.backends import (
@@ -398,6 +397,7 @@ class CFDManager:
 
     @staticmethod
     def geom_check():
+        from mayavi import mlab
 
         folder_path = config.cfd.case_dir.joinpath("constant/triSurface")
 
