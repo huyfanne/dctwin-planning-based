@@ -1,3 +1,4 @@
+import copy
 import os
 import shutil
 import subprocess
@@ -7,6 +8,7 @@ import time
 
 import psutil
 from typing import Optional, Union, Dict
+from collections import OrderedDict
 import numpy as np
 import docker
 import torch
@@ -30,7 +32,10 @@ from .utils import (
     calc_object_mesh_index,
     save_json_file,
     read_temperature,
-    read_sensor_temperature_results,
+    read_p,
+    read_p_rgh,
+    read_u,
+    read_sensor_results,
 )
 
 from dctwin.utils import config
@@ -38,8 +43,9 @@ from dctwin.utils.errors import (
     MeshBuildError,
     FoamSolveError,
 )
-from dclib.room import Room
-
+from dctwin.third_parties.foam.mesh import RackModel, RowRackModel
+from dclib.room import Room, Rack, Server
+from dclib.data import ServerInputs
 
 
 class CFDManager:
@@ -82,9 +88,12 @@ class CFDManager:
         is_k8s: bool = False,
         k8s_config: Dict = None,
         scale_server_flow_rate: bool = False,
-        acu2server_flow_ratio: float = 0.8,
+        acu2server_flow_ratio: float = 0.9,
         is_gpu: bool = False,
+        refinement_level: int = 2,
+        is_modulus: bool = False,
     ) -> None:
+        self.is_modulus = is_modulus
         if k8s_config is None:
             k8s_config = {}
         if not is_k8s:
@@ -114,6 +123,7 @@ class CFDManager:
         self.scale_server_flow_rate = scale_server_flow_rate
         self.acu2server_flow_ratio = acu2server_flow_ratio
         self.is_gpu = is_gpu
+        self.refinement_level = int(refinement_level)
 
         self.last_state_case = None
         self.object_mesh_index = read_object_mesh_index(room=self.room)
@@ -190,6 +200,7 @@ class CFDManager:
             self.mesh_backend.run(
                 room=self.room,
                 case_dir=config.cfd.case_dir,
+                refinement_level=self.refinement_level,
             )
         except Exception:
             raise MeshBuildError("Failed to mesh geometry")
@@ -248,8 +259,10 @@ class CFDManager:
         server_powers: server power for each server
         server_volume_flow_rates: server volume flow rate for each server
         """
-        for rack_id, rack in self.room.constructions.racks.items():
-            for server_uid, server in rack.constructions.servers.items():
+        def __update_server_boundaries(
+            _rack: Rack,
+        ) -> None:
+            for server_uid, server in _rack.constructions.servers.items():
                 if server_powers is not None:
                     try:
                         server.power.input_power = server_powers[server_uid]
@@ -265,12 +278,20 @@ class CFDManager:
                             f"server {server_uid} volume flow rate is missing"
                         )
 
+        for rack_id, rack in self.room.constructions.racks.items():
+            __update_server_boundaries(rack)
+        for row_id, row in self.room.constructions.rows.items():
+            for rack_id, rack in row.racks.items():
+                __update_server_boundaries(rack)
+
+
     def update_boundary_conditions(
         self,
         supply_air_temperatures: Dict = None,
         supply_air_volume_flow_rates: Dict = None,
         server_powers: Dict = None,
         server_volume_flow_rates: Dict = None,
+        **kwargs,
     ) -> None:
         """Update boundary conditions for ACUs and servers"""
         self._update_acu_boundaries(
@@ -283,29 +304,59 @@ class CFDManager:
     @property
     def format_boundary_conditions(self) -> Dict:
         """Format boundary conditions for ACUs and servers to be used in the API"""
+
+        def _get_server_boundary_conditions(_server_id:str, _server, is_modulus):
+            boundary_conditions["server_powers"][_server_id] = _server.power.input_power
+            boundary_conditions["server_volume_flow_rates"][_server_id] = _server.volume_flow_rate
+            if is_modulus:
+                server_inlet_face_center, server_outlet_face_center, server_box_center = (
+                    self.room.constructions.server_patch_positions(_server_id))
+                boundary_conditions["server_inlet_face_center"][_server_id] = server_inlet_face_center
+                boundary_conditions["server_outlet_face_center"][_server_id] = server_outlet_face_center
+
         boundary_conditions = {
             "supply_air_temperatures": {},
             "supply_air_volume_flow_rates": {},
-            # "supply_air_relative_humidities": {},  # TODO: add support for dehumidifiers
+            "acu_supply_face_center": {},
+            "acu_return_face_center": {},
+            "server_powers": {},
+            "server_volume_flow_rates": {},
+            "server_inlet_face_center": {},
+            "server_outlet_face_center": {},
+        } if self.is_modulus else {
+            "supply_air_temperatures": {},
+            "supply_air_volume_flow_rates": {},
             "server_powers": {},
             "server_volume_flow_rates": {},
         }
+
         for acu_id, acu in self.room.constructions.acus.items():
-            boundary_conditions["supply_air_temperatures"][
-                acu_id
-            ] = acu.cooling.operating.supply_air_temperature
-            boundary_conditions["supply_air_volume_flow_rates"][
-                acu_id
-            ] = acu.cooling.operating.supply_air_volume_flow_rate
+
+            boundary_conditions["supply_air_temperatures"][acu_id] = acu.cooling.operating.supply_air_temperature
+
+            boundary_conditions["supply_air_volume_flow_rates"][acu_id] = (acu.cooling.operating
+                                                                           .supply_air_volume_flow_rate)
+            if self.is_modulus:
+                acu_return_face_center, acu_supply_face_center, acu_box_center = self.room.constructions.acu_patch_positions(acu_id)
+                boundary_conditions["acu_supply_face_center"][acu_id] = acu_supply_face_center
+                boundary_conditions["acu_return_face_center"][acu_id] = acu_return_face_center
 
         for rack_id, rack in self.room.constructions.racks.items():
             for server_id, server in rack.constructions.servers.items():
-                boundary_conditions["server_powers"][
-                    server_id
-                ] = server.power.input_power
-                boundary_conditions["server_volume_flow_rates"][
-                    server_id
-                ] = server.volume_flow_rate
+                _get_server_boundary_conditions(
+                    _server_id=server_id,
+                    _server=server,
+                    is_modulus=self.is_modulus,
+                )
+
+        for row_racks in self.room.constructions.rows.values():
+            for rack_id, rack in row_racks.racks.items():
+                for server_id, server in rack.constructions.servers.items():
+                    _get_server_boundary_conditions(
+                        _server_id=server_id,
+                        _server=server,
+                        is_modulus=self.is_modulus,
+                    )
 
         # TODO: add support for dehumidifiers
 
@@ -314,7 +365,7 @@ class CFDManager:
     def _scale_server_flow_rate(
         self,
         boundary_conditions: Dict,
-        acu2server_flow_ratio: float = 0.8,
+        acu2server_flow_ratio: float = 0.9,
         expert_mode: bool = False,
     ) -> Dict:
         """
@@ -333,22 +384,32 @@ class CFDManager:
         )
 
         scale_factor = (
-                sum_acu_volume_flow_rate
-                * acu2server_flow_ratio
-                / sum_server_volume_flow_rate
+            sum_acu_volume_flow_rate
+            * acu2server_flow_ratio
+            / sum_server_volume_flow_rate
         )
         # scale server flow rate
         for server_id, volume_flow_rate in boundary_conditions[
             "server_volume_flow_rates"
         ].items():
             boundary_conditions["server_volume_flow_rates"][server_id] = (
-                    volume_flow_rate * scale_factor
+                volume_flow_rate * scale_factor
             )
 
         for rack_id, rack in self.room.constructions.racks.items():
             for server_id, server in rack.constructions.servers.items():
                 if server.cooling.fan_type == "Variable":
                     server.cooling.volume_flow_rate_ratio *= scale_factor
+                if server.cooling.fan_type == "Fixed":
+                    server.cooling.volume_flow_rate = boundary_conditions["server_volume_flow_rates"][server_id]
+
+        for row_id, row in self.room.constructions.rows.items():
+            for rack_id, rack in row.racks.items():
+                for server_id, server in rack.constructions.servers.items():
+                    if server.cooling.fan_type == "Variable":
+                        server.cooling.volume_flow_rate_ratio *= scale_factor
+                    if server.cooling.fan_type == "Fixed":
+                        server.cooling.volume_flow_rate = boundary_conditions["server_volume_flow_rates"][server_id]
 
         sum_acu_volume_flow_rate_after = sum(
             boundary_conditions["supply_air_volume_flow_rates"].values()
@@ -469,6 +530,63 @@ class CFDManager:
             except Exception as e:
                 logger.critical("An error occurred:", e)
 
+    def _adjust_server(self, racks: [RackModel, RowRackModel], servers_input: OrderedDict, boundary_conditions: Dict):
+        for rack_key, rack in racks.items():
+
+            rack_slot_num = int(round(rack.geometry.size.z / RackModel.slot_height))
+            server_slot_size = 4 if self.refinement_level == 0 else 2
+            servers_num = int(round(rack_slot_num/server_slot_size))
+            new_rack_servers = {f"{rack_key}_server_slot_{_*server_slot_size}":{} for _ in range(servers_num)}
+            slot_to_new_slot = {slot_index: slot_index // server_slot_size for slot_index in range(rack_slot_num)}
+
+            for server_key, server in rack.constructions.servers.items():
+
+                slot_position = server.geometry.slot_position
+                slot_occupation = server.geometry.slot_occupation
+                occupied_slots = range(slot_position, slot_position + slot_occupation)
+                new_slot_counts = {}
+
+                for slot in occupied_slots:
+                    if slot >= rack_slot_num:
+                        continue  # Skip if slot index exceeds the total number of slots
+                    new_slot_index = slot_to_new_slot[slot]
+                    new_slot_counts.setdefault(new_slot_index, 0)
+                    new_slot_counts[new_slot_index] += 1
+
+                # Calculate the fraction of the server in each new slot
+                for new_slot_index, count in new_slot_counts.items():
+                    fraction = count / slot_occupation
+                    new_rack_servers[f"{rack_key}_server_slot_{new_slot_index*server_slot_size}"].setdefault(server_key,
+                                                                                                             0)
+                    new_rack_servers[f"{rack_key}_server_slot_{new_slot_index*server_slot_size}"][server_key] = (
+                        round(fraction, 4))
+
+            servers = OrderedDict()
+            for new_server_key, server in new_rack_servers.items():
+                if bool(server):
+
+                    # Calculate the total input power of the new server
+                    input_power = 0
+                    volume_flow_rates = 0
+
+                    for server_key in server.keys():
+                        input_power += self.room.inputs.servers[server_key].input_power * server[server_key]
+                        volume_flow_rates += (boundary_conditions["server_volume_flow_rates"][server_key]
+                                              * server[server_key])
+
+                    servers_input[new_server_key] = ServerInputs()
+                    servers_input[new_server_key].input_power = input_power
+
+                    # Create a new server object
+                    max_key = max(server, key=lambda k: server[k]*rack.constructions.servers[k].geometry.slot_occupation)
+                    servers[new_server_key] = copy.deepcopy(rack.constructions.servers[max_key])
+                    servers[new_server_key].uid = new_server_key
+                    servers[new_server_key].geometry.slot_position = int(new_server_key.split("_")[-1])
+                    servers[new_server_key].geometry.slot_occupation = server_slot_size
+                    servers[new_server_key].volume_flow_rate = volume_flow_rates
+
+            rack.constructions.servers = servers
+
     def run(
         self,
         case_idx: int = 1,
@@ -504,7 +622,7 @@ class CFDManager:
             self.update_boundary_conditions(**boundary_conditions)
             boundary_conditions = self.format_boundary_conditions
 
-        if self.scale_server_flow_rate or self.room.constructions.check_sealed:
+        if self.scale_server_flow_rate:
             boundary_conditions = self._scale_server_flow_rate(
                 boundary_conditions=boundary_conditions,
                 acu2server_flow_ratio=self.acu2server_flow_ratio,
@@ -512,90 +630,142 @@ class CFDManager:
             )
             self.update_boundary_conditions(**boundary_conditions)
 
-        if self.pod_backend is not None and not self.run_cfd:
-            # use reduced-order CFD simulation if POD backend is provided
-            # and run_cfd flag is set to False
-            assert self.object_mesh_index is not None, (
-                "object mesh index is not provided"
-                "please specify the index file path or read from the mesh directory"
+        for server_key, server in self.room.inputs.servers.items():
+            if server.air_volume_flow_rate:
+                boundary_conditions["server_volume_flow_rates"][server_key] = server.air_volume_flow_rate
+
+        if self.refinement_level < 2:
+
+            servers_input = OrderedDict()
+
+            for row_key, row in self.room.constructions.rows.items():
+                self._adjust_server(
+                    racks=row.racks,
+                    servers_input=servers_input,
+                    boundary_conditions=boundary_conditions
+                )
+
+            self._adjust_server(
+                racks=self.room.constructions.racks,
+                servers_input=servers_input,
+                boundary_conditions=boundary_conditions
             )
-            results = self.pod_backend.run(
-                pod_method=self.pod_method,
-                **boundary_conditions,
-            )
+
+            self.room.inputs.servers = servers_input
+            boundary_conditions = self.format_boundary_conditions
+            self.update_boundary_conditions(**boundary_conditions)
+            del servers_input
+
+        if self.is_modulus:
+            case_dir = "log/modules_base"
+            acus_dict = {
+                "acu_supply_face_center": boundary_conditions["acu_supply_face_center"],
+                "acu_return_face_center": boundary_conditions["acu_return_face_center"],
+                "acu_supply_temperatures": boundary_conditions["supply_air_temperatures"],
+                "acu_supply_flow_rates": boundary_conditions["supply_air_volume_flow_rates"],
+            }
+            servers_dict = {
+                "server_inlet_face_center": boundary_conditions["server_inlet_face_center"],
+                "server_outlet_face_center": boundary_conditions["server_outlet_face_center"],
+                "server_powers": boundary_conditions["server_powers"],
+                "server_supply_flow_rates": boundary_conditions["server_volume_flow_rates"],
+            }
+
+            def run_modules(case_dir, acus_dict, servers_dict):
+                return case_dir, acus_dict, servers_dict
+
+            return run_modules(case_dir, acus_dict, servers_dict)
         else:
-            run_mesh = check_base_dir(
-                episode_idx=episode_idx,
-                case_idx=case_idx,
-            )
+            if self.pod_backend is not None and not self.run_cfd:
+                # use reduced-order CFD simulation if POD backend is provided
+                # and run_cfd flag is set to False
+                assert self.object_mesh_index is not None, (
+                    "object mesh index is not provided"
+                    "please specify the index file path or read from the mesh directory"
+                )
+                temperature = self.pod_backend.run(
+                    pod_method=self.pod_method,
+                    **boundary_conditions,
+                )
+                p, p_rgh, u = None, None, None
+            else:
+                run_mesh = check_base_dir(
+                    episode_idx=episode_idx,
+                    case_idx=case_idx,
+                )
 
-            # use full-fledged CFD simulation
-            init_foam(is_gpu=self.is_gpu)
-            # step 1: mesh geometry
-            if run_mesh:
-                self.mesh()
-                if save_mesh_index:
-                    if self.object_mesh_index is None:
-                        self.object_mesh_index = calc_object_mesh_index(
-                            room=self.room,
-                            mesh_points=read_mesh_coordinates(),
+                # use full-fledged CFD simulation
+                init_foam(is_gpu=self.is_gpu)
+                # step 1: mesh
+                if run_mesh:
+                    self.mesh()
+                    if save_mesh_index:
+                        if self.object_mesh_index is None:
+                            self.object_mesh_index = calc_object_mesh_index(
+                                room=self.room,
+                                mesh_points=read_mesh_coordinates(),
+                            )
+                        save_json_file(
+                            path=config.cfd.mesh_dir.joinpath("object_mesh_index.json"),
+                            saved_dict=self.object_mesh_index,
                         )
-                    save_json_file(
-                        path=config.cfd.mesh_dir.joinpath("object_mesh_index.json"),
-                        saved_dict=self.object_mesh_index,
-                    )
-            if expert_mode:
-                logger.info("Check mesh results...")
-                self.mesh_check()
-                self.get_user_input()
+                if expert_mode:
+                    logger.info("Check mesh results...")
+                    self.mesh_check()
+                    self.get_user_input()
 
-            # step 2: solve
-            self.solve(stream=False)
+                # step 2: solve
+                self.solve(stream=False)
 
-            all_dirs = [d for d in os.listdir(config.cfd.case_dir)]
-            largest_num = 0
-            for dir_name in all_dirs:
-                try:
-                    num = int(dir_name)
-                    if num > largest_num:
-                        largest_num = num
-                except ValueError:
-                    pass
-            self.last_state_case = (
-                config.cfd.case_dir.joinpath(str(largest_num))
-                if not self.steady
-                else None
+                all_dirs = [d for d in os.listdir(config.cfd.case_dir)]
+                largest_num = 0
+                for dir_name in all_dirs:
+                    try:
+                        num = int(dir_name)
+                        if num > largest_num:
+                            largest_num = num
+                    except ValueError:
+                        pass
+                self.last_state_case = (
+                    config.cfd.case_dir.joinpath(str(largest_num))
+                    if not self.steady
+                    else None
+                )
+
+                # step 3: read results
+                temperature = read_temperature(config.cfd.case_dir, str(largest_num))
+                p = read_p(config.cfd.case_dir, str(largest_num))
+                p_rgh = read_p_rgh(config.cfd.case_dir, str(largest_num))
+                u = read_u(config.cfd.case_dir, str(largest_num))
+
+                if not config.cfd.PRESERVE_FOAM_LOG and not run_mesh:
+                    shutil.rmtree(config.cfd.case_dir)
+
+            sensor_results = (
+                read_sensor_results(
+                    case=config.cfd.case_dir,
+                    room=self.room,
+                    object_mesh_index=self.object_mesh_index,
+                    temperature=temperature,
+                    p = p,
+                    p_rgh = p_rgh,
+                    u = u
+                )
+                if self.room.constructions.sensors
+                else {}
             )
 
-            # step 3: read results
-            results = read_temperature(config.cfd.case_dir, str(largest_num))
+            if save_boundary_conditions:
+                assert config.cfd.case_dir is not None
+                save_json_file(
+                    path=config.cfd.case_dir.joinpath("boundary_conditions.json"),
+                    saved_dict=boundary_conditions,
+                )
 
-            if not config.cfd.PRESERVE_FOAM_LOG and not run_mesh:
-                shutil.rmtree(config.cfd.case_dir)
-
-        sensor_results = (
-            read_sensor_temperature_results(
-                case=config.cfd.case_dir,
-                room=self.room,
-                object_mesh_index=self.object_mesh_index,
-                temperature=results,
-            )
-            if self.room.constructions.sensors
-            else {}
-        )
-
-        if save_boundary_conditions:
-            assert config.cfd.case_dir is not None
-            save_json_file(
-                path=config.cfd.case_dir.joinpath("boundary_conditions.json"),
-                saved_dict=boundary_conditions,
-            )
-
-        if save_simulation_results:
-            assert config.cfd.case_dir is not None
-            save_json_file(
-                path=config.cfd.case_dir.joinpath("simulation_sensor_results.json"),
-                saved_dict=sensor_results,
-            )
-
-        return sensor_results if return_sensor_results else results
+            if save_simulation_results:
+                assert config.cfd.case_dir is not None
+                save_json_file(
+                    path=config.cfd.case_dir.joinpath("simulation_sensor_results.json"),
+                    saved_dict=sensor_results,
+                )
+            return sensor_results if return_sensor_results else {}
