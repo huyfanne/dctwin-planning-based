@@ -18,9 +18,10 @@ from dctwin.data import (
 
 from dctwin.data.batch import Batch
 import torch
+import torch.nn as nn
 
 
-class BaseManager(ABC):
+class BaseManager(nn.Module):
     """ Base class for all data center environments.
     """
 
@@ -81,7 +82,7 @@ class BaseManager(ABC):
                 year=year, month=begin_month, day=begin_day_of_month
             )
             self._ending_timestamp = datetime(
-                year=year, month=end_month, day=end_day_of_month
+                year=year, month=end_month, day=end_day_of_month + 1
             )
             self._timestamp_interval = timedelta(
                 minutes=int(60 / self._config.simulation_time_config.number_of_timesteps_per_hour)
@@ -149,5 +150,5 @@ class BaseManager(ABC):
         pass
 
     @abstractmethod
-    def run(self, **kwargs):
+    def forward(self, **kwargs):
         pass

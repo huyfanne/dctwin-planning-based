@@ -18,7 +18,7 @@ from . import AirLoopManager, PlantManager, LiquidLoopManager
 from .data import HVACData, actuator_control_type_dict
 
 
-class HVACManager(BaseManager, ABC):
+class HVACManager(BaseManager):
     """ Base class for all data center environments.
     """
 
@@ -98,6 +98,12 @@ class HVACManager(BaseManager, ABC):
         for key in self.data.obs.dc.keys():
             self._fieldnames.append(f"{key}")
 
+    def save(self, log_path: str) -> None:
+        torch.save(
+            self.air_loop_manager.state_dict(),
+            f"{log_path}"
+        )
+
     @staticmethod
     def _reset_statistics(obs):
         obs.dc.total_dc_power = torch.tensor([0.], dtype=torch.float32)
@@ -146,7 +152,6 @@ class HVACManager(BaseManager, ABC):
                 self.data.obs_next.plants[loop_id].demand_side_total_mass_flow_rate = (
                     torch.zeros((1,), dtype=torch.float32)
                 )
-
 
     @staticmethod
     def format_external_inputs(inps: Dict | Batch) -> Batch:
@@ -233,7 +238,7 @@ class HVACManager(BaseManager, ABC):
         self.air_loop_manager.learn()
         self.plant_manager.learn()
 
-    def run(
+    def forward(
         self,
         acts: Batch,
         obs:  Batch = None,
