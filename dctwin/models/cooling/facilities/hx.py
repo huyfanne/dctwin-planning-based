@@ -32,7 +32,7 @@ class HeatExchangerModel(nn.Module):
         thermal_conductivity: float = 400,
         tol: float = 0.01,
         max_root_finding_iter: int = 100,
-        max_learning_iter: int = 500,
+        max_learning_iter: int = 2000,
         min_loss: float = 0.002
     ) -> None:
         """
@@ -196,44 +196,41 @@ class HeatExchangerModel(nn.Module):
 
     def learn(self) -> None:
         if self.learnable:
-            batch, _ = self.buffer.sample(batch_size=32)  # sample all data from the buffer
-            mask = batch.cooling_coil_air_mass_flow_rate > 0
-            batch = batch[mask]
-            if len(batch) > 10:
-                self.train()
-                logger.info(f"Start learning the heat exchanger model @ {self.uid}.")
-                pbar = tqdm(range(self.max_learning_iter))
-                for _ in pbar:
-                    self.opt.zero_grad()
-                    _, T_air_out, _, _, _, _ = self.forward(
-                        T_air_in=torch.tensor(
-                            batch.cooling_coil_inlet_air_temperature, dtype=torch.float32
-                        ),
-                        m_air=torch.tensor(
-                            batch.cooling_coil_air_mass_flow_rate, dtype=torch.float32
-                        ),
-                        m_water=torch.tensor(
-                            batch.cooling_coil_water_mass_flow_rate, dtype=torch.float32
-                        ),
-                        T_water_in=torch.tensor(
-                            batch.cooling_coil_inlet_water_temperature, dtype=torch.float32
-                        ),
-                    )
-                    loss = nn.MSELoss()(
-                        T_air_out,
-                        torch.tensor(batch.cooling_coil_outlet_air_temperature, dtype=torch.float32)
-                    )
-                    loss.backward(retain_graph=True)
-                    self.opt.step()
-                    self._project_ws()  # project the parameters to the positive region to make them feasible
-                    pbar.set_description(f"Loss: {loss.item():.4f}")
-                    if loss.item() < self.min_loss:
-                        break
-            else:
-                logger.warning(
-                    f"Insufficient data for learning the heat exchanger model @ {self.uid}."
-                    f"Only {len(batch)} valid data points are available."
+            pbar = tqdm(range(self.max_learning_iter))
+            self.train()
+            for _ in pbar:
+                batch, indices = self.buffer.sample(batch_size=32)  # sample all data from the buffer
+                mask = batch.cooling_coil_air_mass_flow_rate > 0
+                batch = batch[mask]
+                self.opt.zero_grad()
+                _, T_air_out, _, _, _, _ = self.forward(
+                    T_air_in=torch.tensor(
+                        batch.cooling_coil_inlet_air_temperature, dtype=torch.float32
+                    ),
+                    m_air=torch.tensor(
+                        batch.cooling_coil_air_mass_flow_rate, dtype=torch.float32
+                    ),
+                    m_water=torch.tensor(
+                        batch.cooling_coil_water_mass_flow_rate, dtype=torch.float32
+                    ),
+                    T_water_in=torch.tensor(
+                        batch.cooling_coil_inlet_water_temperature, dtype=torch.float32
+                    ),
                 )
+                loss = nn.MSELoss()(
+                    T_air_out,
+                    torch.tensor(batch.cooling_coil_outlet_air_temperature, dtype=torch.float32)
+                )
+                loss.backward(retain_graph=True)
+                if torch.isnan(self.num_row.grad):
+                    self.num_row.grad = torch.nan_to_num(self.num_row.grad, nan=0.)
+                if torch.isnan(self.num_transverse.grad):
+                    self.num_transverse.grad = torch.nan_to_num(self.num_transverse.grad, nan=0.)
+                self.opt.step()
+                self._project_ws()  # project the parameters to the positive region to make them feasible
+                pbar.set_description(f"Loss: {loss.item():.4f}")
+                if loss.item() < self.min_loss:
+                    break
 
     def forward(
         self,
@@ -354,17 +351,17 @@ class HeatExchangerModel(nn.Module):
             T_air_in=T_outside_fluid_inlet,
             m_air=m_outside_fluid,
             T_water_in=T_inside_fluid_inlet,
-            m_water=m_inside_fluid
+            m_water=m_inside_fluid_star
         )
-        # g = T_outside_fluid_out - T_outside_fluid_sp  # g should be close to zero (up to tolerance)
-        # J = torch.autograd.grad(
-        #     g,
-        #     m_inside_fluid_star,
-        #     retain_graph=True
-        # )[0]
+        g = T_outside_fluid_outlet - T_outside_fluid_sp  # g should be close to zero (up to tolerance)
+        J = torch.autograd.grad(
+            g,
+            m_inside_fluid_star,
+            retain_graph=True
+        )[0]
         # reengage the gradient calculation by inserting the gradient into the computation graph
-        # m_inside_fluid_star -= g
-        # m_inside_fluid_star.register_hook(
-        #     lambda grad: grad / J
-        # )  # implicit gradient calculation
+        m_inside_fluid_star = m_inside_fluid_star - g
+        m_inside_fluid_star.register_hook(
+            lambda grad: grad / J
+        )  # implicit gradient calculation
         return m_inside_fluid_star, Q, T_outside_fluid_outlet
