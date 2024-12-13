@@ -50,6 +50,11 @@ boundaryField
         type           cyclic;
     }
 
+    "rack_cyclic_.*"
+    {
+        type           cyclic;
+    }
+
     "box_.*"
     {
         type            nutkWallFunction;
@@ -59,12 +64,14 @@ boundaryField
 
     "acu_supply_.*"
     {
-       type            zeroGradient;
+        type            calculated;
+        value           $internalField;
     }
 
     "acu_return_.*"
     {
-        type            zeroGradient;
+        type            calculated;
+        value           $internalField;
     }
 
     "acu_wall_.*"
@@ -93,12 +100,14 @@ boundaryField
 
     "server_inlet_.*"
     {
-        type            zeroGradient;
+        type            calculated;
+        value           $internalField;
     }
 
     "server_outlet_.*"
     {
-       type            zeroGradient;
+        type            calculated;
+        value           $internalField;
     }
 }
 

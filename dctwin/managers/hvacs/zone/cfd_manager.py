@@ -278,11 +278,13 @@ class CFDManager:
                             f"server {server_uid} volume flow rate is missing"
                         )
 
-        for rack_id, rack in self.room.constructions.racks.items():
-            __update_server_boundaries(rack)
-        for row_id, row in self.room.constructions.rows.items():
-            for rack_id, rack in row.racks.items():
+        if self.room.constructions.racks is not None:
+            for rack_id, rack in self.room.constructions.racks.items():
                 __update_server_boundaries(rack)
+        if self.room.constructions.rows is not None:
+            for row_id, row in self.room.constructions.rows.items():
+                for rack_id, rack in row.racks.items():
+                    __update_server_boundaries(rack)
 
 
     def update_boundary_conditions(
@@ -341,22 +343,24 @@ class CFDManager:
                 boundary_conditions["acu_supply_face_center"][acu_id] = acu_supply_face_center
                 boundary_conditions["acu_return_face_center"][acu_id] = acu_return_face_center
 
-        for rack_id, rack in self.room.constructions.racks.items():
-            for server_id, server in rack.constructions.servers.items():
-                _get_server_boundary_conditions(
-                    _server_id=server_id,
-                    _server=server,
-                    is_modulus=self.is_modulus,
-                )
-
-        for row_racks in self.room.constructions.rows.values():
-            for rack_id, rack in row_racks.racks.items():
+        if self.room.constructions.racks is not None:
+            for rack_id, rack in self.room.constructions.racks.items():
                 for server_id, server in rack.constructions.servers.items():
                     _get_server_boundary_conditions(
                         _server_id=server_id,
                         _server=server,
                         is_modulus=self.is_modulus,
                     )
+
+        if self.room.constructions.rows is not None:
+            for row_racks in self.room.constructions.rows.values():
+                for rack_id, rack in row_racks.racks.items():
+                    for server_id, server in rack.constructions.servers.items():
+                        _get_server_boundary_conditions(
+                            _server_id=server_id,
+                            _server=server,
+                            is_modulus=self.is_modulus,
+                        )
 
         # TODO: add support for dehumidifiers
 
@@ -396,20 +400,22 @@ class CFDManager:
                 volume_flow_rate * scale_factor
             )
 
-        for rack_id, rack in self.room.constructions.racks.items():
-            for server_id, server in rack.constructions.servers.items():
-                if server.cooling.fan_type == "Variable":
-                    server.cooling.volume_flow_rate_ratio *= scale_factor
-                if server.cooling.fan_type == "Fixed":
-                    server.cooling.volume_flow_rate = boundary_conditions["server_volume_flow_rates"][server_id]
-
-        for row_id, row in self.room.constructions.rows.items():
-            for rack_id, rack in row.racks.items():
+        if self.room.constructions.racks is not None:
+            for rack_id, rack in self.room.constructions.racks.items():
                 for server_id, server in rack.constructions.servers.items():
                     if server.cooling.fan_type == "Variable":
                         server.cooling.volume_flow_rate_ratio *= scale_factor
                     if server.cooling.fan_type == "Fixed":
                         server.cooling.volume_flow_rate = boundary_conditions["server_volume_flow_rates"][server_id]
+
+        if self.room.constructions.rows is not None:
+            for row_id, row in self.room.constructions.rows.items():
+                for rack_id, rack in row.racks.items():
+                    for server_id, server in rack.constructions.servers.items():
+                        if server.cooling.fan_type == "Variable":
+                            server.cooling.volume_flow_rate_ratio *= scale_factor
+                        if server.cooling.fan_type == "Fixed":
+                            server.cooling.volume_flow_rate = boundary_conditions["server_volume_flow_rates"][server_id]
 
         sum_acu_volume_flow_rate_after = sum(
             boundary_conditions["supply_air_volume_flow_rates"].values()
@@ -635,22 +641,20 @@ class CFDManager:
                 boundary_conditions["server_volume_flow_rates"][server_key] = server.air_volume_flow_rate
 
         if self.refinement_level < 2:
-
             servers_input = OrderedDict()
-
-            for row_key, row in self.room.constructions.rows.items():
+            if self.room.constructions.rows is not None:
+                for row_key, row in self.room.constructions.rows.items():
+                    self._adjust_server(
+                        racks=row.racks,
+                        servers_input=servers_input,
+                        boundary_conditions=boundary_conditions
+                    )
+            if self.room.constructions.racks is not None:
                 self._adjust_server(
-                    racks=row.racks,
+                    racks=self.room.constructions.racks,
                     servers_input=servers_input,
                     boundary_conditions=boundary_conditions
                 )
-
-            self._adjust_server(
-                racks=self.room.constructions.racks,
-                servers_input=servers_input,
-                boundary_conditions=boundary_conditions
-            )
-
             self.room.inputs.servers = servers_input
             boundary_conditions = self.format_boundary_conditions
             self.update_boundary_conditions(**boundary_conditions)
@@ -693,7 +697,6 @@ class CFDManager:
                     episode_idx=episode_idx,
                     case_idx=case_idx,
                 )
-
                 # use full-fledged CFD simulation
                 init_foam(is_gpu=self.is_gpu)
                 # step 1: mesh

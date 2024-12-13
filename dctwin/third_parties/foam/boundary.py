@@ -12,14 +12,14 @@ class Boundary(abc.ABC):
     """A class to generate the boundary condition of the foam simulation"""
 
     zero_gradient = """
-    {
-        type            zeroGradient;
-    }
+        {
+            type            zeroGradient;
+        }
     """
     no_slip = """
-    {
-        type            noSlip;
-    }
+        {
+            type            noSlip;
+        }
     """
 
     @property
@@ -68,7 +68,7 @@ class RoomBoundary(Boundary):
         )
         rack_with_panel = []
         for key, rack in self.room.constructions.racks.items():
-            if rack.geometry.has_blanking_panel:
+            if rack.geometry.hasBlankingPanel:
                 rack_with_panel.append(key)
 
         rack_panel_boundary = "\n".join(
@@ -93,7 +93,7 @@ class RoomBoundary(Boundary):
 
 
 class ACUBoundary(Boundary):
-    def __init__(self, acu_id: str, acu: ACU, sealed: bool) -> None:
+    def __init__(self, acu_id: str, acu: ACU) -> None:
         self.acu_id = acu_id
         self.object = acu
         self.supply_kelvin = round(
@@ -104,7 +104,6 @@ class ACUBoundary(Boundary):
         )
         self.supply_air_mass_flow_rate = rho_air * self.supply_air_volume_flow_rate
         self.cooling_capacity = round(acu.cooling.cooling_capacity, 6)  # unit: kW
-        self.sealed = sealed
 
     @property
     def p_rgh(self) -> str:
@@ -124,17 +123,21 @@ class ACUBoundary(Boundary):
         else:
             outlet = f"""
             {{
-                type            exprFixedValue;
+                type            uniformFixedValue;
                 value           $internalField;
-                valueExpr       "max(0,t2)";
-                variables
-                (
-                    "{t_sink}{{acu_return_{self.acu_id}}} = weightAverage(T)"
-                    "coolingCapacity = {self.cooling_capacity}"		
-                    "supplyAirMassFlowRate = {self.supply_air_mass_flow_rate}"
-                    "t1 = {t_sink} - (coolingCapacity * 1000 / (supplyAirMassFlowRate * {air_specific_heat}))"
-                    "t2 = {self.supply_kelvin}"
-                );
+                uniformValue    
+                {{
+                    type            expression;
+                    expression       "max(0,t2)";
+                    variables
+                    (
+                        "{t_sink}{{acu_return_{self.acu_id}}} = weightAverage(T)"
+                        "coolingCapacity = {self.cooling_capacity}"		
+                        "supplyAirMassFlowRate = {self.supply_air_mass_flow_rate}"
+                        "t1 = {t_sink} - (coolingCapacity * 1000 / (supplyAirMassFlowRate * {air_specific_heat}))"
+                        "t2 = {self.supply_kelvin}"
+                    );
+                }};
             }}
             """
         return f"""
@@ -157,21 +160,13 @@ class ACUBoundary(Boundary):
             }}
             """
 
-            if self.sealed:
-                _return = f"""
-                {{
-                    type            pressureInletOutletVelocity;
-                    value           uniform (0 0 0);
-                }}
-                """
-            else:
-                _return = f"""
-            {{
-                type                flowRateOutletVelocity;
-                volumetricFlowRate  {self.supply_air_volume_flow_rate};
-                value               uniform (0 0 0);
-            }}
-            """
+        _return = f"""
+        {{
+            type                flowRateOutletVelocity;
+            volumetricFlowRate  {self.supply_air_volume_flow_rate};
+            value               uniform (0 0 0);
+        }}
+        """
 
         return f"""
         acu_supply_{self.acu_id} {supply}
@@ -181,13 +176,12 @@ class ACUBoundary(Boundary):
 
 
 class ServerBoundary(Boundary):
-    def __init__(self, server_id: str, server: Server, sealed: bool) -> None:
+    def __init__(self, server_id: str, server: Server) -> None:
         self.server_id = server_id
         self.object: Server = server
         self.input_power = server.power.input_power
         self.server_volume_flow_rate = round(server.volume_flow_rate, 6)
         self.server_mass_flow_rate = rho_air * self.server_volume_flow_rate
-        self.sealed = sealed
 
     @property
     def T(self) -> str:
@@ -198,17 +192,20 @@ class ServerBoundary(Boundary):
             value = f"{t_sink}+{self.input_power / (self.server_mass_flow_rate * air_specific_heat)}"
             outlet = f"""
             {{
-                type            exprFixedValue;
+                type            uniformFixedValue;
                 value           $internalField;
-                valueExpr       "{value}";
-                variables
-                (
-                    "{t_sink}{{server_inlet_{self.server_id}}} = weightAverage(T)"
-                );
+                uniformValue
+                {{
+                    type            expression;
+                    expression       "{value}";
+                    variables
+                    (
+                        "{t_sink}{{server_inlet_{self.server_id}}} = weightAverage(T)"
+                    );
+                    }};
             }}"""
         return f"""
         server_outlet_{self.server_id} {outlet}
-        server_wall_{self.server_id} {self.zero_gradient}
         server_inlet_{self.server_id} {self.zero_gradient}
         """
 
@@ -218,21 +215,13 @@ class ServerBoundary(Boundary):
             inlet = self.no_slip
             outlet = self.no_slip
         else:
-            if self.sealed:
-                inlet = f"""
-                {{
-                    type            pressureInletOutletVelocity;
-                    value           uniform (0 0 0);
-                }}
-                """
-            else:
-                inlet = f"""
-                {{
-                    type                flowRateOutletVelocity;
-                    volumetricFlowRate  {self.server_volume_flow_rate};
-                    value               uniform (0 0 0);
-                }}
-                """
+            inlet = f"""
+            {{
+                type                flowRateOutletVelocity;
+                volumetricFlowRate  {self.server_volume_flow_rate};
+                value               uniform (0 0 0);
+            }}
+            """
 
             outlet = f"""
             {{
@@ -249,13 +238,10 @@ class ServerBoundary(Boundary):
 
     @property
     def p_rgh(self) -> str:
-        if self.sealed:
-            return f"""
-            server_inlet_{self.server_id}
-            {{
-                type        fixedValue;
-                value 		$internalField;
-            }}
-            """
-        else:
-            pass
+        return f"""
+        server_inlet_{self.server_id}
+        {{
+            type        fixedValue;
+            value 		$internalField;
+        }}
+        """

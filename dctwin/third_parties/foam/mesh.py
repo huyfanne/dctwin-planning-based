@@ -966,10 +966,12 @@ class RackModel:
             raise ValueError(f"Invalid orientation: {self.config.geometry.orientation} for rack '{self}'")
 
         if self.config.geometry.size.z < self.config.geometry.slot * self.slot_height:
-            raise ValueError(f"Invalid Rack '{self.config.uid}' height: {self.config.geometry.size.z}. "
-                             f"{self.config.geometry.size.z} < self.config.geometry.slot * self.slot_height "
-                             f"({self.config.geometry.slot} * {self.slot_height} = "
-                             f"{self.config.geometry.slot * self.slot_height})")
+            raise ValueError(
+                f"Invalid Rack height for '{self.config.uid}': "
+                f"actual {self.config.geometry.size.z} is less than required "
+                f"{self.config.geometry.slot * self.slot_height} "
+                f"(slots: {self.config.geometry.slot}, slot height: {self.slot_height})"
+            )
 
     def _make_surrounding_plane(self):
         orientation = self.config.geometry.orientation
@@ -1128,7 +1130,7 @@ class RackModel:
 
 class MeshBuilder:
     docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0"
-    slot_height: float = 0.05  # 1U = 0.05 mm
+    slot_height: float = 0.05  # 1U = 0.05 m
     base_size: float = 0.2  # base_size for the background blockMesh
     scale: int = 0  # scale for refinement region
     room: Room
@@ -1223,31 +1225,33 @@ class MeshBuilder:
             round_face(face=acu.geometry.return_face, face_name=f"{acu.uid}_return_face")
 
         # round the rack
-        for rack in self.room.constructions.racks.values():
-            round_rack(rack)
-
-        # round rows
-        for row in self.room.constructions.rows.values():
-            row.geometry.size.x = (round_to_base(row.geometry.size.x, self.base_size) *
-                                   row.geometry.rackNum)
-            row.geometry.size.y = round_to_base(row.geometry.size.y, self.base_size)
-            row.geometry.size.z = round_to_base(row.geometry.size.z, self.base_size)
-            row.geometry.location.x = round_to_base(row.geometry.location.x, self.base_size)
-            row.geometry.location.y = round_to_base(row.geometry.location.y, self.base_size)
-            row.geometry.location.z = round_to_base(row.geometry.location.z, self.base_size)
-            logger.debug(
-                f"{row.uid}, "
-
-                f"location = ({row.geometry.location.x}, "
-                f"{row.geometry.location.y}, "
-                f"{row.geometry.location.z}),"
-
-                f" size = ({row.geometry.size.x}, "
-                f"{row.geometry.size.y}, "
-                f"{row.geometry.size.z})"
-            )
-            for rack in row.racks.values():
+        if self.room.constructions.racks:
+            for rack in self.room.constructions.racks.values():
                 round_rack(rack)
+
+        if self.room.constructions.rows:
+            # round rows
+            for row in self.room.constructions.rows.values():
+                row.geometry.size.x = (round_to_base(row.geometry.size.x, self.base_size) *
+                                       row.geometry.rackNum)
+                row.geometry.size.y = round_to_base(row.geometry.size.y, self.base_size)
+                row.geometry.size.z = round_to_base(row.geometry.size.z, self.base_size)
+                row.geometry.location.x = round_to_base(row.geometry.location.x, self.base_size)
+                row.geometry.location.y = round_to_base(row.geometry.location.y, self.base_size)
+                row.geometry.location.z = round_to_base(row.geometry.location.z, self.base_size)
+                logger.debug(
+                    f"{row.uid}, "
+    
+                    f"location = ({row.geometry.location.x}, "
+                    f"{row.geometry.location.y}, "
+                    f"{row.geometry.location.z}),"
+    
+                    f" size = ({row.geometry.size.x}, "
+                    f"{row.geometry.size.y}, "
+                    f"{row.geometry.size.z})"
+                )
+                for rack in row.racks.values():
+                    round_rack(rack)
 
         # round the raised floor
         if self.room.constructions.raised_floor:
@@ -1429,11 +1433,7 @@ class MeshBuilder:
                     )
         return box_list, plane_list
 
-    def make_racks(
-            self,
-            racks: Dict[str, Rack],
-            refinement_level: int = 2
-    ) -> List[RackModel]:
+    def make_racks(self, racks: Dict[str, Rack], refinement_level: int = 2 ) -> List[RackModel]:
         rack_list = []
         for rack_name, rack in racks.items():
             rack_model = RackModel(
@@ -1445,11 +1445,7 @@ class MeshBuilder:
             rack_list.append(rack_model)
         return rack_list
 
-    def make_row_racks(
-            self,
-            rows: Dict[str, Row],
-            refinement_level: int = 2
-    ) -> list[RowRackModel]:
+    def make_row_racks( self, rows: Dict[str, Row], refinement_level: int = 2 ) -> list[RowRackModel]:
         row_rack_list = []
         for row in rows.values():
             row_rack_model = RowRackModel(
@@ -1489,7 +1485,7 @@ class MeshBuilder:
         return main_panel_list, opening_face_list
 
     def write_blockMesh_dict(self, v_min, v_max, x_cells, y_cells, z_cells):
-        template = template_env.get_template("foam/mesh/blockMeshDict.j2")
+        template = template_env.get_template("foam/template/mesh/blockMeshDict.j2")
         with open(self.case_dir.joinpath("system/blockMeshDict"), "w") as f:
             f.write(
                 template.render(
@@ -1518,7 +1514,7 @@ class MeshBuilder:
             refinement_surfaces_cmd += f"{obj.snappyHex_cmd[1]}"
             refinement_regions_cmd += f"{obj.snappyHex_cmd[2]}"
 
-        template = template_env.get_template("foam/mesh/snappyHexMeshDict.j2")
+        template = template_env.get_template("foam/template/mesh/snappyHexMeshDict.j2")
         with open(self.case_dir.joinpath("system/snappyHexMeshDict"), "w") as f:
             f.write(
                 template.render(
@@ -1536,7 +1532,7 @@ class MeshBuilder:
         baffles_cmd = ""
         for plane in plane_list:
             baffles_cmd += plane.createBaffles_cmd
-        template = template_env.get_template("foam/mesh/createBafflesDict.j2")
+        template = template_env.get_template("foam/template/mesh/createBafflesDict.j2")
         with open(self.case_dir.joinpath("system/createBafflesDict"), "w") as f:
             f.write(
                 template.render(
@@ -1551,7 +1547,7 @@ class MeshBuilder:
         patches_cmd = ""
         for patch in patch_list:
             patches_cmd += patch.createPatch_cmd
-        template = template_env.get_template("foam/mesh/createPatchDict.j2")
+        template = template_env.get_template("foam/template/mesh/createPatchDict.j2")
         with open(self.case_dir.joinpath("system/createPatchDict"), "w") as f:
             f.write(
                 template.render(
@@ -1566,7 +1562,7 @@ class MeshBuilder:
         face_set_cmd = ""
         for face_set in face_set_list:
             face_set_cmd += face_set.topoSet_cmd
-        template = template_env.get_template("foam/mesh/topoSetDict.j2")
+        template = template_env.get_template("foam/template/mesh/topoSetDict.j2")
         with open(self.case_dir.joinpath("system/topoSetDict"), "w") as f:
             f.write(
                 template.render(
