@@ -39,16 +39,12 @@ class Builder:
         for rack in room.constructions.racks.values():
             for server_key, server in rack.constructions.servers.items():
                 server_dict[server_key] = server
+        for row in room.constructions.rows.values():
+            for rack in row.racks.values():
+                for server_key, server in rack.constructions.servers.items():
+                    server_dict[server_key] = server
         self.server_dict = server_dict
         self.last_state_case = last_state_case
-        try:
-            self.sealed = self.room.constructions.check_sealed
-        except KeyError:
-            logger.error(
-                "Error: there is no -sealed- in the JSON -meta-, please refer the example in -tutorials- "
-                "and add it..."
-            )
-            exit(-1)
 
     def run(self) -> None:
         self.render("alphat", "alphat")
@@ -56,60 +52,44 @@ class Builder:
         self.render("nut", "nut")
         self.render("k", "k")
         self.render("p", "p")
-
-        if self.sealed:
-            self.render("p_rgh_pressure", "p_rgh")
-        else:
-            self.render("p_rgh", "p_rgh")
+        self.render("p_rgh", "p_rgh")
 
         if self.last_state_case is not None:
             self.render(
                 "T", "T", "".join(read_internal_field(Path(self.last_state_case, "T")))
             )
-            if self.sealed:
-                self.render(
-                    "U_pressure",
-                    "U",
-                    "".join(read_internal_field(Path(self.last_state_case, "U"))),
-                )
-            else:
-                self.render(
-                    "U",
-                    "U",
-                    "".join(read_internal_field(Path(self.last_state_case, "U"))),
-                )
+            self.render(
+                "U",
+                "U",
+                "".join(read_internal_field(Path(self.last_state_case, "U"))),
+            )
         else:
             self.render("T", "T")
-            if self.sealed:
-                self.render("U_pressure", "U")
-            else:
-                self.render("U", "U")
+            self.render("U", "U")
 
     @classmethod
     def get_k_and_epsilon(cls, obj_dict: Dict) -> Tuple[float, float]:
         """Get the minimum value greater than 0"""
         _obj_list = [acu for acu in obj_dict.values() if acu.k != 0]
         if len(_obj_list) == 0:
-            raise ValueError("Please check the ACU flow rate value")
+            raise ValueError("Please check the ACU or Server flow rate value")
         obj = min(_obj_list, key=lambda x: x.k)
         return obj.k, obj.epsilon
 
     def render(self, source_filename, write_filename, internal_field=None) -> None:
         acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_dict)
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_dict)
+        server_boundaries = [ServerBoundary(key, server) for key, server in self.server_dict.items()]
         with open(Path(config.cfd.case_dir, f"0/{write_filename}"), "w") as f:
             f.write(
                 template_env.get_template(f"foam/template/0/{source_filename}.j2").render(
                     init_temperature=24 + 273.15,
                     p_rgh=round(self.room_dz * 9.81, 10),
                     acu_boundaries=[
-                        ACUBoundary(key, acu, self.sealed)
+                        ACUBoundary(key, acu)
                         for key, acu in self.acu_dict.items()
                     ],
-                    server_boundaries=[
-                        ServerBoundary(key, server, self.sealed)
-                        for key, server in self.server_dict.items()
-                    ],
+                    server_boundaries=server_boundaries,
                     room_boundary=RoomBoundary(self.room),
                     acu_k=acu_k,
                     acu_epsilon=acu_epsilon,
@@ -150,7 +130,9 @@ class SolverBackendMixin:
                     "mpirun --use-hwthread-cpus --allow-run-as-root "
                     f"-np {self.process_num} {self.solver} -parallel && "
                     f"reconstructPar {latest_time} && "
-                    "rm -rf /data/processor*"
+                    "rm -rf /data/processor* && "
+                    "postProcess -func 'writeCellCentres' -time 0 && "
+                    "postProcess -func 'writeCellVolumes' -time 0"
                 ),
             ]
         else:
@@ -158,7 +140,11 @@ class SolverBackendMixin:
                 "bash",
                 "-c",
                 (
-                    f"source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/amgx/lib && {self.solver}"
+                    f"source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
+                    f"export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/amgx/lib && "
+                    f"{self.solver}"
+                    "postProcess -func 'writeCellCentres' -time 0 && "
+                    "postProcess -func 'writeCellVolumes' -time 0"
                 ),
             ]
         return command

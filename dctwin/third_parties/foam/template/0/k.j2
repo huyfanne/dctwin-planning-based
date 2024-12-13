@@ -23,12 +23,15 @@ boundaryField
 {
     "acu_return_.*"
     {
-        type            zeroGradient;
+        type            inletOutlet;
+        inletValue      uniform {{ acu_k }};
+        value           uniform {{ acu_k }};
     }
 
     "acu_supply_.*"
     {
-        type            fixedValue;
+        type            inletOutlet;
+        inletValue      uniform {{ acu_k }};
         value           uniform {{ acu_k }};
     }
 
@@ -66,6 +69,11 @@ boundaryField
         type           cyclic;
     }
 
+    "rack_cyclic_.*"
+    {
+        type           cyclic;
+    }
+
     "box_.*"
     {
         type            kqRWallFunction;
@@ -93,12 +101,15 @@ boundaryField
 
     "server_inlet_.*"
     {
-        type            zeroGradient;
+        type            inletOutlet;
+        inletValue      uniform {{ server_k }};
+        value           uniform {{ server_k }};
     }
 
     "server_outlet_.*"
     {
-        type            fixedValue;
+        type            inletOutlet;
+        inletValue      uniform {{ server_k }};
         value           uniform {{ server_k }};
     }
 }

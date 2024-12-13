@@ -20,15 +20,16 @@ internalField   uniform {{ p_rgh }};
 
 boundaryField
 {
-  
     "room_wall_.*"
     {
-        type            zeroGradient;
+        type            calculated;
+        value           $internalField;
     }
 
     "raised_floor_.*"
     {
-         type            zeroGradient;
+        type            calculated;
+        value           $internalField;
     }
 
     "opening_raised_floor_.*"
@@ -38,7 +39,8 @@ boundaryField
 
     "false_ceiling_.*"
     {
-        type            zeroGradient;
+        type            calculated;
+        value           $internalField;
     }
 
     "opening_false_ceiling_.*"
@@ -46,39 +48,58 @@ boundaryField
         type            cyclic;
     }
 
+    "rack_cyclic_.*"
+    {
+        type           porousBafflePressure;
+        patchType      cyclic;
+        D              1000;
+        I              500;
+        length         0.15;
+        uniformJump    false;
+        jump           uniform 0;
+        value          uniform 0;
+    }
+
     "box_.*"
     {
-        type            zeroGradient;
+        type            calculated;
+        value           $internalField;
     }
 
     "rack_wall_.*"
     {
-        type            zeroGradient;
+        type            calculated;
+        value           $internalField;
     }
 
     "rack_panel_.*"
     {
-        type            zeroGradient;
+        type            calculated;
+        value           $internalField;
     }
 
     "acu_wall_.*"
 	{
-	 type            zeroGradient;
+        type            calculated;
+        value           $internalField;
 	}
 
     "server_wall_.*"
 	{
-	 type            zeroGradient;
+        type            calculated;
+        value           $internalField;
 	}
-    
+
     "acu_supply_.*"
 	{
-	 type            zeroGradient;
+        type            calculated;
+        value           $internalField;
 	}
 
 	"server_outlet_.*"
 	{
-	type            zeroGradient;
+        type            calculated;
+        value           $internalField;
 	}
 
 	"acu_return_.*"
@@ -90,7 +111,7 @@ boundaryField
 	p0              uniform 0;
 	value           uniform 0;
 	}
-	
+
 	"server_inlet_.*"
 	{
 	type            totalPressure;
