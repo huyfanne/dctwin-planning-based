@@ -169,8 +169,12 @@ class BaseEnv(gym.Env):
             if not count_criteria(item):
                 continue
             if use_unnormed_value:
-                lb_.append(min_)
-                ub_.append(max_)
+                lb_.append(
+                    item.resizer.lb if item.resizer is not None else min_
+                )
+                ub_.append(
+                    item.resizer.ub if item.resizer is not None else max_
+                )
             else:
                 lb_.append(
                     item.resizer.resized_lb if item.resizer is not None else min_
@@ -350,7 +354,7 @@ class BaseEnv(gym.Env):
             self._timestamp += self._timestamp_interval
 
         return (
-            self._get_observations_to_return(),
+            self._get_observations_to_return(use_unnormed_obs=self._use_unnormed_obs,),
             self._calculate_reward(),
             done,
             False,
