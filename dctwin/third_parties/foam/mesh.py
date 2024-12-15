@@ -463,7 +463,7 @@ class ServerModel:
         self.refine_size = base_size / (2 ** scale)
         self._make_inlet_outlet_face()
 
-    def _get_bounding_box_min_max(self, x: int = None, y: int = None):
+    def _get_bounding_box_min_max(self, x: float = None, y: float = None):
         orientation = int(self.config.geometry.orientation)
         if orientation == 0 or orientation == 180:
             bounding_box_min = [
