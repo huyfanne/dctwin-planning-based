@@ -1306,6 +1306,7 @@ class MeshBuilder:
     def make_boxes(self, boxes: Dict[str, Box]):
         box_list = []
         plane_list = []
+        box_opening_face_list = []
         for box_name, box in boxes.items():
             # if the box is closed, create the box object directly by specifying the min and max coordinates
             if is_closed(box):
@@ -1413,6 +1414,15 @@ class MeshBuilder:
                             span=front_face_span,
                         )
                     )
+                    if box.geometry.openings and box.geometry.openings_side == "front":
+                        for opening_name, opening in box.geometry.openings.items():
+                            box_opening_face_list.append(
+                                PlaneModel(
+                                    name=f"opening_box_{box_name}_{opening_name}",
+                                    origin=[opening.location.x, opening.location.y, opening.location.z],
+                                    span=[opening.size.x, 0, opening.size.z],
+                                )
+                            )
                 if box.geometry.faces.rear:
                     rear_face_origin = [
                         box.geometry.location.x,
@@ -1431,7 +1441,7 @@ class MeshBuilder:
                             span=rear_face_span,
                         )
                     )
-        return box_list, plane_list
+        return box_list, plane_list, box_opening_face_list
 
     def make_racks(self, racks: Dict[str, Rack], refinement_level: int = 2 ) -> List[RackModel]:
         rack_list = []
@@ -1604,7 +1614,7 @@ class MeshBuilder:
             v_min=v_min,
             v_max=v_max,
         )
-        box_list, box_plane_list = self.make_boxes(boxes=boxes)
+        box_list, box_plane_list, box_opening_face_list = self.make_boxes(boxes=boxes)
         acu_list = self.make_acus(acus=acus)
         rack_list = self.make_racks(racks=racks, refinement_level=refinement_level)
         row_racks_list = self.make_row_racks(rows=rows, refinement_level=refinement_level)
@@ -1624,7 +1634,7 @@ class MeshBuilder:
         # write createBaffles dict
         self.write_createBaffles_dict(
             plane_list=raised_floor + false_ceiling + box_plane_list + rack_list + row_racks_list +
-                       false_ceiling_opening_face_list + raised_floor_opening_face_list,
+                       false_ceiling_opening_face_list + raised_floor_opening_face_list + box_opening_face_list,
         )
         # write topoSet dict
         self.write_topoSet_dict(

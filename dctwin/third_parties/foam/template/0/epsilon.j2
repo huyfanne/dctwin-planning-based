@@ -60,6 +60,10 @@ boundaryField
         value           uniform {{ acu_epsilon }};
     }
 
+    "opening_box_.*"
+    {
+        type           cyclic;
+    }
 
     "acu_supply_.*"
     {
