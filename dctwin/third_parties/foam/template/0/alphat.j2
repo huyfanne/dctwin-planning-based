@@ -52,11 +52,6 @@ boundaryField
         type           cyclic;
     }
 
-    "rack_cyclic_.*"
-    {
-        type           cyclic;
-    }
-
     "box_.*"
     {
         type            alphatJayatillekeWallFunction;
@@ -67,6 +62,13 @@ boundaryField
     "opening_box_.*"
     {
         type           cyclic;
+    }
+
+    "acu_wall_.*"
+    {
+        type            alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
     }
 
     "acu_supply_.*"
@@ -81,13 +83,6 @@ boundaryField
         value           $internalField;
     }
 
-    "acu_wall_.*"
-    {
-        type            alphatJayatillekeWallFunction;
-        Prt             0.85;
-        value           uniform 0;
-    }
-
     "rack_wall_.*"
     {
         type            alphatJayatillekeWallFunction;
@@ -95,18 +90,14 @@ boundaryField
         value           uniform 0;
     }
 
-    "rack_panel_.*"
+    "rack_cyclic_.*"
     {
-        type            alphatJayatillekeWallFunction;
-        Prt             0.85;
-        value           uniform 0;
+        type            cyclic;
     }
 
-    "server_wall_.*"
+    "rack_air_leak_.*"
     {
-        type            alphatJayatillekeWallFunction;
-        Prt             0.85;
-        value           uniform 0;
+        type           cyclic;
     }
 
     "server_inlet_.*"

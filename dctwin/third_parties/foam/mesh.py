@@ -166,7 +166,7 @@ class PatchModel:
 
     @property
     def topoSet_cmd(self):
-        if "rack_cyclic" in self.name:
+        if "rack_air_leak" in self.name or "rack_cyclic" in self.name:
             top_set_cmd = f"""
                 {{
                     name    {self.face_set_name};
@@ -214,7 +214,7 @@ class PatchModel:
 
     @property
     def createPatch_cmd(self):
-        if "rack_cyclic" in self.name:
+        if "rack_air_leak" in self.name or "rack_cyclic" in self.name:
             create_patch_cmd = f"""
                 {{
                     name {self.patch_name};
@@ -552,9 +552,10 @@ class RowRackModel:
         self.refine_region = None
         self.servers = []
         self.surrounding_planes = []
-        self.blanking_panel = None
+        self.hasBlankingPanel = self.config.geometry.hasBlankingPanel
+        self.blanking_panel = []
         self.slot_height = 0.05
-        self.rack_cyclic_patch_list = []
+        self.rack_air_leak_patch_list = []
         self.cheek_config()
         # compute the absolute coordinates of the rack object
         self.v_min, self.v_max = rotate_rectangular(
@@ -586,19 +587,99 @@ class RowRackModel:
         self.refinement_level = refinement_level
         # make the box of the rack
         self._make_box()
+        if False in self.hasBlankingPanel:
+            self._make_blanking_plane()
         # make the servers of the rack
         self._make_servers()
         # make the surrounding planes of the rack
-        self.make_cyclic_patch()
+        self.make_air_leak_patch()
 
     def cheek_config(self):
         RackModel.cheek_config(self)
 
+    def _make_blanking_plane(self):
+        for rack_index, rack in enumerate(self.config.racks.values()):
+            if self.hasBlankingPanel[rack_index]:
+                continue
+
+            rack_v_min, rack_v_max = rotate_rectangular(
+                abs_vertex_1=Vertex(
+                    x=rack.geometry.location.x,
+                    y=rack.geometry.location.y,
+                    z=rack.geometry.location.z
+                ),
+                abs_vertex_2=Vertex(
+                    x=rack.geometry.location.x + rack.geometry.size.x,
+                    y=rack.geometry.location.y,
+                    z=rack.geometry.location.z
+                ),
+                abs_vertex_3=Vertex(
+                    x=rack.geometry.location.x + rack.geometry.size.x,
+                    y=rack.geometry.location.y + rack.geometry.size.y,
+                    z=rack.geometry.location.z
+                ),
+                abs_vertex_4=Vertex(
+                    x=rack.geometry.location.x,
+                    y=rack.geometry.location.y + rack.geometry.size.y,
+                    z=rack.geometry.location.z
+                ),
+                angle=rack.geometry.orientation,
+            )
+            rack_v_min.z = rack.geometry.location.z
+            rack_v_max.z = rack.geometry.location.z + rack.geometry.size.z
+
+            orientation = self.config.geometry.orientation
+
+            if orientation in [0, 180]:
+                y_inlet_face = rack_v_min.y if orientation == 0 else rack_v_max.y
+                y_outlet_face = rack_v_max.y if orientation == 0 else rack_v_min.y
+                x_inlet_face = None
+                x_outlet_face = None
+            else:  # orientation in [90, 270]
+                y_inlet_face = None
+                y_outlet_face = None
+                x_inlet_face = rack_v_max.x if orientation == 90 else rack_v_min.x
+                x_outlet_face = rack_v_min.x if orientation == 90 else rack_v_max.x
+
+            bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(
+                x=x_inlet_face,
+                y=y_inlet_face,
+                rack_v_max=rack_v_max,
+                rack_v_min=rack_v_min,
+                orientation=orientation,
+                ratio=0
+            )
+            self.blanking_panel.append(
+                PatchModel(
+                    name=f"rack_cyclic_{rack.uid}_master",
+                    neighbour_patch_name=f"rack_cyclic_{rack.uid}_slave",
+                    bounding_box_max=bounding_box_max,
+                    bounding_box_min=bounding_box_min
+                )
+            )
+
+            bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(
+                x=x_outlet_face,
+                y=y_outlet_face,
+                rack_v_max=rack_v_max,
+                rack_v_min=rack_v_min,
+                orientation=orientation,
+                ratio=0
+            )
+            self.blanking_panel.append(
+                PatchModel(
+                    name=f"rack_cyclic_{rack.uid}_slave",
+                    neighbour_patch_name=f"rack_cyclic_{rack.uid}_master",
+                    bounding_box_max=bounding_box_max,
+                    bounding_box_min=bounding_box_min
+                )
+            )
+
     def _get_bounding_box_min_max(self, x: int = None, y: int = None, rack_v_max: Vertex = None,
-                                  rack_v_min: Vertex = None, orientation: int = None):
+                                  rack_v_min: Vertex = None, orientation: int = None, ratio: float = 2/3):
         if orientation == 0 or orientation == 180:
             bounding_box_min = [
-                round(rack_v_min.x + (rack_v_max.x - rack_v_min.x) * 2 / 3, 3),
+                round(rack_v_min.x + (rack_v_max.x - rack_v_min.x) * ratio, 3),
                 y - 0.1 * self.refine_size,
                 rack_v_min.z
             ]
@@ -610,7 +691,7 @@ class RowRackModel:
         elif orientation == 90 or orientation == 270:
             bounding_box_min = [
                 x - 0.1 * self.refine_size,
-                round(rack_v_min.y + (rack_v_max.y - rack_v_min.y) * 2 / 3, 3),
+                round(rack_v_min.y + (rack_v_max.y - rack_v_min.y) * ratio, 3),
                 rack_v_min.z
             ]
             bounding_box_max = [
@@ -623,7 +704,7 @@ class RowRackModel:
 
         return bounding_box_min, bounding_box_max
 
-    def make_cyclic_patch(self):
+    def make_air_leak_patch(self):
         for rack in self.config.racks.values():
             # compute the absolute coordinates of the rack object
             rack_v_min, rack_v_max = rotate_rectangular(
@@ -671,10 +752,10 @@ class RowRackModel:
                 rack_v_min=rack_v_min,
                 orientation=orientation
             )
-            self.rack_cyclic_patch_list.append(
+            self.rack_air_leak_patch_list.append(
                 PatchModel(
-                    name=f"rack_cyclic_{rack.uid}_master",
-                    neighbour_patch_name=f"rack_cyclic_{rack.uid}_slave",
+                    name=f"rack_air_leak_{rack.uid}_master",
+                    neighbour_patch_name=f"rack_air_leak_{rack.uid}_slave",
                     bounding_box_max=bounding_box_max,
                     bounding_box_min=bounding_box_min
                 )
@@ -687,10 +768,10 @@ class RowRackModel:
                 rack_v_min=rack_v_min,
                 orientation=orientation
             )
-            self.rack_cyclic_patch_list.append(
+            self.rack_air_leak_patch_list.append(
                 PatchModel(
-                    name=f"rack_cyclic_{rack.uid}_slave",
-                    neighbour_patch_name=f"rack_cyclic_{rack.uid}_master",
+                    name=f"rack_air_leak_{rack.uid}_slave",
+                    neighbour_patch_name=f"rack_air_leak_{rack.uid}_master",
                     bounding_box_max=bounding_box_max,
                     bounding_box_min=bounding_box_min
                 )
@@ -797,14 +878,14 @@ class RowRackModel:
         create_baffles_cmd = ""
         for plane in self.surrounding_planes:
             create_baffles_cmd += plane.createBaffles_cmd
-        if self.blanking_panel:
-            create_baffles_cmd += self.blanking_panel.createBaffles_cmd
         return create_baffles_cmd
 
     @property
     def topoSet_cmd(self):
         topo_set_cmd = ""
-        for cyclic_patch in self.rack_cyclic_patch_list:
+        for blanking_panel in self.blanking_panel:
+            topo_set_cmd += blanking_panel.topoSet_cmd
+        for cyclic_patch in self.rack_air_leak_patch_list:
             topo_set_cmd += cyclic_patch.topoSet_cmd
         for server in self.servers:
             topo_set_cmd += server.topoSet_cmd
@@ -813,7 +894,9 @@ class RowRackModel:
     @property
     def createPatch_cmd(self):
         create_patch_cmd = ""
-        for cyclic_patch in self.rack_cyclic_patch_list:
+        for blanking_panel in self.blanking_panel:
+            create_patch_cmd += blanking_panel.createPatch_cmd
+        for cyclic_patch in self.rack_air_leak_patch_list:
             create_patch_cmd += cyclic_patch.createPatch_cmd
         for server in self.servers:
             create_patch_cmd += server.createPatch_cmd
@@ -843,9 +926,10 @@ class RackModel:
         self.refine_region = None
         self.servers = []
         self.surrounding_planes = []
-        self.blanking_panel = None
+        self.hasBlankingPanel = self.config.geometry.hasBlankingPanel
+        self.blanking_panel = []
         self.slot_height = 0.05
-        self.rack_cyclic_patch_list = []
+        self.rack_air_leak_patch_list = []
         self.cheek_config()
         # compute the absolute coordinates of the rack object
         self.v_min, self.v_max = rotate_rectangular(
@@ -879,7 +963,9 @@ class RackModel:
         self.refinement_level = refinement_level
         # self._make_refinement_region()
         self._make_box()
-        self.make_cyclic_patch()
+        if not self.hasBlankingPanel:
+            self._make_blanking_plane()
+        self.make_air_leak_patch()
 
     def _make_box(self):
         self.box = BoxModel(
@@ -898,11 +984,11 @@ class RackModel:
             refinement_level=self.refinement_level
         )
 
-    def _get_bounding_box_min_max(self, x: int = None, y: int = None):
+    def _get_bounding_box_min_max(self, x: int = None, y: int = None, ratio: float = 2 / 3):
         orientation = int(self.config.geometry.orientation)
         if orientation == 0 or orientation == 180:
             bounding_box_min = [
-                round(self.v_min.x + (self.v_max.x - self.v_min.x) * 2 / 3, 3),
+                round(self.v_min.x + (self.v_max.x - self.v_min.x) * ratio, 3),
                 y - 0.1 * self.refine_size,
                 self.v_min.z
             ]
@@ -914,7 +1000,7 @@ class RackModel:
         elif orientation == 90 or orientation == 270:
             bounding_box_min = [
                 x - 0.1 * self.refine_size,
-                round(self.v_min.y + (self.v_max.y - self.v_min.y) * 2 / 3, 3),
+                round(self.v_min.y + (self.v_max.y - self.v_min.y) * ratio, 3),
                 self.v_min.z
             ]
             bounding_box_max = [
@@ -927,7 +1013,7 @@ class RackModel:
 
         return bounding_box_min, bounding_box_max
 
-    def make_cyclic_patch(self):
+    def make_air_leak_patch(self):
         orientation = self.config.geometry.orientation
         if orientation in [0, 180]:
             y_inlet_face = self.v_min.y if orientation == 0 else self.v_max.y
@@ -941,20 +1027,20 @@ class RackModel:
             x_outlet_face = self.v_min.x if orientation == 90 else self.v_max.x
 
         bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(x=x_inlet_face, y=y_inlet_face)
-        self.rack_cyclic_patch_list.append(
+        self.rack_air_leak_patch_list.append(
             PatchModel(
-                name=f"rack_cyclic_{self.config.uid}_master",
-                neighbour_patch_name=f"rack_cyclic_{self.config.uid}_slave",
+                name=f"rack_air_leak_{self.config.uid}_master",
+                neighbour_patch_name=f"rack_air_leak_{self.config.uid}_slave",
                 bounding_box_max=bounding_box_max,
                 bounding_box_min=bounding_box_min
             )
         )
 
         bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(x=x_outlet_face, y=y_outlet_face)
-        self.rack_cyclic_patch_list.append(
+        self.rack_air_leak_patch_list.append(
             PatchModel(
-                name=f"rack_cyclic_{self.config.uid}_slave",
-                neighbour_patch_name=f"rack_cyclic_{self.config.uid}_master",
+                name=f"rack_air_leak_{self.config.uid}_slave",
+                neighbour_patch_name=f"rack_air_leak_{self.config.uid}_master",
                 bounding_box_max=bounding_box_max,
                 bounding_box_min=bounding_box_min
             )
@@ -1015,17 +1101,34 @@ class RackModel:
     def _make_blanking_plane(self):
         orientation = self.config.geometry.orientation
         if orientation in [0, 180]:
-            origin = [self.v_min.x, self.v_min.y if orientation == 0 else self.v_max.y, self.v_min.z]
-            span = [self.config.geometry.size.x, 0, self.config.geometry.size.z]
-        elif orientation in [90, 270]:
-            origin = [self.v_max.x if orientation == 90 else self.v_min.x, self.v_min.y, self.v_min.z]
-            span = [0, self.config.geometry.size.x, self.config.geometry.size.z]
-        else:
-            raise ValueError(f"Got invalid rack orientation {orientation}")
-        self.blanking_panel = PlaneModel(
-            name=f"rack_panel_{self.config.uid}_blanking_panel",
-            origin=origin,
-            span=span
+            y_inlet_face = self.v_min.y if orientation == 0 else self.v_max.y
+            y_outlet_face = self.v_max.y if orientation == 0 else self.v_min.y
+            x_inlet_face = None
+            x_outlet_face = None
+        else:  # orientation in [90, 270]
+            y_inlet_face = None
+            y_outlet_face = None
+            x_inlet_face = self.v_max.x if orientation == 90 else self.v_min.x
+            x_outlet_face = self.v_min.x if orientation == 90 else self.v_max.x
+
+        bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(x=x_inlet_face, y=y_inlet_face, ratio=0)
+        self.blanking_panel.append(
+            PatchModel(
+                name=f"rack_cyclic_{self.config.uid}_master",
+                neighbour_patch_name=f"rack_cyclic_{self.config.uid}_slave",
+                bounding_box_max=bounding_box_max,
+                bounding_box_min=bounding_box_min
+            )
+        )
+
+        bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(x=x_outlet_face, y=y_outlet_face, ratio=0)
+        self.blanking_panel.append(
+            PatchModel(
+                name=f"rack_cyclic_{self.config.uid}_slave",
+                neighbour_patch_name=f"rack_cyclic_{self.config.uid}_master",
+                bounding_box_max=bounding_box_max,
+                bounding_box_min=bounding_box_min
+            )
         )
 
     def _make_servers(self):
@@ -1105,14 +1208,14 @@ class RackModel:
         create_baffles_cmd = ""
         for plane in self.surrounding_planes:
             create_baffles_cmd += plane.createBaffles_cmd
-        if self.blanking_panel:
-            create_baffles_cmd += self.blanking_panel.createBaffles_cmd
         return create_baffles_cmd
 
     @property
     def topoSet_cmd(self):
         topo_set_cmd = ""
-        for cyclic_patch in self.rack_cyclic_patch_list:
+        for blanking_panel in self.blanking_panel:
+            topo_set_cmd += blanking_panel.topoSet_cmd
+        for cyclic_patch in self.rack_air_leak_patch_list:
             topo_set_cmd += cyclic_patch.topoSet_cmd
         for server in self.servers:
             topo_set_cmd += server.topoSet_cmd
@@ -1121,7 +1224,9 @@ class RackModel:
     @property
     def createPatch_cmd(self):
         create_patch_cmd = ""
-        for cyclic_patch in self.rack_cyclic_patch_list:
+        for blanking_panel in self.blanking_panel:
+            create_patch_cmd += blanking_panel.createPatch_cmd
+        for cyclic_patch in self.rack_air_leak_patch_list:
             create_patch_cmd += cyclic_patch.createPatch_cmd
         for server in self.servers:
             create_patch_cmd += server.createPatch_cmd
@@ -1342,6 +1447,15 @@ class MeshBuilder:
                             span=bottom_face_span,
                         )
                     )
+                    if box.geometry.openings and box.geometry.openings_side == "right":
+                        for opening_name, opening in box.geometry.openings.items():
+                            box_opening_face_list.append(
+                                PlaneModel(
+                                    name=f"opening_box_{box_name}_{opening_name}",
+                                    origin=[opening.location.x, opening.location.y, opening.location.z],
+                                    span=[opening.size.x, opening.size.y, 0],
+                                )
+                            )
                 if box.geometry.faces.top:
                     top_face_origin = [
                         box.geometry.location.x,
@@ -1360,6 +1474,15 @@ class MeshBuilder:
                             span=top_face_span,
                         )
                     )
+                    if box.geometry.openings and box.geometry.openings_side == "right":
+                        for opening_name, opening in box.geometry.openings.items():
+                            box_opening_face_list.append(
+                                PlaneModel(
+                                    name=f"opening_box_{box_name}_{opening_name}",
+                                    origin=[opening.location.x, opening.location.y, opening.location.z],
+                                    span=[opening.size.x, opening.size.y, 0],
+                                )
+                            )
                 if box.geometry.faces.left:
                     left_face_origin = [
                         box.geometry.location.x,
@@ -1378,6 +1501,15 @@ class MeshBuilder:
                             span=left_face_span,
                         )
                     )
+                    if box.geometry.openings and box.geometry.openings_side == "right":
+                        for opening_name, opening in box.geometry.openings.items():
+                            box_opening_face_list.append(
+                                PlaneModel(
+                                    name=f"opening_box_{box_name}_{opening_name}",
+                                    origin=[opening.location.x, opening.location.y, opening.location.z],
+                                    span=[0, opening.size.y, opening.size.z],
+                                )
+                            )
                 if box.geometry.faces.right:
                     right_face_origin = [
                         box.geometry.location.x + box.geometry.size.x,
@@ -1396,6 +1528,15 @@ class MeshBuilder:
                             span=right_face_span,
                         )
                     )
+                    if box.geometry.openings and box.geometry.openings_side == "right":
+                        for opening_name, opening in box.geometry.openings.items():
+                            box_opening_face_list.append(
+                                PlaneModel(
+                                    name=f"opening_box_{box_name}_{opening_name}",
+                                    origin=[opening.location.x, opening.location.y, opening.location.z],
+                                    span=[0, opening.size.y, opening.size.z],
+                                )
+                            )
                 if box.geometry.faces.front:
                     front_face_origin = [
                         box.geometry.location.x,
@@ -1441,6 +1582,15 @@ class MeshBuilder:
                             span=rear_face_span,
                         )
                     )
+                    if box.geometry.openings and box.geometry.openings_side == "rear":
+                        for opening_name, opening in box.geometry.openings.items():
+                            box_opening_face_list.append(
+                                PlaneModel(
+                                    name=f"opening_box_{box_name}_{opening_name}",
+                                    origin=[opening.location.x, opening.location.y, opening.location.z],
+                                    span=[opening.size.x, 0, opening.size.z],
+                                )
+                            )
         return box_list, plane_list, box_opening_face_list
 
     def make_racks(self, racks: Dict[str, Rack], refinement_level: int = 2 ) -> List[RackModel]:

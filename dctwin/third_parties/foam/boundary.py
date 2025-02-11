@@ -12,15 +12,13 @@ class Boundary(abc.ABC):
     """A class to generate the boundary condition of the foam simulation"""
 
     zero_gradient = """
-        {
-            type            zeroGradient;
-        }
-    """
+    {
+        type            zeroGradient;
+    }"""
     no_slip = """
-        {
-            type            noSlip;
-        }
-    """
+    {
+        type            noSlip;
+    }"""
 
     @property
     @abc.abstractmethod
@@ -80,8 +78,7 @@ class RoomBoundary(Boundary):
         {floor}
         {boxes_boundary}
         {rack_boundary}
-        {rack_panel_boundary}
-        """
+        {rack_panel_boundary}"""
 
     @property
     def T(self) -> str:
@@ -108,12 +105,11 @@ class ACUBoundary(Boundary):
     @property
     def p_rgh(self) -> str:
         return f"""
-        acu_return_{self.acu_id}
-        {{
-            type        fixedValue;
-            value 		$internalField;
-        }}
-        """
+    acu_return_{self.acu_id}
+    {{
+        type        fixedValue;
+        value 		$internalField;
+    }}"""
 
     @property
     def T(self) -> str:
@@ -122,29 +118,29 @@ class ACUBoundary(Boundary):
             outlet = self.zero_gradient
         else:
             outlet = f"""
-            {{
-                type            uniformFixedValue;
-                value           $internalField;
-                uniformValue    
-                {{
-                    type            expression;
-                    expression       "max(0,t2)";
-                    variables
-                    (
-                        "{t_sink}{{acu_return_{self.acu_id}}} = weightAverage(T)"
-                        "coolingCapacity = {self.cooling_capacity}"		
-                        "supplyAirMassFlowRate = {self.supply_air_mass_flow_rate}"
-                        "t1 = {t_sink} - (coolingCapacity * 1000 / (supplyAirMassFlowRate * {air_specific_heat}))"
-                        "t2 = {self.supply_kelvin}"
-                    );
-                }};
-            }}
-            """
+    {{
+        type            uniformFixedValue;
+        value           $internalField;
+        uniformValue    
+        {{
+            type            expression;
+            expression       "max(0,t2)";
+            variables
+            (
+                "{t_sink}{{acu_return_{self.acu_id}}} = weightAverage(T)"
+                "coolingCapacity = {self.cooling_capacity}"		
+                "supplyAirMassFlowRate = {self.supply_air_mass_flow_rate}"
+                "t1 = {t_sink} - (coolingCapacity * 1000 / (supplyAirMassFlowRate * {air_specific_heat}))"
+                "t2 = {self.supply_kelvin}"
+            );
+        }};
+    }}"""
         return f"""
-        acu_supply_{self.acu_id} {outlet}
-        acu_return_{self.acu_id} {self.zero_gradient}
-        acu_wall_{self.acu_id} {self.zero_gradient}
-        """
+    acu_wall_{self.acu_id} {self.zero_gradient}
+    
+    acu_supply_{self.acu_id} {outlet}
+    
+    acu_return_{self.acu_id} {self.zero_gradient}"""
 
     @property
     def U(self) -> str:
@@ -153,26 +149,23 @@ class ACUBoundary(Boundary):
             _return = self.no_slip
         else:
             supply = f"""
-            {{
-                type                flowRateInletVelocity;
-                volumetricFlowRate  {self.supply_air_volume_flow_rate};
-                value               uniform (0 0 0);
-            }}
-            """
+    {{
+        type                flowRateInletVelocity;
+        volumetricFlowRate  {self.supply_air_volume_flow_rate};
+    }}"""
 
         _return = f"""
-        {{
-            type                flowRateOutletVelocity;
-            volumetricFlowRate  {self.supply_air_volume_flow_rate};
-            value               uniform (0 0 0);
-        }}
-        """
+    {{
+        type                flowRateOutletVelocity;
+        volumetricFlowRate  {self.supply_air_volume_flow_rate};
+    }}"""
 
         return f"""
-        acu_supply_{self.acu_id} {supply}
-        acu_return_{self.acu_id} {_return}
-        acu_wall_{self.acu_id} {self.no_slip}
-        """
+    acu_wall_{self.acu_id} {self.no_slip}
+    
+    acu_supply_{self.acu_id} {supply}
+    
+    acu_return_{self.acu_id} {_return}"""
 
 
 class ServerBoundary(Boundary):
@@ -191,23 +184,23 @@ class ServerBoundary(Boundary):
         else:
             value = f"{t_sink}+{self.input_power / (self.server_mass_flow_rate * air_specific_heat)}"
             outlet = f"""
-            {{
-                type            uniformFixedValue;
-                value           $internalField;
-                uniformValue
-                {{
-                    type            expression;
-                    expression       "{value}";
-                    variables
-                    (
-                        "{t_sink}{{server_inlet_{self.server_id}}} = weightAverage(T)"
-                    );
-                    }};
-            }}"""
+    {{
+        type            uniformFixedValue;
+        value           $internalField;
+        uniformValue
+        {{
+            type            expression;
+            expression       "{value}";
+            variables
+            (
+                "{t_sink}{{server_inlet_{self.server_id}}} = weightAverage(T)"
+            );
+            }};
+    }}"""
         return f"""
-        server_outlet_{self.server_id} {outlet}
-        server_inlet_{self.server_id} {self.zero_gradient}
-        """
+    server_inlet_{self.server_id} {self.zero_gradient}
+            
+    server_outlet_{self.server_id} {outlet}"""
 
     @property
     def U(self) -> str:
@@ -216,32 +209,26 @@ class ServerBoundary(Boundary):
             outlet = self.no_slip
         else:
             inlet = f"""
-            {{
-                type                flowRateOutletVelocity;
-                volumetricFlowRate  {self.server_volume_flow_rate};
-                value               uniform (0 0 0);
-            }}
-            """
+    {{
+        type                flowRateOutletVelocity;
+        volumetricFlowRate  {self.server_volume_flow_rate};
+    }}"""
 
             outlet = f"""
-            {{
-                type                flowRateInletVelocity;
-                volumetricFlowRate  {self.server_volume_flow_rate};
-                value               uniform (0 0 0);
-            }}
-            """
+    {{
+        type                flowRateInletVelocity;
+        volumetricFlowRate  {self.server_volume_flow_rate};
+    }}"""
         return f"""
-        server_inlet_{self.server_id} {inlet}
-        server_outlet_{self.server_id} {outlet}
-        server_wall_{self.server_id} {self.no_slip}
-        """
+    server_inlet_{self.server_id} {inlet}
+    
+    server_outlet_{self.server_id} {outlet}"""
 
     @property
     def p_rgh(self) -> str:
         return f"""
-        server_inlet_{self.server_id}
-        {{
-            type        fixedValue;
-            value 		$internalField;
-        }}
-        """
+    server_inlet_{self.server_id}
+    {{
+        type        fixedValue;
+        value 		$internalField;
+    }}"""

@@ -21,12 +21,12 @@ internalField   uniform 0;
 
 boundaryField
 {
+
     "room_wall_.*"
     {
         type            nutkWallFunction;
         value           uniform 0;
     }
-
 
     "raised_floor_.*"
     {
@@ -50,11 +50,6 @@ boundaryField
         type           cyclic;
     }
 
-    "rack_cyclic_.*"
-    {
-        type           cyclic;
-    }
-
     "box_.*"
     {
         type            nutkWallFunction;
@@ -64,6 +59,12 @@ boundaryField
     "opening_box_.*"
     {
         type           cyclic;
+    }
+
+    "acu_wall_.*"
+    {
+        type            nutkWallFunction;
+        value           uniform 0;
     }
 
     "acu_supply_.*"
@@ -78,28 +79,20 @@ boundaryField
         value           $internalField;
     }
 
-    "acu_wall_.*"
-    {
-        type            nutkWallFunction;
-        value           uniform 0;
-    }
-
     "rack_wall_.*"
     {
         type            nutkWallFunction;
         value           uniform 0;
     }
 
-    "rack_panel_.*"
+    "rack_cyclic_.*"
     {
-        type            nutkWallFunction;
-        value           uniform 0;
+        type            cyclic;
     }
 
-    "server_wall_.*"
+    "rack_air_leak_.*"
     {
-        type            nutkWallFunction;
-        value           uniform 0;
+        type           cyclic;
     }
 
     "server_inlet_.*"
@@ -113,6 +106,7 @@ boundaryField
         type            calculated;
         value           $internalField;
     }
+
 }
 
 // ************************************************************************* //

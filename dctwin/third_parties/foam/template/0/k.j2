@@ -21,6 +21,13 @@ internalField   uniform {{ acu_k }};
 
 boundaryField
 {
+
+    "acu_wall_.*"
+    {
+        type            kqRWallFunction;
+        value           uniform {{ acu_k }};
+    }
+
     "acu_return_.*"
     {
         type            inletOutlet;
@@ -32,12 +39,6 @@ boundaryField
     {
         type            inletOutlet;
         inletValue      uniform {{ acu_k }};
-        value           uniform {{ acu_k }};
-    }
-
-    "acu_wall_.*"
-    {
-        type            kqRWallFunction;
         value           uniform {{ acu_k }};
     }
 
@@ -71,6 +72,11 @@ boundaryField
 
     "rack_cyclic_.*"
     {
+        type            cyclic;
+    }
+
+    "rack_air_leak_.*"
+    {
         type           cyclic;
     }
 
@@ -86,18 +92,6 @@ boundaryField
     }
 
     "rack_wall_.*"
-    {
-        type            kqRWallFunction;
-        value           uniform {{ acu_k }};
-    }
-
-    "rack_panel_.*"
-    {
-        type            kqRWallFunction;
-        value           uniform {{ acu_k }};
-    }
-
-    "server_wall_.*"
     {
         type            kqRWallFunction;
         value           uniform {{ acu_k }};

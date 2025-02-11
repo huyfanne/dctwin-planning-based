@@ -21,6 +21,7 @@ internalField   uniform 9.5e-2;
 
 boundaryField
 {
+
     "room_wall_.*"
     {
         type            epsilonWallFunction;
@@ -49,11 +50,6 @@ boundaryField
         type           cyclic;
     }
 
-    "rack_cyclic_.*"
-    {
-        type           cyclic;
-    }
-
     "box_.*"
     {
         type            epsilonWallFunction;
@@ -63,6 +59,12 @@ boundaryField
     "opening_box_.*"
     {
         type           cyclic;
+    }
+
+    "acu_wall_.*"
+    {
+        type            epsilonWallFunction;
+        value           uniform {{ acu_epsilon }};
     }
 
     "acu_supply_.*"
@@ -79,28 +81,20 @@ boundaryField
         value           uniform {{ acu_epsilon }};
     }
 
-    "acu_wall_.*"
-    {
-        type            epsilonWallFunction;
-        value           uniform {{ acu_epsilon }};
-    }
-
     "rack_wall_.*"
     {
         type            epsilonWallFunction;
         value           uniform {{ acu_epsilon }};
     }
 
-    "rack_panel_.*"
+    "rack_cyclic_.*"
     {
-        type            epsilonWallFunction;
-        value           uniform {{ acu_epsilon }};
+        type            cyclic;
     }
 
-    "server_wall_.*"
+    "rack_air_leak_.*"
     {
-        type            epsilonWallFunction;
-        value           uniform {{ acu_epsilon }};
+        type           cyclic;
     }
 
     "server_inlet_.*"

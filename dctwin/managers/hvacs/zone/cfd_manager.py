@@ -116,7 +116,6 @@ class CFDManager:
         self.write_interval = write_interval
         self.end_time = end_time
         self.field_config = field_config
-        self.steady = steady
         self.pod_method = pod_method
         self.isk8s = is_k8s
         self.k8s_config = k8s_config if k8s_config is not None else {}

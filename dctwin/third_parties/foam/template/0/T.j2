@@ -21,7 +21,6 @@ internalField   {{ 'uniform {}'.format(init_temperature) if not internal_field e
 boundaryField
 {
 
-{#    {{ room_boundary.T }}#}
     "room_wall_.*"
     {
         type            zeroGradient;
@@ -47,11 +46,6 @@ boundaryField
         type           cyclic;
     }
 
-    "rack_cyclic_.*"
-    {
-        type           cyclic;
-    }
-
     "box_.*"
     {
         type            zeroGradient;
@@ -67,15 +61,18 @@ boundaryField
         type            zeroGradient;
     }
 
-    "rack_panel_.*"
+    "rack_cyclic_.*"
     {
-        type            zeroGradient;
+        type           cyclic;
     }
 
+    "rack_air_leak_.*"
+    {
+        type           cyclic;
+    }
     {% for acu_boundary in acu_boundaries %}
     {{ acu_boundary.T }}
     {% endfor %}
-
     {% for server_boundary in server_boundaries %}
     {{ server_boundary.T }}
     {% endfor %}
