@@ -353,54 +353,44 @@ Schedule:Compact,
     .0;                       !- Field 4
 
 SCHEDULE:CONSTANT,
-    acu_1 air loop supply air temperature schedule,    !- Name
+    data hall 1a acu-1 air loop supply air temperature schedule,    !- Name
     Any Number,               !- Schedule Type Limits Name
-    18;                       !- Hourly Value
+    25;                       !- Hourly Value
 
 SCHEDULE:CONSTANT,
-    ite_1 operation schedule,    !- Name
-    Any Number,               !- Schedule Type Limits Name
-    1;                        !- Hourly Value
-
-SCHEDULE:CONSTANT,
-    ite_1 cpu schedule,       !- Name
+    Data Hall 1A ite-1 operation schedule,    !- Name
     Any Number,               !- Schedule Type Limits Name
     1;                        !- Hourly Value
 
 SCHEDULE:CONSTANT,
-    zone heating setpoint schedule,    !- Name
+    Data Hall 1A ite-1 cpu schedule,    !- Name
+    Any Number,               !- Schedule Type Limits Name
+    1;                        !- Hourly Value
+
+SCHEDULE:CONSTANT,
+    Data Hall 1A heating setpoint schedule,    !- Name
     Temperature,              !- Schedule Type Limits Name
     15;                       !- Hourly Value
 
 SCHEDULE:CONSTANT,
-    zone cooling setpoint schedule,    !- Name
+    Data Hall 1A cooling setpoint schedule,    !- Name
     Temperature,              !- Schedule Type Limits Name
-    27;                       !- Hourly Value
+    35;                       !- Hourly Value
 
 SCHEDULE:CONSTANT,
-    zone control type schedule,    !- Name
+    Data Hall 1A control type schedule,    !- Name
     Any Number,               !- Schedule Type Limits Name
     4;                        !- Hourly Value
 
 SCHEDULE:CONSTANT,
-    zone humidifying relative humidity setpoint schedule,    !- Name
-    Relative Humidity,        !- Schedule Type Limits Name
-    40;                       !- Hourly Value
-
-SCHEDULE:CONSTANT,
-    zone dehumidifying relative humidity setpoint schedule,    !- Name
-    Relative Humidity,        !- Schedule Type Limits Name
-    60;                       !- Hourly Value
-
-SCHEDULE:CONSTANT,
     chilled water loop exit temperature setpoint schedule,    !- Name
     Temperature,              !- Schedule Type Limits Name
-    10;                       !- Hourly Value
+    16;                       !- Hourly Value
 
 SCHEDULE:CONSTANT,
-    condenser water loop exit temperature setpoint,    !- Name
+    chiller 1 condenser water loop exit temperature setpoint schedule,    !- Name
     Temperature,              !- Schedule Type Limits Name
-    25.6;                     !- Hourly Value
+    29;                       !- Hourly Value
 
 MATERIAL,
     1/2IN Gypsum,             !- Name
@@ -484,7 +474,7 @@ GLOBALGEOMETRYRULES,
     World;                    !- Rectangular Surface Coordinate System
 
 ZONE,
-    zone,                     !- Name
+    data hall 1a,             !- Name
     0,                        !- Direction of Relative North
     0,                        !- X Origin
     0,                        !- Y Origin
@@ -499,10 +489,10 @@ ZONE,
     ;                         !- Part of Total Floor Area
 
 BUILDINGSURFACE:DETAILED,
-    Wall001W,                 !- Name
+    Data Hall 1A Wall001,     !- Name
     Wall,                     !- Surface Type
     ext-walls,                !- Construction Name
-    zone,                     !- Zone Name
+    Data Hall 1A,             !- Zone Name
     Outdoors,                 !- Outside Boundary Condition
     ,                         !- Outside Boundary Condition Object
     SunExposed,               !- Sun Exposure
@@ -515,66 +505,66 @@ BUILDINGSURFACE:DETAILED,
     0.0,                      !- Vertex 2 Xcoordinate
     0.0,                      !- Vertex 2 Ycoordinate
     0.0,                      !- Vertex 2 Zcoordinate
-    50.0,                     !- Vertex 3 Xcoordinate
+    12.6,                     !- Vertex 3 Xcoordinate
     0.0,                      !- Vertex 3 Ycoordinate
     0.0,                      !- Vertex 3 Zcoordinate
-    50.0,                     !- Vertex 4 Xcoordinate
+    12.6,                     !- Vertex 4 Xcoordinate
     0.0,                      !- Vertex 4 Ycoordinate
     4.0;                      !- Vertex 4 Zcoordinate
 
 BUILDINGSURFACE:DETAILED,
-    Wall002W,                 !- Name
+    Data Hall 1A Wall002,     !- Name
     Wall,                     !- Surface Type
     ext-walls,                !- Construction Name
-    zone,                     !- Zone Name
+    Data Hall 1A,             !- Zone Name
     Outdoors,                 !- Outside Boundary Condition
     ,                         !- Outside Boundary Condition Object
     SunExposed,               !- Sun Exposure
     WindExposed,              !- Wind Exposure
     autocalculate,            !- View Factor to Ground
     4,                        !- Number of Vertices
-    50.0,                     !- Vertex 1 Xcoordinate
+    12.6,                     !- Vertex 1 Xcoordinate
     0.0,                      !- Vertex 1 Ycoordinate
     4.0,                      !- Vertex 1 Zcoordinate
-    50.0,                     !- Vertex 2 Xcoordinate
+    12.6,                     !- Vertex 2 Xcoordinate
     0.0,                      !- Vertex 2 Ycoordinate
     0.0,                      !- Vertex 2 Zcoordinate
-    50.0,                     !- Vertex 3 Xcoordinate
-    50.0,                     !- Vertex 3 Ycoordinate
+    12.6,                     !- Vertex 3 Xcoordinate
+    6.0,                      !- Vertex 3 Ycoordinate
     0.0,                      !- Vertex 3 Zcoordinate
-    50.0,                     !- Vertex 4 Xcoordinate
-    50.0,                     !- Vertex 4 Ycoordinate
+    12.6,                     !- Vertex 4 Xcoordinate
+    6.0,                      !- Vertex 4 Ycoordinate
     4.0;                      !- Vertex 4 Zcoordinate
 
 BUILDINGSURFACE:DETAILED,
-    Wall003W,                 !- Name
+    Data Hall 1A Wall003,     !- Name
     Wall,                     !- Surface Type
     ext-walls,                !- Construction Name
-    zone,                     !- Zone Name
+    Data Hall 1A,             !- Zone Name
     Outdoors,                 !- Outside Boundary Condition
     ,                         !- Outside Boundary Condition Object
     SunExposed,               !- Sun Exposure
     WindExposed,              !- Wind Exposure
     autocalculate,            !- View Factor to Ground
     4,                        !- Number of Vertices
-    50.0,                     !- Vertex 1 Xcoordinate
-    50.0,                     !- Vertex 1 Ycoordinate
+    12.6,                     !- Vertex 1 Xcoordinate
+    6.0,                      !- Vertex 1 Ycoordinate
     4.0,                      !- Vertex 1 Zcoordinate
-    50.0,                     !- Vertex 2 Xcoordinate
-    50.0,                     !- Vertex 2 Ycoordinate
+    12.6,                     !- Vertex 2 Xcoordinate
+    6.0,                      !- Vertex 2 Ycoordinate
     0.0,                      !- Vertex 2 Zcoordinate
     0.0,                      !- Vertex 3 Xcoordinate
-    50.0,                     !- Vertex 3 Ycoordinate
+    6.0,                      !- Vertex 3 Ycoordinate
     0.0,                      !- Vertex 3 Zcoordinate
     0.0,                      !- Vertex 4 Xcoordinate
-    50.0,                     !- Vertex 4 Ycoordinate
+    6.0,                      !- Vertex 4 Ycoordinate
     4.0;                      !- Vertex 4 Zcoordinate
 
 BUILDINGSURFACE:DETAILED,
-    Wall004W,                 !- Name
+    Data Hall 1A Wall004,     !- Name
     Wall,                     !- Surface Type
     ext-walls,                !- Construction Name
-    zone,                     !- Zone Name
+    Data Hall 1A,             !- Zone Name
     Outdoors,                 !- Outside Boundary Condition
     ,                         !- Outside Boundary Condition Object
     SunExposed,               !- Sun Exposure
@@ -582,10 +572,10 @@ BUILDINGSURFACE:DETAILED,
     autocalculate,            !- View Factor to Ground
     4,                        !- Number of Vertices
     0.0,                      !- Vertex 1 Xcoordinate
-    50.0,                     !- Vertex 1 Ycoordinate
+    6.0,                      !- Vertex 1 Ycoordinate
     4.0,                      !- Vertex 1 Zcoordinate
     0.0,                      !- Vertex 2 Xcoordinate
-    50.0,                     !- Vertex 2 Ycoordinate
+    6.0,                      !- Vertex 2 Ycoordinate
     0.0,                      !- Vertex 2 Zcoordinate
     0.0,                      !- Vertex 3 Xcoordinate
     0.0,                      !- Vertex 3 Ycoordinate
@@ -595,34 +585,34 @@ BUILDINGSURFACE:DETAILED,
     4.0;                      !- Vertex 4 Zcoordinate
 
 BUILDINGSURFACE:DETAILED,
-    Floor,                    !- Name
+    Data Hall 1A Floor,       !- Name
     Floor,                    !- Surface Type
     FLOOR,                    !- Construction Name
-    zone,                     !- Zone Name
-    Outdoors,                 !- Outside Boundary Condition
+    Data Hall 1A,             !- Zone Name
+    Ground,                   !- Outside Boundary Condition
     ,                         !- Outside Boundary Condition Object
     NoSun,                    !- Sun Exposure
     NoWind,                   !- Wind Exposure
     autocalculate,            !- View Factor to Ground
     4,                        !- Number of Vertices
-    50.0,                     !- Vertex 1 Xcoordinate
-    50.0,                     !- Vertex 1 Ycoordinate
+    12.6,                     !- Vertex 1 Xcoordinate
+    6.0,                      !- Vertex 1 Ycoordinate
     0.0,                      !- Vertex 1 Zcoordinate
-    50.0,                     !- Vertex 2 Xcoordinate
+    12.6,                     !- Vertex 2 Xcoordinate
     0.0,                      !- Vertex 2 Ycoordinate
     0.0,                      !- Vertex 2 Zcoordinate
     0.0,                      !- Vertex 3 Xcoordinate
     0.0,                      !- Vertex 3 Ycoordinate
     0.0,                      !- Vertex 3 Zcoordinate
     0.0,                      !- Vertex 4 Xcoordinate
-    50.0,                     !- Vertex 4 Ycoordinate
+    6.0,                      !- Vertex 4 Ycoordinate
     0.0;                      !- Vertex 4 Zcoordinate
 
 BUILDINGSURFACE:DETAILED,
-    Roof,                     !- Name
+    Data Hall 1A Ceiling,     !- Name
     Roof,                     !- Surface Type
     Roof,                     !- Construction Name
-    zone,                     !- Zone Name
+    Data Hall 1A,             !- Zone Name
     Outdoors,                 !- Outside Boundary Condition
     ,                         !- Outside Boundary Condition Object
     SunExposed,               !- Sun Exposure
@@ -632,48 +622,48 @@ BUILDINGSURFACE:DETAILED,
     0.0,                      !- Vertex 1 Xcoordinate
     0.0,                      !- Vertex 1 Ycoordinate
     4.0,                      !- Vertex 1 Zcoordinate
-    50.0,                     !- Vertex 2 Xcoordinate
+    12.6,                     !- Vertex 2 Xcoordinate
     0.0,                      !- Vertex 2 Ycoordinate
     4.0,                      !- Vertex 2 Zcoordinate
-    50.0,                     !- Vertex 3 Xcoordinate
-    50.0,                     !- Vertex 3 Ycoordinate
+    12.6,                     !- Vertex 3 Xcoordinate
+    6.0,                      !- Vertex 3 Ycoordinate
     4.0,                      !- Vertex 3 Zcoordinate
     0.0,                      !- Vertex 4 Xcoordinate
-    50.0,                     !- Vertex 4 Ycoordinate
+    6.0,                      !- Vertex 4 Ycoordinate
     4.0;                      !- Vertex 4 Zcoordinate
 
 ELECTRICEQUIPMENT:ITE:AIRCOOLED,
-    ite_1,                    !- Name
-    zone,                     !- Zone Name
+    data hall 1a ite-1,       !- Name
+    Data Hall 1A,             !- Zone Name
     FlowFromSystem,           !- Air Flow Calculation Method
     Watts/Unit,               !- Design Power Input Calculation Method
     1000,                     !- Watts per Unit
-    1000,                     !- Number of Units
+    150,                      !- Number of Units
     0,                        !- Watts per Zone Floor Area
-    ite_1 operation schedule,    !- Design Power Input Schedule Name
-    ite_1 cpu schedule,       !- CPU Loading Schedule Name
-    ite_1 cpu power input function of loading and supply Temperature curve,    !- CPU Power Input Function of Loading and Air Temperature Curve Name
+    Data Hall 1A ite-1 operation schedule,    !- Design Power Input Schedule Name
+    Data Hall 1A ite-1 cpu schedule,    !- CPU Loading Schedule Name
+    data hall 1a ite-1 cpu power input function of loading and supply Temperature curve,    !- CPU Power Input Function of Loading and Air Temperature Curve Name
     0.4,                      !- Design Fan Power Input Fraction
     0.0001,                   !- Design Fan Air Flow Rate per Power Input
-    ite_1 air flow function of loading and air temperature curve,    !- Air Flow Function of Loading and Air Temperature Curve Name
-    ite_1 fan power input function of flow curve,    !- Fan Power Input Function of Flow Curve Name
+    data hall 1a ite-1 air flow function of loading and air temperature curve,    !- Air Flow Function of Loading and Air Temperature Curve Name
+    data hall 1a ite-1 fan power input function of flow curve,    !- Fan Power Input Function of Flow Curve Name
     18,                       !- Design Entering Air Temperature
     A1,                       !- Environmental Class
     AdjustedSupply,           !- Air Inlet Connection Type
     ,                         !- Air Inlet Room Air Model Node Name
     ,                         !- Air Outlet Room Air Model Node Name
-    zone inlet node 1,        !- Supply Air Node Name
+    Data Hall 1A inlet node 1,    !- Supply Air Node Name
     0.1,                      !- Design Recirculation Fraction
-    ite_1 recirculation function of loading and supply temperature curve,    !- Recirculation Function of Loading and Supply Temperature Curve Name
-    1,                        !- Design Electric Power Supply Efficiency
-    ite_1 electric power supply efficiency function of part load ratio curve,    !- Electric Power Supply Efficiency Function of Part Load Ratio Curve Name
+    data hall 1a ite-1 recirculation function of loading and supply temperature curve,    !- Recirculation Function of Loading and Supply Temperature Curve Name
+    0.85,                     !- Design Electric Power Supply Efficiency
+    data hall 1a ite-1 electric power supply efficiency function of part load ratio curve,    !- Electric Power Supply Efficiency Function of Part Load Ratio Curve Name
     1,                        !- Fraction of Electric Power Supply Losses to Zone
     ITE-CPU,                  !- CPU EndUse Subcategory
     ITE-Fans,                 !- Fan EndUse Subcategory
     ITE-UPS;                  !- Electric Power Supply EndUse Subcategory
 
 DESIGNSPECIFICATION:OUTDOORAIR,
-    SZ DSOA zone,             !- Name
+    SZ DSOA Data Hall 1A,     !- Name
     flow/person,              !- Outdoor Air Method
     0.0125,                   !- Outdoor Air Flow per Person
     0,                        !- Outdoor Air Flow per Zone Floor Area
@@ -681,16 +671,16 @@ DESIGNSPECIFICATION:OUTDOORAIR,
     0;                        !- Outdoor Air Flow Air Changes per Hour
 
 SIZING:ZONE,
-    zone,                     !- Zone or ZoneList Name
+    Data Hall 1A,             !- Zone or ZoneList Name
     SupplyAirTemperature,     !- Zone Cooling Design Supply Air Temperature Input Method
-    18,                       !- Zone Cooling Design Supply Air Temperature
-    11,                       !- Zone Cooling Design Supply Air Temperature Difference
+    22,                       !- Zone Cooling Design Supply Air Temperature
+    10,                       !- Zone Cooling Design Supply Air Temperature Difference
     SupplyAirTemperature,     !- Zone Heating Design Supply Air Temperature Input Method
     40,                       !- Zone Heating Design Supply Air Temperature
     30,                       !- Zone Heating Design Supply Air Temperature Difference
-    0.0085,                   !- Zone Cooling Design Supply Air Humidity Ratio
-    0.008,                    !- Zone Heating Design Supply Air Humidity Ratio
-    SZ DSOA zone,             !- Design Specification Outdoor Air Object Name
+    0.0075,                   !- Zone Cooling Design Supply Air Humidity Ratio
+    0.004,                    !- Zone Heating Design Supply Air Humidity Ratio
+    SZ DSOA Data Hall 1A,     !- Design Specification Outdoor Air Object Name
     1.25,                     !- Zone Heating Sizing Factor
     1.15,                     !- Zone Cooling Sizing Factor
     DesignDay,                !- Cooling Design Air Flow Method
@@ -710,7 +700,7 @@ SIZING:ZONE,
     autosize;                 !- Dedicated Outdoor Air High Setpoint Temperature for Design
 
 SIZING:SYSTEM,
-    acu_1 air loop,           !- AirLoop Name
+    data hall 1a acu-1 air loop,    !- AirLoop Name
     Sensible,                 !- Type of Load to Size On
     autosize,                 !- Design Outdoor Air Flow Rate
     0.4,                      !- Central Heating Maximum System Air Flow Ratio
@@ -718,7 +708,7 @@ SIZING:SYSTEM,
     0.0085,                   !- Preheat Design Humidity Ratio
     11,                       !- Precool Design Temperature
     0.0085,                   !- Precool Design Humidity Ratio
-    16,                       !- Central Cooling Design Supply Air Temperature
+    22,                       !- Central Cooling Design Supply Air Temperature
     25,                       !- Central Heating Design Supply Air Temperature
     NonCoincident,            !- Type of Zone Sum to Use
     Yes,                      !- 100 Outdoor Air in Cooling
@@ -751,33 +741,27 @@ SIZING:SYSTEM,
 SIZING:PLANT,
     chilled water loop,       !- Plant or Condenser Loop Name
     Cooling,                  !- Loop Type
-    10,                       !- Design Loop Exit Temperature
-    10,                       !- Loop Design Temperature Difference
+    16,                       !- Design Loop Exit Temperature
+    8,                        !- Loop Design Temperature Difference
     NonCoincident,            !- Sizing Option
     1,                        !- Zone Timesteps in Averaging Window
     None;                     !- Coincident Sizing Factor Mode
 
 SIZING:PLANT,
-    condenser water loop,     !- Plant or Condenser Loop Name
+    chiller 1 condenser water loop,    !- Plant or Condenser Loop Name
     Condenser,                !- Loop Type
-    25.6,                     !- Design Loop Exit Temperature
-    5.6,                      !- Loop Design Temperature Difference
+    29,                       !- Design Loop Exit Temperature
+    5.5,                      !- Loop Design Temperature Difference
     NonCoincident,            !- Sizing Option
     1,                        !- Zone Timesteps in Averaging Window
     None;                     !- Coincident Sizing Factor Mode
 
-ZONECONTROL:HUMIDISTAT,
-    zone room humidity control,    !- Name
-    zone,                     !- Zone Name
-    zone humidifying relative humidity setpoint schedule,    !- Humidifying Relative Humidity Setpoint Schedule Name
-    zone dehumidifying relative humidity setpoint schedule;    !- Dehumidifying Relative Humidity Setpoint Schedule Name
-
 ZONECONTROL:THERMOSTAT,
-    zone room temperature control,    !- Name
-    zone,                     !- Zone or ZoneList Name
-    zone control type schedule,    !- Control Type Schedule Name
+    Data Hall 1A room temperature control,    !- Name
+    Data Hall 1A,             !- Zone or ZoneList Name
+    Data Hall 1A control type schedule,    !- Control Type Schedule Name
     ThermostatSetpoint:DualSetpoint,    !- Control 1 Object Type
-    zone thermostat,          !- Control 1 Name
+    Data Hall 1A thermostat,    !- Control 1 Name
     ,                         !- Control 2 Object Type
     ,                         !- Control 2 Name
     ,                         !- Control 3 Object Type
@@ -787,123 +771,102 @@ ZONECONTROL:THERMOSTAT,
     0;                        !- Temperature Difference Between Cutout And Setpoint
 
 THERMOSTATSETPOINT:DUALSETPOINT,
-    zone thermostat,          !- Name
-    zone heating setpoint schedule,    !- Heating Setpoint Temperature Schedule Name
-    zone cooling setpoint schedule;    !- Cooling Setpoint Temperature Schedule Name
-
-ZONEHVAC:DEHUMIDIFIER:DX,
-    zone1dehumidifier1,       !- Name
-    ALWAYS ON,                !- Availability Schedule Name
-    zone dehumidifier inlet node 1,    !- Air Inlet Node Name
-    zone dehumidifier outlet node 1,    !- Air Outlet Node Name
-    50.16,                    !- Rated Water Removal
-    3.412,                    !- Rated Energy Factor
-    0.12036,                  !- Rated Air Flow Rate
-    zone1dehumidifier1 water removal curve,    !- Water Removal Curve Name
-    zone1dehumidifier1 energy factor curve,    !- Energy Factor Curve Name
-    zone1dehumidifier1 part load ratio curve,    !- Part Load Fraction Correlation Curve Name
-    10,                       !- Minimum DryBulb Temperature for Dehumidifier Operation
-    32,                       !- Maximum DryBulb Temperature for Dehumidifier Operation
-    0;                        !- OffCycle Parasitic Electric Load
+    Data Hall 1A thermostat,    !- Name
+    Data Hall 1A heating setpoint schedule,    !- Heating Setpoint Temperature Schedule Name
+    Data Hall 1A cooling setpoint schedule;    !- Cooling Setpoint Temperature Schedule Name
 
 AIRTERMINAL:SINGLEDUCT:VAV:NOREHEAT,
-    zone air terminal unit 1,    !- Name
+    Data Hall 1A air terminal unit 1,    !- Name
     ALWAYS ON,                !- Availability Schedule Name
-    zone inlet node 1,        !- Air Outlet Node Name
-    zone air terminal unit 1 inlet node,    !- Air Inlet Node Name
+    Data Hall 1A inlet node 1,    !- Air Outlet Node Name
+    Data Hall 1A air terminal unit 1 inlet node,    !- Air Inlet Node Name
     autosize,                 !- Maximum Air Flow Rate
     Constant,                 !- Zone Minimum Air Flow Input Method
     0,                        !- Constant Minimum Air Flow Fraction
     autosize;                 !- Fixed Minimum Air Flow Rate
 
 ZONEHVAC:AIRDISTRIBUTIONUNIT,
-    zone air distribution unit 1,    !- Name
-    zone inlet node 1,        !- Air Distribution Unit Outlet Node Name
+    Data Hall 1A air distribution unit 1,    !- Name
+    Data Hall 1A inlet node 1,    !- Air Distribution Unit Outlet Node Name
     AirTerminal:SingleDuct:VAV:NoReheat,    !- Air Terminal Object Type
-    zone air terminal unit 1,    !- Air Terminal Name
+    Data Hall 1A air terminal unit 1,    !- Air Terminal Name
     0,                        !- Nominal Upstream Leakage Fraction
     0;                        !- Constant Downstream Leakage Fraction
 
 ZONEHVAC:EQUIPMENTLIST,
-    zone equipment list,      !- Name
-    UniformLoad,              !- Load Distribution Scheme
+    Data Hall 1A equipment list,    !- Name
+    SequentialLoad,           !- Load Distribution Scheme
     ZoneHVAC:AirDistributionUnit,    !- Zone Equipment 1 Object Type
-    zone air distribution unit 1,    !- Zone Equipment 1 Name
+    Data Hall 1A air distribution unit 1,    !- Zone Equipment 1 Name
     1,                        !- Zone Equipment 1 Cooling Sequence
     1,                        !- Zone Equipment 1 Heating or NoLoad Sequence
     ,                         !- Zone Equipment 1 Sequential Cooling Fraction Schedule Name
-    ,                         !- Zone Equipment 1 Sequential Heating Fraction Schedule Name
-    ZoneHVAC:Dehumidifier:DX,    !- Zone Equipment 2 Object Type
-    zone1dehumidifier1,       !- Zone Equipment 2 Name
-    2,                        !- Zone Equipment 2 Cooling Sequence
-    2,                        !- Zone Equipment 2 Heating or NoLoad Sequence
-    ,                         !- Zone Equipment 2 Sequential Cooling Fraction Schedule Name
-    ;                         !- Zone Equipment 2 Sequential Heating Fraction Schedule Name
+    ;                         !- Zone Equipment 1 Sequential Heating Fraction Schedule Name
 
 ZONEHVAC:EQUIPMENTCONNECTIONS,
-    zone,                     !- Zone Name
-    zone equipment list,      !- Zone Conditioning Equipment List Name
-    zone inlets,              !- Zone Air Inlet Node or NodeList Name
-    zone exhausts,            !- Zone Air Exhaust Node or NodeList Name
-    zone air node,            !- Zone Air Node Name
-    zone returns;             !- Zone Return Air Node or NodeList Name
+    Data Hall 1A,             !- Zone Name
+    Data Hall 1A equipment list,    !- Zone Conditioning Equipment List Name
+    Data Hall 1A inlets,      !- Zone Air Inlet Node or NodeList Name
+    ,                         !- Zone Air Exhaust Node or NodeList Name
+    Data Hall 1A air node,    !- Zone Air Node Name
+    Data Hall 1A returns;     !- Zone Return Air Node or NodeList Name
 
 FAN:VARIABLEVOLUME,
-    acu_1 fan,                !- Name
+    data hall 1a acu-1 fan,    !- Name
     ALWAYS ON,                !- Availability Schedule Name
-    0.7,                      !- Fan Total Efficiency
-    500,                      !- Pressure Rise
-    autosize,                 !- Maximum Flow Rate
+    0.5246024493243244,       !- Fan Total Efficiency
+    450,                      !- Pressure Rise
+    11.625,                   !- Maximum Flow Rate
     Fraction,                 !- Fan Power Minimum Flow Rate Input Method
-    0.25,                     !- Fan Power Minimum Flow Fraction
+    0,                        !- Fan Power Minimum Flow Fraction
     ,                         !- Fan Power Minimum Air Flow Rate
-    0.9,                      !- Motor Efficiency
-    0,                        !- Motor In Airstream Fraction
+    0.86,                     !- Motor Efficiency
+    1,                        !- Motor In Airstream Fraction
     0.35071223,               !- Fan Power Coefficient 1
     0.30850535,               !- Fan Power Coefficient 2
     -0.54137364,              !- Fan Power Coefficient 3
     0.87198823,               !- Fan Power Coefficient 4
     0,                        !- Fan Power Coefficient 5
-    acu_1 cooling coil air outlet node,    !- Air Inlet Node Name
-    acu_1 air loop supply outlet node,    !- Air Outlet Node Name
+    data hall 1a acu-1 cooling coil air outlet node,    !- Air Inlet Node Name
+    data hall 1a acu-1 air loop supply outlet node,    !- Air Outlet Node Name
     General;                  !- EndUse Subcategory
 
 COIL:COOLING:WATER,
-    acu_1 cooling coil,       !- Name
+    data hall 1a acu-1 cooling coil,    !- Name
     ALWAYS ON,                !- Availability Schedule Name
-    autosize,                 !- Design Water Flow Rate
-    autosize,                 !- Design Air Flow Rate
-    autosize,                 !- Design Inlet Water Temperature
-    autosize,                 !- Design Inlet Air Temperature
-    autosize,                 !- Design Outlet Air Temperature
+    0.0040277,                !- Design Water Flow Rate
+    11.625,                   !- Design Air Flow Rate
+    16,                       !- Design Inlet Water Temperature
+    35,                       !- Design Inlet Air Temperature
+    25,                       !- Design Outlet Air Temperature
     autosize,                 !- Design Inlet Air Humidity Ratio
     autosize,                 !- Design Outlet Air Humidity Ratio
-    acu_1 water inlet node,    !- Water Inlet Node Name
-    acu_1 water outlet node,    !- Water Outlet Node Name
-    acu_1 outdoor air system mixed air node,    !- Air Inlet Node Name
-    acu_1 cooling coil air outlet node,    !- Air Outlet Node Name
+    data hall 1a acu-1 water inlet node,    !- Water Inlet Node Name
+    data hall 1a acu-1 water outlet node,    !- Water Outlet Node Name
+    data hall 1a acu-1 outdoor air system mixed air node,    !- Air Inlet Node Name
+    data hall 1a acu-1 cooling coil air outlet node,    !- Air Outlet Node Name
     SimpleAnalysis,           !- Type of Analysis
     CounterFlow,              !- Heat Exchanger Configuration
     ,                         !- Condensate Collection Water Storage Tank Name
     8;                        !- Design Water Temperature Difference
 
 CONTROLLER:WATERCOIL,
-    acu_1 controller,         !- Name
+    data hall 1a acu-1 controller,    !- Name
     Temperature,              !- Control Variable
     REVERSE,                  !- Action
     FLOW,                     !- Actuator Variable
-    acu_1 air loop supply outlet node,    !- Sensor Node Name
-    acu_1 water inlet node,    !- Actuator Node Name
+    data hall 1a acu-1 air loop supply outlet node,    !- Sensor Node Name
+    data hall 1a acu-1 water inlet node,    !- Actuator Node Name
     autosize,                 !- Controller Convergence Tolerance
     autosize,                 !- Maximum Actuated Flow
     0;                        !- Minimum Actuated Flow
 
 CONTROLLER:OUTDOORAIR,
-    acu_1 outdoor air system controller,    !- Name
-    acu_1 outdoor air system relief air outlet node,    !- Relief Air Outlet Node Name
-    acu_1 air loop supply inlet node,    !- Return Air Node Name
-    acu_1 outdoor air system mixed air node,    !- Mixed Air Node Name
-    acu_1 outdoor air system outside air inlet node,    !- Actuator Node Name
+    data hall 1a acu-1 outdoor air system controller,    !- Name
+    data hall 1a acu-1 outdoor air system relief air outlet node,    !- Relief Air Outlet Node Name
+    data hall 1a acu-1 air loop supply inlet node,    !- Return Air Node Name
+    data hall 1a acu-1 outdoor air system mixed air node,    !- Mixed Air Node Name
+    data hall 1a acu-1 outdoor air system outside air inlet node,    !- Actuator Node Name
     autosize,                 !- Minimum Outdoor Air Flow Rate
     autosize,                 !- Maximum Outdoor Air Flow Rate
     NoEconomizer,             !- Economizer Control Type
@@ -927,83 +890,83 @@ CONTROLLER:OUTDOORAIR,
     BypassWhenWithinEconomizerLimits;    !- Heat Recovery Bypass Control Type
 
 AIRLOOPHVAC:CONTROLLERLIST,
-    acu_1 outdoor air system controllers,    !- Name
+    data hall 1a acu-1 outdoor air system controllers,    !- Name
     Controller:OutdoorAir,    !- Controller 1 Object Type
-    acu_1 outdoor air system controller;    !- Controller 1 Name
+    data hall 1a acu-1 outdoor air system controller;    !- Controller 1 Name
 
 AIRLOOPHVAC:CONTROLLERLIST,
-    acu_1 controllers,        !- Name
+    data hall 1a acu-1 controllers,    !- Name
     Controller:WaterCoil,     !- Controller 1 Object Type
-    acu_1 controller;         !- Controller 1 Name
+    data hall 1a acu-1 controller;    !- Controller 1 Name
 
 AIRLOOPHVAC,
-    acu_1 air loop,           !- Name
-    acu_1 controllers,        !- Controller List Name
-    acu_1 air loop availability manager list,    !- Availability Manager List Name
+    data hall 1a acu-1 air loop,    !- Name
+    data hall 1a acu-1 controllers,    !- Controller List Name
+    data hall 1a acu-1 air loop availability manager list,    !- Availability Manager List Name
     autosize,                 !- Design Supply Air Flow Rate
-    acu_1 air loop branches,    !- Branch List Name
+    data hall 1a acu-1 air loop branches,    !- Branch List Name
     ,                         !- Connector List Name
-    acu_1 air loop supply inlet node,    !- Supply Side Inlet Node Name
-    acu_1 air loop demand outlet node,    !- Demand Side Outlet Node Name
-    acu_1 air loop demand inlet node,    !- Demand Side Inlet Node Names
-    acu_1 air loop supply outlet node,    !- Supply Side Outlet Node Names
+    data hall 1a acu-1 air loop supply inlet node,    !- Supply Side Inlet Node Name
+    data hall 1a acu-1 air loop demand outlet node,    !- Demand Side Outlet Node Name
+    data hall 1a acu-1 air loop demand inlet node,    !- Demand Side Inlet Node Names
+    data hall 1a acu-1 air loop supply outlet node,    !- Supply Side Outlet Node Names
     1;                        !- Design Return Air Flow Fraction of Supply Air Flow
 
 AIRLOOPHVAC:OUTDOORAIRSYSTEM:EQUIPMENTLIST,
-    acu_1 outdoor air system outdoor air equipment,    !- Name
+    data hall 1a acu-1 outdoor air system outdoor air equipment,    !- Name
     OUTDOORAIR:MIXER,         !- Component 1 Object Type
-    acu_1 outdoor air system mixer box;    !- Component 1 Name
+    data hall 1a acu-1 outdoor air system mixer box;    !- Component 1 Name
 
 AIRLOOPHVAC:OUTDOORAIRSYSTEM,
-    acu_1 outdoor air system,    !- Name
-    acu_1 outdoor air system controllers,    !- Controller List Name
-    acu_1 outdoor air system outdoor air equipment,    !- Outdoor Air Equipment List Name
-    acu_1 outdoor air system availability manager list;    !- Availability Manager List Name
+    data hall 1a acu-1 outdoor air system,    !- Name
+    data hall 1a acu-1 outdoor air system controllers,    !- Controller List Name
+    data hall 1a acu-1 outdoor air system outdoor air equipment,    !- Outdoor Air Equipment List Name
+    data hall 1a acu-1 outdoor air system availability manager list;    !- Availability Manager List Name
 
 OUTDOORAIR:MIXER,
-    acu_1 outdoor air system mixer box,    !- Name
-    acu_1 outdoor air system mixed air node,    !- Mixed Air Node Name
-    acu_1 outdoor air system outside air inlet node,    !- Outdoor Air Stream Node Name
-    acu_1 outdoor air system relief air outlet node,    !- Relief Air Stream Node Name
-    acu_1 air loop supply inlet node;    !- Return Air Stream Node Name
+    data hall 1a acu-1 outdoor air system mixer box,    !- Name
+    data hall 1a acu-1 outdoor air system mixed air node,    !- Mixed Air Node Name
+    data hall 1a acu-1 outdoor air system outside air inlet node,    !- Outdoor Air Stream Node Name
+    data hall 1a acu-1 outdoor air system relief air outlet node,    !- Relief Air Stream Node Name
+    data hall 1a acu-1 air loop supply inlet node;    !- Return Air Stream Node Name
 
 AIRLOOPHVAC:ZONESPLITTER,
-    acu_1 air loop air splitter,    !- Name
-    acu_1 air loop demand inlet node,    !- Inlet Node Name
-    zone air terminal unit 1 inlet node;    !- Outlet 1 Node Name
+    data hall 1a acu-1 air loop air splitter,    !- Name
+    data hall 1a acu-1 air loop demand inlet node,    !- Inlet Node Name
+    Data Hall 1A air terminal unit 1 inlet node;    !- Outlet 1 Node Name
 
 AIRLOOPHVAC:SUPPLYPATH,
-    acu_1 air loop supply path,    !- Name
-    acu_1 air loop demand inlet node,    !- Supply Air Path Inlet Node Name
+    data hall 1a acu-1 air loop supply path,    !- Name
+    data hall 1a acu-1 air loop demand inlet node,    !- Supply Air Path Inlet Node Name
     AirLoopHVAC:ZoneSplitter,    !- Component 1 Object Type
-    acu_1 air loop air splitter;    !- Component 1 Name
+    data hall 1a acu-1 air loop air splitter;    !- Component 1 Name
 
 AIRLOOPHVAC:ZONEMIXER,
-    acu_1 air loop air mixer,    !- Name
-    acu_1 air loop demand outlet node,    !- Outlet Node Name
-    zone return node 1;       !- Inlet 1 Node Name
+    data hall 1a acu-1 air loop air mixer,    !- Name
+    data hall 1a acu-1 air loop demand outlet node,    !- Outlet Node Name
+    Data Hall 1A return node 1;    !- Inlet 1 Node Name
 
 AIRLOOPHVAC:RETURNPATH,
-    acu_1 air loop return path,    !- Name
-    acu_1 air loop demand outlet node,    !- Return Air Path Outlet Node Name
+    data hall 1a acu-1 air loop return path,    !- Name
+    data hall 1a acu-1 air loop demand outlet node,    !- Return Air Path Outlet Node Name
     AirLoopHVAC:ZoneMixer,    !- Component 1 Object Type
-    acu_1 air loop air mixer;    !- Component 1 Name
+    data hall 1a acu-1 air loop air mixer;    !- Component 1 Name
 
 BRANCH,
-    acu_1 air loop main branch,    !- Name
+    data hall 1a acu-1 air loop main branch,    !- Name
     ,                         !- Pressure Drop Curve Name
     AIRLOOPHVAC:OUTDOORAIRSYSTEM,    !- Component 1 Object Type
-    acu_1 outdoor air system,    !- Component 1 Name
-    acu_1 air loop supply inlet node,    !- Component 1 Inlet Node Name
-    acu_1 outdoor air system mixed air node,    !- Component 1 Outlet Node Name
+    data hall 1a acu-1 outdoor air system,    !- Component 1 Name
+    data hall 1a acu-1 air loop supply inlet node,    !- Component 1 Inlet Node Name
+    data hall 1a acu-1 outdoor air system mixed air node,    !- Component 1 Outlet Node Name
     COIL:COOLING:WATER,       !- Component 2 Object Type
-    acu_1 cooling coil,       !- Component 2 Name
-    acu_1 outdoor air system mixed air node,    !- Component 2 Inlet Node Name
-    acu_1 cooling coil air outlet node,    !- Component 2 Outlet Node Name
+    data hall 1a acu-1 cooling coil,    !- Component 2 Name
+    data hall 1a acu-1 outdoor air system mixed air node,    !- Component 2 Inlet Node Name
+    data hall 1a acu-1 cooling coil air outlet node,    !- Component 2 Outlet Node Name
     FAN:VARIABLEVOLUME,       !- Component 3 Object Type
-    acu_1 fan,                !- Component 3 Name
-    acu_1 cooling coil air outlet node,    !- Component 3 Inlet Node Name
-    acu_1 air loop supply outlet node;    !- Component 3 Outlet Node Name
+    data hall 1a acu-1 fan,    !- Component 3 Name
+    data hall 1a acu-1 cooling coil air outlet node,    !- Component 3 Inlet Node Name
+    data hall 1a acu-1 air loop supply outlet node;    !- Component 3 Outlet Node Name
 
 BRANCH,
     chilled water loop supply inlet branch,    !- Name
@@ -1017,13 +980,13 @@ BRANCH,
     chilled water supply branch 1,    !- Name
     ,                         !- Pressure Drop Curve Name
     PUMP:VARIABLESPEED,       !- Component 1 Object Type
-    chiller-1 chilled water pump,    !- Component 1 Name
-    chiller-1 chilled water pump inlet node,    !- Component 1 Inlet Node Name
-    chiller-1 chilled water pump outlet node,    !- Component 1 Outlet Node Name
+    chiller 1 chwp,           !- Component 1 Name
+    chiller 1 chwp inlet node,    !- Component 1 Inlet Node Name
+    chiller 1 chwp outlet node,    !- Component 1 Outlet Node Name
     CHILLER:ELECTRIC:EIR,     !- Component 2 Object Type
-    chiller-1,                !- Component 2 Name
-    chiller-1 chilled water pump outlet node,    !- Component 2 Inlet Node Name
-    chiller-1 chilled water outlet node;    !- Component 2 Outlet Node Name
+    chiller 1,                !- Component 2 Name
+    chiller 1 chwp outlet node,    !- Component 2 Inlet Node Name
+    chiller 1 chilled water outlet node;    !- Component 2 Outlet Node Name
 
 BRANCH,
     chilled water loop supply outlet branch,    !- Name
@@ -1042,12 +1005,12 @@ BRANCH,
     chilled water loop demand inlet pipe outlet node;    !- Component 1 Outlet Node Name
 
 BRANCH,
-    chilled water demand branch,    !- Name
+    Data Hall 1A acu-1 demand branch,    !- Name
     ,                         !- Pressure Drop Curve Name
     COIL:COOLING:WATER,       !- Component 1 Object Type
-    acu_1 cooling coil,       !- Component 1 Name
-    acu_1 water inlet node,    !- Component 1 Inlet Node Name
-    acu_1 water outlet node;    !- Component 1 Outlet Node Name
+    data hall 1a acu-1 cooling coil,    !- Component 1 Name
+    data hall 1a acu-1 water inlet node,    !- Component 1 Inlet Node Name
+    data hall 1a acu-1 water outlet node;    !- Component 1 Outlet Node Name
 
 BRANCH,
     chilled water loop demand outlet branch,    !- Name
@@ -1058,60 +1021,60 @@ BRANCH,
     chilled water loop demand outlet node;    !- Component 1 Outlet Node Name
 
 BRANCH,
-    condenser water loop 1 supply inlet branch,    !- Name
+    chiller 1 condenser water loop supply inlet branch,    !- Name
     ,                         !- Pressure Drop Curve Name
     PIPE:ADIABATIC,           !- Component 1 Object Type
-    condenser water loop 1 supply inlet pipe,    !- Component 1 Name
-    condenser water loop supply inlet node,    !- Component 1 Inlet Node Name
-    condenser water loop 1 supply inlet pipe outlet node;    !- Component 1 Outlet Node Name
+    chiller 1 condenser water loop supply inlet pipe,    !- Component 1 Name
+    chiller 1 condenser water loop supply inlet node,    !- Component 1 Inlet Node Name
+    chiller 1 condenser water loop supply inlet pipe outlet node;    !- Component 1 Outlet Node Name
 
 BRANCH,
-    condenser water loop 1 supply branch,    !- Name
+    chiller 1 condenser water loop supply branch,    !- Name
     ,                         !- Pressure Drop Curve Name
     PUMP:VARIABLESPEED,       !- Component 1 Object Type
-    condenser water loop 1 supply pump,    !- Component 1 Name
-    condenser water loop 1 supply pump inlet node,    !- Component 1 Inlet Node Name
-    condenser water loop 1 supply pump outlet node,    !- Component 1 Outlet Node Name
+    cooling tower 1 cwp,      !- Component 1 Name
+    cooling tower 1 cwp inlet node,    !- Component 1 Inlet Node Name
+    cooling tower 1 cwp outlet node,    !- Component 1 Outlet Node Name
     COOLINGTOWER:VARIABLESPEED,    !- Component 2 Object Type
-    cooling tower-1,          !- Component 2 Name
-    condenser water loop 1 supply pump outlet node,    !- Component 2 Inlet Node Name
-    cooling tower-1 outlet node;    !- Component 2 Outlet Node Name
+    cooling tower 1,          !- Component 2 Name
+    cooling tower 1 cwp outlet node,    !- Component 2 Inlet Node Name
+    cooling tower 1 outlet node;    !- Component 2 Outlet Node Name
 
 BRANCH,
-    condenser water loop 1 supply outlet branch,    !- Name
+    chiller 1 condenser water loop supply outlet branch,    !- Name
     ,                         !- Pressure Drop Curve Name
     PIPE:ADIABATIC,           !- Component 1 Object Type
-    condenser water loop 1 supply outlet pipe,    !- Component 1 Name
-    condenser water loop 1 supply outlet pipe inlet node,    !- Component 1 Inlet Node Name
-    condenser water loop supply outlet node;    !- Component 1 Outlet Node Name
+    chiller 1 condenser water loop supply outlet pipe,    !- Component 1 Name
+    chiller 1 condenser water loop supply outlet pipe inlet node,    !- Component 1 Inlet Node Name
+    chiller 1 condenser water loop supply outlet node;    !- Component 1 Outlet Node Name
 
 BRANCH,
-    condenser water loop 1 demand inlet branch,    !- Name
+    chiller 1 condenser water loop demand inlet branch,    !- Name
     ,                         !- Pressure Drop Curve Name
     PIPE:ADIABATIC,           !- Component 1 Object Type
-    condenser water loop 1 demand inlet pipe,    !- Component 1 Name
-    condenser water loop demand inlet node,    !- Component 1 Inlet Node Name
-    condenser water loop 1 demand inlet pipe outlet node;    !- Component 1 Outlet Node Name
+    chiller 1 condenser water loop demand inlet pipe,    !- Component 1 Name
+    chiller 1 condenser water loop demand inlet node,    !- Component 1 Inlet Node Name
+    chiller 1 condenser water loop demand inlet pipe outlet node;    !- Component 1 Outlet Node Name
 
 BRANCH,
-    condenser water loop 1 demand branch,    !- Name
+    chiller 1 demand branch,    !- Name
     ,                         !- Pressure Drop Curve Name
     CHILLER:ELECTRIC:EIR,     !- Component 1 Object Type
-    chiller-1,                !- Component 1 Name
-    chiller-1 condenser water inlet node,    !- Component 1 Inlet Node Name
-    chiller-1 condenser water outlet node;    !- Component 1 Outlet Node Name
+    chiller 1,                !- Component 1 Name
+    chiller 1 condenser water inlet node,    !- Component 1 Inlet Node Name
+    chiller 1 condenser water outlet node;    !- Component 1 Outlet Node Name
 
 BRANCH,
-    condenser water loop 1 demand outlet branch,    !- Name
+    chiller 1 condenser water loop demand outlet branch,    !- Name
     ,                         !- Pressure Drop Curve Name
     PIPE:ADIABATIC,           !- Component 1 Object Type
-    condenser water loop 1 demand outlet pipe,    !- Component 1 Name
-    condenser water loop 1 demand outlet pipe inlet node,    !- Component 1 Inlet Node Name
-    condenser water loop demand outlet node;    !- Component 1 Outlet Node Name
+    chiller 1 condenser water loop demand outlet pipe,    !- Component 1 Name
+    chiller 1 condenser water loop demand outlet pipe inlet node,    !- Component 1 Inlet Node Name
+    chiller 1 condenser water loop demand outlet node;    !- Component 1 Outlet Node Name
 
 BRANCHLIST,
-    acu_1 air loop branches,    !- Name
-    acu_1 air loop main branch;    !- Branch 1 Name
+    data hall 1a acu-1 air loop branches,    !- Name
+    data hall 1a acu-1 air loop main branch;    !- Branch 1 Name
 
 BRANCHLIST,
     chilled water loop supply branches,    !- Name
@@ -1122,20 +1085,20 @@ BRANCHLIST,
 BRANCHLIST,
     chilled water loop demand branches,    !- Name
     chilled water loop demand inlet branch,    !- Branch 1 Name
-    chilled water demand branch,    !- Branch 2 Name
+    Data Hall 1A acu-1 demand branch,    !- Branch 2 Name
     chilled water loop demand outlet branch;    !- Branch 3 Name
 
 BRANCHLIST,
-    condenser water loop supply branches,    !- Name
-    condenser water loop 1 supply inlet branch,    !- Branch 1 Name
-    condenser water loop 1 supply branch,    !- Branch 2 Name
-    condenser water loop 1 supply outlet branch;    !- Branch 3 Name
+    chiller 1 condenser water loop supply branches,    !- Name
+    chiller 1 condenser water loop supply inlet branch,    !- Branch 1 Name
+    chiller 1 condenser water loop supply branch,    !- Branch 2 Name
+    chiller 1 condenser water loop supply outlet branch;    !- Branch 3 Name
 
 BRANCHLIST,
-    condenser water loop demand branches,    !- Name
-    condenser water loop 1 demand inlet branch,    !- Branch 1 Name
-    condenser water loop 1 demand branch,    !- Branch 2 Name
-    condenser water loop 1 demand outlet branch;    !- Branch 3 Name
+    chiller 1 condenser water loop demand branches,    !- Name
+    chiller 1 condenser water loop demand inlet branch,    !- Branch 1 Name
+    chiller 1 demand branch,    !- Branch 2 Name
+    chiller 1 condenser water loop demand outlet branch;    !- Branch 3 Name
 
 CONNECTOR:SPLITTER,
     chilled water loop supply splitter,    !- Name
@@ -1145,17 +1108,17 @@ CONNECTOR:SPLITTER,
 CONNECTOR:SPLITTER,
     chilled water loop demand splitter,    !- Name
     chilled water loop demand inlet branch,    !- Inlet Branch Name
-    chilled water demand branch;    !- Outlet Branch 1 Name
+    Data Hall 1A acu-1 demand branch;    !- Outlet Branch 1 Name
 
 CONNECTOR:SPLITTER,
-    condenser water loop supply splitter,    !- Name
-    condenser water loop 1 supply inlet branch,    !- Inlet Branch Name
-    condenser water loop 1 supply branch;    !- Outlet Branch 1 Name
+    chiller 1 condenser water loop supply splitter,    !- Name
+    chiller 1 condenser water loop supply inlet branch,    !- Inlet Branch Name
+    chiller 1 condenser water loop supply branch;    !- Outlet Branch 1 Name
 
 CONNECTOR:SPLITTER,
-    condenser water loop demand splitter,    !- Name
-    condenser water loop 1 demand inlet branch,    !- Inlet Branch Name
-    condenser water loop 1 demand branch;    !- Outlet Branch 1 Name
+    chiller 1 condenser water loop demand splitter,    !- Name
+    chiller 1 condenser water loop demand inlet branch,    !- Inlet Branch Name
+    chiller 1 demand branch;    !- Outlet Branch 1 Name
 
 CONNECTOR:MIXER,
     chilled water loop supply mixer,    !- Name
@@ -1165,17 +1128,17 @@ CONNECTOR:MIXER,
 CONNECTOR:MIXER,
     chilled water loop demand mixer,    !- Name
     chilled water loop demand outlet branch,    !- Outlet Branch Name
-    chilled water demand branch;    !- Inlet Branch 1 Name
+    Data Hall 1A acu-1 demand branch;    !- Inlet Branch 1 Name
 
 CONNECTOR:MIXER,
-    condenser water loop supply mixer,    !- Name
-    condenser water loop 1 supply outlet branch,    !- Outlet Branch Name
-    condenser water loop 1 supply branch;    !- Inlet Branch 1 Name
+    chiller 1 condenser water loop supply mixer,    !- Name
+    chiller 1 condenser water loop supply outlet branch,    !- Outlet Branch Name
+    chiller 1 condenser water loop supply branch;    !- Inlet Branch 1 Name
 
 CONNECTOR:MIXER,
-    condenser water loop demand mixer,    !- Name
-    condenser water loop 1 demand outlet branch,    !- Outlet Branch Name
-    condenser water loop 1 demand branch;    !- Inlet Branch 1 Name
+    chiller 1 condenser water loop demand mixer,    !- Name
+    chiller 1 condenser water loop demand outlet branch,    !- Outlet Branch Name
+    chiller 1 demand branch;    !- Inlet Branch 1 Name
 
 CONNECTORLIST,
     chilled water loop supply connectors,    !- Name
@@ -1192,38 +1155,33 @@ CONNECTORLIST,
     chilled water loop demand mixer;    !- Connector 2 Name
 
 CONNECTORLIST,
-    condenser water loop supply connectors,    !- Name
+    chiller 1 condenser water loop supply connectors,    !- Name
     Connector:Splitter,       !- Connector 1 Object Type
-    condenser water loop supply splitter,    !- Connector 1 Name
+    chiller 1 condenser water loop supply splitter,    !- Connector 1 Name
     Connector:Mixer,          !- Connector 2 Object Type
-    condenser water loop supply mixer;    !- Connector 2 Name
+    chiller 1 condenser water loop supply mixer;    !- Connector 2 Name
 
 CONNECTORLIST,
-    condenser water loop demand connectors,    !- Name
+    chiller 1 condenser water loop demand connectors,    !- Name
     Connector:Splitter,       !- Connector 1 Object Type
-    condenser water loop demand splitter,    !- Connector 1 Name
+    chiller 1 condenser water loop demand splitter,    !- Connector 1 Name
     Connector:Mixer,          !- Connector 2 Object Type
-    condenser water loop demand mixer;    !- Connector 2 Name
+    chiller 1 condenser water loop demand mixer;    !- Connector 2 Name
 
 NODELIST,
-    zone inlets,              !- Name
-    zone inlet node 1,        !- Node 1 Name
-    zone dehumidifier outlet node 1;    !- Node 2 Name
+    Data Hall 1A inlets,      !- Name
+    Data Hall 1A inlet node 1;    !- Node 1 Name
 
 NODELIST,
-    zone returns,             !- Name
-    zone return node 1;       !- Node 1 Name
+    Data Hall 1A returns,     !- Name
+    Data Hall 1A return node 1;    !- Node 1 Name
 
 NODELIST,
-    zone exhausts,            !- Name
-    zone dehumidifier inlet node 1;    !- Node 1 Name
-
-NODELIST,
-    acu_1 outdoor air system outside air inlet nodes,    !- Name
-    acu_1 outdoor air system outside air inlet node;    !- Node 1 Name
+    data hall 1a acu-1 outdoor air system outside air inlet nodes,    !- Name
+    data hall 1a acu-1 outdoor air system outside air inlet node;    !- Node 1 Name
 
 OUTDOORAIR:NODELIST,
-    acu_1 outdoor air system outside air inlet node;    !- Node or NodeList Name 1
+    data hall 1a acu-1 outdoor air system outside air inlet node;    !- Node or NodeList Name 1
 
 PIPE:ADIABATIC,
     chilled water loop supply pipe,    !- Name
@@ -1246,43 +1204,43 @@ PIPE:ADIABATIC,
     chilled water loop demand outlet node;    !- Outlet Node Name
 
 PIPE:ADIABATIC,
-    condenser water loop 1 supply inlet pipe,    !- Name
-    condenser water loop supply inlet node,    !- Inlet Node Name
-    condenser water loop 1 supply inlet pipe outlet node;    !- Outlet Node Name
+    chiller 1 condenser water loop supply inlet pipe,    !- Name
+    chiller 1 condenser water loop supply inlet node,    !- Inlet Node Name
+    chiller 1 condenser water loop supply inlet pipe outlet node;    !- Outlet Node Name
 
 PIPE:ADIABATIC,
-    condenser water loop 1 supply outlet pipe,    !- Name
-    condenser water loop 1 supply outlet pipe inlet node,    !- Inlet Node Name
-    condenser water loop supply outlet node;    !- Outlet Node Name
+    chiller 1 condenser water loop supply outlet pipe,    !- Name
+    chiller 1 condenser water loop supply outlet pipe inlet node,    !- Inlet Node Name
+    chiller 1 condenser water loop supply outlet node;    !- Outlet Node Name
 
 PIPE:ADIABATIC,
-    condenser water loop 1 demand inlet pipe,    !- Name
-    condenser water loop demand inlet node,    !- Inlet Node Name
-    condenser water loop 1 demand inlet pipe outlet node;    !- Outlet Node Name
+    chiller 1 condenser water loop demand inlet pipe,    !- Name
+    chiller 1 condenser water loop demand inlet node,    !- Inlet Node Name
+    chiller 1 condenser water loop demand inlet pipe outlet node;    !- Outlet Node Name
 
 PIPE:ADIABATIC,
-    condenser water loop 1 demand outlet pipe,    !- Name
-    condenser water loop 1 demand outlet pipe inlet node,    !- Inlet Node Name
-    condenser water loop demand outlet node;    !- Outlet Node Name
+    chiller 1 condenser water loop demand outlet pipe,    !- Name
+    chiller 1 condenser water loop demand outlet pipe inlet node,    !- Inlet Node Name
+    chiller 1 condenser water loop demand outlet node;    !- Outlet Node Name
 
 PUMP:VARIABLESPEED,
-    chiller-1 chilled water pump,    !- Name
-    chiller-1 chilled water pump inlet node,    !- Inlet Node Name
-    chiller-1 chilled water pump outlet node,    !- Outlet Node Name
-    0.5652,                   !- Design Maximum Flow Rate
-    160000,                   !- Design Pump Head
-    152000,                   !- Design Power Consumption
-    0.9,                      !- Motor Efficiency
+    chiller 1 chwp,           !- Name
+    chiller 1 chwp inlet node,    !- Inlet Node Name
+    chiller 1 chwp outlet node,    !- Outlet Node Name
+    0.01,                     !- Design Maximum Flow Rate
+    300,                      !- Design Pump Head
+    2500,                     !- Design Power Consumption
+    0.86,                     !- Motor Efficiency
     0,                        !- Fraction of Motor Inefficiencies to Fluid Stream
-    0,                        !- Coefficient 1 of the Part Load Performance Curve
-    1,                        !- Coefficient 2 of the Part Load Performance Curve
-    0,                        !- Coefficient 3 of the Part Load Performance Curve
+    4.4213372e-16,            !- Coefficient 1 of the Part Load Performance Curve
+    1.52380952,               !- Coefficient 2 of the Part Load Performance Curve
+    -0.523809524,             !- Coefficient 3 of the Part Load Performance Curve
     0,                        !- Coefficient 4 of the Part Load Performance Curve
     autosize,                 !- Design Minimum Flow Rate
     Intermittent,             !- Pump Control Type
     ,                         !- Pump Flow Rate Schedule Name
     ,                         !- Pump Curve Name
-    ,                         !- Impeller Diameter
+    0.343,                    !- Impeller Diameter
     ,                         !- VFD Control Type
     ,                         !- Pump RPM Schedule Name
     ,                         !- Minimum Pressure Schedule
@@ -1298,23 +1256,23 @@ PUMP:VARIABLESPEED,
     General;                  !- EndUse Subcategory
 
 PUMP:VARIABLESPEED,
-    condenser water loop 1 supply pump,    !- Name
-    condenser water loop 1 supply pump inlet node,    !- Inlet Node Name
-    condenser water loop 1 supply pump outlet node,    !- Outlet Node Name
-    0.5652,                   !- Design Maximum Flow Rate
-    160000,                   !- Design Pump Head
-    152000,                   !- Design Power Consumption
-    0.9,                      !- Motor Efficiency
+    cooling tower 1 cwp,      !- Name
+    cooling tower 1 cwp inlet node,    !- Inlet Node Name
+    cooling tower 1 cwp outlet node,    !- Outlet Node Name
+    0.04,                     !- Design Maximum Flow Rate
+    300,                      !- Design Pump Head
+    10652,                    !- Design Power Consumption
+    0.87,                     !- Motor Efficiency
     0,                        !- Fraction of Motor Inefficiencies to Fluid Stream
-    0,                        !- Coefficient 1 of the Part Load Performance Curve
-    1,                        !- Coefficient 2 of the Part Load Performance Curve
-    0,                        !- Coefficient 3 of the Part Load Performance Curve
+    4.4213372e-16,            !- Coefficient 1 of the Part Load Performance Curve
+    1.52380952,               !- Coefficient 2 of the Part Load Performance Curve
+    -0.523809524,             !- Coefficient 3 of the Part Load Performance Curve
     0,                        !- Coefficient 4 of the Part Load Performance Curve
     autosize,                 !- Design Minimum Flow Rate
     Intermittent,             !- Pump Control Type
     ,                         !- Pump Flow Rate Schedule Name
     ,                         !- Pump Curve Name
-    ,                         !- Impeller Diameter
+    0.341,                    !- Impeller Diameter
     ,                         !- VFD Control Type
     ,                         !- Pump RPM Schedule Name
     ,                         !- Minimum Pressure Schedule
@@ -1330,24 +1288,24 @@ PUMP:VARIABLESPEED,
     General;                  !- EndUse Subcategory
 
 CHILLER:ELECTRIC:EIR,
-    chiller-1,                !- Name
-    1600000,                  !- Reference Capacity
-    7.2693727,                !- Reference COP
-    10,                       !- Reference Leaving Chilled Water Temperature
-    28,                       !- Reference Entering Condenser Fluid Temperature
-    0.4,                      !- Reference Chilled Water Flow Rate
-    0.45,                     !- Reference Condenser Fluid Flow Rate
-    chiller-1 cooling capacity function of temperature curve,    !- Cooling Capacity Function of Temperature Curve Name
-    chiller-1 electric input to cooling output ratio function of temperature curve,    !- Electric Input to Cooling Output Ratio Function of Temperature Curve Name
-    chiller-1 electric input to cooling output ratio function of part load ratio curve,    !- Electric Input to Cooling Output Ratio Function of Part Load Ratio Curve Name
+    chiller 1,                !- Name
+    750000,                   !- Reference Capacity
+    5,                        !- Reference COP
+    16,                       !- Reference Leaving Chilled Water Temperature
+    29.5,                     !- Reference Entering Condenser Fluid Temperature
+    0.01,                     !- Reference Chilled Water Flow Rate
+    0.04,                     !- Reference Condenser Fluid Flow Rate
+    chiller 1 cooling capacity function of temperature curve,    !- Cooling Capacity Function of Temperature Curve Name
+    chiller 1 electric input to cooling output ratio function of temperature curve,    !- Electric Input to Cooling Output Ratio Function of Temperature Curve Name
+    chiller 1 electric input to cooling output ratio function of part load ratio curve,    !- Electric Input to Cooling Output Ratio Function of Part Load Ratio Curve Name
     0,                        !- Minimum Part Load Ratio
     1,                        !- Maximum Part Load Ratio
     1,                        !- Optimum Part Load Ratio
     0,                        !- Minimum Unloading Ratio
-    chiller-1 chilled water pump outlet node,    !- Chilled Water Inlet Node Name
-    chiller-1 chilled water outlet node,    !- Chilled Water Outlet Node Name
-    chiller-1 condenser water inlet node,    !- Condenser Inlet Node Name
-    chiller-1 condenser water outlet node,    !- Condenser Outlet Node Name
+    chiller 1 chwp outlet node,    !- Chilled Water Inlet Node Name
+    chiller 1 chilled water outlet node,    !- Chilled Water Outlet Node Name
+    chiller 1 condenser water inlet node,    !- Condenser Inlet Node Name
+    chiller 1 condenser water outlet node,    !- Condenser Outlet Node Name
     WaterCooled,              !- Condenser Type
     0,                        !- Condenser Fan Power Ratio
     1,                        !- Fraction of Compressor Electric Consumption Rejected by Condenser
@@ -1366,36 +1324,36 @@ CHILLER:ELECTRIC:EIR,
     General;                  !- EndUse Subcategory
 
 COOLINGTOWER:VARIABLESPEED,
-    cooling tower-1,          !- Name
-    condenser water loop 1 supply pump outlet node,    !- Water Inlet Node Name
-    cooling tower-1 outlet node,    !- Water Outlet Node Name
-    YorkCalcUserDefined,      !- Model Type
-    YorkCalc Default Tower Model,    !- Model Coefficient Name
-    26.666,                   !- Design Inlet Air WetBulb Temperature
-    2.84,                     !- Design Approach Temperature
+    cooling tower 1,          !- Name
+    cooling tower 1 cwp outlet node,    !- Water Inlet Node Name
+    cooling tower 1 outlet node,    !- Water Outlet Node Name
+    YorkCalc,                 !- Model Type
+    ,                         !- Model Coefficient Name
+    26.6,                     !- Design Inlet Air WetBulb Temperature
+    2.8,                      !- Design Approach Temperature
     5.5,                      !- Design Range Temperature
-    0.10169,                  !- Design Water Flow Rate
-    3.54667,                  !- Design Air Flow Rate
-    25000,                    !- Design Fan Power
-    cooling tower-1 fan power ratio function of air flow rate ratio curve,    !- Fan Power Ratio Function of Air Flow Rate Ratio Curve Name
-    0.2,                      !- Minimum Air Flow Rate Ratio
+    0.221,                    !- Design Water Flow Rate
+    100,                      !- Design Air Flow Rate
+    37000,                    !- Design Fan Power
+    cooling tower 1 fan power ratio function of air flow rate ratio curve,    !- Fan Power Ratio Function of Air Flow Rate Ratio Curve Name
+    0.25,                     !- Minimum Air Flow Rate Ratio
     0,                        !- Fraction of Tower Capacity in Free Convection Regime
     0,                        !- Basin Heater Capacity
     2,                        !- Basin Heater Setpoint Temperature
     ,                         !- Basin Heater Operating Schedule Name
     LossFactor,               !- Evaporation Loss Mode
     0.2,                      !- Evaporation Loss Factor
-    0.008,                    !- Drift Loss Percent
+    ,                         !- Drift Loss Percent
     ConcentrationRatio,       !- Blowdown Calculation Mode
     3,                        !- Blowdown Concentration Ratio
     ,                         !- Blowdown Makeup Water Usage Schedule Name
     ,                         !- Supply Water Storage Tank Name
     ,                         !- Outdoor Air Inlet Node Name
-    4,                        !- Number of Cells
+    2,                        !- Number of Cells
     MinimalCell,              !- Cell Control
     0.33,                     !- Cell Minimum Water Flow Rate Fraction
     1,                        !- Cell Maximum Water Flow Rate Fraction
-    1,                        !- Sizing Factor
+    1.0,                      !- Sizing Factor
     General;                  !- EndUse Subcategory
 
 CoolingTowerPerformance:YorkCalc,
@@ -1456,7 +1414,7 @@ PLANTLOOP,
     chilled water loop demand outlet node,    !- Demand Side Outlet Node Name
     chilled water loop demand branches,    !- Demand Side Branch List Name
     chilled water loop demand connectors,    !- Demand Side Connector List Name
-    SequentialLoad,           !- Load Distribution Scheme
+    UniformLoad,              !- Load Distribution Scheme
     ,                         !- Availability Manager List Name
     SingleSetpoint,           !- Plant Loop Demand Calculation Scheme
     None,                     !- Common Pipe Simulation
@@ -1464,25 +1422,25 @@ PLANTLOOP,
     0;                        !- Loop Circulation Time
 
 PLANTLOOP,
-    condenser water loop,     !- Name
+    chiller 1 condenser water loop,    !- Name
     Water,                    !- Fluid Type
     ,                         !- User Defined Fluid Type
-    condenser water loop operation scheme,    !- Plant Equipment Operation Scheme Name
-    condenser water loop supply outlet node,    !- Loop Temperature Setpoint Node Name
+    chiller 1 condenser water loop operation scheme,    !- Plant Equipment Operation Scheme Name
+    chiller 1 condenser water loop supply outlet node,    !- Loop Temperature Setpoint Node Name
     100,                      !- Maximum Loop Temperature
     5,                        !- Minimum Loop Temperature
     autosize,                 !- Maximum Loop Flow Rate
     0,                        !- Minimum Loop Flow Rate
     Autocalculate,            !- Plant Loop Volume
-    condenser water loop supply inlet node,    !- Plant Side Inlet Node Name
-    condenser water loop supply outlet node,    !- Plant Side Outlet Node Name
-    condenser water loop supply branches,    !- Plant Side Branch List Name
-    condenser water loop supply connectors,    !- Plant Side Connector List Name
-    condenser water loop demand inlet node,    !- Demand Side Inlet Node Name
-    condenser water loop demand outlet node,    !- Demand Side Outlet Node Name
-    condenser water loop demand branches,    !- Demand Side Branch List Name
-    condenser water loop demand connectors,    !- Demand Side Connector List Name
-    SequentialLoad,           !- Load Distribution Scheme
+    chiller 1 condenser water loop supply inlet node,    !- Plant Side Inlet Node Name
+    chiller 1 condenser water loop supply outlet node,    !- Plant Side Outlet Node Name
+    chiller 1 condenser water loop supply branches,    !- Plant Side Branch List Name
+    chiller 1 condenser water loop supply connectors,    !- Plant Side Connector List Name
+    chiller 1 condenser water loop demand inlet node,    !- Demand Side Inlet Node Name
+    chiller 1 condenser water loop demand outlet node,    !- Demand Side Outlet Node Name
+    chiller 1 condenser water loop demand branches,    !- Demand Side Branch List Name
+    chiller 1 condenser water loop demand connectors,    !- Demand Side Connector List Name
+    UniformLoad,              !- Load Distribution Scheme
     ,                         !- Availability Manager List Name
     SingleSetpoint,           !- Plant Loop Demand Calculation Scheme
     None,                     !- Common Pipe Simulation
@@ -1492,12 +1450,12 @@ PLANTLOOP,
 PLANTEQUIPMENTLIST,
     chilled water loop equipment list,    !- Name
     Chiller:Electric:EIR,     !- Equipment 1 Object Type
-    chiller-1;                !- Equipment 1 Name
+    chiller 1;                !- Equipment 1 Name
 
 PLANTEQUIPMENTLIST,
-    condenser water loop equipment list,    !- Name
+    chiller 1 condenser water loop equipment list,    !- Name
     CoolingTower:VariableSpeed,    !- Equipment 1 Object Type
-    cooling tower-1;          !- Equipment 1 Name
+    cooling tower 1;          !- Equipment 1 Name
 
 PLANTEQUIPMENTOPERATION:COOLINGLOAD,
     chilled water loop cooling operation scheme,    !- Name
@@ -1506,10 +1464,10 @@ PLANTEQUIPMENTOPERATION:COOLINGLOAD,
     chilled water loop equipment list;    !- Range 1 Equipment List Name
 
 PLANTEQUIPMENTOPERATION:COOLINGLOAD,
-    condenser water loop cooling operation scheme,    !- Name
+    chiller 1 condenser water loop cooling operation scheme,    !- Name
     0,                        !- Load Range 1 Lower Limit
     1000000000,               !- Load Range 1 Upper Limit
-    condenser water loop equipment list;    !- Range 1 Equipment List Name
+    chiller 1 condenser water loop equipment list;    !- Range 1 Equipment List Name
 
 PLANTEQUIPMENTOPERATIONSCHEMES,
     chilled water loop operation scheme,    !- Name
@@ -1518,9 +1476,9 @@ PLANTEQUIPMENTOPERATIONSCHEMES,
     ALWAYS ON;                !- Control Scheme 1 Schedule Name
 
 PLANTEQUIPMENTOPERATIONSCHEMES,
-    condenser water loop operation scheme,    !- Name
+    chiller 1 condenser water loop operation scheme,    !- Name
     PlantEquipmentOperation:CoolingLoad,    !- Control Scheme 1 Object Type
-    condenser water loop cooling operation scheme,    !- Control Scheme 1 Name
+    chiller 1 condenser water loop cooling operation scheme,    !- Control Scheme 1 Name
     ALWAYS ON;                !- Control Scheme 1 Schedule Name
 
 EnergyManagementSystem:Sensor,
@@ -1543,35 +1501,10 @@ EnergyManagementSystem:Sensor,
     Whole Building,           !- OutputVariable or OutputMeter Index Key Name
     Facility Total HVAC Electricity Demand Rate;    !- OutputVariable or OutputMeter Name
 
-ENERGYMANAGEMENTSYSTEM:ACTUATOR,
-    chiller_1_chilled_water_pump_pump_mass_flow_rate,    !- Name
-    chiller-1 chilled water pump,    !- Actuated Component Unique Name
-    Pump,                     !- Actuated Component Type
-    Pump Mass Flow Rate;      !- Actuated Component Control Type
-
-ENERGYMANAGEMENTSYSTEM:ACTUATOR,
-    chiller_1_on_off_supervisory,    !- Name
-    chiller-1,                !- Actuated Component Unique Name
-    Plant Component Chiller:Electric:EIR,    !- Actuated Component Type
-    On/Off Supervisory;       !- Actuated Component Control Type
-
-ENERGYMANAGEMENTSYSTEM:ACTUATOR,
-    cooling_tower_1_on_off_supervisory,    !- Name
-    cooling tower-1,          !- Actuated Component Unique Name
-    Plant Component CoolingTower:VariableSpeed,    !- Actuated Component Type
-    On/Off Supervisory;       !- Actuated Component Control Type
-
 EnergyManagementSystem:ProgramCallingManager,
     Calculate Power Utilization Effectiveness,    !- Name
     EndOfZoneTimestepBeforeZoneReporting,    !- EnergyPlus Model Calling Point
     CalculatePUE;             !- Program Name 1
-
-ENERGYMANAGEMENTSYSTEM:PROGRAMCALLINGMANAGER,
-    internal_actuator_calling_manager,    !- Name
-    InsideHVACSystemIterationLoop,    !- EnergyPlus Model Calling Point
-    program_chiller_1_chilled_water_pump_pump_mass_flow_rate,    !- Program Name 1
-    program_chiller_1_on_off_supervisory,    !- Program Name 2
-    program_cooling_tower_1_on_off_supervisory;    !- Program Name 3
 
 EnergyManagementSystem:Program,
     CalculatePUE,             !- Name
@@ -1584,18 +1517,6 @@ EnergyManagementSystem:Program,
 EnergyManagementSystem:Program,
     CalculateCarbon,          !- Name
     set Carbon_Emissions = 0.4 * Total_Purchased_Electricity / 1000 / 12;    !- Program Line 1
-
-ENERGYMANAGEMENTSYSTEM:PROGRAM,
-    program_chiller_1_chilled_water_pump_pump_mass_flow_rate,    !- Name
-    SET chiller_1_chilled_water_pump_pump_mass_flow_rate = 100.0;    !- Program Line 1
-
-ENERGYMANAGEMENTSYSTEM:PROGRAM,
-    program_chiller_1_on_off_supervisory,    !- Name
-    SET chiller_1_on_off_supervisory = 1.0;    !- Program Line 1
-
-ENERGYMANAGEMENTSYSTEM:PROGRAM,
-    program_cooling_tower_1_on_off_supervisory,    !- Name
-    SET cooling_tower_1_on_off_supervisory = 1.0;    !- Program Line 1
 
 EnergyManagementSystem:GlobalVariable,
     PUE_Value;                !- Erl Variable 1 Name
@@ -1620,28 +1541,28 @@ EnergyManagementSystem:OutputVariable,
     Tons;                     !- Units
 
 AVAILABILITYMANAGER:SCHEDULED,
-    acu_1 outdoor air system availability manager,    !- Name
+    data hall 1a acu-1 outdoor air system availability manager,    !- Name
     ALWAYS ON;                !- Schedule Name
 
 AVAILABILITYMANAGER:SCHEDULED,
-    acu_1 air loop availability manager,    !- Name
+    data hall 1a acu-1 air loop availability manager,    !- Name
     ALWAYS ON;                !- Schedule Name
 
 AVAILABILITYMANAGERASSIGNMENTLIST,
-    acu_1 outdoor air system availability manager list,    !- Name
+    data hall 1a acu-1 outdoor air system availability manager list,    !- Name
     AvailabilityManager:Scheduled,    !- Availability Manager 1 Object Type
-    acu_1 outdoor air system availability manager;    !- Availability Manager 1 Name
+    data hall 1a acu-1 outdoor air system availability manager;    !- Availability Manager 1 Name
 
 AVAILABILITYMANAGERASSIGNMENTLIST,
-    acu_1 air loop availability manager list,    !- Name
+    data hall 1a acu-1 air loop availability manager list,    !- Name
     AvailabilityManager:Scheduled,    !- Availability Manager 1 Object Type
-    acu_1 air loop availability manager;    !- Availability Manager 1 Name
+    data hall 1a acu-1 air loop availability manager;    !- Availability Manager 1 Name
 
 SETPOINTMANAGER:SCHEDULED,
-    acu_1 air loop supply air temperature setpoint manager,    !- Name
+    data hall 1a acu-1 air loop supply air temperature setpoint manager,    !- Name
     Temperature,              !- Control Variable
-    acu_1 air loop supply air temperature schedule,    !- Schedule Name
-    acu_1 air loop supply outlet node;    !- Setpoint Node or NodeList Name
+    data hall 1a acu-1 air loop supply air temperature schedule,    !- Schedule Name
+    data hall 1a acu-1 air loop supply outlet node;    !- Setpoint Node or NodeList Name
 
 SETPOINTMANAGER:SCHEDULED,
     chilled water loop exit temperature setpoint manager,    !- Name
@@ -1650,36 +1571,24 @@ SETPOINTMANAGER:SCHEDULED,
     chilled water loop supply outlet node;    !- Setpoint Node or NodeList Name
 
 SETPOINTMANAGER:SCHEDULED,
-    condenser water loop exit temperature setpoint manager,    !- Name
+    chiller 1 condenser water loop exit temperature setpoint manager,    !- Name
     Temperature,              !- Control Variable
-    condenser water loop exit temperature setpoint,    !- Schedule Name
-    condenser water loop supply outlet node;    !- Setpoint Node or NodeList Name
+    chiller 1 condenser water loop exit temperature setpoint schedule,    !- Schedule Name
+    chiller 1 condenser water loop supply outlet node;    !- Setpoint Node or NodeList Name
 
 SETPOINTMANAGER:MIXEDAIR,
-    acu_1 outdoor air system mixed air manager,    !- Name
+    data hall 1a acu-1 outdoor air system mixed air manager,    !- Name
     Temperature,              !- Control Variable
-    acu_1 air loop supply outlet node,    !- Reference Setpoint Node Name
-    acu_1 outdoor air system mixed air node,    !- Fan Inlet Node Name
-    acu_1 air loop supply outlet node,    !- Fan Outlet Node Name
-    acu_1 outdoor air system mixed air node,    !- Setpoint Node or NodeList Name
+    data hall 1a acu-1 air loop supply outlet node,    !- Reference Setpoint Node Name
+    data hall 1a acu-1 outdoor air system mixed air node,    !- Fan Inlet Node Name
+    data hall 1a acu-1 air loop supply outlet node,    !- Fan Outlet Node Name
+    data hall 1a acu-1 outdoor air system mixed air node,    !- Setpoint Node or NodeList Name
     ,                         !- Cooling Coil Inlet Node Name
     ,                         !- Cooling coil Outlet Node Name
     7.2;                      !- Minimum Temperature at Cooling Coil Outlet Node
 
 CURVE:QUADRATIC,
-    zone1dehumidifier1 part load ratio curve,    !- Name
-    1,                        !- Coefficient1 Constant
-    0,                        !- Coefficient2 x
-    0,                        !- Coefficient3 x2
-    0,                        !- Minimum Value of x
-    1,                        !- Maximum Value of x
-    ,                         !- Minimum Curve Output
-    ,                         !- Maximum Curve Output
-    Dimensionless,            !- Input Unit Type for X
-    Dimensionless;            !- Output Unit Type
-
-CURVE:QUADRATIC,
-    ite_1 fan power input function of flow curve,    !- Name
+    data hall 1a ite-1 fan power input function of flow curve,    !- Name
     0,                        !- Coefficient1 Constant
     1,                        !- Coefficient2 x
     0,                        !- Coefficient3 x2
@@ -1691,7 +1600,7 @@ CURVE:QUADRATIC,
     Dimensionless;            !- Output Unit Type
 
 CURVE:QUADRATIC,
-    ite_1 electric power supply efficiency function of part load ratio curve,    !- Name
+    data hall 1a ite-1 electric power supply efficiency function of part load ratio curve,    !- Name
     1,                        !- Coefficient1 Constant
     0,                        !- Coefficient2 x
     0,                        !- Coefficient3 x2
@@ -1703,7 +1612,7 @@ CURVE:QUADRATIC,
     Dimensionless;            !- Output Unit Type
 
 CURVE:QUADRATIC,
-    chiller-1 electric input to cooling output ratio function of part load ratio curve,    !- Name
+    chiller 1 electric input to cooling output ratio function of part load ratio curve,    !- Name
     0,                        !- Coefficient1 Constant
     1,                        !- Coefficient2 x
     0,                        !- Coefficient3 x2
@@ -1715,7 +1624,7 @@ CURVE:QUADRATIC,
     Dimensionless;            !- Output Unit Type
 
 CURVE:CUBIC,
-    cooling tower-1 fan power ratio function of air flow rate ratio curve,    !- Name
+    cooling tower 1 fan power ratio function of air flow rate ratio curve,    !- Name
     -9.315163e-03,            !- Coefficient1 Constant
     0.0512333965844443,       !- Coefficient2 x
     -8.383647e-02,            !- Coefficient3 x2
@@ -1728,43 +1637,7 @@ CURVE:CUBIC,
     Dimensionless;            !- Output Unit Type
 
 CURVE:BIQUADRATIC,
-    zone1dehumidifier1 water removal curve,    !- Name
-    1,                        !- Coefficient1 Constant
-    0,                        !- Coefficient2 x
-    0,                        !- Coefficient3 x2
-    0,                        !- Coefficient4 y
-    0,                        !- Coefficient5 y2
-    0,                        !- Coefficient6 xy
-    10,                       !- Minimum Value of x
-    60,                       !- Maximum Value of x
-    0,                        !- Minimum Value of y
-    100,                      !- Maximum Value of y
-    ,                         !- Minimum Curve Output
-    ,                         !- Maximum Curve Output
-    Dimensionless,            !- Input Unit Type for X
-    Dimensionless,            !- Input Unit Type for Y
-    Dimensionless;            !- Output Unit Type
-
-CURVE:BIQUADRATIC,
-    zone1dehumidifier1 energy factor curve,    !- Name
-    1,                        !- Coefficient1 Constant
-    0,                        !- Coefficient2 x
-    0,                        !- Coefficient3 x2
-    0,                        !- Coefficient4 y
-    0,                        !- Coefficient5 y2
-    0,                        !- Coefficient6 xy
-    10,                       !- Minimum Value of x
-    60,                       !- Maximum Value of x
-    0,                        !- Minimum Value of y
-    100,                      !- Maximum Value of y
-    ,                         !- Minimum Curve Output
-    ,                         !- Maximum Curve Output
-    Dimensionless,            !- Input Unit Type for X
-    Dimensionless,            !- Input Unit Type for Y
-    Dimensionless;            !- Output Unit Type
-
-CURVE:BIQUADRATIC,
-    ite_1 cpu power input function of loading and supply Temperature curve,    !- Name
+    data hall 1a ite-1 cpu power input function of loading and supply Temperature curve,    !- Name
     0,                        !- Coefficient1 Constant
     1,                        !- Coefficient2 x
     0,                        !- Coefficient3 x2
@@ -1782,7 +1655,7 @@ CURVE:BIQUADRATIC,
     Dimensionless;            !- Output Unit Type
 
 CURVE:BIQUADRATIC,
-    ite_1 air flow function of loading and air temperature curve,    !- Name
+    data hall 1a ite-1 air flow function of loading and air temperature curve,    !- Name
     0,                        !- Coefficient1 Constant
     1,                        !- Coefficient2 x
     0,                        !- Coefficient3 x2
@@ -1800,7 +1673,7 @@ CURVE:BIQUADRATIC,
     Dimensionless;            !- Output Unit Type
 
 CURVE:BIQUADRATIC,
-    ite_1 recirculation function of loading and supply temperature curve,    !- Name
+    data hall 1a ite-1 recirculation function of loading and supply temperature curve,    !- Name
     1,                        !- Coefficient1 Constant
     0,                        !- Coefficient2 x
     0,                        !- Coefficient3 x2
@@ -1818,7 +1691,7 @@ CURVE:BIQUADRATIC,
     Dimensionless;            !- Output Unit Type
 
 CURVE:BIQUADRATIC,
-    chiller-1 cooling capacity function of temperature curve,    !- Name
+    chiller 1 cooling capacity function of temperature curve,    !- Name
     1,                        !- Coefficient1 Constant
     0,                        !- Coefficient2 x
     0,                        !- Coefficient3 x2
@@ -1836,7 +1709,7 @@ CURVE:BIQUADRATIC,
     Dimensionless;            !- Output Unit Type
 
 CURVE:BIQUADRATIC,
-    chiller-1 electric input to cooling output ratio function of temperature curve,    !- Name
+    chiller 1 electric input to cooling output ratio function of temperature curve,    !- Name
     0.47449676,               !- Coefficient1 Constant
     -0.08900207,              !- Coefficient2 x
     0.00214058,               !- Coefficient3 x2
@@ -1940,9 +1813,4 @@ Output:Variable,
 Output:Variable,
     *,                        !- Key Value
     Power Utilization Effectiveness,    !- Variable Name
-    timestep;                 !- Reporting Frequency
-
-Output:Variable,
-    *,                        !- Key Value
-    Carbon Emissions,         !- Variable Name
     timestep;                 !- Reporting Frequency
