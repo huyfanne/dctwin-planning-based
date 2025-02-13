@@ -146,7 +146,7 @@ class CFDManager:
                 self.k8s_config["k8s_resources"] = self.k8s_config[
                     "k8s_solving_resources"
                 ]
-                if self.k8s_config["k8s_gpu_taint"]:
+                if "k8s_gpu_taint" in self.k8s_config:
                     self.k8s_config["k8s_taint"] = self.k8s_config["k8s_gpu_taint"]
                 self.solver_backend = SteadySolverK8sBackend(
                     process_num=self.solve_process,
