@@ -113,6 +113,7 @@ jobs:
           MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN }}
         run: |
           git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
+          poetry env use 3.10.15
           poetry install
 
       - name: Run python script
