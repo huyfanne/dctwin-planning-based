@@ -391,6 +391,6 @@ eplus_env_config {
     }
   }
   use_unnormed_obs: true
-  host: "host.docker.internal"
+  host: "localhost"
   network: "host"
 }

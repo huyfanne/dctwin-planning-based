@@ -42,7 +42,7 @@ jobs:
           poetry install
 
       - name: Run python script
-        run: cd test && poetry run python run_cfd.py
+        run: cd test && poetry run python test_cfd.py
 
   run-cosim:
     runs-on:
