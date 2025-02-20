@@ -1,6 +1,8 @@
+from os import error
+
 from dclib import Room
 from loguru import logger
-from dctwin.interfaces import CFDManager
+from dctwin.managers import CFDManager
 from dctwin.utils import config
 import json
 import docker
@@ -14,6 +16,7 @@ import matplotlib.pyplot as plt
 import fnmatch
 from pathlib import Path
 import pandas as pd
+import traceback
 
 class CFDExecutor:
     def __init__(self, room_config_path, preserve_foam_log=True, iterations=50):
@@ -21,13 +24,6 @@ class CFDExecutor:
         self.room_cofig_path = room_config_path
         config.PRESERVE_FOAM_LOG = preserve_foam_log
         self.is_modulus = False
-        self.manager = CFDManager(
-            room=self.room,
-            mesh_process=2,
-            solve_process=2,
-            is_gpu=False,
-            end_time=iterations
-        )
         self.case_dir = None
         self.residuals = []
         self.residuals = None
@@ -38,7 +34,13 @@ class CFDExecutor:
         config.cfd.mesh_dir = Path("")
         logger.add(config.LOG_DIR / "base/cfd.log", rotation="300 MB")
         self.case_dir = config.LOG_DIR / "base"
-
+        self.manager = CFDManager(
+            room=self.room,
+            mesh_process=2,
+            solve_process=2,
+            is_gpu=False,
+            end_time=iterations
+        )
 
     def execute(self):
         print("Executing CFD simulation...")
@@ -122,7 +124,7 @@ class CFDExecutor:
         # Add a title at the top
         c.setFont("Helvetica-Bold", 18)
         y_position = page_height - top_margin
-        room_name = self.room_config_path.split("/")[-1].split(".")[0]
+        room_name = self.room_cofig_path.split("/")[-1].split(".")[0]
         c.drawString(1 * cm, y_position, f"CFD Simulation Result Report for {room_name}")
 
         # Draw some text below the title
@@ -175,18 +177,14 @@ class CFDExecutor:
         c.showPage()
         c.save()
     def extract_execution_time(self):
-        geo_start = self.extract_datetime_from_logs("start building geometry")
-        geo_end = self.extract_datetime_from_logs("Geometry finished")
         mesh_start = self.extract_datetime_from_logs("start meshing geometry")
         mesh_end = self.extract_datetime_from_logs("Mesh finished")
         solver_start = self.extract_datetime_from_logs("start running CFD solver")
         solver_end = self.extract_datetime_from_logs("Reading temperature from")
         paraview_start = self.extract_datetime_from_logs("Parsing the result with paraview")
         paraview_end = self.extract_datetime_from_logs("Parsing completed with paraview")
-        total_start = geo_start  # Assume the entire process starts with geometry
+        total_start = mesh_start  # Assume the entire process starts with geometry
         total_end = paraview_end  # Assume the entire process ends with paraview
-        if geo_start and geo_end:
-            geo_time = (geo_end - geo_start).total_seconds()
         if mesh_start and mesh_end:
             mesh_time = (mesh_end - mesh_start).total_seconds()
         if solver_start and solver_end:
@@ -196,7 +194,6 @@ class CFDExecutor:
         if total_start and total_end:
             total_time = (total_end - total_start).total_seconds()
         self.execution_time = {
-            "geometry_time": geo_time,
             "mesh_time": mesh_time,
             "solver_time": solver_time,
             "paraview_time": paraview_time,
@@ -315,12 +312,12 @@ class CFDExecutor:
             print("No residuals found")
         return self.residuals
 
-    def add_to_csv_report(self, failed=False):
-        column_titles = ['case', 'succeeded', 'geometry time', 'mesh time', 'solver time', 'paraview time', 'total time', 'ux_final_residual', 'uy_final_residual', 'uz_final_residual', 'T_final_residual', 'epsilon_final_residual', 'k_final_residual']
+    def add_to_csv_report(self, failed=False, error="NA", traceback_message="NA"):
+        column_titles = ['case', 'succeeded', 'error', 'traceback', 'mesh time', 'solver time', 'paraview time', 'total time', 'ux_final_residual', 'uy_final_residual', 'uz_final_residual', 'T_final_residual', 'epsilon_final_residual', 'k_final_residual']
         if failed:
-            new_data = [[self.room_cofig_path, 'False',"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"]]
+            new_data = [[self.room_cofig_path, 'False', error, traceback_message,"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"]]
         else:
-            new_data = [[self.room_cofig_path, 'True', self.execution_time['geometry_time'], self.execution_time['mesh_time'], self.execution_time['solver_time'], self.execution_time['paraview_time'], self.execution_time['total_time'], self.residuals[-1]['ux_final_residual'], self.residuals[-1]['uy_final_residual'], self.residuals[-1]['uz_final_residual'], self.residuals[-1]['T_final_residual'], self.residuals[-1]['epsilon_final_residual'], self.residuals[-1]['k_final_residual']]]
+            new_data = [[self.room_cofig_path, 'True', error, traceback_message, self.execution_time['mesh_time'], self.execution_time['solver_time'], self.execution_time['paraview_time'], self.execution_time['total_time'], self.residuals[-1]['ux_final_residual'], self.residuals[-1]['uy_final_residual'], self.residuals[-1]['uz_final_residual'], self.residuals[-1]['T_final_residual'], self.residuals[-1]['epsilon_final_residual'], self.residuals[-1]['k_final_residual']]]
         new_df = pd.DataFrame(new_data, columns=column_titles)
         file_path = 'log/combined_result.csv'
         # Check if the file already exists
@@ -341,15 +338,20 @@ class CFDExecutor:
 
 # Example of how to use the CFDExecutor class
 if __name__ == "__main__":
-    directory = "models/geometry/room_tests"
+    directory = "models/geometry/existing_geometry"
     csv_path = "log/combined_result.csv"
     if os.path.isfile(csv_path):
         os.remove(csv_path)
     for root, dirs, files in os.walk(directory):
         for filename in fnmatch.filter(files, '*.json'):
             room_path = os.path.join(root, filename)
-            executor = CFDExecutor(room_path)
+            try:
+                executor = CFDExecutor(room_path)
+            except Exception as e:
+                print(f"Failed to initialize CFDExecutor for {room_path}, Error {e}")
             try:
                 executor()
             except Exception as e:
-                executor.add_to_csv_report(failed=True)
+                traceback_message = traceback.format_exc()
+                print(f"Failed to execute CFD simulation for {room_path}")
+                executor.add_to_csv_report(failed=True, error=str(e), traceback_message=traceback_message)
