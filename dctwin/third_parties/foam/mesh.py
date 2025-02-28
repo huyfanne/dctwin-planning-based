@@ -262,6 +262,9 @@ class ACUModel:
         self._make_return_face()
 
     def cheek_config(self):
+        if self.config.geometry.orientation < 0:
+            self.config.geometry.orientation = int(self.config.geometry.orientation + 360)
+
         if not (self.config.geometry.orientation == 0 or self.config.geometry.orientation == 90 or
                 self.config.geometry.orientation == 180 or self.config.geometry.orientation == 270):
             raise ValueError(f"Invalid orientation: {self.config.geometry.orientation} for ACU '{self.config.uid}'")
@@ -1047,11 +1050,14 @@ class RackModel:
         )
 
     def cheek_config(self: [Rack, RowRackModel]):
+        if self.config.geometry.orientation < 0:
+            self.config.geometry.orientation = int(self.config.geometry.orientation + 360)
+
         if not (self.config.geometry.orientation == 0 or self.config.geometry.orientation == 90 or
                 self.config.geometry.orientation == 180 or self.config.geometry.orientation == 270):
             raise ValueError(f"Invalid orientation: {self.config.geometry.orientation} for rack '{self}'")
 
-        if self.config.geometry.size.z < self.config.geometry.slot * self.slot_height:
+        if self.config.geometry.size.z < round(self.config.geometry.slot * self.slot_height, 2):
             raise ValueError(
                 f"Invalid Rack height for '{self.config.uid}': "
                 f"actual {self.config.geometry.size.z} is less than required "
@@ -1249,7 +1255,7 @@ class MeshBuilder:
             "-c",
             (
                 "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
-                "blockMesh && snappyHexMesh -overwrite && createBaffles -overwrite && topoSet && createPatch -overwrite"
+                "blockMesh && snappyHexMesh -overwrite && topoSet && createPatch -overwrite && createBaffles -overwrite"
             ),
         ]
         return command
@@ -1374,6 +1380,7 @@ class MeshBuilder:
         """
         min_z = 0
         v_min, v_max = Vertex(x=0, y=0, z=min_z), Vertex(x=0, y=0, z=self.room.geometry.height)
+
         # find the minimum and maximum x, y, and z coordinates of the room
         for vertex in self.room.geometry.plane:
             if vertex.x < v_min.x:
@@ -1395,6 +1402,7 @@ class MeshBuilder:
         z_cells = int((v_max.z - v_min.z) / self.base_size)
         if self.base_size * z_cells != (v_max.z - v_min.z):
             v_max.z = z_cells * self.base_size - v_min.z
+
         return v_min, v_max, x_cells, y_cells, z_cells
 
     def make_acus(self, acus: Dict[str, ACU]):

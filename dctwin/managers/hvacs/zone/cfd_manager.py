@@ -58,7 +58,6 @@ class CFDManager:
     4. post process results
 
     :param room: a room object that contains all rooms
-    :param mesh_process: number of CPU cores for meshing
     :param solve_process: number of CPU cores for solving
     :param steady: use steady or transient simulation
     :param write_interval: data write interval for simulation, can be set as 5, 10, 100, etc.
@@ -76,7 +75,6 @@ class CFDManager:
     def __init__(
         self,
         room: Room,
-        mesh_process: int = 32,
         solve_process: int = 32,
         steady: bool = True,
         run_cfd: bool = True,
@@ -111,7 +109,6 @@ class CFDManager:
         self.room: Room = room
         self.steady = steady
         self.run_cfd = run_cfd
-        self.mesh_process = mesh_process
         self.solve_process = solve_process
         self.write_interval = write_interval
         self.end_time = end_time
