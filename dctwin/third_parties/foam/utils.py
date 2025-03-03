@@ -186,11 +186,29 @@ def is_closed(box: Box):
     return False
 
 
-def round_to_base(value: float, base: float) -> float:
+def round_to_base(value: float, base: float, mode: str = "round") -> float:
     """
-    Round the value to the nearest base
+    Adjust the value to the nearest base, with the option to use rounding,
+    floor, or ceil rounding modes.
+
+    Parameters:
+    - value: The float value to adjust.
+    - base: The base to which the value should be adjusted.
+    - mode: The mode of adjustment, which can be 'round', 'floor', or 'ceil'.
+
+    Returns:
+    - The adjusted value rounded to three decimal places.
     """
-    return round(base * np.round(value / base), 3)
+    if mode == "round":
+        adjusted_value = base * np.round(value / base)
+    elif mode == "floor":
+        adjusted_value = base * np.floor(value / base)
+    elif mode == "ceil":
+        adjusted_value = base * np.ceil(value / base)
+    else:
+        raise ValueError("Mode should be 'round', 'floor', or 'ceil'.")
+
+    return round(adjusted_value, 3)
 
 
 def rotate_vertex(

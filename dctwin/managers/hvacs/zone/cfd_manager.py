@@ -5,6 +5,7 @@ import subprocess
 import sys
 import platform
 import time
+import math
 
 import psutil
 from typing import Optional, Union, Dict
@@ -24,6 +25,7 @@ from dctwin.third_parties import (
 )
 from dctwin.third_parties.foam.utils import init_foam
 from dctwin.models.cooling.thermodyns.field import PODK8SBackend, PODDockerBackend
+from dclib.models.geometry import Vertex
 
 from .utils import (
     check_base_dir,
@@ -90,6 +92,7 @@ class CFDManager:
         is_gpu: bool = False,
         refinement_level: int = 2,
         is_modulus: bool = False,
+        location_in_mesh: Vertex = Vertex(x=0.,y=0.,z=0.)
     ) -> None:
         self.is_modulus = is_modulus
         if k8s_config is None:
@@ -120,6 +123,7 @@ class CFDManager:
         self.acu2server_flow_ratio = acu2server_flow_ratio
         self.is_gpu = is_gpu
         self.refinement_level = int(refinement_level)
+        self.location_in_mesh = location_in_mesh
 
         self.last_state_case = None
         self.object_mesh_index = read_object_mesh_index(room=self.room)
@@ -197,6 +201,7 @@ class CFDManager:
                 room=self.room,
                 case_dir=config.cfd.case_dir,
                 refinement_level=self.refinement_level,
+                location_in_mesh=self.location_in_mesh
             )
         except Exception:
             raise MeshBuildError("Failed to mesh geometry")
@@ -537,7 +542,7 @@ class CFDManager:
 
             rack_slot_num = int(round(rack.geometry.size.z / RackModel.slot_height))
             server_slot_size = 4 if self.refinement_level == 0 else 2
-            servers_num = int(round(rack_slot_num/server_slot_size))
+            servers_num = math.ceil(rack_slot_num / server_slot_size)
             new_rack_servers = {f"{rack_key}_server_slot_{_*server_slot_size}":{} for _ in range(servers_num)}
             slot_to_new_slot = {slot_index: slot_index // server_slot_size for slot_index in range(rack_slot_num)}
 

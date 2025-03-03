@@ -1057,7 +1057,7 @@ class RackModel:
                 self.config.geometry.orientation == 180 or self.config.geometry.orientation == 270):
             raise ValueError(f"Invalid orientation: {self.config.geometry.orientation} for rack '{self}'")
 
-        if self.config.geometry.size.z < round(self.config.geometry.slot * self.slot_height, 2):
+        if self.config.geometry.size.z < round(self.config.geometry.slot * self.slot_height, 3):
             raise ValueError(
                 f"Invalid Rack height for '{self.config.uid}': "
                 f"actual {self.config.geometry.size.z} is less than required "
@@ -1260,7 +1260,10 @@ class MeshBuilder:
         ]
         return command
 
-    def _align_geometry(self):
+    def _align_geometry(
+            self,
+            refinement_level: int = 2,
+    ):
         """
         Round the coordinates of the geometry objects to the self.base_size size to make the geometry objects align with the
         structured grid to improve the mesh quality
@@ -1282,13 +1285,13 @@ class MeshBuilder:
                     f" size = ({opening.size.x}, {opening.size.y})"
                 )
 
-        def round_box(box_model):
-            box_model.geometry.location.x = round_to_base(box_model.geometry.location.x, self.base_size)
-            box_model.geometry.location.y = round_to_base(box_model.geometry.location.y, self.base_size)
-            box_model.geometry.location.z = round_to_base(box_model.geometry.location.z, self.base_size)
-            box_model.geometry.size.x = round_to_base(box_model.geometry.size.x, self.base_size)
-            box_model.geometry.size.y = round_to_base(box_model.geometry.size.y, self.base_size)
-            box_model.geometry.size.z = round_to_base(box_model.geometry.size.z, self.base_size)
+        def round_box(box_model, base_size=self.base_size, mode="round"):
+            box_model.geometry.location.x = round_to_base(box_model.geometry.location.x, base_size)
+            box_model.geometry.location.y = round_to_base(box_model.geometry.location.y, base_size)
+            box_model.geometry.location.z = round_to_base(box_model.geometry.location.z, base_size)
+            box_model.geometry.size.x = round_to_base(box_model.geometry.size.x, base_size)
+            box_model.geometry.size.y = round_to_base(box_model.geometry.size.y, base_size)
+            box_model.geometry.size.z = round_to_base(box_model.geometry.size.z, base_size, mode)
             logger.debug(
                 f"{box_model.uid}, "
                 f"location = ({box_model.geometry.location.x}, {box_model.geometry.location.y}, {box_model.geometry.location.z}),"
@@ -1305,17 +1308,19 @@ class MeshBuilder:
                          f"offset = ({face.offset.x}, {face.offset.y}, {face.offset.z})")
 
         def round_rack(rack):
+            base_size = round(self.base_size/2**refinement_level, 2)
+
             # round the box of the rack
-            round_box(box_model=rack)
+            round_box(box_model=rack, base_size=base_size, mode="ceil")
 
             # round the servers
             for server in rack.constructions.servers.values():
-                server.geometry.depth = round_to_base(server.geometry.depth, self.base_size)
+                server.geometry.depth = round_to_base(server.geometry.depth, base_size)
                 if server.geometry.depth != rack.geometry.size.y:
                     server.geometry.depth = rack.geometry.size.y
                     logger.warning(f"Server '{server.uid}' depth is changed to {rack.geometry.size.y}, "
                                    f"because it is not the same as the rack depth")
-                server.geometry.width = round_to_base(server.geometry.width, self.base_size)
+                server.geometry.width = round_to_base(server.geometry.width, base_size)
 
         for plane in self.room.geometry.plane:
             plane.x = round_to_base(plane.x, self.base_size)
@@ -1421,33 +1426,51 @@ class MeshBuilder:
         plane_list = []
         box_opening_face_list = []
         for box_name, box in boxes.items():
+            v_min, v_max = rotate_rectangular(
+                abs_vertex_1=Vertex(
+                    x=box.geometry.location.x,
+                    y=box.geometry.location.y,
+                    z=box.geometry.location.z
+                ),
+                abs_vertex_2=Vertex(
+                    x=box.geometry.location.x + box.geometry.size.x,
+                    y=box.geometry.location.y,
+                    z=box.geometry.location.z
+                ),
+                abs_vertex_3=Vertex(
+                    x=box.geometry.location.x + box.geometry.size.x,
+                    y=box.geometry.location.y + box.geometry.size.y,
+                    z=box.geometry.location.z
+                ),
+                abs_vertex_4=Vertex(
+                    x=box.geometry.location.x,
+                    y=box.geometry.location.y + box.geometry.size.y,
+                    z=box.geometry.location.z
+                ),
+                angle=box.geometry.orientation,
+            )
+            v_min.z = box.geometry.location.z
+            v_max.z = box.geometry.location.z + box.geometry.size.z
+
             # if the box is closed, create the box object directly by specifying the min and max coordinates
             if is_closed(box):
                 box_list.append(
                     BoxModel(
                         name="box_" + box_name,
-                        v_min=[box.geometry.location.x, box.geometry.location.y, box.geometry.location.z],
-                        v_max=[
-                            box.geometry.location.x + box.geometry.size.x,
-                            box.geometry.location.y + box.geometry.size.y,
-                            box.geometry.location.z + box.geometry.size.z
-                        ],
+                        v_min=[v_min.x, v_min.y, v_min.z],
+                        v_max=[v_max.x, v_max.y, v_max.z],
                         is_refinement_box=False
                     )
                 )
             # if the box is not closed, create each face of the box separately
             else:
+                rotated_width = v_max.x - v_min.x
+                rotated_depth = v_max.y - v_min.y
+                rotated_height = box.geometry.size.z
+
                 if box.geometry.faces.bottom:
-                    bottom_face_origin = [
-                        box.geometry.location.x,
-                        box.geometry.location.y,
-                        box.geometry.location.z
-                    ]
-                    bottom_face_span = [
-                        box.geometry.size.x,
-                        box.geometry.size.y,
-                        0
-                    ]
+                    bottom_face_origin = [v_min.x, v_min.y, box.geometry.location.z]
+                    bottom_face_span = [rotated_width, rotated_depth, 0]
                     plane_list.append(
                         PlaneModel(
                             name=f"box_{box_name}_bottom_face",
@@ -1455,26 +1478,23 @@ class MeshBuilder:
                             span=bottom_face_span,
                         )
                     )
-                    if box.geometry.openings and box.geometry.openings_side == "right":
+                    if box.geometry.openings and box.geometry.openings_side == "bottom":
                         for opening_name, opening in box.geometry.openings.items():
                             box_opening_face_list.append(
                                 PlaneModel(
                                     name=f"opening_box_{box_name}_{opening_name}",
-                                    origin=[opening.location.x, opening.location.y, opening.location.z],
+                                    origin=[
+                                        bottom_face_origin[0] + opening.location.x,
+                                        bottom_face_origin[1] + opening.location.y,
+                                        bottom_face_origin[2] + opening.location.z
+                                    ],
                                     span=[opening.size.x, opening.size.y, 0],
                                 )
                             )
+
                 if box.geometry.faces.top:
-                    top_face_origin = [
-                        box.geometry.location.x,
-                        box.geometry.location.y,
-                        box.geometry.location.z + box.geometry.size.z
-                    ]
-                    top_face_span = [
-                        box.geometry.size.x,
-                        box.geometry.size.y,
-                        0
-                    ]
+                    top_face_origin = [v_min.x, v_min.y, box.geometry.location.z + rotated_height]
+                    top_face_span = [rotated_width, rotated_depth, 0]
                     plane_list.append(
                         PlaneModel(
                             name=f"box_{box_name}_top_face",
@@ -1482,26 +1502,23 @@ class MeshBuilder:
                             span=top_face_span,
                         )
                     )
-                    if box.geometry.openings and box.geometry.openings_side == "right":
+                    if box.geometry.openings and box.geometry.openings_side == "top":
                         for opening_name, opening in box.geometry.openings.items():
                             box_opening_face_list.append(
                                 PlaneModel(
                                     name=f"opening_box_{box_name}_{opening_name}",
-                                    origin=[opening.location.x, opening.location.y, opening.location.z],
+                                    origin=[
+                                        top_face_origin[0] + opening.location.x,
+                                        top_face_origin[1] + opening.location.y,
+                                        top_face_origin[2] + opening.location.z
+                                    ],
                                     span=[opening.size.x, opening.size.y, 0],
                                 )
                             )
+
                 if box.geometry.faces.left:
-                    left_face_origin = [
-                        box.geometry.location.x,
-                        box.geometry.location.y,
-                        box.geometry.location.z
-                    ]
-                    left_face_span = [
-                        0,
-                        box.geometry.size.y,
-                        box.geometry.size.z
-                    ]
+                    left_face_origin = [v_min.x, v_min.y, box.geometry.location.z]
+                    left_face_span = [0, rotated_depth, rotated_height]
                     plane_list.append(
                         PlaneModel(
                             name=f"box_{box_name}_left_face",
@@ -1509,26 +1526,23 @@ class MeshBuilder:
                             span=left_face_span,
                         )
                     )
-                    if box.geometry.openings and box.geometry.openings_side == "right":
+                    if box.geometry.openings and box.geometry.openings_side == "left":
                         for opening_name, opening in box.geometry.openings.items():
                             box_opening_face_list.append(
                                 PlaneModel(
                                     name=f"opening_box_{box_name}_{opening_name}",
-                                    origin=[opening.location.x, opening.location.y, opening.location.z],
+                                    origin=[
+                                        left_face_origin[0] + opening.location.x,
+                                        left_face_origin[1] + opening.location.y,
+                                        left_face_origin[2] + opening.location.z
+                                    ],
                                     span=[0, opening.size.y, opening.size.z],
                                 )
                             )
+
                 if box.geometry.faces.right:
-                    right_face_origin = [
-                        box.geometry.location.x + box.geometry.size.x,
-                        box.geometry.location.y,
-                        box.geometry.location.z
-                    ]
-                    right_face_span = [
-                        0,
-                        box.geometry.size.y,
-                        box.geometry.size.z
-                    ]
+                    right_face_origin = [v_max.x, v_min.y, box.geometry.location.z]
+                    right_face_span = [0, rotated_depth, rotated_height]
                     plane_list.append(
                         PlaneModel(
                             name=f"box_{box_name}_right_face",
@@ -1541,21 +1555,18 @@ class MeshBuilder:
                             box_opening_face_list.append(
                                 PlaneModel(
                                     name=f"opening_box_{box_name}_{opening_name}",
-                                    origin=[opening.location.x, opening.location.y, opening.location.z],
+                                    origin=[
+                                        right_face_origin[0] + opening.location.x,
+                                        right_face_origin[1] + opening.location.y,
+                                        right_face_origin[2] + opening.location.z
+                                    ],
                                     span=[0, opening.size.y, opening.size.z],
                                 )
                             )
+
                 if box.geometry.faces.front:
-                    front_face_origin = [
-                        box.geometry.location.x,
-                        box.geometry.location.y,
-                        box.geometry.location.z
-                    ]
-                    front_face_span = [
-                        box.geometry.size.x,
-                        0,
-                        box.geometry.size.z
-                    ]
+                    front_face_origin = [v_min.x, v_min.y, box.geometry.location.z]
+                    front_face_span = [rotated_width, 0, rotated_height]
                     plane_list.append(
                         PlaneModel(
                             name=f"box_{box_name}_front_face",
@@ -1568,21 +1579,18 @@ class MeshBuilder:
                             box_opening_face_list.append(
                                 PlaneModel(
                                     name=f"opening_box_{box_name}_{opening_name}",
-                                    origin=[opening.location.x, opening.location.y, opening.location.z],
+                                    origin=[
+                                        front_face_origin[0] + opening.location.x,
+                                        front_face_origin[1] + opening.location.y,
+                                        front_face_origin[2] + opening.location.z
+                                    ],
                                     span=[opening.size.x, 0, opening.size.z],
                                 )
                             )
+
                 if box.geometry.faces.rear:
-                    rear_face_origin = [
-                        box.geometry.location.x,
-                        box.geometry.location.y + box.geometry.size.y,
-                        box.geometry.location.z
-                    ]
-                    rear_face_span = [
-                        box.geometry.size.x,
-                        0,
-                        box.geometry.size.z
-                    ]
+                    rear_face_origin = [v_min.x, v_max.y, box.geometry.location.z]
+                    rear_face_span = [rotated_width, 0, rotated_height]
                     plane_list.append(
                         PlaneModel(
                             name=f"box_{box_name}_rear_face",
@@ -1595,10 +1603,15 @@ class MeshBuilder:
                             box_opening_face_list.append(
                                 PlaneModel(
                                     name=f"opening_box_{box_name}_{opening_name}",
-                                    origin=[opening.location.x, opening.location.y, opening.location.z],
+                                    origin=[
+                                        rear_face_origin[0] + opening.location.x,
+                                        rear_face_origin[1] + opening.location.y,
+                                        rear_face_origin[2] + opening.location.z
+                                    ],
                                     span=[opening.size.x, 0, opening.size.z],
                                 )
                             )
+
         return box_list, plane_list, box_opening_face_list
 
     def make_racks(self, racks: Dict[str, Rack], refinement_level: int = 2 ) -> List[RackModel]:
@@ -1668,12 +1681,8 @@ class MeshBuilder:
     def write_snappyHexMesh_dict(
             self,
             snappy_obj_list: List[BoxModel],
+            location_in_mesh: Vertex
     ):
-        location = Vertex(
-            x=0.,
-            y=0.,
-            z=0.,
-        )
         snappy_obj_cmd = ""
         refinement_surfaces_cmd = ""
         refinement_regions_cmd = ""
@@ -1689,7 +1698,7 @@ class MeshBuilder:
                     snappy_obj_cmd=snappy_obj_cmd,
                     refinement_surfaces_cmd=refinement_surfaces_cmd,
                     refinement_regions_cmd=refinement_regions_cmd,
-                    location=location,
+                    location=location_in_mesh,
                 )
             )
 
@@ -1744,11 +1753,12 @@ class MeshBuilder:
             case_dir: Path = Path("log/base"),
             process_num: int = 1,
             refinement_level: int = 2,
+            location_in_mesh: Vertex = Vertex(x=0., y=0., z=0.),
     ):
         self.room = room
         self.case_dir = case_dir
         self.process_num = process_num
-        self._align_geometry()
+        self._align_geometry(refinement_level)
 
         # Make objects in the room (e.g., ceiling, raised floor, rack, etc.)
         raised_floor = self.room.constructions.raised_floor
@@ -1788,6 +1798,7 @@ class MeshBuilder:
         # write snappyHexMesh dict
         self.write_snappyHexMesh_dict(
             snappy_obj_list=box_list + acu_list + rack_list + row_racks_list,
+            location_in_mesh=location_in_mesh
         )
         # write createBaffles dict
         self.write_createBaffles_dict(
