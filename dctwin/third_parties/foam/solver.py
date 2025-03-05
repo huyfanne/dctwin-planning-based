@@ -40,7 +40,7 @@ class Builder:
             for server_key, server in rack.constructions.servers.items():
                 server_dict[server_key] = server
         for row in room.constructions.rows.values():
-            for rack in row.racks.values():
+            for rack in row.constructions.racks.values():
                 for server_key, server in rack.constructions.servers.items():
                     server_dict[server_key] = server
         self.server_dict = server_dict

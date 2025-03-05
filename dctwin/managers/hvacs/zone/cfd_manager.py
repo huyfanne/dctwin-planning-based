@@ -77,7 +77,7 @@ class CFDManager:
     def __init__(
         self,
         room: Room,
-        solve_process: int = 32,
+        solve_process: int = 8,
         steady: bool = True,
         run_cfd: bool = True,
         write_interval: int = 50,
@@ -284,7 +284,7 @@ class CFDManager:
                 __update_server_boundaries(rack)
         if self.room.constructions.rows is not None:
             for row_id, row in self.room.constructions.rows.items():
-                for rack_id, rack in row.racks.items():
+                for rack_id, rack in row.constructions.racks.items():
                     __update_server_boundaries(rack)
 
 
@@ -354,8 +354,8 @@ class CFDManager:
                     )
 
         if self.room.constructions.rows is not None:
-            for row_racks in self.room.constructions.rows.values():
-                for rack_id, rack in row_racks.racks.items():
+            for row in self.room.constructions.rows.values():
+                for rack_id, rack in row.constructions.racks.items():
                     for server_id, server in rack.constructions.servers.items():
                         _get_server_boundary_conditions(
                             _server_id=server_id,
@@ -411,7 +411,7 @@ class CFDManager:
 
         if self.room.constructions.rows is not None:
             for row_id, row in self.room.constructions.rows.items():
-                for rack_id, rack in row.racks.items():
+                for rack_id, rack in row.constructions.racks.items():
                     for server_id, server in rack.constructions.servers.items():
                         if server.cooling.fan_type == "Variable":
                             server.cooling.volume_flow_rate_ratio *= scale_factor
@@ -646,7 +646,7 @@ class CFDManager:
             if self.room.constructions.rows is not None:
                 for row_key, row in self.room.constructions.rows.items():
                     self._adjust_server(
-                        racks=row.racks,
+                        racks=row.constructions.racks,
                         servers_input=servers_input,
                         boundary_conditions=boundary_conditions
                     )

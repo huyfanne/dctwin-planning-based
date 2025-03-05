@@ -1,6 +1,7 @@
 from typing import Dict, List
 from pathlib import Path
 from loguru import logger
+import math
 
 from dclib import Room
 from dclib.ite.servers.server import Server
@@ -16,6 +17,47 @@ from dctwin.third_parties.docker_backend import DockerBackend
 from dctwin.third_parties.k8s_backend import K8sBackend
 
 from .utils import is_closed, round_to_base, rotate_rectangular
+
+
+def get_face_mapping(orientation):
+    if orientation == 0:
+        return {
+            'left': 'left',
+            'right': 'right',
+            'front': 'front',
+            'rear': 'rear',
+            'top': 'top',
+            'bottom': 'bottom'
+        }
+    elif orientation == 90:
+        return {
+            'left': 'front',
+            'right': 'rear',
+            'front': 'right',
+            'rear': 'left',
+            'top': 'top',
+            'bottom': 'bottom'
+        }
+    elif orientation == 180:
+        return {
+            'left': 'right',
+            'right': 'left',
+            'front': 'rear',
+            'rear': 'front',
+            'top': 'top',
+            'bottom': 'bottom'
+        }
+    elif orientation == 270:
+        return {
+            'left': 'rear',
+            'right': 'front',
+            'front': 'left',
+            'rear': 'right',
+            'top': 'top',
+            'bottom': 'bottom'
+        }
+    else:
+        raise ValueError("Invalid orientation")
 
 
 class BoxModel:
@@ -103,13 +145,13 @@ class PlaneModel:
                         master
                         {{
                             name            {self.name}_master_patches;
-                            type            cyclic;
+                            type            cyclicAMI;
                             neighbourPatch  {self.name}_slave_patches;
                         }}
                         slave
                         {{
                             name            {self.name}_slave_patches;
-                            type            cyclic;
+                            type            cyclicAMI;
                             neighbourPatch  {self.name}_master_patches;
                         }}
                     }}
@@ -214,13 +256,26 @@ class PatchModel:
 
     @property
     def createPatch_cmd(self):
-        if "rack_air_leak" in self.name or "rack_cyclic" in self.name:
+        if "rack_air_leak" in self.name:
             create_patch_cmd = f"""
                 {{
                     name {self.patch_name};
                     patchInfo
                     {{
                         type cyclic;
+                        neighbourPatch {self.neighbour_patch_name};
+                    }}
+                    constructFrom set;
+                    set {self.face_set_name};
+                }}
+                """
+        elif "rack_cyclic" in self.name:
+            create_patch_cmd = f"""
+                {{
+                    name {self.patch_name};
+                    patchInfo
+                    {{
+                        type cyclicAMI;
                         neighbourPatch {self.neighbour_patch_name};
                     }}
                     constructFrom set;
@@ -456,7 +511,7 @@ class ServerModel:
             v_max: Vertex,
             slot_height: float = 0.05,
             base_size: float = 0.2,
-            scale: int = 0
+            scale: int = 3
     ):
         self.config = config
         self.v_min = v_min
@@ -546,7 +601,7 @@ class RowRackModel:
             self,
             row_rack: Row,
             base_size: float = 0.2,
-            scale: int = 0,
+            scale: int = 3,
             refinement_level: int = 2
     ):
         self.config = row_rack
@@ -555,7 +610,6 @@ class RowRackModel:
         self.refine_region = None
         self.servers = []
         self.surrounding_planes = []
-        self.hasBlankingPanel = self.config.geometry.hasBlankingPanel
         self.blanking_panel = []
         self.slot_height = 0.05
         self.rack_air_leak_patch_list = []
@@ -590,21 +644,31 @@ class RowRackModel:
         self.refinement_level = refinement_level
         # make the box of the rack
         self._make_box()
-        if False in self.hasBlankingPanel:
-            self._make_blanking_plane()
+        self._make_blanking_plane()
         # make the servers of the rack
         self._make_servers()
         # make the surrounding planes of the rack
         self.make_air_leak_patch()
 
     def cheek_config(self):
-        RackModel.cheek_config(self)
+        if self.config.geometry.orientation < 0:
+            self.config.geometry.orientation = int(self.config.geometry.orientation + 360)
+
+        if not (self.config.geometry.orientation == 0 or self.config.geometry.orientation == 90 or
+                self.config.geometry.orientation == 180 or self.config.geometry.orientation == 270):
+            raise ValueError(f"Invalid orientation: {self.config.geometry.orientation} for rack '{self}'")
+
+        for rack in self.config.constructions.racks.values():
+            if rack.geometry.orientation != self.config.geometry.orientation:
+                rack.geometry.orientation = self.config.geometry.orientation
+                logger.warning(f"Rack '{rack.uid}' orientation is not consistent with the row orientation. "
+                               f"Now the orientation of the rack is set to {self.config.geometry.orientation}")
+            RackModel.cheek_config(rack)
 
     def _make_blanking_plane(self):
-        for rack_index, rack in enumerate(self.config.racks.values()):
-            if self.hasBlankingPanel[rack_index]:
+        for rack in self.config.constructions.racks.values():
+            if not rack.geometry.hasBlankingPanel:
                 continue
-
             rack_v_min, rack_v_max = rotate_rectangular(
                 abs_vertex_1=Vertex(
                     x=rack.geometry.location.x,
@@ -708,7 +772,7 @@ class RowRackModel:
         return bounding_box_min, bounding_box_max
 
     def make_air_leak_patch(self):
-        for rack in self.config.racks.values():
+        for rack in self.config.constructions.racks.values():
             # compute the absolute coordinates of the rack object
             rack_v_min, rack_v_max = rotate_rectangular(
                 abs_vertex_1=Vertex(
@@ -798,7 +862,7 @@ class RowRackModel:
         )
 
     def _make_servers(self):
-        for rack in self.config.racks.values():
+        for rack in self.config.constructions.racks.values():
             rack_v_min, rack_v_max = rotate_rectangular(
                 abs_vertex_1=Vertex(
                     x=rack.geometry.location.x,
@@ -858,8 +922,7 @@ class RowRackModel:
                     server_v_max = Vertex(
                         x=rack_v_max.x,
                         y=rack_v_max.y,
-                        z=rack_v_min.z + (
-                                    server.geometry.slot_position + server.geometry.slot_occupation) * self.slot_height
+                        z=rack_v_min.z + (server.geometry.slot_position + server.geometry.slot_occupation) * self.slot_height
                     )
 
                 self.servers.append(
@@ -920,7 +983,7 @@ class RackModel:
             self,
             rack: Rack,
             base_size: float = 0.2,
-            scale: int = 0,
+            scale: int = 3,
             refinement_level: int = 2
     ):
         self.config = rack
@@ -1049,21 +1112,19 @@ class RackModel:
             )
         )
 
-    def cheek_config(self: [Rack, RowRackModel]):
-        if self.config.geometry.orientation < 0:
-            self.config.geometry.orientation = int(self.config.geometry.orientation + 360)
+    def cheek_config(self: [Rack]):
+        # If self is a Rack instance (not a RackModel)
+        if isinstance(self, Rack):
+            rack_config = self
+        else:
+            rack_config = self.config
 
-        if not (self.config.geometry.orientation == 0 or self.config.geometry.orientation == 90 or
-                self.config.geometry.orientation == 180 or self.config.geometry.orientation == 270):
-            raise ValueError(f"Invalid orientation: {self.config.geometry.orientation} for rack '{self}'")
+        if rack_config.geometry.orientation < 0:
+            rack_config.geometry.orientation = int(rack_config.geometry.orientation + 360)
 
-        if self.config.geometry.size.z < round(self.config.geometry.slot * self.slot_height, 3):
-            raise ValueError(
-                f"Invalid Rack height for '{self.config.uid}': "
-                f"actual {self.config.geometry.size.z} is less than required "
-                f"{self.config.geometry.slot * self.slot_height} "
-                f"(slots: {self.config.geometry.slot}, slot height: {self.slot_height})"
-            )
+        if not (rack_config.geometry.orientation == 0 or rack_config.geometry.orientation == 90 or
+                rack_config.geometry.orientation == 180 or rack_config.geometry.orientation == 270):
+            raise ValueError(f"Invalid orientation: {rack_config.geometry.orientation} for rack '{rack_config}'")
 
     def _make_surrounding_plane(self):
         orientation = self.config.geometry.orientation
@@ -1243,7 +1304,7 @@ class MeshBuilder:
     docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0"
     slot_height: float = 0.05  # 1U = 0.05 m
     base_size: float = 0.2  # base_size for the background blockMesh
-    scale: int = 0  # scale for refinement region
+    scale: int = 3
     room: Room
     case_dir: Path
     process_num: int
@@ -1348,8 +1409,7 @@ class MeshBuilder:
         if self.room.constructions.rows:
             # round rows
             for row in self.room.constructions.rows.values():
-                row.geometry.size.x = (round_to_base(row.geometry.size.x, self.base_size) *
-                                       row.geometry.rackNum)
+                row.geometry.size.x = round_to_base(row.geometry.size.x, self.base_size)
                 row.geometry.size.y = round_to_base(row.geometry.size.y, self.base_size)
                 row.geometry.size.z = round_to_base(row.geometry.size.z, self.base_size)
                 row.geometry.location.x = round_to_base(row.geometry.location.x, self.base_size)
@@ -1366,8 +1426,12 @@ class MeshBuilder:
                     f"{row.geometry.size.y}, "
                     f"{row.geometry.size.z})"
                 )
-                for rack in row.racks.values():
+                for rack in row.constructions.racks.values():
                     round_rack(rack)
+                    if rack.geometry.location.z != row.geometry.location.z:
+                        rack.geometry.location.z = row.geometry.location.z
+                        logger.warning(f"Rack '{rack.uid}' location.z is changed to {row.geometry.location.z}, "
+                                       f"because it is not the same as the row location.z")
 
         # round the raised floor
         if self.room.constructions.raised_floor:
@@ -1452,165 +1516,121 @@ class MeshBuilder:
             v_min.z = box.geometry.location.z
             v_max.z = box.geometry.location.z + box.geometry.size.z
 
-            # if the box is closed, create the box object directly by specifying the min and max coordinates
             if is_closed(box):
-                box_list.append(
-                    BoxModel(
-                        name="box_" + box_name,
-                        v_min=[v_min.x, v_min.y, v_min.z],
-                        v_max=[v_max.x, v_max.y, v_max.z],
-                        is_refinement_box=False
-                    )
-                )
-            # if the box is not closed, create each face of the box separately
+                box_list.append(BoxModel(
+                    name=f"box_{box_name}",
+                    v_min=[v_min.x, v_min.y, v_min.z],
+                    v_max=[v_max.x, v_max.y, v_max.z],
+                    is_refinement_box=False
+                ))
             else:
                 rotated_width = v_max.x - v_min.x
                 rotated_depth = v_max.y - v_min.y
                 rotated_height = box.geometry.size.z
 
-                if box.geometry.faces.bottom:
-                    bottom_face_origin = [v_min.x, v_min.y, box.geometry.location.z]
-                    bottom_face_span = [rotated_width, rotated_depth, 0]
-                    plane_list.append(
-                        PlaneModel(
-                            name=f"box_{box_name}_bottom_face",
-                            origin=bottom_face_origin,
-                            span=bottom_face_span,
-                        )
-                    )
-                    if box.geometry.openings and box.geometry.openings_side == "bottom":
-                        for opening_name, opening in box.geometry.openings.items():
-                            box_opening_face_list.append(
-                                PlaneModel(
-                                    name=f"opening_box_{box_name}_{opening_name}",
-                                    origin=[
-                                        bottom_face_origin[0] + opening.location.x,
-                                        bottom_face_origin[1] + opening.location.y,
-                                        bottom_face_origin[2] + opening.location.z
-                                    ],
-                                    span=[opening.size.x, opening.size.y, 0],
-                                )
-                            )
+                face_mapping = get_face_mapping(box.geometry.orientation)
 
-                if box.geometry.faces.top:
-                    top_face_origin = [v_min.x, v_min.y, box.geometry.location.z + rotated_height]
-                    top_face_span = [rotated_width, rotated_depth, 0]
-                    plane_list.append(
-                        PlaneModel(
-                            name=f"box_{box_name}_top_face",
-                            origin=top_face_origin,
-                            span=top_face_span,
-                        )
-                    )
-                    if box.geometry.openings and box.geometry.openings_side == "top":
-                        for opening_name, opening in box.geometry.openings.items():
-                            box_opening_face_list.append(
-                                PlaneModel(
-                                    name=f"opening_box_{box_name}_{opening_name}",
-                                    origin=[
-                                        top_face_origin[0] + opening.location.x,
-                                        top_face_origin[1] + opening.location.y,
-                                        top_face_origin[2] + opening.location.z
-                                    ],
-                                    span=[opening.size.x, opening.size.y, 0],
-                                )
-                            )
+                for local_face in ['left', 'right', 'front', 'rear', 'top', 'bottom']:
+                    if getattr(box.geometry.faces, local_face, False):
+                        global_face = face_mapping[local_face]
+                        if global_face == 'left':
+                            origin = [v_min.x, v_min.y, box.geometry.location.z]
+                            span = [0, rotated_depth, rotated_height]
+                        elif global_face == 'right':
+                            origin = [v_max.x, v_min.y, box.geometry.location.z]
+                            span = [0, rotated_depth, rotated_height]
+                        elif global_face == 'front':
+                            origin = [v_min.x, v_min.y, box.geometry.location.z]
+                            span = [rotated_width, 0, rotated_height]
+                        elif global_face == 'rear':
+                            origin = [v_min.x, v_max.y, box.geometry.location.z]
+                            span = [rotated_width, 0, rotated_height]
+                        elif global_face == 'top':
+                            origin = [v_min.x, v_min.y, v_max.z]
+                            span = [rotated_width, rotated_depth, 0]
+                        elif global_face == 'bottom':
+                            origin = [v_min.x, v_min.y, v_min.z]
+                            span = [rotated_width, rotated_depth, 0]
 
-                if box.geometry.faces.left:
-                    left_face_origin = [v_min.x, v_min.y, box.geometry.location.z]
-                    left_face_span = [0, rotated_depth, rotated_height]
-                    plane_list.append(
-                        PlaneModel(
-                            name=f"box_{box_name}_left_face",
-                            origin=left_face_origin,
-                            span=left_face_span,
-                        )
-                    )
-                    if box.geometry.openings and box.geometry.openings_side == "left":
-                        for opening_name, opening in box.geometry.openings.items():
-                            box_opening_face_list.append(
-                                PlaneModel(
-                                    name=f"opening_box_{box_name}_{opening_name}",
-                                    origin=[
-                                        left_face_origin[0] + opening.location.x,
-                                        left_face_origin[1] + opening.location.y,
-                                        left_face_origin[2] + opening.location.z
-                                    ],
-                                    span=[0, opening.size.y, opening.size.z],
-                                )
-                            )
+                        plane_list.append(PlaneModel(
+                            name=f"box_{box_name}_{global_face}_face",
+                            origin=origin,
+                            span=span
+                        ))
 
-                if box.geometry.faces.right:
-                    right_face_origin = [v_max.x, v_min.y, box.geometry.location.z]
-                    right_face_span = [0, rotated_depth, rotated_height]
-                    plane_list.append(
-                        PlaneModel(
-                            name=f"box_{box_name}_right_face",
-                            origin=right_face_origin,
-                            span=right_face_span,
-                        )
-                    )
-                    if box.geometry.openings and box.geometry.openings_side == "right":
-                        for opening_name, opening in box.geometry.openings.items():
-                            box_opening_face_list.append(
-                                PlaneModel(
-                                    name=f"opening_box_{box_name}_{opening_name}",
-                                    origin=[
-                                        right_face_origin[0] + opening.location.x,
-                                        right_face_origin[1] + opening.location.y,
-                                        right_face_origin[2] + opening.location.z
-                                    ],
-                                    span=[0, opening.size.y, opening.size.z],
-                                )
-                            )
+                if box.geometry.openings:
+                    original_side = box.geometry.openings_side
+                    global_side = face_mapping[original_side]
 
-                if box.geometry.faces.front:
-                    front_face_origin = [v_min.x, v_min.y, box.geometry.location.z]
-                    front_face_span = [rotated_width, 0, rotated_height]
-                    plane_list.append(
-                        PlaneModel(
-                            name=f"box_{box_name}_front_face",
-                            origin=front_face_origin,
-                            span=front_face_span,
-                        )
-                    )
-                    if box.geometry.openings and box.geometry.openings_side == "front":
-                        for opening_name, opening in box.geometry.openings.items():
-                            box_opening_face_list.append(
-                                PlaneModel(
-                                    name=f"opening_box_{box_name}_{opening_name}",
-                                    origin=[
-                                        front_face_origin[0] + opening.location.x,
-                                        front_face_origin[1] + opening.location.y,
-                                        front_face_origin[2] + opening.location.z
-                                    ],
-                                    span=[opening.size.x, 0, opening.size.z],
-                                )
-                            )
+                    for opening_name, opening in box.geometry.openings.items():
+                        dx_local = opening.location.x - box.geometry.location.x
+                        dy_local = opening.location.y - box.geometry.location.y
+                        dz_local = opening.location.z - box.geometry.location.z
 
-                if box.geometry.faces.rear:
-                    rear_face_origin = [v_min.x, v_max.y, box.geometry.location.z]
-                    rear_face_span = [rotated_width, 0, rotated_height]
-                    plane_list.append(
-                        PlaneModel(
-                            name=f"box_{box_name}_rear_face",
-                            origin=rear_face_origin,
-                            span=rear_face_span,
-                        )
-                    )
-                    if box.geometry.openings and box.geometry.openings_side == "rear":
-                        for opening_name, opening in box.geometry.openings.items():
-                            box_opening_face_list.append(
-                                PlaneModel(
-                                    name=f"opening_box_{box_name}_{opening_name}",
-                                    origin=[
-                                        rear_face_origin[0] + opening.location.x,
-                                        rear_face_origin[1] + opening.location.y,
-                                        rear_face_origin[2] + opening.location.z
-                                    ],
-                                    span=[opening.size.x, 0, opening.size.z],
-                                )
-                            )
+                        theta = math.radians(box.geometry.orientation)
+                        cos_theta = math.cos(theta)
+                        sin_theta = math.sin(theta)
+
+                        rotated_x = dx_local * cos_theta - dy_local * sin_theta
+                        rotated_y = dx_local * sin_theta + dy_local * cos_theta
+
+                        global_x = box.geometry.location.x + rotated_x
+                        global_y = box.geometry.location.y + rotated_y
+                        global_z = box.geometry.location.z + dz_local
+
+                        # Determine size dimensions based on orientation
+                        if box.geometry.orientation in [90, 270] and original_side in ['top', 'bottom']:
+                            # Swap dimensions for 90/270 degree rotations on top/bottom faces
+                            size_x, size_y, size_z = opening.size.y, opening.size.x, opening.size.z
+                        else:
+                            size_x, size_y, size_z = opening.size.x, opening.size.y, opening.size.z
+
+                        # Adjust the size according to the original face direction and the rotated face direction.
+                        if original_side in ['left', 'right']:
+                            if global_side in ['front', 'rear']:
+                                # The original size Y changes to size X.
+                                size_x, size_y = size_y, 0
+                        elif original_side in ['front', 'rear']:
+                            if global_side in ['left', 'right']:
+                                # The original size X is changed to size Y.
+                                size_y, size_x = size_x, 0
+
+                        # Determine the span direction based on the global surface type.
+                        if global_side in ['left', 'right']:
+                            if original_side in ["left"] and global_side == "right":
+                                global_y -= size_y
+                            elif original_side in ["rear"] and global_side == "right":
+                                global_y -= size_y
+                            elif original_side in ["front"] and global_side == "left":
+                                global_y -= size_y
+                            elif original_side in ["right"] and global_side == "left":
+                                global_y -= size_y
+                            span = [0, size_y, size_z]
+                        elif global_side in ['front', 'rear']:
+                            if original_side in ["left"] and global_side == "front":
+                                global_x -= size_x
+                            elif original_side in ["right"] and global_side == "rear":
+                                global_x -= size_x
+                            elif original_side in ["front"] and global_side == "rear":
+                                global_x -= size_x
+                            elif original_side in ["rear"] and global_side == "front":
+                                global_x -= size_x
+                            span = [size_x, 0, size_z]
+                        elif global_side in ['top', 'bottom']:
+                            if box.geometry.orientation == 90.0:
+                                global_x -= size_x
+                            elif box.geometry.orientation == 180.0:
+                                global_y -= size_y
+                                global_x -= size_x
+                            elif box.geometry.orientation == 270.0:
+                                global_y -= size_y
+                            span = [size_x, size_y, 0]
+
+                        box_opening_face_list.append(PlaneModel(
+                            name=f"opening_box_{box_name}_{opening_name}",
+                            origin=[global_x, global_y, global_z],
+                            span=span
+                        ))
 
         return box_list, plane_list, box_opening_face_list
 
@@ -1620,7 +1640,7 @@ class MeshBuilder:
             rack_model = RackModel(
                 rack=rack,
                 base_size=self.base_size,
-                scale=0,
+                scale=3,
                 refinement_level=refinement_level
             )
             rack_list.append(rack_model)
@@ -1632,7 +1652,7 @@ class MeshBuilder:
             row_rack_model = RowRackModel(
                 row_rack=row,
                 base_size=self.base_size,
-                scale=0,
+                scale=3,
                 refinement_level=refinement_level
             )
             row_rack_list.append(row_rack_model)
