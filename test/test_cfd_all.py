@@ -1,6 +1,7 @@
 from os import error
 
 from dclib import Room
+from dclib.models.geometry import Vertex
 from loguru import logger
 from dctwin.managers import CFDManager
 from dctwin.utils import config
@@ -19,7 +20,7 @@ import pandas as pd
 import traceback
 
 class CFDExecutor:
-    def __init__(self, room_config_path, preserve_foam_log=True, iterations=50):
+    def __init__(self, room_config_path, preserve_foam_log=True, iterations=200):
         self.room = Room.load(room_config_path)
         self.room_cofig_path = room_config_path
         config.PRESERVE_FOAM_LOG = preserve_foam_log
@@ -34,12 +35,16 @@ class CFDExecutor:
         config.cfd.mesh_dir = Path("")
         logger.add(config.LOG_DIR / "base/cfd.log", rotation="300 MB")
         self.case_dir = config.LOG_DIR / "base"
+        if self.room.meta.name == "TDC23v2(final)22":
+            location_in_mesh = Vertex(x=1.2, y=1.2, z=0.)
+        else:
+            location_in_mesh = Vertex(x=0, y=0, z=0.)
         self.manager = CFDManager(
             room=self.room,
-            mesh_process=2,
-            solve_process=2,
+            solve_process=8,
             is_gpu=False,
-            end_time=iterations
+            end_time=iterations,
+            location_in_mesh=location_in_mesh
         )
 
     def execute(self):

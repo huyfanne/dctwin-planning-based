@@ -81,7 +81,7 @@ class CFDManager:
         steady: bool = True,
         run_cfd: bool = True,
         write_interval: int = 50,
-        end_time: int = 100,
+        end_time: int = 1000,
         field_config: Dict = None,
         pod_method: str = "GP",
         docker_client: docker.DockerClient = None,

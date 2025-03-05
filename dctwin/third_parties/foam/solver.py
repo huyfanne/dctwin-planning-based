@@ -142,7 +142,7 @@ class SolverBackendMixin:
                 (
                     f"source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
                     f"export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/amgx/lib && "
-                    f"{self.solver}"
+                    f"{self.solver} && "
                     "postProcess -func 'writeCellCentres' -time 0 && "
                     "postProcess -func 'writeCellVolumes' -time 0"
                 ),

@@ -1,6 +1,8 @@
 import math
 import shutil
 from typing import List
+from venv import logger
+
 from dclib.room import Room
 from dctwin.utils import (
     template_env,
@@ -57,9 +59,11 @@ def generate_control_dict(
             )
         )
     if process_num > 1:
-        process_num = 2 ** round(math.log(process_num, 2))
-        if process_num >= 64:
-            process_num = 64
+        process_num = int(process_num)
+        if process_num > 64:
+            logger.error("The number of processes should be less than 64."
+                         "But the number of processes is %d" % process_num)
+            exit(1)
         with open(Path(config.cfd.case_dir, "system/decomposeParDict"), "w") as f:
             f.write(
                 template_env.get_template("foam/template/system/decomposeParDict.j2").render(

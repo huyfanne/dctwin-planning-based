@@ -145,13 +145,13 @@ class PlaneModel:
                         master
                         {{
                             name            {self.name}_master_patches;
-                            type            cyclicAMI;
+                            type            cyclic;
                             neighbourPatch  {self.name}_slave_patches;
                         }}
                         slave
                         {{
                             name            {self.name}_slave_patches;
-                            type            cyclicAMI;
+                            type            cyclic;
                             neighbourPatch  {self.name}_master_patches;
                         }}
                     }}
@@ -275,7 +275,7 @@ class PatchModel:
                     name {self.patch_name};
                     patchInfo
                     {{
-                        type cyclicAMI;
+                        type cyclic;
                         neighbourPatch {self.neighbour_patch_name};
                     }}
                     constructFrom set;
