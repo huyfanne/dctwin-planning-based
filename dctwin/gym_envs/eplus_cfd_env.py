@@ -56,7 +56,6 @@ class EplusCFDEnv(EPlusEnv):
             write_interval=config.cfd.write_interval,
             end_time=config.cfd.end_time,
             field_config=config.cfd.field_config,
-            mesh_process=config.cfd.process_num,
             solve_process=config.cfd.process_num,
             steady=config.cfd.steady,
             run_cfd=config.cfd.run_cfd,

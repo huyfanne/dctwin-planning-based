@@ -56,7 +56,6 @@ class EplusCFDAdapter:
 
         self.cfd_manager = CFDManager(
             room=room,
-            mesh_process=mesh_process,
             solve_process=solve_process,
             steady=steady,
             run_cfd=run_cfd,
