@@ -92,7 +92,7 @@ eplus_cfd_env_config {
             {
                 control_type: PRE_SCHEDULED
                 variable_name: "cpu_loading_schedule1"
-                input_source: "data/schedule/workloads/schedule.json"
+                input_source: "data/schedule/workloads/Alibaba_15min_interval.json"
                 schedule_config:{
                     initial_value: 0.5
                     lb: 0
