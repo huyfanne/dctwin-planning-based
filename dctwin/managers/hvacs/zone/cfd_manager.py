@@ -64,7 +64,6 @@ class CFDManager:
     :param steady: use steady or transient simulation
     :param write_interval: data write interval for simulation, can be set as 5, 10, 100, etc.
     :param end_time: end step for steady simulation, can be set as 50, 100, 150, etc. Normally 100-500 is enough.
-    :param field_config: field configuration for meshing
     :param pod_method: POD method, can be GP, Flux, or GP-Flux
     :param docker_client: docker client
     :param is_k8s: whether to use k8s for simulation
@@ -82,7 +81,6 @@ class CFDManager:
         run_cfd: bool = True,
         write_interval: int = 50,
         end_time: int = 1000,
-        field_config: Dict = None,
         pod_method: str = "GP",
         docker_client: docker.DockerClient = None,
         is_k8s: bool = False,
@@ -115,7 +113,6 @@ class CFDManager:
         self.solve_process = solve_process
         self.write_interval = write_interval
         self.end_time = end_time
-        self.field_config = field_config
         self.pod_method = pod_method
         self.isk8s = is_k8s
         self.k8s_config = k8s_config if k8s_config is not None else {}
