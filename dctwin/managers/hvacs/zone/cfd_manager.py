@@ -698,10 +698,10 @@ class CFDManager:
                     episode_idx=episode_idx,
                     case_idx=case_idx,
                 )
-                # use full-fledged CFD simulation
-                init_foam(is_gpu=self.is_gpu)
                 # step 1: mesh
                 if run_mesh:
+                    # use full-fledged CFD simulation
+                    init_foam(is_gpu=self.is_gpu)
                     self.mesh()
                     if save_mesh_index:
                         if self.object_mesh_index is None:

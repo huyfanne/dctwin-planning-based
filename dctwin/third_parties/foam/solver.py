@@ -192,6 +192,9 @@ class SolverBackendMixin:
                 )
             Path(config.cfd.case_dir, "case.foam").touch(exist_ok=True)
             time.sleep(1)
+        else:
+            builder = Builder(room, last_state_case)
+            builder.run()
 
         room.dump(config.cfd.case_dir / "model.json")
 
@@ -200,9 +203,6 @@ class SolverBackendMixin:
         if end_time is not None:
             self.end_time = end_time
         self.generate_control_dict(room)
-
-        builder = Builder(room, last_state_case)
-        builder.run()
 
         if config.cfd.dry_run:
             return
