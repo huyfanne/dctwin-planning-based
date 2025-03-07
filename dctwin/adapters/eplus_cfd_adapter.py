@@ -239,11 +239,10 @@ class EplusCFDAdapter:
             case_idx=self.step_idx,
             episode_idx=episode_idx,
             save_mesh_index=True,
-            return_sensor_results=True,
             **init_boundary_condition,
         )
         self.cfd_sensor_obs, return_temp, _ = self._post_process(
-            temperature=cfd_obs["all_T"], log_to_csv=False, **init_boundary_condition
+            temperature=cfd_obs, log_to_csv=False, **init_boundary_condition
         )
         return np.concatenate([eplus_obs, self.cfd_sensor_obs], axis=0), done
 
@@ -297,12 +296,11 @@ class EplusCFDAdapter:
         cfd_obs = self.cfd_manager.run(
             case_idx=self.step_idx,
             episode_idx=self.episode_idx,
-            return_sensor_results=True,
             **boundary_conditions
         )
         # post-processing CFD/POD simulation result to obtain return temperature
         self.cfd_sensor_obs, return_temp, zone_server_powers = self._post_process(
-            temperature=cfd_obs["all_T"], **boundary_conditions
+            temperature=cfd_obs, **boundary_conditions
         )
         server_inlet_temperatures = self._compute_equivalent_inlet_temperature(
             parsed_actions=parsed_actions,

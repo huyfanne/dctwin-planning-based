@@ -304,7 +304,6 @@ def read_sensor_results(
         )
         for sensor_id, index in object_mesh_index["sensors"].items():
             results["T"][sensor_id] = round(float(temperature.squeeze()[index]), 2)
-            results["all_T"] = temperature.squeeze()
     else:
         # read from postProcessing folder
         assert room is not None, "room is not provided"

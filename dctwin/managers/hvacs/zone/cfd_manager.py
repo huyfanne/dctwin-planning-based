@@ -772,4 +772,4 @@ class CFDManager:
                     path=config.cfd.case_dir.joinpath("simulation_sensor_results.json"),
                     saved_dict=sensor_results,
                 )
-            return sensor_results if return_sensor_results else {}
+            return sensor_results if return_sensor_results else temperature
