@@ -61,7 +61,6 @@ class EplusCFDAdapter:
             run_cfd=run_cfd,
             write_interval=write_interval,
             end_time=end_time,
-            field_config=field_config,
             pod_method=pod_method,
             docker_client=docker_client,
         )
