@@ -177,7 +177,8 @@ class SolverBackendMixin:
         if process_num is not None:
             self.process_num = process_num
 
-        if config.cfd.mesh_dir != Path("") and config.cfd.case_dir != Path(""):
+        if (config.cfd.mesh_dir != Path("") and config.cfd.case_dir != Path("")
+                and config.cfd.mesh_dir != config.cfd.case_dir):
             config.cfd.case_dir.mkdir(parents=True, exist_ok=True)
             config.cfd.case_dir = Path(config.cfd.case_dir).absolute()
             if not Path(f"{config.cfd.case_dir}/0").exists():
