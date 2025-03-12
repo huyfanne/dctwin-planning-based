@@ -77,6 +77,7 @@ class CFDManager:
         self,
         room: Room,
         solve_process: int = 8,
+        mesh_process: int = 8,
         steady: bool = True,
         run_cfd: bool = True,
         write_interval: int = 50,
@@ -111,6 +112,7 @@ class CFDManager:
         self.steady = steady
         self.run_cfd = run_cfd
         self.solve_process = solve_process
+        self.mesh_process = mesh_process
         self.write_interval = write_interval
         self.end_time = end_time
         self.pod_method = pod_method
@@ -135,6 +137,7 @@ class CFDManager:
         """
         if self.isk8s:
             self.mesh_backend = SnappyHexK8sBackend(
+                process_num=self.mesh_process,
                 k8s_config=self.k8s_config,
                 is_gpu=self.is_gpu,
             )
@@ -196,6 +199,7 @@ class CFDManager:
             logger.info("start meshing geometry ...")
             self.mesh_backend.run(
                 room=self.room,
+                process_num=self.mesh_process,
                 case_dir=config.cfd.case_dir,
                 refinement_level=self.refinement_level,
                 location_in_mesh=self.location_in_mesh
@@ -698,7 +702,7 @@ class CFDManager:
                 # step 1: mesh
                 if run_mesh:
                     # use full-fledged CFD simulation
-                    init_foam(is_gpu=self.is_gpu)
+                    init_foam(is_gpu=self.is_gpu, process_num=self.mesh_process)
                     self.mesh()
                     if save_mesh_index:
                         if self.object_mesh_index is None:

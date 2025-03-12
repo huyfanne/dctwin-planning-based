@@ -72,7 +72,7 @@ def generate_control_dict(
             )
 
 
-def init_foam(is_gpu: bool = False) -> None:
+def init_foam(is_gpu: bool = False, process_num: int = 1) -> None:
     Path(config.cfd.case_dir, "0").mkdir(parents=True, exist_ok=True)
     Path(config.cfd.case_dir, "constant").mkdir(parents=True, exist_ok=True)
     Path(config.cfd.case_dir, "system").mkdir(parents=True, exist_ok=True)

@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Union
 from pathlib import Path
 from loguru import logger
 import math
@@ -15,6 +15,7 @@ from dclib.room import Row
 from dctwin.utils import template_env
 from dctwin.third_parties.docker_backend import DockerBackend
 from dctwin.third_parties.k8s_backend import K8sBackend
+from dctwin.third_parties.foam.utils import generate_control_dict
 
 from .utils import is_closed, round_to_base, rotate_rectangular
 
@@ -1112,7 +1113,7 @@ class RackModel:
             )
         )
 
-    def cheek_config(self: [Rack]):
+    def cheek_config(self: Union[Rack, 'RackModel']):
         # If self is a Rack instance (not a RackModel)
         if isinstance(self, Rack):
             rack_config = self
@@ -1316,10 +1317,35 @@ class MeshBuilder:
             "-c",
             (
                 "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
-                "blockMesh && snappyHexMesh -overwrite && topoSet && createPatch -overwrite && createBaffles -overwrite"
+                "echo '>>> Running blockMesh...' && "
+                "blockMesh && "
+                "echo '>>> Running decomposePar...' && "
+                "decomposePar -force && "
+                f"echo '>>> Running snappyHexMesh in parallel with {self.process_num} cores...' && "
+                f"OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 "
+                f"mpirun -np {self.process_num} snappyHexMesh -overwrite -parallel && "
+                "echo '>>> Running reconstructParMesh...' && "
+                "reconstructParMesh -constant -mergeTol 1E-08 -noZero && "
+                "echo '>>> Running topoSet...' && "
+                "topoSet && "
+                "echo '>>> Running createPatch...' && "
+                "createPatch -overwrite && "
+                "echo '>>> Running createBaffles...' && "
+                "createBaffles -overwrite && "
+                "echo '>>> Mesh generation complete!'"
             ),
         ]
         return command
+
+        # command = [
+        #     "bash",
+        #     "-c",
+        #     (
+        #         "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
+        #         "blockMesh && snappyHexMesh -overwrite && topoSet && createPatch -overwrite && createBaffles -overwrite"
+        #     ),
+        # ]
+        # return command
 
     def _align_geometry(
             self,
@@ -1771,13 +1797,14 @@ class MeshBuilder:
             self,
             room: Room,
             case_dir: Path = Path("log/base"),
-            process_num: int = 1,
+            process_num: int = None,
             refinement_level: int = 2,
             location_in_mesh: Vertex = Vertex(x=0., y=0., z=0.),
     ):
         self.room = room
         self.case_dir = case_dir
-        self.process_num = process_num
+        if process_num is not None:
+            self.process_num = process_num
         self._align_geometry(refinement_level)
 
         # Make objects in the room (e.g., ceiling, raised floor, rack, etc.)
@@ -1834,9 +1861,18 @@ class MeshBuilder:
             patch_list=acu_list + rack_list + row_racks_list
         )
 
+        self.generate_control_dict()
+
         self.run_container(user=0, case_dir=self.case_dir)
 
         logger.info("***** Mesh finished *****\n\n")
+
+    def generate_control_dict(
+        self,
+    ) -> None:
+        generate_control_dict(
+            process_num=self.process_num,
+        )
 
 
 class SnappyHexBackend(MeshBuilder, DockerBackend):
