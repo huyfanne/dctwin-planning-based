@@ -1337,16 +1337,6 @@ class MeshBuilder:
         ]
         return command
 
-        # command = [
-        #     "bash",
-        #     "-c",
-        #     (
-        #         "source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
-        #         "blockMesh && snappyHexMesh -overwrite && topoSet && createPatch -overwrite && createBaffles -overwrite"
-        #     ),
-        # ]
-        # return command
-
     def _align_geometry(
             self,
             refinement_level: int = 2,

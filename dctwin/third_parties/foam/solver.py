@@ -177,8 +177,7 @@ class SolverBackendMixin:
         if process_num is not None:
             self.process_num = process_num
 
-        if (config.cfd.mesh_dir != Path("") and config.cfd.case_dir != Path("")
-                and config.cfd.mesh_dir != config.cfd.case_dir):
+        if config.cfd.mesh_dir != Path("") and config.cfd.case_dir != Path(""):
             config.cfd.case_dir.mkdir(parents=True, exist_ok=True)
             config.cfd.case_dir = Path(config.cfd.case_dir).absolute()
             if not Path(f"{config.cfd.case_dir}/0").exists():
@@ -193,9 +192,6 @@ class SolverBackendMixin:
                 )
             Path(config.cfd.case_dir, "case.foam").touch(exist_ok=True)
             time.sleep(1)
-        else:
-            builder = Builder(room, last_state_case)
-            builder.run()
 
         room.dump(config.cfd.case_dir / "model.json")
 
@@ -207,6 +203,9 @@ class SolverBackendMixin:
 
         if config.cfd.dry_run:
             return
+
+        builder = Builder(room, last_state_case)
+        builder.run()
 
         host_path = os.environ.get("HOST_PATH", None)
         if host_path is not None:
