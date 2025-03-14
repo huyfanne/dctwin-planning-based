@@ -8,12 +8,12 @@ on:
 jobs:
   build-and-scout:
     runs-on:
-      labels: large_16c
+      labels: large_4c
     steps:
     - name: Set Swap Space
       uses: actionhippie/swap-space@v1
       with:
-        size: 20G
+        size: 40G
     
     - name: Check out code
       uses: actions/checkout@v4
