@@ -353,7 +353,7 @@ Schedule:Compact,
     .0;                       !- Field 4
 
 SCHEDULE:CONSTANT,
-    data hall 1a acu-1 air loop supply air temperature schedule,    !- Name
+    data_hall_1a_acu_1 air loop supply air temperature schedule,    !- Name
     Any Number,               !- Schedule Type Limits Name
     25;                       !- Hourly Value
 
@@ -700,7 +700,7 @@ SIZING:ZONE,
     autosize;                 !- Dedicated Outdoor Air High Setpoint Temperature for Design
 
 SIZING:SYSTEM,
-    data hall 1a acu-1 air loop,    !- AirLoop Name
+    data_hall_1a_acu_1 air loop,    !- AirLoop Name
     Sensible,                 !- Type of Load to Size On
     autosize,                 !- Design Outdoor Air Flow Rate
     0.4,                      !- Central Heating Maximum System Air Flow Ratio
@@ -812,7 +812,7 @@ ZONEHVAC:EQUIPMENTCONNECTIONS,
     Data Hall 1A returns;     !- Zone Return Air Node or NodeList Name
 
 FAN:VARIABLEVOLUME,
-    data hall 1a acu-1 fan,    !- Name
+    data_hall_1a_acu_1 fan,    !- Name
     ALWAYS ON,                !- Availability Schedule Name
     0.5246024493243244,       !- Fan Total Efficiency
     450,                      !- Pressure Rise
@@ -827,12 +827,12 @@ FAN:VARIABLEVOLUME,
     -0.54137364,              !- Fan Power Coefficient 3
     0.87198823,               !- Fan Power Coefficient 4
     0,                        !- Fan Power Coefficient 5
-    data hall 1a acu-1 cooling coil air outlet node,    !- Air Inlet Node Name
-    data hall 1a acu-1 air loop supply outlet node,    !- Air Outlet Node Name
+    data_hall_1a_acu_1 cooling coil air outlet node,    !- Air Inlet Node Name
+    data_hall_1a_acu_1 air loop supply outlet node,    !- Air Outlet Node Name
     General;                  !- EndUse Subcategory
 
 COIL:COOLING:WATER,
-    data hall 1a acu-1 cooling coil,    !- Name
+    data_hall_1a_acu_1 cooling coil,    !- Name
     ALWAYS ON,                !- Availability Schedule Name
     0.0040277,                !- Design Water Flow Rate
     11.625,                   !- Design Air Flow Rate
@@ -841,32 +841,32 @@ COIL:COOLING:WATER,
     25,                       !- Design Outlet Air Temperature
     autosize,                 !- Design Inlet Air Humidity Ratio
     autosize,                 !- Design Outlet Air Humidity Ratio
-    data hall 1a acu-1 water inlet node,    !- Water Inlet Node Name
-    data hall 1a acu-1 water outlet node,    !- Water Outlet Node Name
-    data hall 1a acu-1 outdoor air system mixed air node,    !- Air Inlet Node Name
-    data hall 1a acu-1 cooling coil air outlet node,    !- Air Outlet Node Name
+    data_hall_1a_acu_1 water inlet node,    !- Water Inlet Node Name
+    data_hall_1a_acu_1 water outlet node,    !- Water Outlet Node Name
+    data_hall_1a_acu_1 outdoor air system mixed air node,    !- Air Inlet Node Name
+    data_hall_1a_acu_1 cooling coil air outlet node,    !- Air Outlet Node Name
     SimpleAnalysis,           !- Type of Analysis
     CounterFlow,              !- Heat Exchanger Configuration
     ,                         !- Condensate Collection Water Storage Tank Name
     8;                        !- Design Water Temperature Difference
 
 CONTROLLER:WATERCOIL,
-    data hall 1a acu-1 controller,    !- Name
+    data_hall_1a_acu_1 controller,    !- Name
     Temperature,              !- Control Variable
     REVERSE,                  !- Action
     FLOW,                     !- Actuator Variable
-    data hall 1a acu-1 air loop supply outlet node,    !- Sensor Node Name
-    data hall 1a acu-1 water inlet node,    !- Actuator Node Name
+    data_hall_1a_acu_1 air loop supply outlet node,    !- Sensor Node Name
+    data_hall_1a_acu_1 water inlet node,    !- Actuator Node Name
     autosize,                 !- Controller Convergence Tolerance
     autosize,                 !- Maximum Actuated Flow
     0;                        !- Minimum Actuated Flow
 
 CONTROLLER:OUTDOORAIR,
-    data hall 1a acu-1 outdoor air system controller,    !- Name
-    data hall 1a acu-1 outdoor air system relief air outlet node,    !- Relief Air Outlet Node Name
-    data hall 1a acu-1 air loop supply inlet node,    !- Return Air Node Name
-    data hall 1a acu-1 outdoor air system mixed air node,    !- Mixed Air Node Name
-    data hall 1a acu-1 outdoor air system outside air inlet node,    !- Actuator Node Name
+    data_hall_1a_acu_1 outdoor air system controller,    !- Name
+    data_hall_1a_acu_1 outdoor air system relief air outlet node,    !- Relief Air Outlet Node Name
+    data_hall_1a_acu_1 air loop supply inlet node,    !- Return Air Node Name
+    data_hall_1a_acu_1 outdoor air system mixed air node,    !- Mixed Air Node Name
+    data_hall_1a_acu_1 outdoor air system outside air inlet node,    !- Actuator Node Name
     autosize,                 !- Minimum Outdoor Air Flow Rate
     autosize,                 !- Maximum Outdoor Air Flow Rate
     NoEconomizer,             !- Economizer Control Type
@@ -890,83 +890,83 @@ CONTROLLER:OUTDOORAIR,
     BypassWhenWithinEconomizerLimits;    !- Heat Recovery Bypass Control Type
 
 AIRLOOPHVAC:CONTROLLERLIST,
-    data hall 1a acu-1 outdoor air system controllers,    !- Name
+    data_hall_1a_acu_1 outdoor air system controllers,    !- Name
     Controller:OutdoorAir,    !- Controller 1 Object Type
-    data hall 1a acu-1 outdoor air system controller;    !- Controller 1 Name
+    data_hall_1a_acu_1 outdoor air system controller;    !- Controller 1 Name
 
 AIRLOOPHVAC:CONTROLLERLIST,
-    data hall 1a acu-1 controllers,    !- Name
+    data_hall_1a_acu_1 controllers,    !- Name
     Controller:WaterCoil,     !- Controller 1 Object Type
-    data hall 1a acu-1 controller;    !- Controller 1 Name
+    data_hall_1a_acu_1 controller;    !- Controller 1 Name
 
 AIRLOOPHVAC,
-    data hall 1a acu-1 air loop,    !- Name
-    data hall 1a acu-1 controllers,    !- Controller List Name
-    data hall 1a acu-1 air loop availability manager list,    !- Availability Manager List Name
+    data_hall_1a_acu_1 air loop,    !- Name
+    data_hall_1a_acu_1 controllers,    !- Controller List Name
+    data_hall_1a_acu_1 air loop availability manager list,    !- Availability Manager List Name
     autosize,                 !- Design Supply Air Flow Rate
-    data hall 1a acu-1 air loop branches,    !- Branch List Name
+    data_hall_1a_acu_1 air loop branches,    !- Branch List Name
     ,                         !- Connector List Name
-    data hall 1a acu-1 air loop supply inlet node,    !- Supply Side Inlet Node Name
-    data hall 1a acu-1 air loop demand outlet node,    !- Demand Side Outlet Node Name
-    data hall 1a acu-1 air loop demand inlet node,    !- Demand Side Inlet Node Names
-    data hall 1a acu-1 air loop supply outlet node,    !- Supply Side Outlet Node Names
+    data_hall_1a_acu_1 air loop supply inlet node,    !- Supply Side Inlet Node Name
+    data_hall_1a_acu_1 air loop demand outlet node,    !- Demand Side Outlet Node Name
+    data_hall_1a_acu_1 air loop demand inlet node,    !- Demand Side Inlet Node Names
+    data_hall_1a_acu_1 air loop supply outlet node,    !- Supply Side Outlet Node Names
     1;                        !- Design Return Air Flow Fraction of Supply Air Flow
 
 AIRLOOPHVAC:OUTDOORAIRSYSTEM:EQUIPMENTLIST,
-    data hall 1a acu-1 outdoor air system outdoor air equipment,    !- Name
+    data_hall_1a_acu_1 outdoor air system outdoor air equipment,    !- Name
     OUTDOORAIR:MIXER,         !- Component 1 Object Type
-    data hall 1a acu-1 outdoor air system mixer box;    !- Component 1 Name
+    data_hall_1a_acu_1 outdoor air system mixer box;    !- Component 1 Name
 
 AIRLOOPHVAC:OUTDOORAIRSYSTEM,
-    data hall 1a acu-1 outdoor air system,    !- Name
-    data hall 1a acu-1 outdoor air system controllers,    !- Controller List Name
-    data hall 1a acu-1 outdoor air system outdoor air equipment,    !- Outdoor Air Equipment List Name
-    data hall 1a acu-1 outdoor air system availability manager list;    !- Availability Manager List Name
+    data_hall_1a_acu_1 outdoor air system,    !- Name
+    data_hall_1a_acu_1 outdoor air system controllers,    !- Controller List Name
+    data_hall_1a_acu_1 outdoor air system outdoor air equipment,    !- Outdoor Air Equipment List Name
+    data_hall_1a_acu_1 outdoor air system availability manager list;    !- Availability Manager List Name
 
 OUTDOORAIR:MIXER,
-    data hall 1a acu-1 outdoor air system mixer box,    !- Name
-    data hall 1a acu-1 outdoor air system mixed air node,    !- Mixed Air Node Name
-    data hall 1a acu-1 outdoor air system outside air inlet node,    !- Outdoor Air Stream Node Name
-    data hall 1a acu-1 outdoor air system relief air outlet node,    !- Relief Air Stream Node Name
-    data hall 1a acu-1 air loop supply inlet node;    !- Return Air Stream Node Name
+    data_hall_1a_acu_1 outdoor air system mixer box,    !- Name
+    data_hall_1a_acu_1 outdoor air system mixed air node,    !- Mixed Air Node Name
+    data_hall_1a_acu_1 outdoor air system outside air inlet node,    !- Outdoor Air Stream Node Name
+    data_hall_1a_acu_1 outdoor air system relief air outlet node,    !- Relief Air Stream Node Name
+    data_hall_1a_acu_1 air loop supply inlet node;    !- Return Air Stream Node Name
 
 AIRLOOPHVAC:ZONESPLITTER,
-    data hall 1a acu-1 air loop air splitter,    !- Name
-    data hall 1a acu-1 air loop demand inlet node,    !- Inlet Node Name
+    data_hall_1a_acu_1 air loop air splitter,    !- Name
+    data_hall_1a_acu_1 air loop demand inlet node,    !- Inlet Node Name
     Data Hall 1A air terminal unit 1 inlet node;    !- Outlet 1 Node Name
 
 AIRLOOPHVAC:SUPPLYPATH,
-    data hall 1a acu-1 air loop supply path,    !- Name
-    data hall 1a acu-1 air loop demand inlet node,    !- Supply Air Path Inlet Node Name
+    data_hall_1a_acu_1 air loop supply path,    !- Name
+    data_hall_1a_acu_1 air loop demand inlet node,    !- Supply Air Path Inlet Node Name
     AirLoopHVAC:ZoneSplitter,    !- Component 1 Object Type
-    data hall 1a acu-1 air loop air splitter;    !- Component 1 Name
+    data_hall_1a_acu_1 air loop air splitter;    !- Component 1 Name
 
 AIRLOOPHVAC:ZONEMIXER,
-    data hall 1a acu-1 air loop air mixer,    !- Name
-    data hall 1a acu-1 air loop demand outlet node,    !- Outlet Node Name
+    data_hall_1a_acu_1 air loop air mixer,    !- Name
+    data_hall_1a_acu_1 air loop demand outlet node,    !- Outlet Node Name
     Data Hall 1A return node 1;    !- Inlet 1 Node Name
 
 AIRLOOPHVAC:RETURNPATH,
-    data hall 1a acu-1 air loop return path,    !- Name
-    data hall 1a acu-1 air loop demand outlet node,    !- Return Air Path Outlet Node Name
+    data_hall_1a_acu_1 air loop return path,    !- Name
+    data_hall_1a_acu_1 air loop demand outlet node,    !- Return Air Path Outlet Node Name
     AirLoopHVAC:ZoneMixer,    !- Component 1 Object Type
-    data hall 1a acu-1 air loop air mixer;    !- Component 1 Name
+    data_hall_1a_acu_1 air loop air mixer;    !- Component 1 Name
 
 BRANCH,
-    data hall 1a acu-1 air loop main branch,    !- Name
+    data_hall_1a_acu_1 air loop main branch,    !- Name
     ,                         !- Pressure Drop Curve Name
     AIRLOOPHVAC:OUTDOORAIRSYSTEM,    !- Component 1 Object Type
-    data hall 1a acu-1 outdoor air system,    !- Component 1 Name
-    data hall 1a acu-1 air loop supply inlet node,    !- Component 1 Inlet Node Name
-    data hall 1a acu-1 outdoor air system mixed air node,    !- Component 1 Outlet Node Name
+    data_hall_1a_acu_1 outdoor air system,    !- Component 1 Name
+    data_hall_1a_acu_1 air loop supply inlet node,    !- Component 1 Inlet Node Name
+    data_hall_1a_acu_1 outdoor air system mixed air node,    !- Component 1 Outlet Node Name
     COIL:COOLING:WATER,       !- Component 2 Object Type
-    data hall 1a acu-1 cooling coil,    !- Component 2 Name
-    data hall 1a acu-1 outdoor air system mixed air node,    !- Component 2 Inlet Node Name
-    data hall 1a acu-1 cooling coil air outlet node,    !- Component 2 Outlet Node Name
+    data_hall_1a_acu_1 cooling coil,    !- Component 2 Name
+    data_hall_1a_acu_1 outdoor air system mixed air node,    !- Component 2 Inlet Node Name
+    data_hall_1a_acu_1 cooling coil air outlet node,    !- Component 2 Outlet Node Name
     FAN:VARIABLEVOLUME,       !- Component 3 Object Type
-    data hall 1a acu-1 fan,    !- Component 3 Name
-    data hall 1a acu-1 cooling coil air outlet node,    !- Component 3 Inlet Node Name
-    data hall 1a acu-1 air loop supply outlet node;    !- Component 3 Outlet Node Name
+    data_hall_1a_acu_1 fan,    !- Component 3 Name
+    data_hall_1a_acu_1 cooling coil air outlet node,    !- Component 3 Inlet Node Name
+    data_hall_1a_acu_1 air loop supply outlet node;    !- Component 3 Outlet Node Name
 
 BRANCH,
     chilled water loop supply inlet branch,    !- Name
@@ -1005,12 +1005,12 @@ BRANCH,
     chilled water loop demand inlet pipe outlet node;    !- Component 1 Outlet Node Name
 
 BRANCH,
-    Data Hall 1A acu-1 demand branch,    !- Name
+    Data_Hall_1A_acu_1 demand branch,    !- Name
     ,                         !- Pressure Drop Curve Name
     COIL:COOLING:WATER,       !- Component 1 Object Type
-    data hall 1a acu-1 cooling coil,    !- Component 1 Name
-    data hall 1a acu-1 water inlet node,    !- Component 1 Inlet Node Name
-    data hall 1a acu-1 water outlet node;    !- Component 1 Outlet Node Name
+    data_hall_1a_acu_1 cooling coil,    !- Component 1 Name
+    data_hall_1a_acu_1 water inlet node,    !- Component 1 Inlet Node Name
+    data_hall_1a_acu_1 water outlet node;    !- Component 1 Outlet Node Name
 
 BRANCH,
     chilled water loop demand outlet branch,    !- Name
@@ -1073,8 +1073,8 @@ BRANCH,
     chiller 1 condenser water loop demand outlet node;    !- Component 1 Outlet Node Name
 
 BRANCHLIST,
-    data hall 1a acu-1 air loop branches,    !- Name
-    data hall 1a acu-1 air loop main branch;    !- Branch 1 Name
+    data_hall_1a_acu_1 air loop branches,    !- Name
+    data_hall_1a_acu_1 air loop main branch;    !- Branch 1 Name
 
 BRANCHLIST,
     chilled water loop supply branches,    !- Name
@@ -1085,7 +1085,7 @@ BRANCHLIST,
 BRANCHLIST,
     chilled water loop demand branches,    !- Name
     chilled water loop demand inlet branch,    !- Branch 1 Name
-    Data Hall 1A acu-1 demand branch,    !- Branch 2 Name
+    Data_Hall_1A_acu_1 demand branch,    !- Branch 2 Name
     chilled water loop demand outlet branch;    !- Branch 3 Name
 
 BRANCHLIST,
@@ -1108,7 +1108,7 @@ CONNECTOR:SPLITTER,
 CONNECTOR:SPLITTER,
     chilled water loop demand splitter,    !- Name
     chilled water loop demand inlet branch,    !- Inlet Branch Name
-    Data Hall 1A acu-1 demand branch;    !- Outlet Branch 1 Name
+    Data_Hall_1A_acu_1 demand branch;    !- Outlet Branch 1 Name
 
 CONNECTOR:SPLITTER,
     chiller 1 condenser water loop supply splitter,    !- Name
@@ -1128,7 +1128,7 @@ CONNECTOR:MIXER,
 CONNECTOR:MIXER,
     chilled water loop demand mixer,    !- Name
     chilled water loop demand outlet branch,    !- Outlet Branch Name
-    Data Hall 1A acu-1 demand branch;    !- Inlet Branch 1 Name
+    Data_Hall_1A_acu_1 demand branch;    !- Inlet Branch 1 Name
 
 CONNECTOR:MIXER,
     chiller 1 condenser water loop supply mixer,    !- Name
@@ -1177,11 +1177,11 @@ NODELIST,
     Data Hall 1A return node 1;    !- Node 1 Name
 
 NODELIST,
-    data hall 1a acu-1 outdoor air system outside air inlet nodes,    !- Name
-    data hall 1a acu-1 outdoor air system outside air inlet node;    !- Node 1 Name
+    data_hall_1a_acu_1 outdoor air system outside air inlet nodes,    !- Name
+    data_hall_1a_acu_1 outdoor air system outside air inlet node;    !- Node 1 Name
 
 OUTDOORAIR:NODELIST,
-    data hall 1a acu-1 outdoor air system outside air inlet node;    !- Node or NodeList Name 1
+    data_hall_1a_acu_1 outdoor air system outside air inlet node;    !- Node or NodeList Name 1
 
 PIPE:ADIABATIC,
     chilled water loop supply pipe,    !- Name
@@ -1541,28 +1541,28 @@ EnergyManagementSystem:OutputVariable,
     Tons;                     !- Units
 
 AVAILABILITYMANAGER:SCHEDULED,
-    data hall 1a acu-1 outdoor air system availability manager,    !- Name
+    data_hall_1a_acu_1 outdoor air system availability manager,    !- Name
     ALWAYS ON;                !- Schedule Name
 
 AVAILABILITYMANAGER:SCHEDULED,
-    data hall 1a acu-1 air loop availability manager,    !- Name
+    data_hall_1a_acu_1 air loop availability manager,    !- Name
     ALWAYS ON;                !- Schedule Name
 
 AVAILABILITYMANAGERASSIGNMENTLIST,
-    data hall 1a acu-1 outdoor air system availability manager list,    !- Name
+    data_hall_1a_acu_1 outdoor air system availability manager list,    !- Name
     AvailabilityManager:Scheduled,    !- Availability Manager 1 Object Type
-    data hall 1a acu-1 outdoor air system availability manager;    !- Availability Manager 1 Name
+    data_hall_1a_acu_1 outdoor air system availability manager;    !- Availability Manager 1 Name
 
 AVAILABILITYMANAGERASSIGNMENTLIST,
-    data hall 1a acu-1 air loop availability manager list,    !- Name
+    data_hall_1a_acu_1 air loop availability manager list,    !- Name
     AvailabilityManager:Scheduled,    !- Availability Manager 1 Object Type
-    data hall 1a acu-1 air loop availability manager;    !- Availability Manager 1 Name
+    data_hall_1a_acu_1 air loop availability manager;    !- Availability Manager 1 Name
 
 SETPOINTMANAGER:SCHEDULED,
-    data hall 1a acu-1 air loop supply air temperature setpoint manager,    !- Name
+    data_hall_1a_acu_1 air loop supply air temperature setpoint manager,    !- Name
     Temperature,              !- Control Variable
-    data hall 1a acu-1 air loop supply air temperature schedule,    !- Schedule Name
-    data hall 1a acu-1 air loop supply outlet node;    !- Setpoint Node or NodeList Name
+    data_hall_1a_acu_1 air loop supply air temperature schedule,    !- Schedule Name
+    data_hall_1a_acu_1 air loop supply outlet node;    !- Setpoint Node or NodeList Name
 
 SETPOINTMANAGER:SCHEDULED,
     chilled water loop exit temperature setpoint manager,    !- Name
@@ -1577,12 +1577,12 @@ SETPOINTMANAGER:SCHEDULED,
     chiller 1 condenser water loop supply outlet node;    !- Setpoint Node or NodeList Name
 
 SETPOINTMANAGER:MIXEDAIR,
-    data hall 1a acu-1 outdoor air system mixed air manager,    !- Name
+    data_hall_1a_acu_1 outdoor air system mixed air manager,    !- Name
     Temperature,              !- Control Variable
-    data hall 1a acu-1 air loop supply outlet node,    !- Reference Setpoint Node Name
-    data hall 1a acu-1 outdoor air system mixed air node,    !- Fan Inlet Node Name
-    data hall 1a acu-1 air loop supply outlet node,    !- Fan Outlet Node Name
-    data hall 1a acu-1 outdoor air system mixed air node,    !- Setpoint Node or NodeList Name
+    data_hall_1a_acu_1 air loop supply outlet node,    !- Reference Setpoint Node Name
+    data_hall_1a_acu_1 outdoor air system mixed air node,    !- Fan Inlet Node Name
+    data_hall_1a_acu_1 air loop supply outlet node,    !- Fan Outlet Node Name
+    data_hall_1a_acu_1 outdoor air system mixed air node,    !- Setpoint Node or NodeList Name
     ,                         !- Cooling Coil Inlet Node Name
     ,                         !- Cooling coil Outlet Node Name
     7.2;                      !- Minimum Temperature at Cooling Coil Outlet Node
