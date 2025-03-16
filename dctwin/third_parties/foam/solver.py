@@ -79,17 +79,19 @@ class Builder:
     def render(self, source_filename, write_filename, internal_field=None) -> None:
         acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_dict)
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_dict)
-        server_boundaries = [ServerBoundary(key, server) for key, server in self.server_dict.items()]
         with open(Path(config.cfd.case_dir, f"0/{write_filename}"), "w") as f:
             f.write(
                 template_env.get_template(f"foam/template/0/{source_filename}.j2").render(
                     init_temperature=24 + 273.15,
                     p_rgh=round(self.room_dz * 9.81, 10),
                     acu_boundaries=[
-                        ACUBoundary(key, acu)
-                        for key, acu in self.acu_dict.items()
-                    ],
-                    server_boundaries=server_boundaries,
+                        ACUBoundary(acu)
+                        for acu in self.acu_dict.values()
+                        ],
+                    server_boundaries=[
+                        ServerBoundary(server) 
+                        for server in self.server_dict.values()
+                        ],
                     room_boundary=RoomBoundary(self.room),
                     acu_k=acu_k,
                     acu_epsilon=acu_epsilon,

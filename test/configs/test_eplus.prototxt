@@ -33,7 +33,7 @@ eplus_env_config {
     control_type: AGENT_CONTROLLED
     variable_name: "data_hall_1a_acu_1_supply_air_temperature_setpoint"
     actuator_config {
-      actuated_component_unique_name: "data_hall_1a_acu_1 air loop supply air temperature schedule"
+      actuated_component_unique_name: "data hall 1a acu-1 air loop supply air temperature schedule"
       actuated_component_type: Schedule_Constant
       actuated_component_control_type: Schedule_Value
     }
@@ -42,7 +42,7 @@ eplus_env_config {
     control_type: AGENT_CONTROLLED
     variable_name: "data_hall_1a_acu_1_supply_air_mass_flow_rate"
     actuator_config {
-      actuated_component_unique_name: "data_hall_1a_acu_1 fan"
+      actuated_component_unique_name: "data hall 1a acu-1 fan"
       actuated_component_type: Fan
       actuated_component_control_type: Fan_Air_Mass_Flow_Rate
     }
@@ -86,99 +86,99 @@ eplus_env_config {
   }
   observations {
     exposed: false
-    variable_name: "data_hall_1a_acu_1 fan power consumption"
+    variable_name: "data hall 1a acu-1 fan power consumption"
     output_variable_config {
-      key_value: "DATA_HALL_1A_ACU_1 FAN"
+      key_value: "DATA HALL 1A ACU-1 FAN"
       variable_name: "Fan Electricity Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "data_hall_1a_acu_1 fan air mass flow rate"
+    variable_name: "data hall 1a acu-1 fan air mass flow rate"
     output_variable_config {
-      key_value: "DATA_HALL_1A_ACU_1 AIR LOOP SUPPLY OUTLET NODE"
+      key_value: "DATA HALL 1A ACU-1 AIR LOOP SUPPLY OUTLET NODE"
       variable_name: "System Node Mass Flow Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "data_hall_1a_acu_1 fan outlet air temperature"
+    variable_name: "data hall 1a acu-1 fan outlet air temperature"
     output_variable_config {
-      key_value: "DATA_HALL_1A_ACU_1 AIR LOOP SUPPLY OUTLET NODE"
+      key_value: "DATA HALL 1A ACU-1 AIR LOOP SUPPLY OUTLET NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "data_hall_1a_acu_1 fan inlet air temperature"
+    variable_name: "data hall 1a acu-1 fan inlet air temperature"
     output_variable_config {
-      key_value: "DATA_HALL_1A_ACU_1 COOLING COIL AIR OUTLET NODE"
+      key_value: "DATA HALL 1A ACU-1 COOLING COIL AIR OUTLET NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "data_hall_1a_acu_1 cooling coil inlet air temperature"
+    variable_name: "data hall 1a acu-1 cooling coil inlet air temperature"
     output_variable_config {
-      key_value: "DATA_HALL_1A_ACU_1 OUTDOOR AIR SYSTEM MIXED AIR NODE"
+      key_value: "DATA HALL 1A ACU-1 OUTDOOR AIR SYSTEM MIXED AIR NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "data_hall_1a_acu_1 cooling coil air mass flow rate"
+    variable_name: "data hall 1a acu-1 cooling coil air mass flow rate"
     output_variable_config {
-      key_value: "DATA_HALL_1A_ACU_1 OUTDOOR AIR SYSTEM MIXED AIR NODE"
+      key_value: "DATA HALL 1A ACU-1 OUTDOOR AIR SYSTEM MIXED AIR NODE"
       variable_name: "System Node Mass Flow Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "data_hall_1a_acu_1 cooling coil outlet air temperature"
+    variable_name: "data hall 1a acu-1 cooling coil outlet air temperature"
     output_variable_config {
-      key_value: "DATA_HALL_1A_ACU_1 COOLING COIL AIR OUTLET NODE"
+      key_value: "DATA HALL 1A ACU-1 COOLING COIL AIR OUTLET NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "data_hall_1a_acu_1 cooling coil inlet water temperature"
+    variable_name: "data hall 1a acu-1 cooling coil inlet water temperature"
     output_variable_config {
-      key_value: "DATA_HALL_1A_ACU_1 WATER INLET NODE"
+      key_value: "DATA HALL 1A ACU-1 WATER INLET NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "data_hall_1a_acu_1 cooling coil outlet water temperature"
+    variable_name: "data hall 1a acu-1 cooling coil outlet water temperature"
     output_variable_config {
-      key_value: "DATA_HALL_1A_ACU_1 WATER OUTLET NODE"
+      key_value: "DATA HALL 1A ACU-1 WATER OUTLET NODE"
       variable_name: "System Node Temperature"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "data_hall_1a_acu_1 cooling coil water mass flow rate"
+    variable_name: "data hall 1a acu-1 cooling coil water mass flow rate"
     output_variable_config {
-      key_value: "DATA_HALL_1A_ACU_1 WATER INLET NODE"
+      key_value: "DATA HALL 1A ACU-1 WATER INLET NODE"
       variable_name: "System Node Mass Flow Rate"
       reporting_frequency: "timestep"
     }
   }
   observations {
     exposed: false
-    variable_name: "data_hall_1a_acu_1 cooling coil cooling load"
+    variable_name: "data hall 1a acu-1 cooling coil cooling load"
     output_variable_config {
-      key_value: "DATA_HALL_1A_ACU_1 COOLING COIL"
+      key_value: "DATA HALL 1A ACU-1 COOLING COIL"
       variable_name: "Cooling Coil Sensible Cooling Rate"
       reporting_frequency: "timestep"
     }
@@ -391,6 +391,6 @@ eplus_env_config {
     }
   }
   use_unnormed_obs: true
-  host: "host.docker.internal"
+  host: "localhost"
   network: "host"
 }

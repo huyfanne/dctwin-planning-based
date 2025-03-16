@@ -362,7 +362,7 @@ class ACUModel:
         v_max.z = self.config.geometry.location.z + self.config.geometry.size.z
         # create a box object that represents the ACU
         self.box = BoxModel(
-            name=f"acu_wall_{self.config.uid}",
+            name=f"acu_wall_{self.config.valid_id}",
             v_min=[v_min.x, v_min.y, v_min.z],
             v_max=[v_max.x, v_max.y, v_max.z],
             is_refinement_box=False
@@ -372,7 +372,7 @@ class ACUModel:
         acu_supply_face = self.config.geometry.supply_face
         bounding_box_min, bounding_box_max = self._get_supply_or_return_face_bounding_box(face=acu_supply_face)
         self.supply_face = PatchModel(
-            name=f"acu_supply_{self.config.uid}",
+            name=f"acu_supply_{self.config.valid_id}",
             bounding_box_min=bounding_box_min,
             bounding_box_max=bounding_box_max
         )
@@ -381,7 +381,7 @@ class ACUModel:
         acu_return_face = self.config.geometry.return_face
         bounding_box_min, bounding_box_max = self._get_supply_or_return_face_bounding_box(face=acu_return_face)
         self.return_face = PatchModel(
-            name=f"acu_return_{self.config.uid}",
+            name=f"acu_return_{self.config.valid_id}",
             bounding_box_min=bounding_box_min,
             bounding_box_max=bounding_box_max
         )
@@ -566,16 +566,16 @@ class ServerModel:
 
         bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(x=x_inlet_face, y=y_inlet_face)
         self.inlet_face = PatchModel(
-            name=f"server_inlet_{self.config.uid}",
-            neighbour_patch_name=f"server_outlet_{self.config.uid}",
+            name=f"server_inlet_{self.config.valid_id}",
+            neighbour_patch_name=f"server_outlet_{self.config.valid_id}",
             bounding_box_max=bounding_box_max,
             bounding_box_min=bounding_box_min
         )
 
         bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(x=x_outlet_face, y=y_outlet_face)
         self.outlet_face = PatchModel(
-            name=f"server_outlet_{self.config.uid}",
-            neighbour_patch_name=f"server_inlet_{self.config.uid}",
+            name=f"server_outlet_{self.config.valid_id}",
+            neighbour_patch_name=f"server_inlet_{self.config.valid_id}",
             bounding_box_max=bounding_box_max,
             bounding_box_min=bounding_box_min
         )
@@ -719,8 +719,8 @@ class RowRackModel:
             )
             self.blanking_panel.append(
                 PatchModel(
-                    name=f"rack_cyclic_{rack.uid}_master",
-                    neighbour_patch_name=f"rack_cyclic_{rack.uid}_slave",
+                    name=f"rack_cyclic_{rack.valid_id}_master",
+                    neighbour_patch_name=f"rack_cyclic_{rack.valid_id}_slave",
                     bounding_box_max=bounding_box_max,
                     bounding_box_min=bounding_box_min
                 )
@@ -736,8 +736,8 @@ class RowRackModel:
             )
             self.blanking_panel.append(
                 PatchModel(
-                    name=f"rack_cyclic_{rack.uid}_slave",
-                    neighbour_patch_name=f"rack_cyclic_{rack.uid}_master",
+                    name=f"rack_cyclic_{rack.valid_id}_slave",
+                    neighbour_patch_name=f"rack_cyclic_{rack.valid_id}_master",
                     bounding_box_max=bounding_box_max,
                     bounding_box_min=bounding_box_min
                 )
@@ -822,8 +822,8 @@ class RowRackModel:
             )
             self.rack_air_leak_patch_list.append(
                 PatchModel(
-                    name=f"rack_air_leak_{rack.uid}_master",
-                    neighbour_patch_name=f"rack_air_leak_{rack.uid}_slave",
+                    name=f"rack_air_leak_{rack.valid_id}_master",
+                    neighbour_patch_name=f"rack_air_leak_{rack.valid_id}_slave",
                     bounding_box_max=bounding_box_max,
                     bounding_box_min=bounding_box_min
                 )
@@ -838,8 +838,8 @@ class RowRackModel:
             )
             self.rack_air_leak_patch_list.append(
                 PatchModel(
-                    name=f"rack_air_leak_{rack.uid}_slave",
-                    neighbour_patch_name=f"rack_air_leak_{rack.uid}_master",
+                    name=f"rack_air_leak_{rack.valid_id}_slave",
+                    neighbour_patch_name=f"rack_air_leak_{rack.valid_id}_master",
                     bounding_box_max=bounding_box_max,
                     bounding_box_min=bounding_box_min
                 )
@@ -1036,7 +1036,7 @@ class RackModel:
 
     def _make_box(self):
         self.box = BoxModel(
-            name=f'rack_wall_{self.config.uid}',
+            name=f'rack_wall_{self.config.valid_id}',
             v_min=[
                 self.v_min.x,
                 self.v_min.y,
@@ -1096,8 +1096,8 @@ class RackModel:
         bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(x=x_inlet_face, y=y_inlet_face)
         self.rack_air_leak_patch_list.append(
             PatchModel(
-                name=f"rack_air_leak_{self.config.uid}_master",
-                neighbour_patch_name=f"rack_air_leak_{self.config.uid}_slave",
+                name=f"rack_air_leak_{self.config.valid_id}_master",
+                neighbour_patch_name=f"rack_air_leak_{self.config.valid_id}_slave",
                 bounding_box_max=bounding_box_max,
                 bounding_box_min=bounding_box_min
             )
@@ -1106,8 +1106,8 @@ class RackModel:
         bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(x=x_outlet_face, y=y_outlet_face)
         self.rack_air_leak_patch_list.append(
             PatchModel(
-                name=f"rack_air_leak_{self.config.uid}_slave",
-                neighbour_patch_name=f"rack_air_leak_{self.config.uid}_master",
+                name=f"rack_air_leak_{self.config.valid_id}_slave",
+                neighbour_patch_name=f"rack_air_leak_{self.config.valid_id}_master",
                 bounding_box_max=bounding_box_max,
                 bounding_box_min=bounding_box_min
             )
@@ -1132,17 +1132,17 @@ class RackModel:
         if orientation == 0 or orientation == 180:
             self.surrounding_planes = [
                 PlaneModel(
-                    name=f"rack_wall_{self.config.uid}_left_plane",
+                    name=f"rack_wall_{self.config.valid_id}_left_plane",
                     origin=[self.v_min.x if orientation == 0 else self.v_max.x, self.v_min.y, self.v_min.z],
                     span=[0, self.config.geometry.size.y, self.config.geometry.size.z],
                 ),
                 PlaneModel(
-                    name=f"rack_wall_{self.config.uid}_right_plane",
+                    name=f"rack_wall_{self.config.valid_id}_right_plane",
                     origin=[self.v_max.x if orientation == 0 else self.v_min.x, self.v_min.y, self.v_min.z],
                     span=[0, self.config.geometry.size.y, self.config.geometry.size.z],
                 ),
                 PlaneModel(
-                    name=f"rack_wall_{self.config.uid}_top_plane",
+                    name=f"rack_wall_{self.config.valid_id}_top_plane",
                     origin=[self.v_min.x, self.v_min.y, self.v_min.z + self.config.geometry.size.z],
                     span=[self.config.geometry.size.x, self.config.geometry.size.y, 0],
                 )
@@ -1150,17 +1150,17 @@ class RackModel:
         elif orientation == 90 or orientation == 270:
             self.surrounding_planes = [
                 PlaneModel(
-                    name=f"rack_wall_{self.config.uid}_left_plane",
+                    name=f"rack_wall_{self.config.valid_id}_left_plane",
                     origin=[self.v_min.x, self.v_min.y if orientation == 90 else self.v_max.y, self.v_min.z],
                     span=[self.config.geometry.size.y, 0, self.config.geometry.size.z],
                 ),
                 PlaneModel(
-                    name=f"rack_wall_{self.config.uid}_right_plane",
+                    name=f"rack_wall_{self.config.valid_id}_right_plane",
                     origin=[self.v_min.x, self.v_max.y if orientation == 90 else self.v_min.y, self.v_min.z],
                     span=[self.config.geometry.size.y, 0, self.config.geometry.size.z],
                 ),
                 PlaneModel(
-                    name=f"rack_wall_{self.config.uid}_top_plane",
+                    name=f"rack_wall_{self.config.valid_id}_top_plane",
                     origin=[self.v_min.x, self.v_min.y, self.v_min.z + self.config.geometry.size.z],
                     span=[self.config.geometry.size.y, self.config.geometry.size.x, 0],
                 )
@@ -1182,8 +1182,8 @@ class RackModel:
         bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(x=x_inlet_face, y=y_inlet_face, ratio=0)
         self.blanking_panel.append(
             PatchModel(
-                name=f"rack_cyclic_{self.config.uid}_master",
-                neighbour_patch_name=f"rack_cyclic_{self.config.uid}_slave",
+                name=f"rack_cyclic_{self.config.valid_id}_master",
+                neighbour_patch_name=f"rack_cyclic_{self.config.valid_id}_slave",
                 bounding_box_max=bounding_box_max,
                 bounding_box_min=bounding_box_min
             )
@@ -1192,8 +1192,8 @@ class RackModel:
         bounding_box_min, bounding_box_max = self._get_bounding_box_min_max(x=x_outlet_face, y=y_outlet_face, ratio=0)
         self.blanking_panel.append(
             PatchModel(
-                name=f"rack_cyclic_{self.config.uid}_slave",
-                neighbour_patch_name=f"rack_cyclic_{self.config.uid}_master",
+                name=f"rack_cyclic_{self.config.valid_id}_slave",
+                neighbour_patch_name=f"rack_cyclic_{self.config.valid_id}_master",
                 bounding_box_max=bounding_box_max,
                 bounding_box_min=bounding_box_min
             )
@@ -1260,7 +1260,7 @@ class RackModel:
             self.v_max.z
         ]
         self.refine_region = BoxModel(
-            name=f"{self.config.uid}_box",
+            name=f"{self.config.valid_id}_box",
             v_min=_v_min,
             v_max=_v_max,
             is_refinement_box=True,
@@ -1414,8 +1414,8 @@ class MeshBuilder:
             round_box(box_model=acu)
 
             # round the faces of the acu
-            round_face(face=acu.geometry.supply_face, face_name=f"{acu.uid}_supply_face")
-            round_face(face=acu.geometry.return_face, face_name=f"{acu.uid}_return_face")
+            round_face(face=acu.geometry.supply_face, face_name=f"{acu.valid_id}_supply_face")
+            round_face(face=acu.geometry.return_face, face_name=f"{acu.valid_id}_return_face")
 
         # round the rack
         if self.room.constructions.racks:

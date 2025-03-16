@@ -42,6 +42,7 @@ class CFDExecutor:
         self.manager = CFDManager(
             room=self.room,
             solve_process=8,
+            mesh_process=8,
             is_gpu=False,
             end_time=iterations,
             location_in_mesh=location_in_mesh

@@ -585,7 +585,7 @@
                 },
                 "constructions": {
                     "acus": {
-                        "Data_Hall_1A_acu_1": {
+                        "data hall 1a acu-1": {
                             "cooling": {
                                 "model": "acu model 1"
                             },
@@ -749,10 +749,10 @@
                             },
                             "side": "inlet"
                         },
-                        "Data_Hall_1A_acu_1 demand branch": {
+                        "data hall 1a acu-1 demand branch": {
                             "components": {
                                 "acu": {
-                                    "Data_Hall_1A_acu_1": {}
+                                    "data hall 1a acu-1": {}
                                 }
                             },
                             "side": "middle"

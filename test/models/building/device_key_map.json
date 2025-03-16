@@ -34,25 +34,25 @@
         }
     },
     "acus": {
-        "Data_Hall_1A_acu_1": {
+        "data hall 1a acu-1": {
             "fan": {
-                "air mass flow rate": "DATA_HALL_1A_ACU_1 AIR LOOP SUPPLY OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
-                "outlet air temperature": "DATA_HALL_1A_ACU_1 AIR LOOP SUPPLY OUTLET NODE:System Node Temperature [C](TimeStep)",
-                "power": "DATA_HALL_1A_ACU_1 FAN:Fan Electricity Rate [W](TimeStep)",
-                "inlet air temperature": "DATA_HALL_1A_ACU_1 COOLING COIL AIR OUTLET NODE:System Node Temperature [C](TimeStep)",
-                "outlet air relative humidity": "DATA_HALL_1A_ACU_1 AIR LOOP SUPPLY OUTLET NODE:System Node Relative Humidity [%](TimeStep)",
-                "inlet air relative humidity": "DATA_HALL_1A_ACU_1 COOLING COIL AIR OUTLET NODE:System Node Relative Humidity [%](TimeStep)",
-                "outlet air humidity ratio": "DATA_HALL_1A_ACU_1 AIR LOOP SUPPLY OUTLET NODE:System Node Humidity Ratio [](TimeStep)",
-                "inlet air humidity ratio": "DATA_HALL_1A_ACU_1 COOLING COIL AIR OUTLET NODE:System Node Humidity Ratio [](TimeStep)"
+                "air mass flow rate": "DATA HALL 1A ACU-1 AIR LOOP SUPPLY OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "outlet air temperature": "DATA HALL 1A ACU-1 AIR LOOP SUPPLY OUTLET NODE:System Node Temperature [C](TimeStep)",
+                "power": "DATA HALL 1A ACU-1 FAN:Fan Electricity Rate [W](TimeStep)",
+                "inlet air temperature": "DATA HALL 1A ACU-1 COOLING COIL AIR OUTLET NODE:System Node Temperature [C](TimeStep)",
+                "outlet air relative humidity": "DATA HALL 1A ACU-1 AIR LOOP SUPPLY OUTLET NODE:System Node Relative Humidity [%](TimeStep)",
+                "inlet air relative humidity": "DATA HALL 1A ACU-1 COOLING COIL AIR OUTLET NODE:System Node Relative Humidity [%](TimeStep)",
+                "outlet air humidity ratio": "DATA HALL 1A ACU-1 AIR LOOP SUPPLY OUTLET NODE:System Node Humidity Ratio [](TimeStep)",
+                "inlet air humidity ratio": "DATA HALL 1A ACU-1 COOLING COIL AIR OUTLET NODE:System Node Humidity Ratio [](TimeStep)"
             },
             "cooling coil": {
-                "inlet air temperature": "DATA_HALL_1A_ACU_1 OUTDOOR AIR SYSTEM MIXED AIR NODE:System Node Temperature [C](TimeStep)",
-                "air mass flow rate": "DATA_HALL_1A_ACU_1 OUTDOOR AIR SYSTEM MIXED AIR NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
-                "outlet air temperature": "DATA_HALL_1A_ACU_1 COOLING COIL AIR OUTLET NODE:System Node Temperature [C](TimeStep)",
-                "inlet water temperature": "DATA_HALL_1A_ACU_1 WATER INLET NODE:System Node Temperature [C](TimeStep)",
-                "outlet water temperature": "DATA_HALL_1A_ACU_1 WATER OUTLET NODE:System Node Temperature [C](TimeStep)",
-                "water mass flow rate": "DATA_HALL_1A_ACU_1 WATER INLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
-                "cooling load": "DATA_HALL_1A_ACU_1 COOLING COIL:Cooling Coil Sensible Cooling Rate [W](TimeStep)"
+                "inlet air temperature": "DATA HALL 1A ACU-1 OUTDOOR AIR SYSTEM MIXED AIR NODE:System Node Temperature [C](TimeStep)",
+                "air mass flow rate": "DATA HALL 1A ACU-1 OUTDOOR AIR SYSTEM MIXED AIR NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "outlet air temperature": "DATA HALL 1A ACU-1 COOLING COIL AIR OUTLET NODE:System Node Temperature [C](TimeStep)",
+                "inlet water temperature": "DATA HALL 1A ACU-1 WATER INLET NODE:System Node Temperature [C](TimeStep)",
+                "outlet water temperature": "DATA HALL 1A ACU-1 WATER OUTLET NODE:System Node Temperature [C](TimeStep)",
+                "water mass flow rate": "DATA HALL 1A ACU-1 WATER INLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "cooling load": "DATA HALL 1A ACU-1 COOLING COIL:Cooling Coil Sensible Cooling Rate [W](TimeStep)"
             }
         }
     },

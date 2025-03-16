@@ -61,6 +61,7 @@ class CFDManager:
 
     :param room: a room object that contains all rooms
     :param solve_process: number of CPU cores for solving
+    :param mesh_process: number of CPU cores for meshing
     :param steady: use steady or transient simulation
     :param write_interval: data write interval for simulation, can be set as 5, 10, 100, etc.
     :param end_time: end step for steady simulation, can be set as 50, 100, 150, etc. Normally 100-500 is enough.

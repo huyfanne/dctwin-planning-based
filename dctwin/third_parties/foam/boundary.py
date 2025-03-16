@@ -90,8 +90,8 @@ class RoomBoundary(Boundary):
 
 
 class ACUBoundary(Boundary):
-    def __init__(self, acu_id: str, acu: ACU) -> None:
-        self.acu_id = acu_id
+    def __init__(self, acu: ACU) -> None:
+        self.acu_id = acu.valid_id
         self.object = acu
         self.supply_kelvin = round(
             acu.cooling.operating.supply_air_temperature + 273.15, 2
@@ -169,8 +169,8 @@ class ACUBoundary(Boundary):
 
 
 class ServerBoundary(Boundary):
-    def __init__(self, server_id: str, server: Server) -> None:
-        self.server_id = server_id
+    def __init__(self, server: Server) -> None:
+        self.server_id = server.valid_id
         self.object: Server = server
         self.input_power = server.power.input_power
         self.server_volume_flow_rate = round(server.volume_flow_rate, 6)
