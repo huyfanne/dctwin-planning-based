@@ -41,8 +41,8 @@ class CFDExecutor:
             location_in_mesh = Vertex(x=0, y=0, z=0.)
         self.manager = CFDManager(
             room=self.room,
-            solve_process=8,
-            mesh_process=8,
+            solve_process=16,
+            mesh_process=16,
             is_gpu=False,
             end_time=iterations,
             location_in_mesh=location_in_mesh

@@ -57,6 +57,7 @@ class EplusCFDEnv(EPlusEnv):
             end_time=config.cfd.end_time,
             field_config=config.cfd.field_config,
             solve_process=config.cfd.process_num,
+            mesh_process=config.cfd.process_num,
             steady=config.cfd.steady,
             run_cfd=config.cfd.run_cfd,
             pod_method=config.cfd.pod_method,

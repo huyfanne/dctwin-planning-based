@@ -303,6 +303,7 @@ def read_sensor_results(
             else temperature
         )
         for sensor_id, index in object_mesh_index["sensors"].items():
+            logger.info(f"sensor_id: {sensor_id}, index: {index}, temperature shape: {temperature.shape}")
             results["T"][sensor_id] = round(float(temperature.squeeze()[index]), 2)
     else:
         # read from postProcessing folder
