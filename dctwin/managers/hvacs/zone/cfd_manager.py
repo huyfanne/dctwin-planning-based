@@ -539,7 +539,7 @@ class CFDManager:
             except Exception as e:
                 logger.critical("An error occurred:", e)
 
-    def _adjust_server(self, racks: [RackModel, RowRackModel], servers_input: OrderedDict, boundary_conditions: Dict):
+    def _adjust_server(self, racks: Union[RackModel, RowRackModel], servers_input: OrderedDict, boundary_conditions: Dict):
         for rack_key, rack in racks.items():
 
             rack_slot_num = int(round(rack.geometry.size.z / RackModel.slot_height))
