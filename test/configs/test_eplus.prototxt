@@ -203,24 +203,6 @@ eplus_env_config {
   }
   observations {
     exposed: false
-    variable_name: "cooling tower 1 cwp mass flow rate"
-    output_variable_config {
-      key_value: "COOLING TOWER 1 CWP OUTLET NODE"
-      variable_name: "System Node Mass Flow Rate"
-      reporting_frequency: "timestep"
-    }
-  }
-  observations {
-    exposed: false
-    variable_name: "cooling tower 1 cwp power consumption"
-    output_variable_config {
-      key_value: "COOLING TOWER 1 CWP"
-      variable_name: "Pump Electricity Rate"
-      reporting_frequency: "timestep"
-    }
-  }
-  observations {
-    exposed: false
     variable_name: "chiller 1 cooling load"
     output_variable_config {
       key_value: "CHILLER 1"
@@ -257,15 +239,6 @@ eplus_env_config {
   }
   observations {
     exposed: false
-    variable_name: "chiller 1 chilled water mass flow rate"
-    output_variable_config {
-      key_value: "CHILLER 1"
-      variable_name: "Chiller Condenser Mass Flow Rate"
-      reporting_frequency: "timestep"
-    }
-  }
-  observations {
-    exposed: false
     variable_name: "chiller 1 condenser water supply temperature"
     output_variable_config {
       key_value: "CHILLER 1"
@@ -275,73 +248,10 @@ eplus_env_config {
   }
   observations {
     exposed: false
-    variable_name: "chiller 1 condenser water return temperature"
-    output_variable_config {
-      key_value: "CHILLER 1"
-      variable_name: "Chiller Condenser Outlet Temperature"
-      reporting_frequency: "timestep"
-    }
-  }
-  observations {
-    exposed: false
-    variable_name: "chiller 1 condenser water mass flow rate"
-    output_variable_config {
-      key_value: "CHILLER 1"
-      variable_name: "Chiller Condenser Mass Flow Rate"
-      reporting_frequency: "timestep"
-    }
-  }
-  observations {
-    exposed: false
     variable_name: "chiller 1 power consumption"
     output_variable_config {
       key_value: "CHILLER 1"
       variable_name: "Chiller Electricity Rate"
-      reporting_frequency: "timestep"
-    }
-  }
-  observations {
-    exposed: false
-    variable_name: "cooling tower 1 return water temperature"
-    output_variable_config {
-      key_value: "COOLING TOWER 1 CWP OUTLET NODE"
-      variable_name: "System Node Temperature"
-      reporting_frequency: "timestep"
-    }
-  }
-  observations {
-    exposed: false
-    variable_name: "cooling tower 1 water mass flow rate"
-    output_variable_config {
-      key_value: "COOLING TOWER 1 CWP OUTLET NODE"
-      variable_name: "System Node Mass Flow Rate"
-      reporting_frequency: "timestep"
-    }
-  }
-  observations {
-    exposed: false
-    variable_name: "cooling tower 1 supply water temperature"
-    output_variable_config {
-      key_value: "COOLING TOWER 1 OUTLET NODE"
-      variable_name: "System Node Temperature"
-      reporting_frequency: "timestep"
-    }
-  }
-  observations {
-    exposed: false
-    variable_name: "cooling tower 1 air flow rate ratio"
-    output_variable_config {
-      key_value: "COOLING TOWER 1"
-      variable_name: "Cooling Tower Air Flow Rate Ratio"
-      reporting_frequency: "timestep"
-    }
-  }
-  observations {
-    exposed: false
-    variable_name: "cooling tower 1 fan power consumption"
-    output_variable_config {
-      key_value: "COOLING TOWER 1"
-      variable_name: "Cooling Tower Fan Electricity Rate"
       reporting_frequency: "timestep"
     }
   }

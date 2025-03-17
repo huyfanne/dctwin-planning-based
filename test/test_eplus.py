@@ -5,10 +5,9 @@ from dclib import Building
 from dctwin.third_parties import IDFBuilder, ConfigBuilder
 from dctwin.registraion import make_env
 
-
-if __name__ == "__main__":
+def main(building_path: str):
     # Build IDF file
-    building = Building.load("models/building/building.json")
+    building = Building.load(building_path)
     manager = IDFBuilder(
         building=building,
     )
@@ -66,3 +65,8 @@ if __name__ == "__main__":
     done = False
     while not done:
         obs, rew, done, truncated, info = env.step(act)
+
+
+if __name__ == "__main__":
+    main(building_path="models/building/building.json")
+    main(building_path="models/building/building(air-cooled chiller).json")
