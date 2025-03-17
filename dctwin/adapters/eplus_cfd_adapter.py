@@ -12,8 +12,8 @@ import torch
 from dclib.room import Room
 
 from dctwin.utils import config
-from dctwin.interfaces.managers import CFDManager
-from dctwin.backends import EplusBackend
+from dctwin.managers import CFDManager
+from dctwin.third_parties import EplusDockerBackend, EplusK8SBackend
 
 
 class EplusCFDAdapter:
@@ -37,7 +37,7 @@ class EplusCFDAdapter:
     def __init__(
         self,
         room: Room,
-        eplus_backend: EplusBackend,
+        eplus_backend: EplusDockerBackend | EplusK8SBackend,
         map_boundary_condition_fn: Callable,
         mesh_process: int = 8,
         solve_process: int = 8,
@@ -62,7 +62,6 @@ class EplusCFDAdapter:
             run_cfd=run_cfd,
             write_interval=write_interval,
             end_time=end_time,
-            field_config=field_config,
             pod_method=pod_method,
             docker_client=docker_client,
         )
@@ -114,7 +113,7 @@ class EplusCFDAdapter:
         config.cfd.log_handler.writeheader()
         config.cfd.file_handler.flush()
 
-    def _post_processing(
+    def _post_process(
         self,
         temperature: Union[torch.Tensor, np.ndarray],
         server_powers: Dict,
@@ -242,7 +241,7 @@ class EplusCFDAdapter:
             save_mesh_index=True,
             **init_boundary_condition,
         )
-        self.cfd_sensor_obs, return_temp, _ = self._post_processing(
+        self.cfd_sensor_obs, return_temp, _ = self._post_process(
             temperature=cfd_obs, log_to_csv=False, **init_boundary_condition
         )
         return np.concatenate([eplus_obs, self.cfd_sensor_obs], axis=0), done
@@ -294,12 +293,14 @@ class EplusCFDAdapter:
             boundary_conditions=boundary_conditions
         )
         # run CFD/POD simulation
-        temperature = self.cfd_manager.run(
-            case_idx=self.step_idx, episode_idx=self.episode_idx, **boundary_conditions
+        cfd_obs = self.cfd_manager.run(
+            case_idx=self.step_idx,
+            episode_idx=self.episode_idx,
+            **boundary_conditions
         )
         # post-processing CFD/POD simulation result to obtain return temperature
-        self.cfd_sensor_obs, return_temp, zone_server_powers = self._post_processing(
-            temperature=temperature, **boundary_conditions
+        self.cfd_sensor_obs, return_temp, zone_server_powers = self._post_process(
+            temperature=cfd_obs, **boundary_conditions
         )
         server_inlet_temperatures = self._compute_equivalent_inlet_temperature(
             parsed_actions=parsed_actions,

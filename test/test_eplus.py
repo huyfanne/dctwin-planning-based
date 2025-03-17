@@ -2,8 +2,9 @@ from pathlib import Path
 import numpy as np
 
 from dclib import Building
-from dctwin import IDFBuilder, ConfigBuilder
+from dctwin.third_parties import IDFBuilder, ConfigBuilder
 from dctwin.registraion import make_env
+
 
 if __name__ == "__main__":
     # Build IDF file
@@ -42,6 +43,7 @@ if __name__ == "__main__":
     config.make_cooling_tower_observations(exposed=False)
     config.make_zone_observations(exposed=False)
     config.make_ite_observations(exposed=False)
+    config.make_dehumidifier_observations(exposed=False)
     config.save(path="configs/test_eplus.prototxt")
 
     # Run simulation

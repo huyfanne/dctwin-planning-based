@@ -301,7 +301,7 @@
                         "y": 10.2,
                         "z": 0.9
                     },
-                    "orientation": -90,
+                    "orientation": 270,
                     "hasBlankingPanel": true
                 },
                 "constructions": {

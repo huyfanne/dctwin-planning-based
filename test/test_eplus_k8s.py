@@ -2,8 +2,9 @@ from pathlib import Path
 import numpy as np
 
 from dclib import Building
-from dctwin.utils.builder import IDFBuilder, ConfigBuilder
+from dctwin.third_parties.eplus import IDFBuilder, ConfigBuilder
 from dctwin.registraion import make_env
+
 
 if __name__ == "__main__":
     building = Building.load("models/building/building.json")
@@ -12,8 +13,8 @@ if __name__ == "__main__":
     )
     manager.make()
     manager.save(
-        idf_save_dir=Path("models/idf"),
-        device_key_map_save_dir=Path("models/building"),
+        idf_save_path=Path("models/idf"),
+        device_key_map_save_path=Path("models/building"),
     )
 
     config = ConfigBuilder(
@@ -30,9 +31,9 @@ if __name__ == "__main__":
     config.make_cpu_loading_schedules(schedule_dir=Path("data/schedule/workloads"))
     config.make_acu_supply_air_temperature_actions()
     config.make_acu_supply_air_flow_rate_actions()
-    config.make_loop_supply_temperature_actions(
-        loops=config.building.constructions.plant.chilled_water_loops,
-    )
+    # config.make_loop_supply_temperature_actions(
+    #     loops=config.building.constructions.plant.chilled_water_loops,
+    # )
     config.make_acu_fan_observations(exposed=False)
     config.make_cooling_coil_observations(exposed=False)
     config.make_pump_observations(exposed=False)

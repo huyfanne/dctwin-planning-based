@@ -1,7 +1,7 @@
 from dctwin.utils import config
 from dclib import Room
-from dctwin.interfaces import CFDManager
-from dctwin.backends.core_k8s import create_job_object, create_job, wait_for_job
+from dctwin.managers import CFDManager
+from dctwin.third_parties.k8s_backend import create_job_object, create_job, wait_for_job
 from loguru import logger
 
 import os

@@ -1,1 +1,1384 @@
-{"meta":{"name":"SLab123 (1)","version":"0.1","isNewDT":false,"isComplete":true},"models":{"geometryModels":{"acus":{"PCU":{"size":{"x":1.82,"y":1.02,"z":1.98},"supplyFace":{"side":"bottom","width":1.82,"length":1.02,"offset":{"x":0,"y":0,"z":0}},"returnFace":{"side":"top","width":1.82,"length":1.02,"offset":{"x":0,"y":0,"z":0}}}},"racks":{"RACK1":{"firstSlotOffset":0,"size":{"x":0.6,"y":1.2,"z":2.35},"slot":45}},"servers":{"1U_Server":{"depth":1.05,"slotOccupation":1,"width":0.6},"2U_Server":{"depth":1.05,"slotOccupation":2,"width":0.6},"4U_Server":{"depth":1.05,"slotOccupation":4,"width":0.6}},"boxes":{"partition":{"faces":{"top":true,"bottom":true,"rear":true,"front":true,"left":true,"right":true}},"pillar":{"faces":{"top":true,"bottom":true,"rear":true,"front":true,"left":true,"right":true}},"duct":{"faces":{"top":false,"bottom":false,"rear":true,"front":true,"left":true,"right":true}},"containment":{"faces":{"top":true,"bottom":false,"rear":false,"front":false,"left":true,"right":true}}}},"coolingModels":{"acus":{"CANATAL_ME_Series_080":{"coolingType":"CW","coolingCapacity":85.5}},"servers":{"GPU_1":{"fanType":"Fixed","volumeFlowRate":0.02},"GPU_2":{"fanType":"Fixed","volumeFlowRate":0.02},"GPU_4":{"fanType":"Fixed","volumeFlowRate":0.02}}},"powerModels":{}},"geometry":{"height":3.4,"plane":[{"x":0,"y":0,"z":0},{"x":10.45,"y":0,"z":0},{"x":10.45,"y":2.98,"z":0},{"x":9.75,"y":2.98,"z":0},{"x":9.75,"y":3.612,"z":0},{"x":0,"y":3.612,"z":0}]},"constructions":{"raisedFloor":{"geometry":{"height":0.4,"openings":{"opening_1":{"location":{"x":0,"y":0.6,"z":0.4},"size":{"x":1.02,"y":1.82,"z":0.001}},"opening_2":{"location":{"x":9.43,"y":0.6,"z":0.4},"size":{"x":1.02,"y":1.82,"z":0.001}},"opening_3":{"location":{"x":2.22,"y":0.6,"z":0.4},"size":{"x":6,"y":0.6,"z":0.001}}}}},"boxes":{"containment":{"geometry":{"model":"containment","size":{"x":6.25,"y":1.25,"z":2.4},"location":{"x":2.07,"y":0,"z":0.4}}},"pillar":{"geometry":{"model":"pillar","size":{"x":0.9,"y":0.632,"z":3.4},"location":{"x":2.82,"y":2.98,"z":0}}},"partition":{"geometry":{"model":"partition","size":{"x":1.45,"y":0.1,"z":2.4},"location":{"x":4.47,"y":1.25,"z":0.4}}}},"acus":{"PCU_1":{"geometry":{"model":"PCU","orientation":90,"location":{"x":1.02,"y":0.6,"z":0.4}},"cooling":{"model":"CANATAL_ME_Series_080"}},"PCU_2":{"geometry":{"model":"PCU","orientation":270,"location":{"x":9.43,"y":2.42,"z":0.4}},"cooling":{"model":"CANATAL_ME_Series_080"}}},"racks":{"R1":{"geometry":{"model":"RACK1","location":{"x":2.07,"y":1.25,"z":0.4},"orientation":0,"hasBlankingPanel":false},"constructions":{"servers":{"R1_39":{"geometry":{"model":"1U_Server","slotPosition":39,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_1"}}}}},"R2":{"geometry":{"model":"RACK1","location":{"x":2.67,"y":1.25,"z":0.4},"orientation":0,"hasBlankingPanel":false},"constructions":{"servers":{"R2_33":{"geometry":{"model":"4U_Server","slotPosition":33,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_4"}},"R2_37":{"geometry":{"model":"1U_Server","slotPosition":37,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_1"}},"R2_39":{"geometry":{"model":"1U_Server","slotPosition":39,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_1"}}}}},"R3":{"geometry":{"model":"RACK1","location":{"x":3.27,"y":1.25,"z":0.4},"orientation":0,"hasBlankingPanel":false},"constructions":{"servers":{"R3_33":{"geometry":{"model":"4U_Server","slotPosition":33,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_4"}},"R3_37":{"geometry":{"model":"1U_Server","slotPosition":37,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_1"}},"R3_39":{"geometry":{"model":"1U_Server","slotPosition":39,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_1"}}}}},"R4":{"geometry":{"model":"RACK1","location":{"x":3.87,"y":1.25,"z":0.4},"orientation":0,"hasBlankingPanel":false},"constructions":{"servers":{"R4_34":{"geometry":{"model":"2U_Server","slotPosition":34,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_2"}},"R4_37":{"geometry":{"model":"1U_Server","slotPosition":37,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_1"}},"R4_39":{"geometry":{"model":"1U_Server","slotPosition":39,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_1"}}}}},"R5":{"geometry":{"model":"RACK1","location":{"x":5.92,"y":1.25,"z":0.4},"orientation":0,"hasBlankingPanel":false},"constructions":{"servers":{"R5_33":{"geometry":{"model":"4U_Server","slotPosition":33,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_4"}},"R5_37":{"geometry":{"model":"1U_Server","slotPosition":37,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_1"}},"R5_39":{"geometry":{"model":"1U_Server","slotPosition":39,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_1"}}}}},"R6":{"geometry":{"model":"RACK1","location":{"x":6.52,"y":1.25,"z":0.4},"orientation":0,"hasBlankingPanel":false},"constructions":{"servers":{"R6_39":{"geometry":{"model":"1U_Server","slotPosition":39,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_1"}}}}},"R7":{"geometry":{"model":"RACK1","location":{"x":7.12,"y":1.25,"z":0.4},"orientation":0,"hasBlankingPanel":false},"constructions":{"servers":{"R7_39":{"geometry":{"model":"1U_Server","slotPosition":39,"orientation":0,"offsetFromLeft":0},"cooling":{"model":"GPU_1"}}}}},"R8":{"geometry":{"model":"RACK1","location":{"x":7.72,"y":1.25,"z":0.4},"orientation":0,"hasBlankingPanel":false},"constructions":{"servers":{}}}},"sensors":{"Sensor_001":{"geometry":{"location":{"x":1.5523777,"y":0.50905776,"z":0.4}}},"Sensor_002":{"geometry":{"location":{"x":9.182696,"y":1.07949138,"z":0.4}}}}},"inputs":{"acus":{"PCU_1":{"supplyAirVolumeFlowRate":4,"supplyAirTemperature":29},"PCU_2":{"supplyAirVolumeFlowRate":4,"supplyAirTemperature":29}},"servers":{"R1_39":{"inputPower":1500},"R2_33":{"inputPower":1500},"R2_37":{"inputPower":1500},"R2_39":{"inputPower":1500},"R3_33":{"inputPower":1500},"R3_37":{"inputPower":1500},"R3_39":{"inputPower":1500},"R4_34":{"inputPower":1500},"R4_37":{"inputPower":1500},"R4_39":{"inputPower":1500},"R5_33":{"inputPower":1500},"R5_37":{"inputPower":1500},"R5_39":{"inputPower":1500},"R6_39":{"inputPower":1500},"R7_39":{"inputPower":1500}}},"screen":"/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAFoAoADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDxKiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAoop4jY9sfWgBlFPaJh05FMoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAoopQpboKAEoqQQnucVIEVegp2AhVGboKesP94/lUtFOwhAoXoKWiimAUjKG6ilooAhaIjpyKjq1SMobqKVgK1FSNEf4eajIx1qRhRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUU8Rse2PrTxEo6807BchAJ6DNSCJj14qYADoMUU7CuMEajtn60+un8N/D7xN4qRJtN01/sjMF+1TERxYJILAnlgCDnaGIx0zivVfDfwCsoESbxJqD3MwYN9nszsiwCcqzkbmBGOgQjnk8GjYDweCCW5njggieWaVgkccalmdicAADkkntXf6P8FfGOqwedLb22nIVV0F7LhnDDP3UDFSOMhgDz9cfRuj+H9I0CDydJ022s0KqjGGMBnCjA3N1YjJ5JJ5PrWlSuFj498TeCtf8ACM5TVrB0hLbY7qP54ZOTjDjgEhSdpw2OSBXP19t3llaajava31rDc20mN8M8YdGwcjIPB5AP4V454z+BcEsZu/CTeTKMl7G4lJRgF4EbHJDEjoxwd3VQMF3A8Hoqe+srjTb+4sbuPy7m3kaKVMg7WU4IyODyO1ZZu5ZFCqyxt6jjPTv27+lDYFx3WPHmMFz0z1/LrV650q+tIEnmt3WJ1DbsfdyBw3oecc967OTSbK+0u1tbiKKaOGJRbu6/ME2EL864JXLF8AgE4OPXX+zi6R0Easrll8gtvYqSAB0G4nPQe/GKLgeUUV22oeFbW53SWp+zynnA5Q/h2/D8q5W/0u7058XERC5wJF5U/j+HTrQBTpCobqM0tFMCFoj/AA81GQR1GKtU2T7h4zSsFyvRRRUjCiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKUKW6CpFh/vH8qLARU4IzdBUyoq9BTqdhXIlhH8R/KpAoXoKWvQPDvwd8V65JC9zaf2XZvy0158rgBsECL727qQGCg46jIp7Aef1e0nRtS16/Wx0qymu7lsfJEudoyBuY9FXJGScAZ5NfQ3h34H+G9IkhuNSkm1a5j5KzAJAW3ZB8scngYIZmBycj09Hs7K0061S1sbWG2to87IYIwiLk5OAOBySfxouFjwDw78BtZvJIZtfu4dPtjy8ELCWfhsbcj5FyMkMC2OOOuPWPDfw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"}
+{
+    "meta": {
+        "name": "SLab",
+        "version": "1.1.1"
+    },
+    "models": {
+        "geometryModels": {
+            "acus": {
+                "PCU": {
+                    "size": {
+                        "x": 1.82,
+                        "y": 1.02,
+                        "z": 1.98
+                    },
+                    "supplyFace": {
+                        "length": 1.02,
+                        "width": 1.82,
+                        "offset": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "side": "bottom"
+                    },
+                    "returnFace": {
+                        "length": 1.02,
+                        "width": 1.82,
+                        "offset": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "side": "top"
+                    }
+                }
+            },
+            "racks": {
+                "RACK1": {
+                    "firstSlotOffset": 0,
+                    "size": {
+                        "x": 0.6,
+                        "y": 1.2,
+                        "z": 2.35
+                    },
+                    "slot": 45
+                }
+            },
+            "servers": {
+                "1U_Server": {
+                    "slotOccupation": 1,
+                    "depth": 1.05,
+                    "width": 0.6
+                },
+                "2U_Server": {
+                    "slotOccupation": 2,
+                    "depth": 1.05,
+                    "width": 0.6
+                },
+                "3U_Server": {
+                    "slotOccupation": 3,
+                    "depth": 1.05,
+                    "width": 0.6
+                },
+                "4U_Server": {
+                    "slotOccupation": 4,
+                    "depth": 1.05,
+                    "width": 0.6
+                },
+                "5U_Server": {
+                    "slotOccupation": 5,
+                    "depth": 1.05,
+                    "width": 0.6
+                }
+            },
+            "boxes": {
+                "partition": {
+                    "faces": {
+                        "top": true,
+                        "bottom": true,
+                        "rear": true,
+                        "front": true,
+                        "left": true,
+                        "right": true
+                    }
+                },
+                "pillar": {
+                    "faces": {
+                        "top": true,
+                        "bottom": true,
+                        "rear": true,
+                        "front": true,
+                        "left": true,
+                        "right": true
+                    }
+                },
+                "duct": {
+                    "faces": {
+                        "top": false,
+                        "bottom": false,
+                        "rear": true,
+                        "front": true,
+                        "left": true,
+                        "right": true
+                    }
+                },
+                "containment": {
+                    "faces": {
+                        "top": true,
+                        "bottom": false,
+                        "rear": false,
+                        "front": false,
+                        "left": true,
+                        "right": true
+                    }
+                }
+            }
+        },
+        "coolingModels": {
+            "acus": {
+                "CANATAL_ME_Series_080": {
+                    "coolingType": "CW",
+                    "coolingCapacity": 85.5
+                }
+            },
+            "servers": {
+                "GPU_1": {
+                    "fanType": "Fixed",
+                    "volumeFlowRate": 0.02
+                }
+            }
+        },
+        "powerModels": {
+            "servers": {
+                "server_power_1": {
+                    "ratedPower": 2000
+                }
+            }
+        }
+    },
+    "geometry": {
+        "height": 3.4,
+        "plane": [
+            {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            {
+                "x": 10.45,
+                "y": 0,
+                "z": 0
+            },
+            {
+                "x": 10.45,
+                "y": 2.98,
+                "z": 0
+            },
+            {
+                "x": 9.75,
+                "y": 2.98,
+                "z": 0
+            },
+            {
+                "x": 9.75,
+                "y": 3.612,
+                "z": 0
+            },
+            {
+                "x": 0,
+                "y": 3.612,
+                "z": 0
+            }
+        ]
+    },
+    "constructions": {
+        "raisedFloor": {
+            "geometry": {
+                "height": 0.4,
+                "openings": {
+                    "opening_1": {
+                        "location": {
+                            "x": 2.22,
+                            "y": 0.6,
+                            "z": 0
+                        },
+                        "size": {
+                            "x": 6,
+                            "y": 0.6,
+                            "z": 0
+                        }
+                    }
+                }
+            }
+        },
+        "boxes": {
+            "containment_1": {
+                "geometry": {
+                    "model": "containment",
+                    "size": {
+                        "x": 6.25,
+                        "y": 1.25,
+                        "z": 2.4
+                    },
+                    "location": {
+                        "x": 2.07,
+                        "y": 0,
+                        "z": 0.4
+                    }
+                }
+            },
+            "partition_1": {
+                "geometry": {
+                    "model": "partition",
+                    "size": {
+                        "x": 1.45,
+                        "y": 0.1,
+                        "z": 2.4
+                    },
+                    "location": {
+                        "x": 4.47,
+                        "y": 1.25,
+                        "z": 0.4
+                    }
+                }
+            },
+            "pillar_1": {
+                "geometry": {
+                    "model": "pillar",
+                    "size": {
+                        "x": 0.9,
+                        "y": 0.632,
+                        "z": 3.4
+                    },
+                    "location": {
+                        "x": 2.82,
+                        "y": 2.98,
+                        "z": 0
+                    }
+                }
+            }
+        },
+        "acus": {
+            "PCU_1": {
+                "geometry": {
+                    "model": "PCU",
+                    "orientation": 90,
+                    "location": {
+                        "x": 1.02,
+                        "y": 0.6,
+                        "z": 0.4
+                    }
+                },
+                "cooling": {
+                    "model": "CANATAL_ME_Series_080"
+                }
+            },
+            "PCU_2": {
+                "geometry": {
+                    "model": "PCU",
+                    "orientation": 270,
+                    "location": {
+                        "x": 9.43,
+                        "y": 2.42,
+                        "z": 0.4
+                    }
+                },
+                "cooling": {
+                    "model": "CANATAL_ME_Series_080"
+                }
+            }
+        },
+        "rows": {
+            "row_1": {
+                "geometry": {
+                    "location": {
+                        "x": 2.0,
+                        "y": 1.2,
+                        "z": 0.4
+                    },
+                    "size": {
+                        "x": 2.4,
+                        "y": 1.2,
+                        "z": 2.4
+                    },
+                    "orientation": 0
+                },
+                "constructions": {
+                    "racks": {
+                        "R1": {
+                            "geometry": {
+                                "model": "RACK1",
+                                "location": {
+                                    "x": 2.0,
+                                    "y": 1.2,
+                                    "z": 0.4
+                                },
+                                "orientation": 0,
+                                "hasBlankingPanel": true
+                            },
+                            "constructions": {
+                                "servers": {
+                                    "R1_slot_11": {
+                                        "geometry": {
+                                            "model": "2U_Server",
+                                            "slotPosition": 11,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R1_slot_22": {
+                                        "geometry": {
+                                            "model": "5U_Server",
+                                            "slotPosition": 22,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "R2": {
+                            "geometry": {
+                                "model": "RACK1",
+                                "location": {
+                                    "x": 2.6,
+                                    "y": 1.2,
+                                    "z": 0.4
+                                },
+                                "orientation": 0,
+                                "hasBlankingPanel": true
+                            },
+                            "constructions": {
+                                "servers": {
+                                    "R2_slot_11": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 11,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        },
+                                        "power": {
+                                            "model": "server_power_1"
+                                        }
+                                    },
+                                    "R2_slot_16": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 16,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R2_slot_21": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 21,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R2_slot_26": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 26,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R2_slot_31": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 31,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "R3": {
+                            "geometry": {
+                                "model": "RACK1",
+                                "location": {
+                                    "x": 3.2,
+                                    "y": 1.2,
+                                    "z": 0.4
+                                },
+                                "orientation": 0,
+                                "hasBlankingPanel": true
+                            },
+                            "constructions": {
+                                "servers": {
+                                    "R3_slot_11": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 11,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R3_slot_16": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 16,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R3_slot_21": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 21,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R3_slot_26": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 26,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R3_slot_31": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 31,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "R4": {
+                    "geometry": {
+                        "model": "RACK1",
+                        "location": {
+                            "x": 3.8,
+                            "y": 1.2,
+                            "z": 0.4
+                        },
+                        "orientation": 0,
+                        "hasBlankingPanel": true
+                    },
+                    "constructions": {
+                        "servers": {
+                            "R4_slot_6": {
+                                "geometry": {
+                                    "model": "4U_Server",
+                                    "slotPosition": 6,
+                                    "orientation": 0
+                                },
+                                "cooling": {
+                                    "model": "GPU_1"
+                                }
+                            },
+                            "R4_slot_11": {
+                                "geometry": {
+                                    "model": "4U_Server",
+                                    "slotPosition": 11,
+                                    "orientation": 0
+                                },
+                                "cooling": {
+                                    "model": "GPU_1"
+                                }
+                            },
+                            "R4_slot_16": {
+                                "geometry": {
+                                    "model": "4U_Server",
+                                    "slotPosition": 16,
+                                    "orientation": 0
+                                },
+                                "cooling": {
+                                    "model": "GPU_1"
+                                }
+                            },
+                            "R4_slot_21": {
+                                "geometry": {
+                                    "model": "4U_Server",
+                                    "slotPosition": 21,
+                                    "orientation": 0
+                                },
+                                "cooling": {
+                                    "model": "GPU_1"
+                                }
+                            },
+                            "R4_slot_26": {
+                                "geometry": {
+                                    "model": "4U_Server",
+                                    "slotPosition": 26,
+                                    "orientation": 0
+                                },
+                                "cooling": {
+                                    "model": "GPU_1"
+                                }
+                            },
+                            "R4_slot_31": {
+                                "geometry": {
+                                    "model": "4U_Server",
+                                    "slotPosition": 31,
+                                    "orientation": 0
+                                },
+                                "cooling": {
+                                    "model": "GPU_1"
+                                }
+                            }
+                        }
+                    }
+                }
+                    }
+                }
+            },
+            "row_2": {
+                "geometry": {
+                    "location": {
+                        "x": 5.8,
+                        "y": 1.2,
+                        "z": 0.4
+                    },
+                    "size": {
+                        "x": 2.4,
+                        "y": 1.2,
+                        "z": 2.4
+                    },
+                    "orientation": 0
+                },
+                "constructions": {
+                    "racks": {
+                        "R5": {
+                            "geometry": {
+                                "model": "RACK1",
+                                "location": {
+                                    "x": 5.8,
+                                    "y": 1.2,
+                                    "z": 0.4
+                                },
+                                "orientation": 0,
+                                "hasBlankingPanel": true
+                            },
+                            "constructions": {
+                                "servers": {
+                                    "R5_slot_11": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 11,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R5_slot_16": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 16,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R5_slot_21": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 21,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R5_slot_26": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 26,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R5_slot_31": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 31,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "R6": {
+                            "geometry": {
+                                "model": "RACK1",
+                                "location": {
+                                    "x": 6.4,
+                                    "y": 1.2,
+                                    "z": 0.4
+                                },
+                                "orientation": 0,
+                                "hasBlankingPanel": true
+                            },
+                            "constructions": {
+                                "servers": {
+                                    "R6_slot_11": {
+                                        "geometry": {
+                                            "model": "5U_Server",
+                                            "slotPosition": 11,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R6_slot_21": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 21,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R6_slot_26": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 26,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R6_slot_31": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 31,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "R7": {
+                            "geometry": {
+                                "model": "RACK1",
+                                "location": {
+                                    "x": 7.0,
+                                    "y": 1.2,
+                                    "z": 0.4
+                                },
+                                "orientation": 0,
+                                "hasBlankingPanel": true
+                            },
+                            "constructions": {
+                                "servers": {
+                                    "R7_slot_11": {
+                                        "geometry": {
+                                            "model": "5U_Server",
+                                            "slotPosition": 11,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R7_slot_21": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 21,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R7_slot_26": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 26,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R7_slot_31": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 31,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "R8": {
+                            "geometry": {
+                                "model": "RACK1",
+                                "location": {
+                                    "x": 7.6,
+                                    "y": 1.2,
+                                    "z": 0.4
+                                },
+                                "orientation": 0,
+                                "hasBlankingPanel": true
+                            },
+                            "constructions": {
+                                "servers": {
+                                    "R8_slot_11": {
+                                        "geometry": {
+                                            "model": "5U_Server",
+                                            "slotPosition": 11,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R8_slot_21": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 21,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R8_slot_26": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 26,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    },
+                                    "R8_slot_31": {
+                                        "geometry": {
+                                            "model": "4U_Server",
+                                            "slotPosition": 31,
+                                            "orientation": 0
+                                        },
+                                        "cooling": {
+                                            "model": "GPU_1"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "sensors": {
+            "R1_inlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 2.3,
+                        "y": 1.15,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R1_outlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 2.3,
+                        "y": 2.4499999999999997,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R1_inlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 2.3,
+                        "y": 1.15,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R1_outlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 2.3,
+                        "y": 2.4499999999999997,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R1_inlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 2.3,
+                        "y": 1.15,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R1_outlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 2.3,
+                        "y": 2.4499999999999997,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R2_inlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 2.9,
+                        "y": 1.15,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R2_outlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 2.9,
+                        "y": 2.4499999999999997,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R2_inlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 2.9,
+                        "y": 1.15,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R2_outlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 2.9,
+                        "y": 2.4499999999999997,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R2_inlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 2.9,
+                        "y": 1.15,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R2_outlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 2.9,
+                        "y": 2.4499999999999997,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R3_inlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 3.5,
+                        "y": 1.15,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R3_outlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 3.5,
+                        "y": 2.4499999999999997,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R3_inlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 3.5,
+                        "y": 1.15,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R3_outlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 3.5,
+                        "y": 2.4499999999999997,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R3_inlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 3.5,
+                        "y": 1.15,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R3_outlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 3.5,
+                        "y": 2.4499999999999997,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R4_inlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 4.1,
+                        "y": 1.15,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R4_outlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 4.1,
+                        "y": 2.4499999999999997,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R4_inlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 4.1,
+                        "y": 1.15,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R4_outlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 4.1,
+                        "y": 2.4499999999999997,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R4_inlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 4.1,
+                        "y": 1.15,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R4_outlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 4.1,
+                        "y": 2.4499999999999997,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R5_inlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 6.1,
+                        "y": 1.15,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R5_outlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 6.1,
+                        "y": 2.4499999999999997,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R5_inlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 6.1,
+                        "y": 1.15,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R5_outlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 6.1,
+                        "y": 2.4499999999999997,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R5_inlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 6.1,
+                        "y": 1.15,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R5_outlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 6.1,
+                        "y": 2.4499999999999997,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R6_inlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 6.7,
+                        "y": 1.15,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R6_outlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 6.7,
+                        "y": 2.4499999999999997,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R6_inlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 6.7,
+                        "y": 1.15,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R6_outlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 6.7,
+                        "y": 2.4499999999999997,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R6_inlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 6.7,
+                        "y": 1.15,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R6_outlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 6.7,
+                        "y": 2.4499999999999997,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R7_inlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 7.3,
+                        "y": 1.15,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R7_outlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 7.3,
+                        "y": 2.4499999999999997,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R7_inlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 7.3,
+                        "y": 1.15,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R7_outlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 7.3,
+                        "y": 2.4499999999999997,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R7_inlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 7.3,
+                        "y": 1.15,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R7_outlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 7.3,
+                        "y": 2.4499999999999997,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R8_inlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 7.8999999999999995,
+                        "y": 1.15,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R8_outlet_sensor_bottom": {
+                "geometry": {
+                    "location": {
+                        "x": 7.8999999999999995,
+                        "y": 2.4499999999999997,
+                        "z": 0.925
+                    }
+                }
+            },
+            "R8_inlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 7.8999999999999995,
+                        "y": 1.15,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R8_outlet_sensor_middle": {
+                "geometry": {
+                    "location": {
+                        "x": 7.8999999999999995,
+                        "y": 2.4499999999999997,
+                        "z": 1.675
+                    }
+                }
+            },
+            "R8_inlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 7.8999999999999995,
+                        "y": 1.15,
+                        "z": 2.425
+                    }
+                }
+            },
+            "R8_outlet_sensor_top": {
+                "geometry": {
+                    "location": {
+                        "x": 7.8999999999999995,
+                        "y": 2.4499999999999997,
+                        "z": 2.425
+                    }
+                }
+            }
+        }
+    },
+    "inputs": {
+        "servers": {
+            "R1_slot_11": {
+                "inputPower": 1882.6699106481963,
+                "airVolumeFlowRate": 0.096019136190478,
+                "serverSwitch": false
+            },
+            "R1_slot_22": {
+                "inputPower": 4577.495690484341,
+                "airVolumeFlowRate": 0.23345950324590595
+            },
+            "R2_slot_11": {
+                "inputPowerPercentage": 50,
+                "airVolumeFlowRate": 0.024395125479559448
+            },
+            "R2_slot_16": {
+                "inputPower": 3460.6510449855637,
+                "airVolumeFlowRate": 0.1764986640073209
+            },
+            "R2_slot_21": {
+                "inputPower": 1408.7701788353015,
+                "airVolumeFlowRate": 0.0718495020808498
+            },
+            "R2_slot_26": {
+                "inputPower": 275.3727875160207,
+                "airVolumeFlowRate": 0.014044446686115462
+            },
+            "R2_slot_31": {
+                "inputPower": 4361.646668696071,
+                "airVolumeFlowRate": 0.22245086253706625
+            },
+            "R3_slot_11": {
+                "inputPower": 2298.667939314629,
+                "airVolumeFlowRate": 0.11723569207399988
+            },
+            "R3_slot_16": {
+                "inputPower": 130.25848204091963,
+                "airVolumeFlowRate": 0.00664338812465844
+            },
+            "R3_slot_21": {
+                "inputPower": 4348.561266583536,
+                "airVolumeFlowRate": 0.22178348638129708
+            },
+            "R3_slot_26": {
+                "inputPower": 2997.9563347002545,
+                "airVolumeFlowRate": 0.15290050367649444
+            },
+            "R3_slot_31": {
+                "inputPower": 2495.396188747883,
+                "airVolumeFlowRate": 0.12726914322122848
+            },
+            "R4_slot_6": {
+                "inputPower": 4366.33076872227,
+                "airVolumeFlowRate": 0.22268975902964921
+            },
+            "R4_slot_11": {
+                "inputPower": 361.4834786188947,
+                "airVolumeFlowRate": 0.01843622781019807
+            },
+            "R4_slot_16": {
+                "inputPower": 4316.00484928977,
+                "airVolumeFlowRate": 0.22012305772711635
+            },
+            "R4_slot_21": {
+                "inputPower": 275.05691515290425,
+                "airVolumeFlowRate": 0.014028336697167666
+            },
+            "R4_slot_26": {
+                "inputPower": 3183.720090241203,
+                "airVolumeFlowRate": 0.16237474833385968
+            },
+            "R4_slot_31": {
+                "inputPower": 4432.925800741893,
+                "airVolumeFlowRate": 0.22608621074587174
+            },
+            "R5_slot_11": {
+                "inputPower": 2925.0527201548584,
+                "airVolumeFlowRate": 0.14918230429686852
+            },
+            "R5_slot_16": {
+                "inputPower": 2631.6694631584514,
+                "airVolumeFlowRate": 0.13421929524774368
+            },
+            "R5_slot_21": {
+                "inputPower": 380.2955296440564,
+                "airVolumeFlowRate": 0.019395672096841666
+            },
+            "R5_slot_26": {
+                "inputPower": 1180.7970832462827,
+                "airVolumeFlowRate": 0.060222514477064115
+            },
+            "R5_slot_31": {
+                "inputPower": 3710.579936488531,
+                "airVolumeFlowRate": 0.18924543184773124
+            },
+            "R6_slot_11": {
+                "inputPower": 3408.1855516268897,
+                "airVolumeFlowRate": 0.17382284105842558
+            },
+            "R6_slot_21": {
+                "inputPower": 1801.044139448185,
+                "airVolumeFlowRate": 0.0918560930583932
+            },
+            "R6_slot_26": {
+                "inputPower": 2577.8777744338704,
+                "airVolumeFlowRate": 0.1314758342425253
+            },
+            "R6_slot_31": {
+                "inputPower": 3764.388292871069,
+                "airVolumeFlowRate": 0.19198974292980606
+            },
+            "R7_slot_11": {
+                "inputPower": 1487.5855438185574,
+                "airVolumeFlowRate": 0.07586921006121684
+            },
+            "R7_slot_21": {
+                "inputPower": 1967.052912588269,
+                "airVolumeFlowRate": 0.10032280244106125
+            },
+            "R7_slot_26": {
+                "inputPower": 3464.758913738294,
+                "airVolumeFlowRate": 0.1767081717956964
+            },
+            "R7_slot_31": {
+                "inputPower": 1098.8636452602836,
+                "airVolumeFlowRate": 0.05604377985341302
+            },
+            "R8_slot_11": {
+                "inputPower": 3020.218216614903,
+                "airVolumeFlowRate": 0.15403589478214133
+            },
+            "R8_slot_21": {
+                "inputPower": 4196.741792295689,
+                "airVolumeFlowRate": 0.21404045363001012
+            },
+            "R8_slot_26": {
+                "inputPower": 442.6796473846385,
+                "airVolumeFlowRate": 0.022577360540246706
+            },
+            "R8_slot_31": {
+                "inputPower": 1501.183975359078,
+                "airVolumeFlowRate": 0.0765627515273449
+            }
+        },
+        "acus": {
+            "PCU_1": {
+                "supplyAirTemperature": 16.301504275539397,
+                "supplyAirVolumeFlowRate": 4.155835929510114,
+                "acuSwitch": false
+            },
+            "PCU_2": {
+                "supplyAirTemperature": 17.999169232168256,
+                "supplyAirVolumeFlowRate": 4.5358799663606195
+            }
+        }
+    }
+}

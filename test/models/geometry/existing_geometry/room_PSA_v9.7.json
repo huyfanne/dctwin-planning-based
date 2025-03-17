@@ -1,4 +1,3 @@
-
 {
     "meta": {
         "name": "PSA",
@@ -2876,163 +2875,6 @@
                             },
                             "cooling": {
                                 "model": "2901"
-                            }
-                        }
-                    }
-                },
-                "meta": {}
-            },
-            "PA_3": {
-                "geometry": {
-                    "model": "RackType_F",
-                    "location": {
-                        "x": 11.0,
-                        "y": 7.3,
-                        "z": 0.55
-                    },
-                    "orientation": -90,
-                    "hasBlankingPanel": false
-                },
-                "constructions": {
-                    "servers": {
-                        "iblox2intdns1": {
-                            "geometry": {
-                                "model": "1U_server_0.6_width_1.0_depth",
-                                "slotPosition": 20,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "Trinzic_1425"
-                            }
-                        },
-                        "nspm2app1b": {
-                            "geometry": {
-                                "model": "1U_server_0.6_width_1.0_depth",
-                                "slotPosition": 16,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "AlgoSec_2162"
-                            }
-                        },
-                        "UC2UCS1": {
-                            "geometry": {
-                                "model": "2U_server_0.6_width_1.0_depth",
-                                "slotPosition": 32,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "UCS_C240_M5"
-                            }
-                        },
-                        "pptb1cc_isurf_ds02": {
-                            "geometry": {
-                                "model": "1U_server_0.6_width_1.0_depth",
-                                "slotPosition": 5,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "WS_C4500X_24X_ES"
-                            }
-                        },
-                        "iblox2rptdns1": {
-                            "geometry": {
-                                "model": "1U_server_0.6_width_1.0_depth",
-                                "slotPosition": 18,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "TR_1405_5GB"
-                            }
-                        },
-                        "UC2ISR1": {
-                            "geometry": {
-                                "model": "1U_server_0.6_width_1.0_depth",
-                                "slotPosition": 39,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "ISR4431/K9"
-                            }
-                        },
-                        "pptb1cc_isurf_fw01b": {
-                            "geometry": {
-                                "model": "3U_server_0.6_width_1.0_depth",
-                                "slotPosition": 11,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "PA_5220"
-                            }
-                        },
-                        "PPTB1CC_ISURF_SSW01A": {
-                            "geometry": {
-                                "model": "2U_server_0.6_width_1.0_depth",
-                                "slotPosition": 9,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "WS_C2960XR_24TD_I"
-                            }
-                        },
-                        "ci_ppt_acs01": {
-                            "geometry": {
-                                "model": "1U_server_0.6_width_1.0_depth",
-                                "slotPosition": 28,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "1121_Secure_Access"
-                            }
-                        },
-                        "pptb1cc_isurf_ssw01b": {
-                            "geometry": {
-                                "model": "2U_server_0.6_width_1.0_depth",
-                                "slotPosition": 7,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "WS_C2960XR_24TD_I"
-                            }
-                        },
-                        "PPTB1CC_SHDC_WLC02": {
-                            "geometry": {
-                                "model": "1U_server_0.6_width_1.0_depth",
-                                "slotPosition": 30,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "5520_Wireless_Controller"
-                            }
-                        },
-                        "gss_pptb1_ds02": {
-                            "geometry": {
-                                "model": "1U_server_0.6_width_1.0_depth",
-                                "slotPosition": 37,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "WS_C3560X_48T_S"
-                            }
-                        },
-                        "PPT_ATS_PA03": {
-                            "geometry": {
-                                "model": "1U_server_0.6_width_1.0_depth",
-                                "slotPosition": 41,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "AP7722"
-                            }
-                        },
-                        "UC2DMZUCS1": {
-                            "geometry": {
-                                "model": "2U_server_0.6_width_1.0_depth",
-                                "slotPosition": 21,
-                                "orientation": -90
-                            },
-                            "cooling": {
-                                "model": "UCS_C240_M5"
                             }
                         }
                     }
@@ -12650,7 +12492,7 @@
                     "model": "RackType_A",
                     "location": {
                         "x": 19.4,
-                        "y": 13.7,
+                        "y": 13.8,
                         "z": 0.55
                     },
                     "orientation": -90,
@@ -12677,7 +12519,7 @@
                     "model": "RackType_D",
                     "location": {
                         "x": 19.6,
-                        "y": 13.1,
+                        "y": 13.2,
                         "z": 0.55
                     },
                     "orientation": -90,
@@ -13818,24 +13660,6 @@
                     "name": "PPT1-TempHumuTag-QH04-BackBottom",
                     "pline": "Sensors - RF Code",
                     "rack": "QH_4",
-                    "type": "Sensor",
-                    "value": "28.1"
-                }
-            },
-            "PA_3_Sensor_1": {
-                "geometry": {
-                    "location": {
-                        "x": 10.95,
-                        "y": 7.0,
-                        "z": 0.65
-                    }
-                },
-                "meta": {
-                    "measuredVariable": "Temperature",
-                    "model": "RFCode - R155 Temp-Hum",
-                    "name": "PPT1-TempHumuTag-PA03-FrontBottom",
-                    "pline": "Sensors - RF Code",
-                    "rack": "PA_3",
                     "type": "Sensor",
                     "value": "28.1"
                 }
@@ -15040,48 +14864,6 @@
             },
             "GSS_INT2_RT01": {
                 "inputPower": 115.4375
-            },
-            "iblox2intdns1": {
-                "inputPower": 133.78571428571428
-            },
-            "nspm2app1b": {
-                "inputPower": 133.78571428571428
-            },
-            "UC2UCS1": {
-                "inputPower": 133.78571428571428
-            },
-            "pptb1cc_isurf_ds02": {
-                "inputPower": 133.78571428571428
-            },
-            "iblox2rptdns1": {
-                "inputPower": 133.78571428571428
-            },
-            "UC2ISR1": {
-                "inputPower": 133.78571428571428
-            },
-            "pptb1cc_isurf_fw01b": {
-                "inputPower": 133.78571428571428
-            },
-            "PPTB1CC_ISURF_SSW01A": {
-                "inputPower": 133.78571428571428
-            },
-            "ci_ppt_acs01": {
-                "inputPower": 133.78571428571428
-            },
-            "pptb1cc_isurf_ssw01b": {
-                "inputPower": 133.78571428571428
-            },
-            "PPTB1CC_SHDC_WLC02": {
-                "inputPower": 133.78571428571428
-            },
-            "gss_pptb1_ds02": {
-                "inputPower": 133.78571428571428
-            },
-            "PPT_ATS_PA03": {
-                "inputPower": 133.78571428571428
-            },
-            "UC2DMZUCS1": {
-                "inputPower": 133.78571428571428
             },
             "UC2UCS3": {
                 "inputPower": 74.66666666666667

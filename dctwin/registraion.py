@@ -2,14 +2,17 @@ import gym
 from typing import Union, Callable
 from google.protobuf import json_format
 from dctwin.utils import read_engine_config
-from dctwin.interfaces import get_env_id, BaseEnv
+from dctwin.gym_envs import get_env_id, BaseEnv
+from dclib import Building
 
 
 def make_env(
     env_proto_config: str,
     reward_fn: Callable[[BaseEnv], float],
     schedule_fn: Callable = None,
+    parse_obs_fn: Callable = None,
     map_boundary_condition_fn: Callable = None,
+    building: Building = None,
     is_k8s: bool = False,
     k8s_config: dict = None,
 ) -> Union[gym.Env, BaseEnv]:
@@ -17,7 +20,8 @@ def make_env(
     :param env_proto_config: the path to the protobuf config file
     :param reward_fn: the callback reward function defined by the user
         We need the user to pass in a reward function
-    :param schedule_fn: the callback facility schedule function defined by the user
+    :param schedule_fn: the callback facility workloads function defined by the user
+    :param parse_obs_fn: the callback function to parse the observations returned by the environment
     :param map_boundary_condition_fn: the callback function to map the boundary conditions
         defined by the user, this is only used for co-simulation
         e.g., the format of the boundary conditions should be consistent with the CFDManger
@@ -26,6 +30,7 @@ def make_env(
             "supply_air_temperatures": {}, "supply_air_volume_flow_rates": {},
             "server_powers": {}, "server_volume_flow_rates": {}
         }
+    :param building: the building object, this is only used for eplus and liquid cooling co-simulation
     :param is_k8s: whether the environment is running in k8s
     return: the gym-like environment instance
     """
@@ -37,11 +42,14 @@ def make_env(
     )
     if env_config_name == "eplus_cfd_env_config":
         env_params.update({"map_boundary_condition_fn": map_boundary_condition_fn})
+    if env_config_name == "eplus_cdu_env_config":
+        env_params.update({"building": building})
     env = gym.make(
         get_env_id(env_config_name),
         config=getattr(engine_config, env_config_name),
         reward_fn=reward_fn,
         schedule_fn=schedule_fn,
+        parse_obs_fn=parse_obs_fn,
         is_k8s=is_k8s,
         k8s_config=k8s_config,
         **env_params

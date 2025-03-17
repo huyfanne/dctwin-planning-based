@@ -1,4 +1,4 @@
-from dctwin.interfaces import CFDManager
+from dctwin.managers import CFDManager
 from dclib import Room
 from dctwin.utils import config
 
@@ -8,7 +8,6 @@ config._environ.__setitem__("is_local_k8s", "True")
 
 manager = CFDManager(
     room=room,
-    mesh_process=2,
     solve_process=2,
     is_k8s=True,
 )

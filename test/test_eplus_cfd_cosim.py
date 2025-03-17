@@ -1,10 +1,11 @@
 import numpy as np
+from google.protobuf import json_format
 
-from dctwin.interfaces.gym_envs import EplusCFDEnv
+from dctwin.gym_envs import EplusCFDEnv
 from dctwin.utils import config as env_config
 from dctwin.utils import read_engine_config, setup_logging
+
 from hooks import map_boundary_condition_fn
-from google.protobuf import json_format
 
 
 engine_config = "configs/test_eplus_cfd_cosim.prototxt"

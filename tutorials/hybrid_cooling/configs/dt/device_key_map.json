@@ -1,0 +1,88 @@
+{
+    "chilled water loops": {
+        "chilled water loop": {
+            "supply temperature": "CHILLED WATER LOOP SUPPLY OUTLET NODE:System Node Temperature [C](TimeStep)",
+            "return temperature": "CHILLED WATER LOOP SUPPLY INLET NODE:System Node Temperature [C](TimeStep)",
+            "supply flow rate": "CHILLED WATER LOOP SUPPLY OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+            "return flow rate": "CHILLED WATER LOOP SUPPLY INLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)"
+        }
+    },
+    "secondary chilled water loops": {},
+    "condenser water loops": {
+        "chiller 1 condenser water loop": {
+            "supply temperature": "CHILLER 1 CONDENSER WATER LOOP SUPPLY OUTLET NODE:System Node Temperature [C](TimeStep)",
+            "return temperature": "CHILLER 1 CONDENSER WATER LOOP SUPPLY INLET NODE:System Node Temperature [C](TimeStep)",
+            "supply flow rate": "CHILLER 1 CONDENSER WATER LOOP SUPPLY OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+            "return flow rate": "CHILLER 1 CONDENSER WATER LOOP SUPPLY INLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)"
+        }
+    },
+    "zones": {
+        "Data Hall 1A": {
+            "air temperature": "DATA HALL 1A:Zone Air Temperature [C](TimeStep)",
+            "air relative humidity": "DATA HALL 1A:Zone Air Relative Humidity [%](TimeStep)",
+            "air humidity ratio": "DATA HALL 1A:Zone Air Humidity Ratio [](TimeStep)",
+            "ite power": "DATA HALL 1A:Zone ITE CPU Electricity Rate [W](TimeStep)"
+        }
+    },
+    "ites": {},
+    "acus": {
+        "Data Hall 1A acu-1": {
+            "fan": {
+                "air mass flow rate": "DATA HALL 1A ACU-1 AIR LOOP SUPPLY OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "outlet air temperature": "DATA HALL 1A ACU-1 AIR LOOP SUPPLY OUTLET NODE:System Node Temperature [C](TimeStep)",
+                "power": "DATA HALL 1A ACU-1 FAN:Fan Electricity Rate [W](TimeStep)",
+                "inlet air temperature": "DATA HALL 1A ACU-1 COOLING COIL AIR OUTLET NODE:System Node Temperature [C](TimeStep)",
+                "outlet air relative humidity": "DATA HALL 1A ACU-1 AIR LOOP SUPPLY OUTLET NODE:System Node Relative Humidity [%](TimeStep)",
+                "inlet air relative humidity": "DATA HALL 1A ACU-1 COOLING COIL AIR OUTLET NODE:System Node Relative Humidity [%](TimeStep)",
+                "outlet air humidity ratio": "DATA HALL 1A ACU-1 AIR LOOP SUPPLY OUTLET NODE:System Node Humidity Ratio [](TimeStep)",
+                "inlet air humidity ratio": "DATA HALL 1A ACU-1 COOLING COIL AIR OUTLET NODE:System Node Humidity Ratio [](TimeStep)"
+            },
+            "cooling coil": {
+                "inlet air temperature": "DATA HALL 1A ACU-1 OUTDOOR AIR SYSTEM MIXED AIR NODE:System Node Temperature [C](TimeStep)",
+                "air mass flow rate": "DATA HALL 1A ACU-1 OUTDOOR AIR SYSTEM MIXED AIR NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "outlet air temperature": "DATA HALL 1A ACU-1 COOLING COIL AIR OUTLET NODE:System Node Temperature [C](TimeStep)",
+                "inlet water temperature": "DATA HALL 1A ACU-1 WATER INLET NODE:System Node Temperature [C](TimeStep)",
+                "outlet water temperature": "DATA HALL 1A ACU-1 WATER OUTLET NODE:System Node Temperature [C](TimeStep)",
+                "water mass flow rate": "DATA HALL 1A ACU-1 WATER INLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+                "cooling load": "DATA HALL 1A ACU-1 COOLING COIL:Cooling Coil Sensible Cooling Rate [W](TimeStep)"
+            }
+        }
+    },
+    "cdus": {},
+    "dehumidifiers": {},
+    "pumps": {
+        "chiller 1 chwp": {
+            "mass flow rate": "CHILLER 1 CHWP OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+            "power": "CHILLER 1 CHWP:Pump Electricity Rate [W](TimeStep)"
+        },
+        "cooling tower 1 cwp": {
+            "mass flow rate": "COOLING TOWER 1 CWP OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+            "power": "COOLING TOWER 1 CWP:Pump Electricity Rate [W](TimeStep)"
+        }
+    },
+    "chillers": {
+        "chiller 1": {
+            "cooling load": "CHILLER 1:Chiller Evaporator Cooling Rate [W](TimeStep)",
+            "chilled water supply temperature": "CHILLER 1:Chiller Evaporator Outlet Temperature [C](TimeStep)",
+            "chilled water return temperature": "CHILLER 1:Chiller Evaporator Inlet Temperature [C](TimeStep)",
+            "chilled water mass flow rate": "CHILLER 1:Chiller Evaporator Mass Flow Rate [kg/s](TimeStep)",
+            "condenser water return temperature": "CHILLER 1:Chiller Condenser Outlet Temperature [C](TimeStep)",
+            "condenser water supply temperature": "CHILLER 1:Chiller Condenser Inlet Temperature [C](TimeStep)",
+            "condenser water mass flow rate": "CHILLER 1:Chiller Condenser Mass Flow Rate [kg/s](TimeStep)",
+            "power": "CHILLER 1:Chiller Electricity Rate [W](TimeStep)",
+            "mass flow rate": "CHILLER 1 CHILLED WATER OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)"
+        }
+    },
+    "heat exchangers": {},
+    "cooling towers": {
+        "cooling tower 1": {
+            "return water temperature": "COOLING TOWER 1 CWP OUTLET NODE:System Node Temperature [C](TimeStep)",
+            "water mass flow rate": "COOLING TOWER 1 CWP OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
+            "supply water temperature": "COOLING TOWER 1 OUTLET NODE:System Node Temperature [C](TimeStep)",
+            "air flow rate ratio": "COOLING TOWER 1:Cooling Tower Air Flow Rate Ratio [](TimeStep)",
+            "outside air wetbulb temperature": "Environment:Site Outdoor Air Wetbulb Temperature [C](TimeStep)",
+            "power": "COOLING TOWER 1:Cooling Tower Fan Electricity Rate [W](TimeStep)"
+        }
+    },
+    "thermal storage tanks": {}
+}
