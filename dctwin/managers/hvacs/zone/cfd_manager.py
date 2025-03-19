@@ -137,13 +137,13 @@ class CFDManager:
         reduced-order solver: POD
         """
         if self.isk8s:
+            self.k8s_config["k8s_resources"] = self.k8s_config["k8s_meshing_resources"]
+            self.k8s_config["k8s_taint"] = self.k8s_config["k8s_cpu_taint"]
             self.mesh_backend = SnappyHexK8sBackend(
                 process_num=self.mesh_process,
                 k8s_config=self.k8s_config,
                 is_gpu=self.is_gpu,
             )
-            self.k8s_config["k8s_resources"] = self.k8s_config["k8s_meshing_resources"]
-            self.k8s_config["k8s_taint"] = self.k8s_config["k8s_cpu_taint"]
             if self.steady:
                 self.k8s_config["k8s_resources"] = self.k8s_config[
                     "k8s_solving_resources"
