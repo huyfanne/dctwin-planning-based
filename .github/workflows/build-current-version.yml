@@ -6,8 +6,13 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on:
+      labels: large_4c
     steps:
+    - name: Set Swap Space
+      uses: actionhippie/swap-space@v1
+      with:
+        size: 40G
     - name: Check out code
       uses: actions/checkout@v2
 

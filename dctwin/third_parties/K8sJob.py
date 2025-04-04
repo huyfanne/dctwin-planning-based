@@ -84,15 +84,15 @@ class K8sJob:
         container_additional_args = {}
         tmpl_spec_additional_args = {}
         tmpl_additional_args = {}
-        spec_additional_args = dict(backoff_limit=0, ttl_seconds_after_finished=60)
+        spec_additional_args = dict(backoff_limit=2, ttl_seconds_after_finished=60)
         job_additional_args = {}
         for k, v in job_params.items():
-            if k.startswith("spec.templates.spec.containers."):
+            if k.startswith("spec.template.spec.containers."):
                 idx = int(k.split(".")[-2])
                 container_additional_args.setdefault(idx, {})[k.split(".")[-1]] = v
-            elif k.startswith("sepc.templates.spec"):
+            elif k.startswith("sepc.template.spec"):
                 tmpl_spec_additional_args[k.split(".")[-1]] = v
-            elif k.startswith("spec.templates"):
+            elif k.startswith("spec.template"):
                 tmpl_additional_args[k.split(".")[-1]] = v
             elif k.startswith("spec"):
                 spec_additional_args[k.split(".")[-1]] = v
@@ -101,9 +101,9 @@ class K8sJob:
         return {
             ".": job_additional_args,
             "spec": spec_additional_args,
-            "spec.templates": tmpl_additional_args,
-            "spec.templates.spec": tmpl_spec_additional_args,
-            "spec.templates.spec.containers": container_additional_args,
+            "spec.template": tmpl_additional_args,
+            "spec.template.spec": tmpl_spec_additional_args,
+            "spec.template.spec.containers": container_additional_args,
         }
 
     @staticmethod
@@ -314,16 +314,16 @@ class K8sJob:
             tmpl_spec_args["subdomain"] = self.service_name
 
         container_args.update(
-            self.additional_params["spec.templates.spec.containers"].get(0, {})
+            self.additional_params["spec.template.spec.containers"].get(0, {})
         )
         tmpl_spec_args["containers"] = [client.V1Container(**container_args)]
 
         pod_spec = client.V1PodSpec(
-            **tmpl_spec_args | self.additional_params["spec.templates.spec"]
+            **tmpl_spec_args | self.additional_params["spec.template.spec"]
         )
         pod_spec.image_pull_secrets = [client.V1LocalObjectReference(name="regcred")]
 
-        # Configure Pod templates container
+        # Configure Pod template container
         job = client.V1Job(
             api_version="batch/v1",
             kind="Job",
@@ -337,7 +337,7 @@ class K8sJob:
             spec=client.V1JobSpec(
                 template=client.V1PodTemplateSpec(
                     spec=pod_spec,
-                    **self.additional_params["spec.templates"],
+                    **self.additional_params["spec.template"],
                 ),
                 completion_mode="Indexed",
                 **self.additional_params["spec"],
@@ -370,6 +370,7 @@ class K8sJob:
                 ),
             ),
         )
+
 
     def _get_job_pods(self, exclude_pods=()):
         pod_list = self._core_api.list_namespaced_pod(self.namespace)
