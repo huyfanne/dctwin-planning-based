@@ -8,14 +8,7 @@
         }
     },
     "secondary chilled water loops": {},
-    "condenser water loops": {
-        "chiller 1 condenser water loop": {
-            "supply temperature": "CHILLER 1 CONDENSER WATER LOOP SUPPLY OUTLET NODE:System Node Temperature [C](TimeStep)",
-            "return temperature": "CHILLER 1 CONDENSER WATER LOOP SUPPLY INLET NODE:System Node Temperature [C](TimeStep)",
-            "supply flow rate": "CHILLER 1 CONDENSER WATER LOOP SUPPLY OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
-            "return flow rate": "CHILLER 1 CONDENSER WATER LOOP SUPPLY INLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)"
-        }
-    },
+    "condenser water loops": {},
     "zones": {
         "Data Hall 1A": {
             "air temperature": "DATA HALL 1A:Zone Air Temperature [C](TimeStep)",
@@ -62,10 +55,6 @@
         "chiller 1 chwp": {
             "mass flow rate": "CHILLER 1 CHWP OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
             "power": "CHILLER 1 CHWP:Pump Electricity Rate [W](TimeStep)"
-        },
-        "cooling tower 1 cwp": {
-            "mass flow rate": "COOLING TOWER 1 CWP OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
-            "power": "COOLING TOWER 1 CWP:Pump Electricity Rate [W](TimeStep)"
         }
     },
     "chillers": {
@@ -82,15 +71,6 @@
         }
     },
     "heat exchangers": {},
-    "cooling towers": {
-        "cooling tower 1": {
-            "return water temperature": "COOLING TOWER 1 CWP OUTLET NODE:System Node Temperature [C](TimeStep)",
-            "water mass flow rate": "COOLING TOWER 1 CWP OUTLET NODE:System Node Mass Flow Rate [kg/s](TimeStep)",
-            "supply water temperature": "COOLING TOWER 1 OUTLET NODE:System Node Temperature [C](TimeStep)",
-            "air flow rate ratio": "COOLING TOWER 1:Cooling Tower Air Flow Rate Ratio [](TimeStep)",
-            "outside air wetbulb temperature": "Environment:Site Outdoor Air Wetbulb Temperature [C](TimeStep)",
-            "power": "COOLING TOWER 1:Cooling Tower Fan Electricity Rate [W](TimeStep)"
-        }
-    },
+    "cooling towers": {},
     "thermal storage tanks": {}
 }

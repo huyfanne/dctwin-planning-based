@@ -828,16 +828,17 @@ class ConfigBuilder:
                 ub=ub
             ) if variable_names is None or "chilled water return temperature" in variable_names else None
             # chilled water mass flow rate
-            self._make_observation(
-                exposed=exposed,
-                variable_name=f"{chiller_name} chilled water mass flow rate".lower(),
-                key_value=chiller["chilled water mass flow rate"].split(":")[0],
-                output_variable_name="Chiller Condenser Mass Flow Rate",
-                reporting_frequency="timestep",
-                normalize_method=normalize_method,
-                lb=lb,
-                ub=ub
-            ) if variable_names is None or "chilled water mass flow rate" in variable_names else None
+            if self.device_key_map["condenser water loops"]:
+                self._make_observation(
+                    exposed=exposed,
+                    variable_name=f"{chiller_name} chilled water mass flow rate".lower(),
+                    key_value=chiller["chilled water mass flow rate"].split(":")[0],
+                    output_variable_name="Chiller Condenser Mass Flow Rate",
+                    reporting_frequency="timestep",
+                    normalize_method=normalize_method,
+                    lb=lb,
+                    ub=ub
+                ) if variable_names is None or "chilled water mass flow rate" in variable_names else None
             # condenser water supply temperature
             self._make_observation(
                 exposed=exposed,
@@ -850,26 +851,27 @@ class ConfigBuilder:
                 ub=ub
             ) if variable_names is None or "condenser water supply temperature" in variable_names else None
             # condenser water return temperature
-            self._make_observation(
-                exposed=exposed,
-                variable_name=f"{chiller_name} condenser water return temperature".lower(),
-                key_value=chiller["condenser water return temperature"].split(":")[0],
-                output_variable_name="Chiller Condenser Outlet Temperature",
-                reporting_frequency="timestep",
-                normalize_method=normalize_method,
-                lb=lb,
-                ub=ub
-            ) if variable_names is None or "condenser water return temperature" in variable_names else None
-            self._make_observation(
-                exposed=exposed,
-                variable_name=f"{chiller_name} condenser water mass flow rate".lower(),
-                key_value=chiller["condenser water mass flow rate"].split(":")[0],
-                output_variable_name="Chiller Condenser Mass Flow Rate",
-                reporting_frequency="timestep",
-                normalize_method=normalize_method,
-                lb=lb,
-                ub=ub
-            ) if variable_names is None or "condenser water mass flow rate" in variable_names else None
+            if self.device_key_map["condenser water loops"]:
+                self._make_observation(
+                    exposed=exposed,
+                    variable_name=f"{chiller_name} condenser water return temperature".lower(),
+                    key_value=chiller["condenser water return temperature"].split(":")[0],
+                    output_variable_name="Chiller Condenser Outlet Temperature",
+                    reporting_frequency="timestep",
+                    normalize_method=normalize_method,
+                    lb=lb,
+                    ub=ub
+                ) if variable_names is None or "condenser water return temperature" in variable_names else None
+                self._make_observation(
+                    exposed=exposed,
+                    variable_name=f"{chiller_name} condenser water mass flow rate".lower(),
+                    key_value=chiller["condenser water mass flow rate"].split(":")[0],
+                    output_variable_name="Chiller Condenser Mass Flow Rate",
+                    reporting_frequency="timestep",
+                    normalize_method=normalize_method,
+                    lb=lb,
+                    ub=ub
+                ) if variable_names is None or "condenser water mass flow rate" in variable_names else None
             # observe chiller power consumption
             self._make_observation(
                 exposed=exposed,

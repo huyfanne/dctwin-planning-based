@@ -387,11 +387,6 @@ SCHEDULE:CONSTANT,
     Temperature,              !- Schedule Type Limits Name
     16;                       !- Hourly Value
 
-SCHEDULE:CONSTANT,
-    chiller 1 condenser water loop exit temperature setpoint schedule,    !- Name
-    Temperature,              !- Schedule Type Limits Name
-    29;                       !- Hourly Value
-
 MATERIAL,
     1/2IN Gypsum,             !- Name
     Smooth,                   !- Roughness
@@ -747,15 +742,6 @@ SIZING:PLANT,
     1,                        !- Zone Timesteps in Averaging Window
     None;                     !- Coincident Sizing Factor Mode
 
-SIZING:PLANT,
-    chiller 1 condenser water loop,    !- Plant or Condenser Loop Name
-    Condenser,                !- Loop Type
-    29,                       !- Design Loop Exit Temperature
-    5.5,                      !- Loop Design Temperature Difference
-    NonCoincident,            !- Sizing Option
-    1,                        !- Zone Timesteps in Averaging Window
-    None;                     !- Coincident Sizing Factor Mode
-
 ZONECONTROL:THERMOSTAT,
     Data Hall 1A room temperature control,    !- Name
     Data Hall 1A,             !- Zone or ZoneList Name
@@ -1020,58 +1006,6 @@ BRANCH,
     chilled water loop demand outlet pipe inlet node,    !- Component 1 Inlet Node Name
     chilled water loop demand outlet node;    !- Component 1 Outlet Node Name
 
-BRANCH,
-    chiller 1 condenser water loop supply inlet branch,    !- Name
-    ,                         !- Pressure Drop Curve Name
-    PIPE:ADIABATIC,           !- Component 1 Object Type
-    chiller 1 condenser water loop supply inlet pipe,    !- Component 1 Name
-    chiller 1 condenser water loop supply inlet node,    !- Component 1 Inlet Node Name
-    chiller 1 condenser water loop supply inlet pipe outlet node;    !- Component 1 Outlet Node Name
-
-BRANCH,
-    chiller 1 condenser water loop supply branch,    !- Name
-    ,                         !- Pressure Drop Curve Name
-    PUMP:VARIABLESPEED,       !- Component 1 Object Type
-    cooling tower 1 cwp,      !- Component 1 Name
-    cooling tower 1 cwp inlet node,    !- Component 1 Inlet Node Name
-    cooling tower 1 cwp outlet node,    !- Component 1 Outlet Node Name
-    COOLINGTOWER:VARIABLESPEED,    !- Component 2 Object Type
-    cooling tower 1,          !- Component 2 Name
-    cooling tower 1 cwp outlet node,    !- Component 2 Inlet Node Name
-    cooling tower 1 outlet node;    !- Component 2 Outlet Node Name
-
-BRANCH,
-    chiller 1 condenser water loop supply outlet branch,    !- Name
-    ,                         !- Pressure Drop Curve Name
-    PIPE:ADIABATIC,           !- Component 1 Object Type
-    chiller 1 condenser water loop supply outlet pipe,    !- Component 1 Name
-    chiller 1 condenser water loop supply outlet pipe inlet node,    !- Component 1 Inlet Node Name
-    chiller 1 condenser water loop supply outlet node;    !- Component 1 Outlet Node Name
-
-BRANCH,
-    chiller 1 condenser water loop demand inlet branch,    !- Name
-    ,                         !- Pressure Drop Curve Name
-    PIPE:ADIABATIC,           !- Component 1 Object Type
-    chiller 1 condenser water loop demand inlet pipe,    !- Component 1 Name
-    chiller 1 condenser water loop demand inlet node,    !- Component 1 Inlet Node Name
-    chiller 1 condenser water loop demand inlet pipe outlet node;    !- Component 1 Outlet Node Name
-
-BRANCH,
-    chiller 1 demand branch,    !- Name
-    ,                         !- Pressure Drop Curve Name
-    CHILLER:ELECTRIC:EIR,     !- Component 1 Object Type
-    chiller 1,                !- Component 1 Name
-    chiller 1 condenser water inlet node,    !- Component 1 Inlet Node Name
-    chiller 1 condenser water outlet node;    !- Component 1 Outlet Node Name
-
-BRANCH,
-    chiller 1 condenser water loop demand outlet branch,    !- Name
-    ,                         !- Pressure Drop Curve Name
-    PIPE:ADIABATIC,           !- Component 1 Object Type
-    chiller 1 condenser water loop demand outlet pipe,    !- Component 1 Name
-    chiller 1 condenser water loop demand outlet pipe inlet node,    !- Component 1 Inlet Node Name
-    chiller 1 condenser water loop demand outlet node;    !- Component 1 Outlet Node Name
-
 BRANCHLIST,
     data hall 1a acu-1 air loop branches,    !- Name
     data hall 1a acu-1 air loop main branch;    !- Branch 1 Name
@@ -1088,18 +1022,6 @@ BRANCHLIST,
     data hall 1a acu-1 demand branch,    !- Branch 2 Name
     chilled water loop demand outlet branch;    !- Branch 3 Name
 
-BRANCHLIST,
-    chiller 1 condenser water loop supply branches,    !- Name
-    chiller 1 condenser water loop supply inlet branch,    !- Branch 1 Name
-    chiller 1 condenser water loop supply branch,    !- Branch 2 Name
-    chiller 1 condenser water loop supply outlet branch;    !- Branch 3 Name
-
-BRANCHLIST,
-    chiller 1 condenser water loop demand branches,    !- Name
-    chiller 1 condenser water loop demand inlet branch,    !- Branch 1 Name
-    chiller 1 demand branch,    !- Branch 2 Name
-    chiller 1 condenser water loop demand outlet branch;    !- Branch 3 Name
-
 CONNECTOR:SPLITTER,
     chilled water loop supply splitter,    !- Name
     chilled water loop supply inlet branch,    !- Inlet Branch Name
@@ -1110,16 +1032,6 @@ CONNECTOR:SPLITTER,
     chilled water loop demand inlet branch,    !- Inlet Branch Name
     data hall 1a acu-1 demand branch;    !- Outlet Branch 1 Name
 
-CONNECTOR:SPLITTER,
-    chiller 1 condenser water loop supply splitter,    !- Name
-    chiller 1 condenser water loop supply inlet branch,    !- Inlet Branch Name
-    chiller 1 condenser water loop supply branch;    !- Outlet Branch 1 Name
-
-CONNECTOR:SPLITTER,
-    chiller 1 condenser water loop demand splitter,    !- Name
-    chiller 1 condenser water loop demand inlet branch,    !- Inlet Branch Name
-    chiller 1 demand branch;    !- Outlet Branch 1 Name
-
 CONNECTOR:MIXER,
     chilled water loop supply mixer,    !- Name
     chilled water loop supply outlet branch,    !- Outlet Branch Name
@@ -1129,16 +1041,6 @@ CONNECTOR:MIXER,
     chilled water loop demand mixer,    !- Name
     chilled water loop demand outlet branch,    !- Outlet Branch Name
     data hall 1a acu-1 demand branch;    !- Inlet Branch 1 Name
-
-CONNECTOR:MIXER,
-    chiller 1 condenser water loop supply mixer,    !- Name
-    chiller 1 condenser water loop supply outlet branch,    !- Outlet Branch Name
-    chiller 1 condenser water loop supply branch;    !- Inlet Branch 1 Name
-
-CONNECTOR:MIXER,
-    chiller 1 condenser water loop demand mixer,    !- Name
-    chiller 1 condenser water loop demand outlet branch,    !- Outlet Branch Name
-    chiller 1 demand branch;    !- Inlet Branch 1 Name
 
 CONNECTORLIST,
     chilled water loop supply connectors,    !- Name
@@ -1153,20 +1055,6 @@ CONNECTORLIST,
     chilled water loop demand splitter,    !- Connector 1 Name
     Connector:Mixer,          !- Connector 2 Object Type
     chilled water loop demand mixer;    !- Connector 2 Name
-
-CONNECTORLIST,
-    chiller 1 condenser water loop supply connectors,    !- Name
-    Connector:Splitter,       !- Connector 1 Object Type
-    chiller 1 condenser water loop supply splitter,    !- Connector 1 Name
-    Connector:Mixer,          !- Connector 2 Object Type
-    chiller 1 condenser water loop supply mixer;    !- Connector 2 Name
-
-CONNECTORLIST,
-    chiller 1 condenser water loop demand connectors,    !- Name
-    Connector:Splitter,       !- Connector 1 Object Type
-    chiller 1 condenser water loop demand splitter,    !- Connector 1 Name
-    Connector:Mixer,          !- Connector 2 Object Type
-    chiller 1 condenser water loop demand mixer;    !- Connector 2 Name
 
 NODELIST,
     Data Hall 1A inlets,      !- Name
@@ -1203,26 +1091,6 @@ PIPE:ADIABATIC,
     chilled water loop demand outlet pipe inlet node,    !- Inlet Node Name
     chilled water loop demand outlet node;    !- Outlet Node Name
 
-PIPE:ADIABATIC,
-    chiller 1 condenser water loop supply inlet pipe,    !- Name
-    chiller 1 condenser water loop supply inlet node,    !- Inlet Node Name
-    chiller 1 condenser water loop supply inlet pipe outlet node;    !- Outlet Node Name
-
-PIPE:ADIABATIC,
-    chiller 1 condenser water loop supply outlet pipe,    !- Name
-    chiller 1 condenser water loop supply outlet pipe inlet node,    !- Inlet Node Name
-    chiller 1 condenser water loop supply outlet node;    !- Outlet Node Name
-
-PIPE:ADIABATIC,
-    chiller 1 condenser water loop demand inlet pipe,    !- Name
-    chiller 1 condenser water loop demand inlet node,    !- Inlet Node Name
-    chiller 1 condenser water loop demand inlet pipe outlet node;    !- Outlet Node Name
-
-PIPE:ADIABATIC,
-    chiller 1 condenser water loop demand outlet pipe,    !- Name
-    chiller 1 condenser water loop demand outlet pipe inlet node,    !- Inlet Node Name
-    chiller 1 condenser water loop demand outlet node;    !- Outlet Node Name
-
 PUMP:VARIABLESPEED,
     chiller 1 chwp,           !- Name
     chiller 1 chwp inlet node,    !- Inlet Node Name
@@ -1255,38 +1123,6 @@ PUMP:VARIABLESPEED,
     0,                        !- Design Minimum Flow Rate Fraction
     General;                  !- EndUse Subcategory
 
-PUMP:VARIABLESPEED,
-    cooling tower 1 cwp,      !- Name
-    cooling tower 1 cwp inlet node,    !- Inlet Node Name
-    cooling tower 1 cwp outlet node,    !- Outlet Node Name
-    0.04,                     !- Design Maximum Flow Rate
-    300,                      !- Design Pump Head
-    10652,                    !- Design Power Consumption
-    0.87,                     !- Motor Efficiency
-    0,                        !- Fraction of Motor Inefficiencies to Fluid Stream
-    4.4213372e-16,            !- Coefficient 1 of the Part Load Performance Curve
-    1.52380952,               !- Coefficient 2 of the Part Load Performance Curve
-    -0.523809524,             !- Coefficient 3 of the Part Load Performance Curve
-    0,                        !- Coefficient 4 of the Part Load Performance Curve
-    autosize,                 !- Design Minimum Flow Rate
-    Intermittent,             !- Pump Control Type
-    ,                         !- Pump Flow Rate Schedule Name
-    ,                         !- Pump Curve Name
-    0.341,                    !- Impeller Diameter
-    ,                         !- VFD Control Type
-    ,                         !- Pump RPM Schedule Name
-    ,                         !- Minimum Pressure Schedule
-    ,                         !- Maximum Pressure Schedule
-    ,                         !- Minimum RPM Schedule
-    ,                         !- Maximum RPM Schedule
-    ,                         !- Zone Name
-    0.5,                      !- Skin Loss Radiative Fraction
-    PowerPerFlowPerPressure,    !- Design Power Sizing Method
-    348701.1,                 !- Design Electric Power per Unit Flow Rate
-    1.282051282,              !- Design Shaft Power per Unit Flow Rate per Unit Head
-    0,                        !- Design Minimum Flow Rate Fraction
-    General;                  !- EndUse Subcategory
-
 CHILLER:ELECTRIC:EIR,
     chiller 1,                !- Name
     750000,                   !- Reference Capacity
@@ -1304,9 +1140,9 @@ CHILLER:ELECTRIC:EIR,
     0,                        !- Minimum Unloading Ratio
     chiller 1 chwp outlet node,    !- Chilled Water Inlet Node Name
     chiller 1 chilled water outlet node,    !- Chilled Water Outlet Node Name
-    chiller 1 condenser water inlet node,    !- Condenser Inlet Node Name
-    chiller 1 condenser water outlet node,    !- Condenser Outlet Node Name
-    WaterCooled,              !- Condenser Type
+    ,                         !- Condenser Inlet Node Name
+    ,                         !- Condenser Outlet Node Name
+    AirCooled,                !- Condenser Type
     0,                        !- Condenser Fan Power Ratio
     1,                        !- Fraction of Compressor Electric Consumption Rejected by Condenser
     5,                        !- Leaving Chilled Water Lower Temperature Limit
@@ -1321,39 +1157,6 @@ CHILLER:ELECTRIC:EIR,
     ,                         !- Condenser Heat Recovery Relative Capacity Fraction
     ,                         !- Heat Recovery Inlet High Temperature Limit Schedule Name
     ,                         !- Heat Recovery Leaving Temperature Setpoint Node Name
-    General;                  !- EndUse Subcategory
-
-COOLINGTOWER:VARIABLESPEED,
-    cooling tower 1,          !- Name
-    cooling tower 1 cwp outlet node,    !- Water Inlet Node Name
-    cooling tower 1 outlet node,    !- Water Outlet Node Name
-    YorkCalc,                 !- Model Type
-    ,                         !- Model Coefficient Name
-    26.6,                     !- Design Inlet Air WetBulb Temperature
-    2.8,                      !- Design Approach Temperature
-    5.5,                      !- Design Range Temperature
-    0.221,                    !- Design Water Flow Rate
-    100,                      !- Design Air Flow Rate
-    37000,                    !- Design Fan Power
-    cooling tower 1 fan power ratio function of air flow rate ratio curve,    !- Fan Power Ratio Function of Air Flow Rate Ratio Curve Name
-    0.25,                     !- Minimum Air Flow Rate Ratio
-    0,                        !- Fraction of Tower Capacity in Free Convection Regime
-    0,                        !- Basin Heater Capacity
-    2,                        !- Basin Heater Setpoint Temperature
-    ,                         !- Basin Heater Operating Schedule Name
-    LossFactor,               !- Evaporation Loss Mode
-    0.2,                      !- Evaporation Loss Factor
-    ,                         !- Drift Loss Percent
-    ConcentrationRatio,       !- Blowdown Calculation Mode
-    3,                        !- Blowdown Concentration Ratio
-    ,                         !- Blowdown Makeup Water Usage Schedule Name
-    ,                         !- Supply Water Storage Tank Name
-    ,                         !- Outdoor Air Inlet Node Name
-    2,                        !- Number of Cells
-    MinimalCell,              !- Cell Control
-    0.33,                     !- Cell Minimum Water Flow Rate Fraction
-    1,                        !- Cell Maximum Water Flow Rate Fraction
-    1.0,                      !- Sizing Factor
     General;                  !- EndUse Subcategory
 
 CoolingTowerPerformance:YorkCalc,
@@ -1421,41 +1224,10 @@ PLANTLOOP,
     None,                     !- Pressure Simulation Type
     0;                        !- Loop Circulation Time
 
-PLANTLOOP,
-    chiller 1 condenser water loop,    !- Name
-    Water,                    !- Fluid Type
-    ,                         !- User Defined Fluid Type
-    chiller 1 condenser water loop operation scheme,    !- Plant Equipment Operation Scheme Name
-    chiller 1 condenser water loop supply outlet node,    !- Loop Temperature Setpoint Node Name
-    100,                      !- Maximum Loop Temperature
-    5,                        !- Minimum Loop Temperature
-    autosize,                 !- Maximum Loop Flow Rate
-    0,                        !- Minimum Loop Flow Rate
-    Autocalculate,            !- Plant Loop Volume
-    chiller 1 condenser water loop supply inlet node,    !- Plant Side Inlet Node Name
-    chiller 1 condenser water loop supply outlet node,    !- Plant Side Outlet Node Name
-    chiller 1 condenser water loop supply branches,    !- Plant Side Branch List Name
-    chiller 1 condenser water loop supply connectors,    !- Plant Side Connector List Name
-    chiller 1 condenser water loop demand inlet node,    !- Demand Side Inlet Node Name
-    chiller 1 condenser water loop demand outlet node,    !- Demand Side Outlet Node Name
-    chiller 1 condenser water loop demand branches,    !- Demand Side Branch List Name
-    chiller 1 condenser water loop demand connectors,    !- Demand Side Connector List Name
-    UniformLoad,              !- Load Distribution Scheme
-    ,                         !- Availability Manager List Name
-    SingleSetpoint,           !- Plant Loop Demand Calculation Scheme
-    None,                     !- Common Pipe Simulation
-    None,                     !- Pressure Simulation Type
-    0;                        !- Loop Circulation Time
-
 PLANTEQUIPMENTLIST,
     chilled water loop equipment list,    !- Name
     Chiller:Electric:EIR,     !- Equipment 1 Object Type
     chiller 1;                !- Equipment 1 Name
-
-PLANTEQUIPMENTLIST,
-    chiller 1 condenser water loop equipment list,    !- Name
-    CoolingTower:VariableSpeed,    !- Equipment 1 Object Type
-    cooling tower 1;          !- Equipment 1 Name
 
 PLANTEQUIPMENTOPERATION:COOLINGLOAD,
     chilled water loop cooling operation scheme,    !- Name
@@ -1463,22 +1235,10 @@ PLANTEQUIPMENTOPERATION:COOLINGLOAD,
     1000000000,               !- Load Range 1 Upper Limit
     chilled water loop equipment list;    !- Range 1 Equipment List Name
 
-PLANTEQUIPMENTOPERATION:COOLINGLOAD,
-    chiller 1 condenser water loop cooling operation scheme,    !- Name
-    0,                        !- Load Range 1 Lower Limit
-    1000000000,               !- Load Range 1 Upper Limit
-    chiller 1 condenser water loop equipment list;    !- Range 1 Equipment List Name
-
 PLANTEQUIPMENTOPERATIONSCHEMES,
     chilled water loop operation scheme,    !- Name
     PlantEquipmentOperation:CoolingLoad,    !- Control Scheme 1 Object Type
     chilled water loop cooling operation scheme,    !- Control Scheme 1 Name
-    ALWAYS ON;                !- Control Scheme 1 Schedule Name
-
-PLANTEQUIPMENTOPERATIONSCHEMES,
-    chiller 1 condenser water loop operation scheme,    !- Name
-    PlantEquipmentOperation:CoolingLoad,    !- Control Scheme 1 Object Type
-    chiller 1 condenser water loop cooling operation scheme,    !- Control Scheme 1 Name
     ALWAYS ON;                !- Control Scheme 1 Schedule Name
 
 EnergyManagementSystem:Sensor,
@@ -1570,12 +1330,6 @@ SETPOINTMANAGER:SCHEDULED,
     chilled water loop exit temperature setpoint schedule,    !- Schedule Name
     chilled water loop supply outlet node;    !- Setpoint Node or NodeList Name
 
-SETPOINTMANAGER:SCHEDULED,
-    chiller 1 condenser water loop exit temperature setpoint manager,    !- Name
-    Temperature,              !- Control Variable
-    chiller 1 condenser water loop exit temperature setpoint schedule,    !- Schedule Name
-    chiller 1 condenser water loop supply outlet node;    !- Setpoint Node or NodeList Name
-
 SETPOINTMANAGER:MIXEDAIR,
     data hall 1a acu-1 outdoor air system mixed air manager,    !- Name
     Temperature,              !- Control Variable
@@ -1616,19 +1370,6 @@ CURVE:QUADRATIC,
     0,                        !- Coefficient1 Constant
     1,                        !- Coefficient2 x
     0,                        !- Coefficient3 x2
-    0,                        !- Minimum Value of x
-    1,                        !- Maximum Value of x
-    ,                         !- Minimum Curve Output
-    ,                         !- Maximum Curve Output
-    Dimensionless,            !- Input Unit Type for X
-    Dimensionless;            !- Output Unit Type
-
-CURVE:CUBIC,
-    cooling tower 1 fan power ratio function of air flow rate ratio curve,    !- Name
-    -9.315163e-03,            !- Coefficient1 Constant
-    0.0512333965844443,       !- Coefficient2 x
-    -8.383647e-02,            !- Coefficient3 x2
-    1.04191823356909,         !- Coefficient4 x3
     0,                        !- Minimum Value of x
     1,                        !- Maximum Value of x
     ,                         !- Minimum Curve Output
