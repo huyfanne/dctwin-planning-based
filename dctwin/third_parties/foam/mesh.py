@@ -1323,7 +1323,7 @@ class MeshBuilder:
                 "decomposePar -force && "
                 f"echo '>>> Running snappyHexMesh in parallel with {self.process_num} cores...' && "
                 f"OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 "
-                f"mpirun -np {self.process_num} snappyHexMesh -overwrite -parallel && "
+                f"mpirun --oversubscribe -np {self.process_num} snappyHexMesh -overwrite -parallel && "
                 "echo '>>> Running reconstructParMesh...' && "
                 "reconstructParMesh -constant -mergeTol 1E-08 -noZero && "
                 "echo '>>> Running topoSet...' && "
