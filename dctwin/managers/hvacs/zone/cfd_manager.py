@@ -92,7 +92,8 @@ class CFDManager:
         is_gpu: bool = False,
         refinement_level: int = 2,
         is_modulus: bool = False,
-        location_in_mesh: Vertex = Vertex(x=0.,y=0.,z=0.)
+        location_in_mesh: Vertex = Vertex(x=0.,y=0.,z=0.),
+        openfoam_image = None
     ) -> None:
         self.is_modulus = is_modulus
         if k8s_config is None:
@@ -128,6 +129,7 @@ class CFDManager:
         self.last_state_case = None
         self.object_mesh_index = read_object_mesh_index(room=self.room)
         self._setup_default_backend()
+        self.openfoam_image = openfoam_image
 
     def _setup_default_backend(self) -> None:
         """Setup default backend
@@ -171,6 +173,9 @@ class CFDManager:
                 self.solver_backend = TransientSolverK8sBackend(
                     process_num=self.solve_process, is_gpu=self.is_gpu
                 )
+            if self.openfoam_image:
+                self.solver_backend.docker_image = self.openfoam_image
+                self.mesh_backend.docker_image = self.openfoam_image
         else:
             self.mesh_backend = SnappyHexBackend(
                 self.docker_client, is_gpu=self.is_gpu

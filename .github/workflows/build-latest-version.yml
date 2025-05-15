@@ -47,3 +47,23 @@ jobs:
             ghcr.io/cap-dcwiz/dctwin:${{ env.IMAGE_VERSION_LONG }}
             ghcr.io/cap-dcwiz/dctwin:${{ env.IMAGE_VERSION_SHORT }}
             ghcr.io/cap-dcwiz/dctwin:latest
+
+      - name: Log in to the Azure Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: dcwiz.azurecr.io
+          username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
+          password: ${{ secrets.AZURE_TOKEN }}
+
+      - name: Build and push Azure registry image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          secrets: |
+            GITHUB_TOKEN=${{ secrets.AZURE_TOKEN }}
+          tags: |
+            dcwiz.azurecr.io/cap-dcwiz/dctwin:${{ env.IMAGE_VERSION_LONG }}
+            dcwiz.azurecr.io/cap-dcwiz/dctwin:${{ env.IMAGE_VERSION_SHORT }}
+            dcwiz.azurecr.io/cap-dcwiz/dctwin:latest

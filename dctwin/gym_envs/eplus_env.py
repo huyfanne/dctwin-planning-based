@@ -36,6 +36,7 @@ class EPlusEnv(BaseEnv):
         is_k8s: bool = False,
         k8s_config: dict = None,
         is_gpu: bool = False,
+        eplus_image = None,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -54,6 +55,8 @@ class EPlusEnv(BaseEnv):
                 docker_client=docker_client,
                 k8s_config=k8s_config,
             )
+            if eplus_image:
+                self.eplus_backend.docker_image = eplus_image
         else:
             self.eplus_backend = EplusDockerBackend(
                 proto_config=config,

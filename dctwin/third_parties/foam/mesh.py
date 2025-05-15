@@ -1302,13 +1302,22 @@ class RackModel:
 
 
 class MeshBuilder:
-    docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0"
     slot_height: float = 0.05  # 1U = 0.05 m
     base_size: float = 0.2  # base_size for the background blockMesh
     scale: int = 3
     room: Room
     case_dir: Path
     process_num: int
+
+    _docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0"
+
+    @property
+    def docker_image(self) -> str:
+        return self._docker_image
+
+    @docker_image.setter
+    def docker_image(self, value: str) -> None:
+        self._docker_image = value
 
     @property
     def command(self) -> list[str]:

@@ -15,6 +15,7 @@ def make_env(
     building: Building = None,
     is_k8s: bool = False,
     k8s_config: dict = None,
+    eplus_image: str = None,
 ) -> Union[gym.Env, BaseEnv]:
     """The factory function to create the environment.
     :param env_proto_config: the path to the protobuf config file
@@ -52,6 +53,7 @@ def make_env(
         parse_obs_fn=parse_obs_fn,
         is_k8s=is_k8s,
         k8s_config=k8s_config,
+        eplus_image=eplus_image,
         **env_params
     )
 

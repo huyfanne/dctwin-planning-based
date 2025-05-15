@@ -29,11 +29,20 @@ class EplusBackendMixin:
     :param docker_client: The docker client to use (default: None)
     """
 
-    docker_image = "ghcr.io/cap-dcwiz/energyplus-9-5-0:latest"
     _version = 2
     _cur_sim_time = 0.0
     _msg_buf_size = 2048
     _encoding = "ISO-8859-1"
+
+    _docker_image = "ghcr.io/cap-dcwiz/energyplus-9-5-0:latest"
+
+    @property
+    def docker_image(self) -> str:
+        return self._docker_image
+
+    @docker_image.setter
+    def docker_image(self, value: str) -> None:
+        self._docker_image = value
 
     def __init__(
         self,

@@ -107,7 +107,15 @@ class SolverBackendMixin:
     Backend for OpenFOAM solver. The class is inherited from the core Backend
     """
 
-    docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0"
+    _docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0"
+
+    @property
+    def docker_image(self) -> str:
+        return self._docker_image
+
+    @docker_image.setter
+    def docker_image(self, value: str) -> None:
+        self._docker_image = value
 
     only_save_latest = True
     write_interval = 10
