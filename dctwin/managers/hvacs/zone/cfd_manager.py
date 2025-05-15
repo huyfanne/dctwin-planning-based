@@ -128,8 +128,8 @@ class CFDManager:
 
         self.last_state_case = None
         self.object_mesh_index = read_object_mesh_index(room=self.room)
-        self._setup_default_backend()
         self.openfoam_image = openfoam_image
+        self._setup_default_backend()
 
     def _setup_default_backend(self) -> None:
         """Setup default backend
