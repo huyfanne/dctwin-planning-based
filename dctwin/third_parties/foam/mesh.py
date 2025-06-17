@@ -1864,6 +1864,8 @@ class MeshBuilder:
 
         self.run_container(user=0, case_dir=self.case_dir)
 
+        self.room.dump(self.case_dir / "model.json")
+
         logger.info("***** Mesh finished *****\n\n")
 
     def generate_control_dict(
