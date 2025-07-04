@@ -717,7 +717,7 @@ class RoomBuilder:
         zone_equipment_list = self.model.newidfobject(
             key="ZoneHVAC:EquipmentList".upper(),
             Name=f"{zone_name} equipment list",
-            Load_Distribution_Scheme="UniformLoad",
+            Load_Distribution_Scheme=meta.load_distribution_scheme or "UniformLoad",
         )
         # step 2.1 make air distribution units
         make_air_distribution_units(
