@@ -535,7 +535,7 @@ class RoomBuilder:
         zone_name: str,
         acus: Dict[str, ACU],
         dehumidifiers: Dict[str, Dehumidifier],
-        meta: RoomMeta,
+        meta: OrderedDict[str, str],
     ) -> None:
         """
         Build the ZoneHVAC equipment for a thermal zone
@@ -571,7 +571,6 @@ class RoomBuilder:
                 Name=f"{zone_name} returns",
             )
 
-            zone_exhausts = {}
             if num_dehumidifier != 0:
                 zone_exhausts = model.newidfobject(
                     key="NodeList".upper(),
@@ -717,7 +716,7 @@ class RoomBuilder:
         zone_equipment_list = self.model.newidfobject(
             key="ZoneHVAC:EquipmentList".upper(),
             Name=f"{zone_name} equipment list",
-            Load_Distribution_Scheme=meta.load_distribution_scheme or "UniformLoad",
+            Load_Distribution_Scheme=meta.load_distribution_scheme,
         )
         # step 2.1 make air distribution units
         make_air_distribution_units(
