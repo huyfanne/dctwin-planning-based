@@ -1,1015 +1,1015 @@
 {
-  "meta": {
-    "name": "OneZone",
-    "description": "One data hall equipped with chilled water cooling system."
-  },
-  "models": {
-    "curveModels": {
-      "ites": {
-        "cpuPowerInputFunctionOfLoadingAndAirTemperatureCurveModels": {
-          "DataCenterServerPowerFLoadTemp": {
-            "type": "Biquadratic",
-            "coefficients": [
-              0.0,
-              1.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ],
-            "minX": 0.0,
-            "maxX": 1.0,
-            "minY": 0.0,
-            "maxY": 100.0,
-            "inputTypeOfX": "Dimensionless",
-            "inputTypeOfY": "Temperature",
-            "outputType": "Dimensionless"
-          }
-        },
-        "airFlowFunctionOfLoadingAndAirTemperatureCurveModels": {
-          "DataCenterServersAirflowFLoadTemp": {
-            "type": "Biquadratic",
-            "coefficients": [
-              0.0,
-              1.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ],
-            "minX": 0.0,
-            "maxX": 1.0,
-            "minY": 0.0,
-            "maxY": 100.0,
-            "inputTypeOfX": "Dimensionless",
-            "inputTypeOfY": "Temperature",
-            "outputType": "Dimensionless"
-          }
-        },
-        "fanPowerInputFunctionOfFlowCurveModels": {
-          "DataCenterServersFanPowerFFlow": {
-            "type": "Quadratic",
-            "coefficients": [
-              0.0,
-              1.0,
-              0.0
-            ],
-            "minX": 0.0,
-            "maxX": 1.0
-          }
-        },
-        "recirculationFractionFunctionOfLoadingAndAirTemperatureCurveModels": {
-          "DataCenterRecirculationFLoadTemp": {
-            "type": "Biquadratic",
-            "coefficients": [
-              1.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ],
-            "minX": 0.0,
-            "maxX": 1.0,
-            "minY": 0.0,
-            "maxY": 100.0,
-            "inputTypeOfX": "Dimensionless",
-            "inputTypeOfY": "Temperature",
-            "outputType": "Dimensionless"
-          }
-        },
-        "electricPowerSupplyEfficiencyFunctionOfPartLoadRatioCurveModels": {
-          "UPSEfficiencyfPLR": {
-            "type": "Quadratic",
-            "coefficients": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "minX": 0.0,
-            "maxX": 1.0
-          }
-        }
-      },
-      "chillers": {
-        "coolingCapacityFunctionOfTemperatureCurveModels": {
-          "ChillerCoolingCapacityFTemp": {
-            "type": "Biquadratic",
-            "coefficients": [
-              1.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ],
-            "minX": 0.0,
-            "maxX": 100.0,
-            "minY": 0.0,
-            "maxY": 100.0
-          }
-        },
-        "electricInputToCoolingOutputRatioFunctionOfTemperatureCurveModels": {
-          "ChillerEnergyInputToCoolingOutputFTemp": {
-            "type": "Biquadratic",
-            "coefficients": [
-              0.47449676,
-              -0.08900207,
-              0.00214058,
-              0.06906117,
-              -0.00112497,
-              0.00060898
-            ],
-            "minX": 0,
-            "maxX": 100.0,
-            "minY": 0.0,
-            "maxY": 100.0
-          }
-        },
-        "electricInputToCoolingOutputRatioFunctionOfPartLoadRatioCurveModels": {
-          "ChillerEnergyInputToCoolingOutputFPLR": {
-            "type": "Quadratic",
-            "coefficients": [
-              0.0,
-              1.0,
-              0.0
-            ],
-            "minX": 0.0,
-            "maxX": 1.0
-          }
-        }
-      },
-      "coolingTowers": {
-        "fanPowerRatioFunctionOfAirFlowRateRatioCurveModels": {
-          "cooling tower model 1": {
-            "type": "Cubic",
-            "coefficients": [
-              -0.00931516301535329,
-              0.0512333965844443,
-              -0.0838364671381841,
-              1.04191823356909
-            ],
-            "minX": 0.0,
-            "maxX": 1.0
-          }
-        }
-      },
-      "acus": {
-        "fanPowerCurveModels": {
-          "ACU Fan PLR Curve": {
-            "type": "Cubic",
-            "coefficients": [
-              4.4213372e-16,
-              1.52380952,
-              -0.523809524,
-              0.0
-            ],
-            "minX": 0.0,
-            "maxX": 1.0
-          }
-        }
-      },
-      "pumps": {
-        "partLoadPerformanceCurveModels": {
-          "CHWP PLR Curve": {
-            "type": "Cubic",
-            "coefficients": [
-              4.4213372e-16,
-              1.52380952,
-              -0.523809524,
-              0.0
-            ],
-            "minX": 0.0,
-            "maxX": 1.0
-          },
-          "CDWP PLR Curve": {
-            "type": "Cubic",
-            "coefficients": [
-              4.4213372e-16,
-              1.52380952,
-              -0.523809524,
-              0.0
-            ],
-            "minX": 0.0,
-            "maxX": 1.0
-          },
-          "CDUP PLR Curve": {
-            "type": "Cubic",
-            "coefficients": [
-              4.4213372e-16,
-              1.52380952,
-              -0.523809524,
-              0.0
-            ],
-            "minX": 0.0,
-            "maxX": 1.0
-          }
-        }
-      }
+    "meta": {
+        "name": "OneZone",
+        "description": "One data hall equipped with chilled water cooling system."
     },
-    "materialModels": {
-      "1/2IN Gypsum": {
-        "roughness": "Smooth",
-        "conductivity": 0.16,
-        "density": 800.0,
-        "specificHeat": 1090.0,
-        "thickness": 0.0127,
-        "thermalAbsorptance": 0.9,
-        "solarAbsorptance": 0.7,
-        "visibleAbsorptance": 0.7
-      },
-      "C19 - 2 IN LIGHT WEIGHT CONCRETE": {
-        "roughness": "MediumRough",
-        "conductivity": 0.1298912,
-        "density": 480.5539,
-        "specificHeat": 836.8,
-        "thickness": 0.0508,
-        "thermalAbsorptance": 0.9,
-        "solarAbsorptance": 0.7,
-        "visibleAbsorptance": 0.7
-      },
-      "E1 - 3 / 4 IN PLASTER OR GYP BOARD": {
-        "roughness": "Smooth",
-        "conductivity": 0.7264,
-        "density": 800.0,
-        "specificHeat": 1090.0,
-        "thickness": 0.01905,
-        "thermalAbsorptance": 0.9,
-        "solarAbsorptance": 0.7,
-        "visibleAbsorptance": 0.7
-      },
-      "C6 - 8 IN CLAY TILE": {
-        "roughness": "MediumRough",
-        "conductivity": 0.7264,
-        "density": 1120.0,
-        "specificHeat": 837.0,
-        "thickness": 0.2032,
-        "thermalAbsorptance": 0.9,
-        "solarAbsorptance": 0.7,
-        "visibleAbsorptance": 0.7
-      },
-      "8IN Concrete HW": {
-        "roughness": "MediumRough",
-        "conductivity": 1.729599,
-        "density": 2242.99,
-        "specificHeat": 836.99,
-        "thickness": 0.2032,
-        "thermalAbsorptance": 0.9,
-        "solarAbsorptance": 0.65,
-        "visibleAbsorptance": 0.65
-      }
-    },
-    "constructionModels": {
-      "ext-walls": {
-        "materials": [
-          "1/2IN Gypsum",
-          "C19 - 2 IN LIGHT WEIGHT CONCRETE",
-          "E1 - 3 / 4 IN PLASTER OR GYP BOARD",
-          "C6 - 8 IN CLAY TILE"
-        ]
-      },
-      "FLOOR": {
-        "materials": [
-          "8IN Concrete HW"
-        ]
-      },
-      "ROOF": {
-        "materials": [
-          "1/2IN Gypsum"
-        ]
-      },
-      "Ceiling": {
-        "materials": [
-          "8IN Concrete HW"
-        ]
-      }
-    },
-    "geometryModels": {
-      "acus": {
-        "acu model 1": {
-          "supplyFace": {
-            "side": "bottom",
-            "width": 1.82,
-            "length": 1.02,
-            "offset": {
-              "x": 0,
-              "y": 0,
-              "z": 0
-            }
-          },
-          "returnFace": {
-            "side": "top",
-            "width": 1.82,
-            "length": 1.02,
-            "offset": {
-              "x": 0,
-              "y": 0,
-              "z": 0
-            }
-          },
-          "size": {
-            "x": 1.82,
-            "y": 1.02,
-            "z": 1.98
-          }
-        }
-      },
-      "servers": {
-        "4U_Server": {
-          "slotOccupation": 4,
-          "depth": 1.2,
-          "width": 0.6
-        },
-        "1U_Server": {
-          "slotOccupation": 1,
-          "depth": 1.2,
-          "width": 0.6
-        },
-        "8U_Server": {
-          "slotOccupation": 8,
-          "depth": 1.2,
-          "width": 0.6
-        }
-      },
-      "cdus": {
-        "CDU": {
-          "size": {
-            "x": 0.6,
-            "y": 1.2,
-            "z": 0.1
-          },
-          "mainPipeDiameter": 0.004
-        }
-      },
-      "pipes": {
-        "server_pipe_1": {
-          "pipeDiameter": 0.003,
-          "pipeLength": 0.01,
-          "roughness": 1e-06,
-          "fluidName": "water"
-        }
-      },
-      "racks": {
-        "RACK": {
-          "firstSlotOffset": 0.1,
-          "size": {
-            "x": 0.6,
-            "y": 1.2,
-            "z": 2.7
-          },
-          "slot": 60
-        }
-      },
-      "heatExchangers": {
-        "hx_1": {
-          "tubeDiameter": 0.01,
-          "tubeLength": 1.0,
-          "tubeWallThickness": 0.002,
-          "rowNumber": 20,
-          "rowPitch": 0.015,
-          "transverseNumber": 50,
-          "transversePitch": 0.015,
-          "material": "copper",
-          "tubeRoughness": 1e-06,
-          "thermalConductivity": 400
-        }
-      }
-    },
-    "coolingModels": {
-      "acus": {
-        "acu model 1": {
-          "coolingType": "CW",
-          "coolingCapacity": 155.0,
-          "pressureRise": 450,
-          "designWaterFlowRate": 0.0040277,
-          "designAirFlowRate": 11.625,
-          "maximumFlowRate": 11.625,
-          "designInletWaterTemperature": 16,
-          "designOutletWaterTemperature": 24,
-          "designInletAirTemperature": 35.0,
-          "designOutletAirTemperature": 25.0,
-          "designWaterTemperatureDifference": 8.0
-        }
-      },
-      "dehumidifiers": {
-        "dehumidifier:DX": {
-          "ratedWaterRemoval": 50.16,
-          "ratedAirFlowRate": 0.12036,
-          "waterRemovalCurveModel": "DXDehumidifierWaterRemovalCurve"
-        }
-      },
-      "chillers": {
-        "chiller model 1": {
-          "referenceCapacity": 750000,
-          "referenceCop": 5,
-          "referenceLeavingChilledWaterTemperature": 16.0,
-          "referenceEnteringCondenserFluidTemperature": 29.5,
-          "referenceChilledWaterFlowRate": 0.01,
-          "referenceCondenserFluidFlowRate": 0.04,
-          "coolingCapacityFunctionOfTemperatureCurveModel": "ChillerCoolingCapacityFTemp"
-        }
-      },
-      "pumps": {
-        "CHWP": {
-          "designMaximumFlowRate": 0.01,
-          "designPumpHead": 300,
-          "impellerDiameter": 0.343
-        },
-        "CDWP": {
-          "designMaximumFlowRate": 0.04,
-          "designPumpHead": 300,
-          "impellerDiameter": 0.341
-        },
-        "CDUP": {
-          "designMaximumFlowRate": 0.01,
-          "designPumpHead": 300,
-          "impellerDiameter": 0.343
-        }
-      },
-      "coolingTowers": {
-        "CT Model 1": {
-          "modelCoefficientName": "YorkCalc Default Tower Model",
-          "designInletAirWetBulbTemperature": 26.6,
-          "designApproachTemperature": 2.8,
-          "designRangeTemperature": 5.5,
-          "designWaterFlowRate": 0.221,
-          "designAirFlowRate": 100,
-          "numberOfCells": 2,
-          "minimumAirFlowRateRatio": 0.25
-        }
-      },
-      "servers": {
-        "4U_Server_cool": {
-          "fanType": "Variable",
-          "volumeFlowRateRatio": 5e-05,
-          "liquidCooling": true,
-          "pipeDiamater": 0.001
-        },
-        "8U_Server_cool": {
-          "fanType": "Variable",
-          "volumeFlowRateRatio": 5e-05,
-          "liquidCooling": true,
-          "pipeDiamater": 0.001
-        }
-      },
-      "heatExchangers": {
-        "hx_1": {
-          "loopDemandSideDesignFlowRate": 0.0024,
-          "loopSupplySideDesignFlowRate": 0.03,
-          "loopSupplySideDesignTemperature": 33,
-          "loopDemandSideDesignTemperature": 16
-        }
-      }
-    },
-    "powerModels": {
-      "acus": {
-        "acu model 1": {
-          "fanTotalEfficiency": 0.5246024493243244,
-          "fanPowerMinimumFlowRateInputMethod": "Fraction",
-          "fanPowerMinimumFlowFraction": 0.0,
-          "motorEfficiency": 0.86,
-          "motorInAirstreamFraction": 1.0,
-          "fanPowerCurveModel": "ACU Fan PLR Curve"
-        }
-      },
-      "dehumidifiers": {
-        "dehumidifier:DX": {
-          "ratedEnergyFactor": 3.412,
-          "energyFactorCurveModel": "DXDehumidifierEnergyFactorCurve",
-          "partLoadFractionCorrelationCurveModel": "DXDehumidifierPartLoadFractionCorrelationCurve"
-        }
-      },
-      "chillers": {
-        "chiller model 1": {
-          "electricInputToCoolingOutputRatioFunctionOfTemperatureCurveModel": "ChillerEnergyInputToCoolingOutputFTemp",
-          "electricInputToCoolingOutputRatioFunctionOfPLRModel": "ChillerEnergyInputToCoolingOutputFPLR"
-        }
-      },
-      "pumps": {
-        "CHWP": {
-          "designPowerConsumption": 2500,
-          "motorEfficiency": 0.86,
-          "designEletricPowerPerUnitFlowRate": "",
-          "partLoadPerformanceCurveModel": "CHWP PLR Curve"
-        },
-        "CDWP": {
-          "designPowerConsumption": 10652,
-          "motorEfficiency": 0.87,
-          "designEletricPowerPerUnitFlowRate": "",
-          "partLoadPerformanceCurveModel": "CDWP PLR Curve"
-        },
-        "CDUP": {
-          "designPowerConsumption": 2500,
-          "motorEfficiency": 0.86,
-          "designEletricPowerPerUnitFlowRate": "",
-          "partLoadPerformanceCurveModel": "CDUP PLR Curve"
-        }
-      },
-      "coolingTowers": {
-        "CT Model 1": {
-          "designFanPower": 37000
-        }
-      }
-    },
-    "controlModels": {
-      "acus": {
-        "acu model 1": {
-          "controlType": "Temperature",
-          "supplyAirTemperatureSetpoint": 25
-        }
-      },
-      "pumps": {
-        "CHWP": {
-          "controlType": "Intermittent"
-        },
-        "CDWP": {
-          "controlType": "Intermittent"
-        },
-        "CDUP": {
-          "controlType": "Intermittent"
-        }
-      }
-    },
-    "heatGainModels": {
-      "ite": {
-        "ITE Model": {
-          "airFlowCalculationMethod": "FlowFromSystem",
-          "designPowerInputCalculationMethod": "Watts/Unit",
-          "wattsPerZoneFloorArea": 0.0,
-          "designPowerInputScheduleName": "ALWAYS ON",
-          "cpuLoadingScheduleName": "",
-          "cpuPowerInputFunctionOfLoadingAndAirTemperatureCurveModel": "DataCenterServerPowerFLoadTemp",
-          "airFlowFunctionOfLoadingAndAirTemperatureCurveModel": "DataCenterServersAirflowFLoadTemp",
-          "fanPowerInputFunctionOfFlowCurveModel": "DataCenterServersFanPowerFFlow",
-          "recirculationFractionFunctionOfLoadingAndAirTemperatureCurveModel": "DataCenterRecirculationFLoadTemp",
-          "electricPowerSupplyEfficiencyFunctionOfPartLoadRatioCurveModel": "UPSEfficiencyfPLR",
-          "designElectricPowerSupplyEfficiency": 0.85
-        }
-      },
-      "light": {
-        "Light Model": {}
-      },
-      "people": {
-        "People Model": {}
-      },
-      "electricEquipment": {
-        "Electric Equipment Model": {}
-      }
-    }
-  },
-  "geometry": {
-    "height": 4,
-    "plane": [
-      {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      {
-        "x": 12.6,
-        "y": 0,
-        "z": 0
-      },
-      {
-        "x": 12.6,
-        "y": 6,
-        "z": 0
-      },
-      {
-        "x": 0,
-        "y": 6,
-        "z": 0
-      }
-    ]
-  },
-  "constructions": {
-    "surface": {},
-    "zones": {
-      "Data Hall 1A": {
-        "geometry": {
-          "height": 4.0,
-          "plane": [
-            {
-              "x": 0,
-              "y": 0,
-              "z": 0.0
-            },
-            {
-              "x": 12.6,
-              "y": 0,
-              "z": 0.0
-            },
-            {
-              "x": 12.6,
-              "y": 6,
-              "z": 0.0
-            },
-            {
-              "x": 0,
-              "y": 6,
-              "z": 0.0
-            }
-          ]
-        },
-        "constructions": {
-          "acus": {
-            "Data Hall 1A acu-1": {
-              "geometry": {
-                "model": "acu model 1"
-              },
-              "cooling": {
-                "model": "acu model 1"
-              },
-              "power": {
-                "model": "acu model 1"
-              },
-              "controller": {
-                "model": "acu model 1"
-              }
-            }
-          },
-          "surfaces": {
-            "Data Hall 1A Wall001": {
-              "type": "Wall",
-              "zoneName": "Data Hall 1A",
-              "outsideBoundaryCondition": "Outdoors",
-              "constructionName": "ext-walls",
-              "sunExposure": "SunExposed",
-              "windExposure": "WindExposed"
-            },
-            "Data Hall 1A Wall002": {
-              "type": "Wall",
-              "zoneName": "Data Hall 1A",
-              "outsideBoundaryCondition": "Outdoors",
-              "constructionName": "ext-walls",
-              "sunExposure": "SunExposed",
-              "windExposure": "WindExposed"
-            },
-            "Data Hall 1A Wall003": {
-              "type": "Wall",
-              "zoneName": "Data Hall 1A",
-              "outsideBoundaryCondition": "Outdoors",
-              "constructionName": "ext-walls",
-              "sunExposure": "SunExposed",
-              "windExposure": "WindExposed"
-            },
-            "Data Hall 1A Wall004": {
-              "type": "Wall",
-              "zoneName": "Data Hall 1A",
-              "outsideBoundaryCondition": "Outdoors",
-              "constructionName": "ext-walls",
-              "sunExposure": "SunExposed",
-              "windExposure": "WindExposed"
-            },
-            "Data Hall 1A Floor": {
-              "zoneName": "Data Hall 1A",
-              "constructionName": "FLOOR",
-              "type": "Floor",
-              "outsideBoundaryCondition": "Ground",
-              "outsideBoundaryConditionObject": "",
-              "sunExposure": "NoSun",
-              "windExposure": "NoWind"
-            },
-            "Data Hall 1A Ceiling": {
-              "zoneName": "Data Hall 1A",
-              "constructionName": "Roof",
-              "outsideBoundaryCondition": "Outdoors",
-              "outsideBoundaryConditionObject": "",
-              "type": "Roof",
-              "sunExposure": "SunExposed",
-              "windExposure": "WindExposed",
-              "viewFactorToGround": 0.0
-            }
-          },
-          "liquidFlowNetworks": {
-            "liquid loop 1": {
-              "supplyBranches": {
-                "liquid loop supply inlet branch": {
-                  "components": {
-                    "pipes": {
-                      "liquid loop supply pipe": {
-                        "type": "Pipe:Adiabatic"
-                      }
+    "models": {
+        "curveModels": {
+            "ites": {
+                "cpuPowerInputFunctionOfLoadingAndAirTemperatureCurveModels": {
+                    "DataCenterServerPowerFLoadTemp": {
+                        "type": "Biquadratic",
+                        "coefficients": [
+                            0.0,
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "minX": 0.0,
+                        "maxX": 1.0,
+                        "minY": 0.0,
+                        "maxY": 100.0,
+                        "inputTypeOfX": "Dimensionless",
+                        "inputTypeOfY": "Temperature",
+                        "outputType": "Dimensionless"
                     }
-                  },
-                  "side": "inlet"
                 },
-                "liquid loop supply branch 1": {
-                  "components": {
-                    "cdus": {
-                      "Data Hall 1A cdu-1": {
-                        "constructions": {
-                          "heatExchanger": {
-                            "cooling": {
-                              "model": "hx_1"
-                            },
+                "airFlowFunctionOfLoadingAndAirTemperatureCurveModels": {
+                    "DataCenterServersAirflowFLoadTemp": {
+                        "type": "Biquadratic",
+                        "coefficients": [
+                            0.0,
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "minX": 0.0,
+                        "maxX": 1.0,
+                        "minY": 0.0,
+                        "maxY": 100.0,
+                        "inputTypeOfX": "Dimensionless",
+                        "inputTypeOfY": "Temperature",
+                        "outputType": "Dimensionless"
+                    }
+                },
+                "fanPowerInputFunctionOfFlowCurveModels": {
+                    "DataCenterServersFanPowerFFlow": {
+                        "type": "Quadratic",
+                        "coefficients": [
+                            0.0,
+                            1.0,
+                            0.0
+                        ],
+                        "minX": 0.0,
+                        "maxX": 1.0
+                    }
+                },
+                "recirculationFractionFunctionOfLoadingAndAirTemperatureCurveModels": {
+                    "DataCenterRecirculationFLoadTemp": {
+                        "type": "Biquadratic",
+                        "coefficients": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "minX": 0.0,
+                        "maxX": 1.0,
+                        "minY": 0.0,
+                        "maxY": 100.0,
+                        "inputTypeOfX": "Dimensionless",
+                        "inputTypeOfY": "Temperature",
+                        "outputType": "Dimensionless"
+                    }
+                },
+                "electricPowerSupplyEfficiencyFunctionOfPartLoadRatioCurveModels": {
+                    "UPSEfficiencyfPLR": {
+                        "type": "Quadratic",
+                        "coefficients": [
+                            1.0,
+                            0.0,
+                            0.0
+                        ],
+                        "minX": 0.0,
+                        "maxX": 1.0
+                    }
+                }
+            },
+            "chillers": {
+                "coolingCapacityFunctionOfTemperatureCurveModels": {
+                    "ChillerCoolingCapacityFTemp": {
+                        "type": "Biquadratic",
+                        "coefficients": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "minX": 0.0,
+                        "maxX": 100.0,
+                        "minY": 0.0,
+                        "maxY": 100.0
+                    }
+                },
+                "electricInputToCoolingOutputRatioFunctionOfTemperatureCurveModels": {
+                    "ChillerEnergyInputToCoolingOutputFTemp": {
+                        "type": "Biquadratic",
+                        "coefficients": [
+                            0.47449676,
+                            -0.08900207,
+                            0.00214058,
+                            0.06906117,
+                            -0.00112497,
+                            0.00060898
+                        ],
+                        "minX": 0,
+                        "maxX": 100.0,
+                        "minY": 0.0,
+                        "maxY": 100.0
+                    }
+                },
+                "electricInputToCoolingOutputRatioFunctionOfPartLoadRatioCurveModels": {
+                    "ChillerEnergyInputToCoolingOutputFPLR": {
+                        "type": "Quadratic",
+                        "coefficients": [
+                            0.0,
+                            1.0,
+                            0.0
+                        ],
+                        "minX": 0.0,
+                        "maxX": 1.0
+                    }
+                }
+            },
+            "coolingTowers": {
+                "fanPowerRatioFunctionOfAirFlowRateRatioCurveModels": {
+                    "cooling tower model 1": {
+                        "type": "Cubic",
+                        "coefficients": [
+                            -0.00931516301535329,
+                            0.0512333965844443,
+                            -0.0838364671381841,
+                            1.04191823356909
+                        ],
+                        "minX": 0.0,
+                        "maxX": 1.0
+                    }
+                }
+            },
+            "acus": {
+                "fanPowerCurveModels": {
+                    "ACU Fan PLR Curve": {
+                        "type": "Cubic",
+                        "coefficients": [
+                            4.4213372e-16,
+                            1.52380952,
+                            -0.523809524,
+                            0.0
+                        ],
+                        "minX": 0.0,
+                        "maxX": 1.0
+                    }
+                }
+            },
+            "pumps": {
+                "partLoadPerformanceCurveModels": {
+                    "CHWP PLR Curve": {
+                        "type": "Cubic",
+                        "coefficients": [
+                            4.4213372e-16,
+                            1.52380952,
+                            -0.523809524,
+                            0.0
+                        ],
+                        "minX": 0.0,
+                        "maxX": 1.0
+                    },
+                    "CDWP PLR Curve": {
+                        "type": "Cubic",
+                        "coefficients": [
+                            4.4213372e-16,
+                            1.52380952,
+                            -0.523809524,
+                            0.0
+                        ],
+                        "minX": 0.0,
+                        "maxX": 1.0
+                    },
+                    "CDUP PLR Curve": {
+                        "type": "Cubic",
+                        "coefficients": [
+                            4.4213372e-16,
+                            1.52380952,
+                            -0.523809524,
+                            0.0
+                        ],
+                        "minX": 0.0,
+                        "maxX": 1.0
+                    }
+                }
+            }
+        },
+        "materialModels": {
+            "1/2IN Gypsum": {
+                "roughness": "Smooth",
+                "conductivity": 0.16,
+                "density": 800.0,
+                "specificHeat": 1090.0,
+                "thickness": 0.0127,
+                "thermalAbsorptance": 0.9,
+                "solarAbsorptance": 0.7,
+                "visibleAbsorptance": 0.7
+            },
+            "C19 - 2 IN LIGHT WEIGHT CONCRETE": {
+                "roughness": "MediumRough",
+                "conductivity": 0.1298912,
+                "density": 480.5539,
+                "specificHeat": 836.8,
+                "thickness": 0.0508,
+                "thermalAbsorptance": 0.9,
+                "solarAbsorptance": 0.7,
+                "visibleAbsorptance": 0.7
+            },
+            "E1 - 3 / 4 IN PLASTER OR GYP BOARD": {
+                "roughness": "Smooth",
+                "conductivity": 0.7264,
+                "density": 800.0,
+                "specificHeat": 1090.0,
+                "thickness": 0.01905,
+                "thermalAbsorptance": 0.9,
+                "solarAbsorptance": 0.7,
+                "visibleAbsorptance": 0.7
+            },
+            "C6 - 8 IN CLAY TILE": {
+                "roughness": "MediumRough",
+                "conductivity": 0.7264,
+                "density": 1120.0,
+                "specificHeat": 837.0,
+                "thickness": 0.2032,
+                "thermalAbsorptance": 0.9,
+                "solarAbsorptance": 0.7,
+                "visibleAbsorptance": 0.7
+            },
+            "8IN Concrete HW": {
+                "roughness": "MediumRough",
+                "conductivity": 1.729599,
+                "density": 2242.99,
+                "specificHeat": 836.99,
+                "thickness": 0.2032,
+                "thermalAbsorptance": 0.9,
+                "solarAbsorptance": 0.65,
+                "visibleAbsorptance": 0.65
+            }
+        },
+        "constructionModels": {
+            "ext-walls": {
+                "materials": [
+                    "1/2IN Gypsum",
+                    "C19 - 2 IN LIGHT WEIGHT CONCRETE",
+                    "E1 - 3 / 4 IN PLASTER OR GYP BOARD",
+                    "C6 - 8 IN CLAY TILE"
+                ]
+            },
+            "FLOOR": {
+                "materials": [
+                    "8IN Concrete HW"
+                ]
+            },
+            "ROOF": {
+                "materials": [
+                    "1/2IN Gypsum"
+                ]
+            },
+            "Ceiling": {
+                "materials": [
+                    "8IN Concrete HW"
+                ]
+            }
+        },
+        "geometryModels": {
+            "acus": {
+                "acu model 1": {
+                    "supplyFace": {
+                        "side": "bottom",
+                        "width": 1.82,
+                        "length": 1.02,
+                        "offset": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        }
+                    },
+                    "returnFace": {
+                        "side": "top",
+                        "width": 1.82,
+                        "length": 1.02,
+                        "offset": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        }
+                    },
+                    "size": {
+                        "x": 1.82,
+                        "y": 1.02,
+                        "z": 1.98
+                    }
+                }
+            },
+            "servers": {
+                "4U_Server": {
+                    "slotOccupation": 4,
+                    "depth": 1.2,
+                    "width": 0.6
+                },
+                "1U_Server": {
+                    "slotOccupation": 1,
+                    "depth": 1.2,
+                    "width": 0.6
+                },
+                "8U_Server": {
+                    "slotOccupation": 8,
+                    "depth": 1.2,
+                    "width": 0.6
+                }
+            },
+            "cdus": {
+                "CDU": {
+                    "size": {
+                        "x": 0.6,
+                        "y": 1.2,
+                        "z": 0.1
+                    },
+                    "mainPipeDiameter": 0.004
+                }
+            },
+            "pipes": {
+                "server_pipe_1": {
+                    "pipeDiameter": 0.003,
+                    "pipeLength": 0.01,
+                    "roughness": 1e-06,
+                    "fluidName": "water"
+                }
+            },
+            "racks": {
+                "RACK": {
+                    "firstSlotOffset": 0.1,
+                    "size": {
+                        "x": 0.6,
+                        "y": 1.2,
+                        "z": 2.7
+                    },
+                    "slot": 60
+                }
+            },
+            "heatExchangers": {
+                "hx_1": {
+                    "tubeDiameter": 0.01,
+                    "tubeLength": 1.0,
+                    "tubeWallThickness": 0.002,
+                    "rowNumber": 20,
+                    "rowPitch": 0.015,
+                    "transverseNumber": 50,
+                    "transversePitch": 0.015,
+                    "material": "copper",
+                    "tubeRoughness": 1e-06,
+                    "thermalConductivity": 400
+                }
+            }
+        },
+        "coolingModels": {
+            "acus": {
+                "acu model 1": {
+                    "coolingType": "CW",
+                    "coolingCapacity": 155.0,
+                    "pressureRise": 450,
+                    "designWaterFlowRate": 0.0040277,
+                    "designAirFlowRate": 11.625,
+                    "maximumFlowRate": 11.625,
+                    "designInletWaterTemperature": 16,
+                    "designOutletWaterTemperature": 24,
+                    "designInletAirTemperature": 35.0,
+                    "designOutletAirTemperature": 25.0,
+                    "designWaterTemperatureDifference": 8.0
+                }
+            },
+            "dehumidifiers": {
+                "dehumidifier:DX": {
+                    "ratedWaterRemoval": 50.16,
+                    "ratedAirFlowRate": 0.12036,
+                    "waterRemovalCurveModel": "DXDehumidifierWaterRemovalCurve"
+                }
+            },
+            "chillers": {
+                "chiller model 1": {
+                    "referenceCapacity": 750000,
+                    "referenceCop": 5,
+                    "referenceLeavingChilledWaterTemperature": 16.0,
+                    "referenceEnteringCondenserFluidTemperature": 29.5,
+                    "referenceChilledWaterFlowRate": 0.01,
+                    "referenceCondenserFluidFlowRate": 0.04,
+                    "coolingCapacityFunctionOfTemperatureCurveModel": "ChillerCoolingCapacityFTemp"
+                }
+            },
+            "pumps": {
+                "CHWP": {
+                    "designMaximumFlowRate": 0.01,
+                    "designPumpHead": 300,
+                    "impellerDiameter": 0.343
+                },
+                "CDWP": {
+                    "designMaximumFlowRate": 0.04,
+                    "designPumpHead": 300,
+                    "impellerDiameter": 0.341
+                },
+                "CDUP": {
+                    "designMaximumFlowRate": 0.01,
+                    "designPumpHead": 300,
+                    "impellerDiameter": 0.343
+                }
+            },
+            "coolingTowers": {
+                "CT Model 1": {
+                    "modelCoefficientName": "YorkCalc Default Tower Model",
+                    "designInletAirWetBulbTemperature": 26.6,
+                    "designApproachTemperature": 2.8,
+                    "designRangeTemperature": 5.5,
+                    "designWaterFlowRate": 0.221,
+                    "designAirFlowRate": 100,
+                    "numberOfCells": 2,
+                    "minimumAirFlowRateRatio": 0.25
+                }
+            },
+            "servers": {
+                "4U_Server_cool": {
+                    "fanType": "Variable",
+                    "volumeFlowRateRatio": 5e-05,
+                    "liquidCooling": true,
+                    "pipeDiamater": 0.001
+                },
+                "8U_Server_cool": {
+                    "fanType": "Variable",
+                    "volumeFlowRateRatio": 5e-05,
+                    "liquidCooling": true,
+                    "pipeDiamater": 0.001
+                }
+            },
+            "heatExchangers": {
+                "hx_1": {
+                    "loopDemandSideDesignFlowRate": 0.0024,
+                    "loopSupplySideDesignFlowRate": 0.03,
+                    "loopSupplySideDesignTemperature": 33,
+                    "loopDemandSideDesignTemperature": 16
+                }
+            }
+        },
+        "powerModels": {
+            "acus": {
+                "acu model 1": {
+                    "fanTotalEfficiency": 0.5246024493243244,
+                    "fanPowerMinimumFlowRateInputMethod": "Fraction",
+                    "fanPowerMinimumFlowFraction": 0.0,
+                    "motorEfficiency": 0.86,
+                    "motorInAirstreamFraction": 1.0,
+                    "fanPowerCurveModel": "ACU Fan PLR Curve"
+                }
+            },
+            "dehumidifiers": {
+                "dehumidifier:DX": {
+                    "ratedEnergyFactor": 3.412,
+                    "energyFactorCurveModel": "DXDehumidifierEnergyFactorCurve",
+                    "partLoadFractionCorrelationCurveModel": "DXDehumidifierPartLoadFractionCorrelationCurve"
+                }
+            },
+            "chillers": {
+                "chiller model 1": {
+                    "electricInputToCoolingOutputRatioFunctionOfTemperatureCurveModel": "ChillerEnergyInputToCoolingOutputFTemp",
+                    "electricInputToCoolingOutputRatioFunctionOfPLRModel": "ChillerEnergyInputToCoolingOutputFPLR"
+                }
+            },
+            "pumps": {
+                "CHWP": {
+                    "designPowerConsumption": 2500,
+                    "motorEfficiency": 0.86,
+                    "designEletricPowerPerUnitFlowRate": "",
+                    "partLoadPerformanceCurveModel": "CHWP PLR Curve"
+                },
+                "CDWP": {
+                    "designPowerConsumption": 10652,
+                    "motorEfficiency": 0.87,
+                    "designEletricPowerPerUnitFlowRate": "",
+                    "partLoadPerformanceCurveModel": "CDWP PLR Curve"
+                },
+                "CDUP": {
+                    "designPowerConsumption": 2500,
+                    "motorEfficiency": 0.86,
+                    "designEletricPowerPerUnitFlowRate": "",
+                    "partLoadPerformanceCurveModel": "CDUP PLR Curve"
+                }
+            },
+            "coolingTowers": {
+                "CT Model 1": {
+                    "designFanPower": 37000
+                }
+            }
+        },
+        "controlModels": {
+            "acus": {
+                "acu model 1": {
+                    "controlType": "Temperature",
+                    "supplyAirTemperatureSetpoint": 25
+                }
+            },
+            "pumps": {
+                "CHWP": {
+                    "controlType": "Intermittent"
+                },
+                "CDWP": {
+                    "controlType": "Intermittent"
+                },
+                "CDUP": {
+                    "controlType": "Intermittent"
+                }
+            }
+        },
+        "heatGainModels": {
+            "ite": {
+                "ITE Model": {
+                    "airFlowCalculationMethod": "FlowFromSystem",
+                    "designPowerInputCalculationMethod": "Watts/Unit",
+                    "wattsPerZoneFloorArea": 0.0,
+                    "designPowerInputScheduleName": "ALWAYS ON",
+                    "cpuLoadingScheduleName": "",
+                    "cpuPowerInputFunctionOfLoadingAndAirTemperatureCurveModel": "DataCenterServerPowerFLoadTemp",
+                    "airFlowFunctionOfLoadingAndAirTemperatureCurveModel": "DataCenterServersAirflowFLoadTemp",
+                    "fanPowerInputFunctionOfFlowCurveModel": "DataCenterServersFanPowerFFlow",
+                    "recirculationFractionFunctionOfLoadingAndAirTemperatureCurveModel": "DataCenterRecirculationFLoadTemp",
+                    "electricPowerSupplyEfficiencyFunctionOfPartLoadRatioCurveModel": "UPSEfficiencyfPLR",
+                    "designElectricPowerSupplyEfficiency": 0.85
+                }
+            },
+            "light": {
+                "Light Model": {}
+            },
+            "people": {
+                "People Model": {}
+            },
+            "electricEquipment": {
+                "Electric Equipment Model": {}
+            }
+        }
+    },
+    "geometry": {
+        "height": 4,
+        "plane": [
+            {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            {
+                "x": 12.6,
+                "y": 0,
+                "z": 0
+            },
+            {
+                "x": 12.6,
+                "y": 6,
+                "z": 0
+            },
+            {
+                "x": 0,
+                "y": 6,
+                "z": 0
+            }
+        ]
+    },
+    "constructions": {
+        "surface": {},
+        "zones": {
+            "Data Hall 1A": {
+                "geometry": {
+                    "height": 4.0,
+                    "plane": [
+                        {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0.0
+                        },
+                        {
+                            "x": 12.6,
+                            "y": 0,
+                            "z": 0.0
+                        },
+                        {
+                            "x": 12.6,
+                            "y": 6,
+                            "z": 0.0
+                        },
+                        {
+                            "x": 0,
+                            "y": 6,
+                            "z": 0.0
+                        }
+                    ]
+                },
+                "constructions": {
+                    "acus": {
+                        "Data Hall 1A acu-1": {
                             "geometry": {
-                              "model": "hx_1"
-                            }
-                          },
-                          "pump": {
+                                "model": "acu model 1"
+                            },
                             "cooling": {
-                              "model": "CDUP"
+                                "model": "acu model 1"
                             },
                             "power": {
-                              "model": "CDUP"
+                                "model": "acu model 1"
                             },
-                            "control": {
-                              "model": "CDUP"
+                            "controller": {
+                                "model": "acu model 1"
                             }
-                          }
                         }
-                      }
+                    },
+                    "surfaces": {
+                        "Data Hall 1A Wall001": {
+                            "type": "Wall",
+                            "zoneName": "Data Hall 1A",
+                            "outsideBoundaryCondition": "Outdoors",
+                            "constructionName": "ext-walls",
+                            "sunExposure": "SunExposed",
+                            "windExposure": "WindExposed"
+                        },
+                        "Data Hall 1A Wall002": {
+                            "type": "Wall",
+                            "zoneName": "Data Hall 1A",
+                            "outsideBoundaryCondition": "Outdoors",
+                            "constructionName": "ext-walls",
+                            "sunExposure": "SunExposed",
+                            "windExposure": "WindExposed"
+                        },
+                        "Data Hall 1A Wall003": {
+                            "type": "Wall",
+                            "zoneName": "Data Hall 1A",
+                            "outsideBoundaryCondition": "Outdoors",
+                            "constructionName": "ext-walls",
+                            "sunExposure": "SunExposed",
+                            "windExposure": "WindExposed"
+                        },
+                        "Data Hall 1A Wall004": {
+                            "type": "Wall",
+                            "zoneName": "Data Hall 1A",
+                            "outsideBoundaryCondition": "Outdoors",
+                            "constructionName": "ext-walls",
+                            "sunExposure": "SunExposed",
+                            "windExposure": "WindExposed"
+                        },
+                        "Data Hall 1A Floor": {
+                            "zoneName": "Data Hall 1A",
+                            "constructionName": "FLOOR",
+                            "type": "Floor",
+                            "outsideBoundaryCondition": "Ground",
+                            "outsideBoundaryConditionObject": "",
+                            "sunExposure": "NoSun",
+                            "windExposure": "NoWind"
+                        },
+                        "Data Hall 1A Ceiling": {
+                            "zoneName": "Data Hall 1A",
+                            "constructionName": "Roof",
+                            "outsideBoundaryCondition": "Outdoors",
+                            "outsideBoundaryConditionObject": "",
+                            "type": "Roof",
+                            "sunExposure": "SunExposed",
+                            "windExposure": "WindExposed",
+                            "viewFactorToGround": 0.0
+                        }
+                    },
+                    "liquidFlowNetworks": {
+                        "liquid loop 1": {
+                            "supplyBranches": {
+                                "liquid loop supply inlet branch": {
+                                    "components": {
+                                        "pipes": {
+                                            "liquid loop supply pipe": {
+                                                "type": "Pipe:Adiabatic"
+                                            }
+                                        }
+                                    },
+                                    "side": "inlet"
+                                },
+                                "liquid loop supply branch 1": {
+                                    "components": {
+                                        "cdus": {
+                                            "Data Hall 1A cdu-1": {
+                                                "constructions": {
+                                                    "heatExchanger": {
+                                                        "cooling": {
+                                                            "model": "hx_1"
+                                                        },
+                                                        "geometry": {
+                                                            "model": "hx_1"
+                                                        }
+                                                    },
+                                                    "pump": {
+                                                        "cooling": {
+                                                            "model": "CDUP"
+                                                        },
+                                                        "power": {
+                                                            "model": "CDUP"
+                                                        },
+                                                        "control": {
+                                                            "model": "CDUP"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "side": "middle"
+                                },
+                                "liquid loop supply outlet branch": {
+                                    "components": {
+                                        "pipes": {
+                                            "liquid loop supply pipe": {
+                                                "type": "Pipe:Adiabatic"
+                                            }
+                                        }
+                                    },
+                                    "side": "outlet"
+                                }
+                            },
+                            "demandBranches": {
+                                "liquid loop demand inlet branch": {
+                                    "components": {
+                                        "pipes": {
+                                            "liquid loop demand pipe": {
+                                                "type": "Pipe:Adiabatic"
+                                            }
+                                        }
+                                    },
+                                    "side": "inlet"
+                                },
+                                "liquid loop demand branch 1": {
+                                    "components": {
+                                        "servers": {
+                                            "Data Hall 1A server-1": {
+                                                "cooling": {
+                                                    "model": "8U_Server_cool"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "side": "middle"
+                                },
+                                "liquid loop demand branch 2": {
+                                    "components": {
+                                        "servers": {
+                                            "Data Hall 1A server-2": {
+                                                "cooling": {
+                                                    "model": "4U_Server_cool"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "side": "middle"
+                                },
+                                "liquid loop demand outlet branch": {
+                                    "components": {
+                                        "pipes": {
+                                            "liquid loop demand pipe": {
+                                                "type": "Pipe:Adiabatic"
+                                            }
+                                        }
+                                    },
+                                    "side": "outlet"
+                                }
+                            }
+                        }
                     }
-                  },
-                  "side": "middle"
                 },
-                "liquid loop supply outlet branch": {
-                  "components": {
-                    "pipes": {
-                      "liquid loop supply pipe": {
-                        "type": "Pipe:Adiabatic"
-                      }
+                "controlStates": {
+                    "thermostats": {
+                        "coolingSetpoint": 35
                     }
-                  },
-                  "side": "outlet"
+                },
+                "sizing": {
+                    "sizingSystem": {
+                        "type": "Load",
+                        "centralCoolingDesignSupplyAirTemperature": 22.0,
+                        "zoneOrZonelistName": "Data Hall 1A",
+                        "typeOfLoadToSizeOn": "Sensible"
+                    },
+                    "sizingZone": {
+                        "type": "NonCoincident",
+                        "zoneCoolingDesignSupplyAirTemperature": 22.0,
+                        "zoneCoolingDesignSupplyAirTemperatureDifference": 10.0,
+                        "zoneOrZonelistName": "Data Hall 1A",
+                        "typeOfLoadToSizeOn": "Sensible"
+                    }
                 }
-              },
-              "demandBranches": {
-                "liquid loop demand inlet branch": {
-                  "components": {
-                    "pipes": {
-                      "liquid loop demand pipe": {
-                        "type": "Pipe:Adiabatic"
-                      }
-                    }
-                  },
-                  "side": "inlet"
-                },
-                "liquid loop demand branch 1": {
-                  "components": {
-                    "servers": {
-                      "Data Hall 1A server-1": {
-                        "cooling": {
-                          "model": "8U_Server_cool"
-                        }
-                      }
-                    }
-                  },
-                  "side": "middle"
-                },
-                "liquid loop demand branch 2": {
-                  "components": {
-                    "servers": {
-                      "Data Hall 1A server-2": {
-                        "cooling": {
-                          "model": "4U_Server_cool"
-                        }
-                      }
-                    }
-                  },
-                  "side": "middle"
-                },
-                "liquid loop demand outlet branch": {
-                  "components": {
-                    "pipes": {
-                      "liquid loop demand pipe": {
-                        "type": "Pipe:Adiabatic"
-                      }
-                    }
-                  },
-                  "side": "outlet"
-                }
-              }
             }
-          }
         },
-        "controlStates": {
-          "thermostats": {
-            "coolingSetpoint": 35
-          }
-        },
-        "sizing": {
-          "sizingSystem": {
-            "type": "Load",
-            "centralCoolingDesignSupplyAirTemperature": 22.0,
-            "zoneOrZonelistName": "Data Hall 1A",
-            "typeOfLoadToSizeOn": "Sensible"
-          },
-          "sizingZone": {
-            "type": "NonCoincident",
-            "zoneCoolingDesignSupplyAirTemperature": 22.0,
-            "zoneCoolingDesignSupplyAirTemperatureDifference": 10.0,
-            "zoneOrZonelistName": "Data Hall 1A",
-            "typeOfLoadToSizeOn": "Sensible"
-          }
+        "plant": {
+            "chilledWaterLoops": {
+                "chilled water loop": {
+                    "supplyBranches": {
+                        "chilled water loop supply inlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "chilled water loop supply pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "inlet"
+                        },
+                        "chilled water supply branch 1": {
+                            "components": {
+                                "chillers": {
+                                    "chiller 1": {
+                                        "cooling": {
+                                            "model": "chiller model 1"
+                                        },
+                                        "power": {
+                                            "model": "chiller model 1"
+                                        }
+                                    }
+                                },
+                                "pumps": {
+                                    "chiller 1 chwp": {
+                                        "cooling": {
+                                            "model": "CHWP"
+                                        },
+                                        "power": {
+                                            "model": "CHWP"
+                                        },
+                                        "control": {
+                                            "model": "CHWP"
+                                        }
+                                    }
+                                }
+                            },
+                            "side": "middle"
+                        },
+                        "chilled water loop supply outlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "chilled water loop supply outlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "outlet"
+                        }
+                    },
+                    "demandBranches": {
+                        "chilled water loop demand inlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "chilled water loop demand inlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "inlet"
+                        },
+                        "Data Hall 1A acu-1 demand branch": {
+                            "components": {
+                                "acu": {
+                                    "Data Hall 1A acu-1": {}
+                                }
+                            },
+                            "side": "middle"
+                        },
+                        "Data Hall 1A cdu-1 demand branch": {
+                            "components": {
+                                "cdus": {
+                                    "Data Hall 1A cdu-1": {}
+                                }
+                            },
+                            "side": "middle"
+                        },
+                        "chilled water loop demand outlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "chilled water loop demand outlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "outlet"
+                        }
+                    },
+                    "sizing": {
+                        "typeOfLoadToSizeOn": "Sensible",
+                        "loopType": "Cooling",
+                        "loopDesignTemperatureDifference": 8,
+                        "designLoopExitTemperature": 16
+                    },
+                    "meta": {
+                        "loadDistributionScheme": "UniformLoad",
+                        "plantLoopDemandCalculationScheme": "SingleSetpoint"
+                    }
+                }
+            },
+            "condenserWaterLoops": {
+                "chiller 1 condenser water loop": {
+                    "supplyBranches": {
+                        "chiller 1 condenser water loop supply inlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "chiller 1 condenser water loop supply inlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "inlet"
+                        },
+                        "chiller 1 condenser water loop supply branch": {
+                            "components": {
+                                "coolingTowers": {
+                                    "cooling tower 1": {
+                                        "cooling": {
+                                            "model": "CT Model 1"
+                                        },
+                                        "power": {
+                                            "model": "CT Model 1"
+                                        }
+                                    }
+                                },
+                                "pumps": {
+                                    "cooling tower 1 cwp": {
+                                        "cooling": {
+                                            "model": "CDWP"
+                                        },
+                                        "power": {
+                                            "model": "CDWP"
+                                        },
+                                        "control": {
+                                            "model": "CDWP"
+                                        }
+                                    }
+                                }
+                            },
+                            "side": "middle"
+                        },
+                        "chiller 1 condenser water loop supply outlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "chiller 1 condenser water loop supply outlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "outlet"
+                        }
+                    },
+                    "demandBranches": {
+                        "chiller 1 condenser water loop demand inlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "chiller 1 condenser water loop demand inlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "inlet"
+                        },
+                        "chiller 1 demand branch": {
+                            "components": {
+                                "chillers": {
+                                    "chiller 1": {
+                                        "cooling": {
+                                            "model": "chiller model 1"
+                                        },
+                                        "power": {
+                                            "model": "chiller model 1"
+                                        }
+                                    }
+                                }
+                            },
+                            "side": "middle"
+                        },
+                        "chiller 1 condenser water loop demand outlet branch": {
+                            "components": {
+                                "pipes": {
+                                    "chiller 1 condenser water loop demand outlet pipe": {
+                                        "type": "Pipe:Adiabatic"
+                                    }
+                                }
+                            },
+                            "side": "outlet"
+                        }
+                    },
+                    "sizing": {
+                        "typeOfLoadToSizeOn": "Sensible",
+                        "loopType": "Condenser",
+                        "loopDesignTemperatureDifference": 5.5,
+                        "designLoopExitTemperature": 29
+                    },
+                    "meta": {
+                        "loadDistributionScheme": "UniformLoad",
+                        "plantLoopDemandCalculationScheme": "SingleSetpoint"
+                    }
+                }
+            }
         }
-      }
-    },
-    "plant": {
-      "chilledWaterLoops": {
-        "chilled water loop": {
-          "supplyBranches": {
-            "chilled water loop supply inlet branch": {
-              "components": {
-                "pipes": {
-                  "chilled water loop supply pipe": {
-                    "type": "Pipe:Adiabatic"
-                  }
-                }
-              },
-              "side": "inlet"
-            },
-            "chilled water supply branch 1": {
-              "components": {
-                "chillers": {
-                  "chiller 1": {
-                    "cooling": {
-                      "model": "chiller model 1"
-                    },
-                    "power": {
-                      "model": "chiller model 1"
-                    }
-                  }
-                },
-                "pumps": {
-                  "chiller 1 chwp": {
-                    "cooling": {
-                      "model": "CHWP"
-                    },
-                    "power": {
-                      "model": "CHWP"
-                    },
-                    "control": {
-                      "model": "CHWP"
-                    }
-                  }
-                }
-              },
-              "side": "middle"
-            },
-            "chilled water loop supply outlet branch": {
-              "components": {
-                "pipes": {
-                  "chilled water loop supply outlet pipe": {
-                    "type": "Pipe:Adiabatic"
-                  }
-                }
-              },
-              "side": "outlet"
-            }
-          },
-          "demandBranches": {
-            "chilled water loop demand inlet branch": {
-              "components": {
-                "pipes": {
-                  "chilled water loop demand inlet pipe": {
-                    "type": "Pipe:Adiabatic"
-                  }
-                }
-              },
-              "side": "inlet"
-            },
-            "Data Hall 1A acu-1 demand branch": {
-              "components": {
-                "acu": {
-                  "Data Hall 1A acu-1": {}
-                }
-              },
-              "side": "middle"
-            },
-            "Data Hall 1A cdu-1 demand branch": {
-              "components": {
-                "cdus": {
-                  "Data Hall 1A cdu-1": {}
-                }
-              },
-              "side": "middle"
-            },
-            "chilled water loop demand outlet branch": {
-              "components": {
-                "pipes": {
-                  "chilled water loop demand outlet pipe": {
-                    "type": "Pipe:Adiabatic"
-                  }
-                }
-              },
-              "side": "outlet"
-            }
-          },
-          "sizing": {
-            "typeOfLoadToSizeOn": "Sensible",
-            "loopType": "Cooling",
-            "loopDesignTemperatureDifference": 8,
-            "designLoopExitTemperature": 16
-          },
-          "meta": {
-            "loadDistributionScheme": "UniformLoad",
-            "plantLoopDemandCalculationScheme": "SingleSetpoint"
-          }
-        }
-      },
-      "condenserWaterLoops": {
-        "chiller 1 condenser water loop": {
-          "supplyBranches": {
-            "chiller 1 condenser water loop supply inlet branch": {
-              "components": {
-                "pipes": {
-                  "chiller 1 condenser water loop supply inlet pipe": {
-                    "type": "Pipe:Adiabatic"
-                  }
-                }
-              },
-              "side": "inlet"
-            },
-            "chiller 1 condenser water loop supply branch": {
-              "components": {
-                "coolingTowers": {
-                  "cooling tower 1": {
-                    "cooling": {
-                      "model": "CT Model 1"
-                    },
-                    "power": {
-                      "model": "CT Model 1"
-                    }
-                  }
-                },
-                "pumps": {
-                  "cooling tower 1 cwp": {
-                    "cooling": {
-                      "model": "CDWP"
-                    },
-                    "power": {
-                      "model": "CDWP"
-                    },
-                    "control": {
-                      "model": "CDWP"
-                    }
-                  }
-                }
-              },
-              "side": "middle"
-            },
-            "chiller 1 condenser water loop supply outlet branch": {
-              "components": {
-                "pipes": {
-                  "chiller 1 condenser water loop supply outlet pipe": {
-                    "type": "Pipe:Adiabatic"
-                  }
-                }
-              },
-              "side": "outlet"
-            }
-          },
-          "demandBranches": {
-            "chiller 1 condenser water loop demand inlet branch": {
-              "components": {
-                "pipes": {
-                  "chiller 1 condenser water loop demand inlet pipe": {
-                    "type": "Pipe:Adiabatic"
-                  }
-                }
-              },
-              "side": "inlet"
-            },
-            "chiller 1 demand branch": {
-              "components": {
-                "chillers": {
-                  "chiller 1": {
-                    "cooling": {
-                      "model": "chiller model 1"
-                    },
-                    "power": {
-                      "model": "chiller model 1"
-                    }
-                  }
-                }
-              },
-              "side": "middle"
-            },
-            "chiller 1 condenser water loop demand outlet branch": {
-              "components": {
-                "pipes": {
-                  "chiller 1 condenser water loop demand outlet pipe": {
-                    "type": "Pipe:Adiabatic"
-                  }
-                }
-              },
-              "side": "outlet"
-            }
-          },
-          "sizing": {
-            "typeOfLoadToSizeOn": "Sensible",
-            "loopType": "Condenser",
-            "loopDesignTemperatureDifference": 5.5,
-            "designLoopExitTemperature": 29
-          },
-          "meta": {
-            "loadDistributionScheme": "UniformLoad",
-            "plantLoopDemandCalculationScheme": "SingleSetpoint"
-          }
-        }
-      }
     }
-  }
 }
