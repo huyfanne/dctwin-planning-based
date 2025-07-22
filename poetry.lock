@@ -746,7 +746,7 @@ files = [
 
 [[package]]
 name = "dclib"
-version = "2.0.0"
+version = "2.1.5"
 description = ""
 optional = false
 python-versions = ">=3.10,<4.0"
@@ -762,8 +762,8 @@ pydantic = "^2.0.0"
 [package.source]
 type = "git"
 url = "https://github.com/cap-dcwiz/dclib.git"
-reference = "v2.1.1"
-resolved_reference = "71dd3f6b199f8d6bbc508556067872beb056eb1c"
+reference = "v2.1.5"
+resolved_reference = "cc0a0725c0e9b6a61228d7a62c5c8f883b3a06d7"
 
 [[package]]
 name = "decorator"
@@ -3970,4 +3970,4 @@ dev = ["black (>=19.3b0) ; python_version >= \"3.6\"", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "8fde4d83386ad0760128b40f5ee5270a5d2a22c1077e116542ad3310b071403a"
+content-hash = "3f1cee4fd28bdf355a6afb6143c2cce3fcb5b853e0944b5c95092a77b28f9f35"
