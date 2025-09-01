@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Any
 from pathlib import Path
 from loguru import logger
 import math
@@ -382,6 +382,202 @@ class ACUModel:
         bounding_box_min, bounding_box_max = self._get_supply_or_return_face_bounding_box(face=acu_return_face)
         self.return_face = PatchModel(
             name=f"acu_return_{self.config.valid_id}",
+            bounding_box_min=bounding_box_min,
+            bounding_box_max=bounding_box_max
+        )
+
+    def _get_supply_or_return_face_bounding_box(self, face):
+        orientation = int(self.config.geometry.orientation)
+        if face.side.name == "bottom" or face.side.name == "top":
+            bounding_box_min = [
+                self.box.v_min[0] + face.offset.x
+                if orientation in [0, 180] else self.box.v_min[0] + face.offset.y,
+
+                self.box.v_min[1] + face.offset.y
+                if orientation in [0, 180] else self.box.v_min[1] + face.offset.x,
+
+                self.box.v_min[2] - 0.1 * self.base_size if face.side.name == "bottom"
+                else self.box.v_min[2] + self.config.geometry.size.z - 0.1 * self.base_size
+            ]
+            bounding_box_max = [
+                self.box.v_min[0] + face.offset.x + face.width
+                if orientation in [0, 180] else self.box.v_min[0] + face.offset.y + face.length,
+
+                self.box.v_min[1] + face.offset.y + face.length
+                if orientation in [0, 180] else self.box.v_min[1] + face.offset.x + face.width,
+
+                self.box.v_min[2] + 0.1 * self.base_size if face.side.name == "bottom"
+                else self.box.v_min[2] + self.config.geometry.size.z + 0.1 * self.base_size
+            ]
+        elif face.side.name == "left" or face.side.name == "right":
+            if self.config.geometry.orientation == 0 or self.config.geometry.orientation == 180:
+                bounding_box_min = [
+                    self.box.v_min[0] - 0.1 * self.base_size
+                    if (face.side.name == "left" and self.config.geometry.orientation == 0) or
+                       (face.side.name == "right" and self.config.geometry.orientation == 180)
+                    else self.box.v_min[0] + self.config.geometry.size.x - 0.1 * self.base_size,
+                    self.box.v_min[1] + face.offset.x,
+                    self.box.v_min[2] + face.offset.y
+                ]
+                bounding_box_max = [
+                    self.box.v_min[0] + 0.1 * self.base_size
+                    if (face.side.name == "left" and self.config.geometry.orientation == 0) or
+                       (face.side.name == "right" and self.config.geometry.orientation == 180)
+                    else self.box.v_min[0] + self.config.geometry.size.x + 0.1 * self.base_size,
+                    self.box.v_min[1] + face.offset.x + face.width,
+                    self.box.v_min[2] + face.offset.y + face.length
+                ]
+            else:
+                bounding_box_min = [
+                    self.box.v_min[0] + face.offset.x,
+                    self.box.v_min[1] - 0.1 * self.base_size
+                    if (face.side.name == "left" and self.config.geometry.orientation == 270) or
+                       (face.side.name == "right" and self.config.geometry.orientation == 90)
+                    else self.box.v_min[1] + self.config.geometry.size.y - 0.1 * self.base_size,
+                    self.box.v_min[2] + face.offset.y
+                ]
+                bounding_box_max = [
+                    self.box.v_min[0] + face.offset.x + face.width,
+                    self.box.v_min[1] + 0.1 * self.base_size
+                    if (face.side.name == "left" and self.config.geometry.orientation == 270) or
+                       (face.side.name == "right" and self.config.geometry.orientation == 90)
+                    else self.box.v_min[1] + self.config.geometry.size.y + 0.1 * self.base_size,
+                    self.box.v_min[2] + face.offset.y + face.length
+                ]
+        else:  # face.side.name == "front" or face.side.name == "rear":
+            if self.config.geometry.orientation == 0 or self.config.geometry.orientation == 180:
+                bounding_box_min = [
+                    self.box.v_min[0] + face.offset.x,
+                    self.box.v_min[1] - 0.1 * self.base_size
+                    if (face.side.name == "front" and self.config.geometry.orientation == 0)
+                       or (face.side.name == "rear" and self.config.geometry.orientation == 180)
+                    else self.box.v_min[1] + self.config.geometry.size.y - 0.1 * self.base_size,
+                    self.box.v_min[2] + face.offset.y
+                ]
+                bounding_box_max = [
+                    self.box.v_min[0] + face.offset.x + face.width,
+                    self.box.v_min[1] + 0.1 * self.base_size
+                    if (face.side.name == "front" and self.config.geometry.orientation == 0)
+                       or (face.side.name == "rear" and self.config.geometry.orientation == 180)
+                    else self.box.v_min[1] + self.config.geometry.size.y + 0.1 * self.base_size,
+                    self.box.v_min[2] + face.offset.y + face.length
+                ]
+            else:
+                bounding_box_min = [
+                    self.box.v_min[0] + self.config.geometry.size.y - 0.1 * self.base_size
+                    if (face.side.name == "front" and self.config.geometry.orientation == 90)
+                       or (face.side.name == "rear" and self.config.geometry.orientation == 270)
+                    else self.box.v_min[0] - 0.1 * self.base_size,
+                    self.box.v_min[1] + face.offset.x,
+                    self.box.v_min[2] + face.offset.y
+                ]
+                bounding_box_max = [
+                    self.box.v_min[0] + self.config.geometry.size.y + 0.1 * self.base_size
+                    if (face.side.name == "front" and self.config.geometry.orientation == 90)
+                       or (face.side.name == "rear" and self.config.geometry.orientation == 270)
+                    else self.box.v_min[0] + 0.1 * self.base_size,
+                    self.box.v_min[1] + face.offset.x + face.width,
+                    self.box.v_min[2] + face.offset.y + face.length
+                ]
+        return bounding_box_min, bounding_box_max
+
+    @property
+    def snappyHex_cmd(self):
+        return self.box.snappyHex_cmd
+
+    @property
+    def topoSet_cmd(self):
+        return self.supply_face.topoSet_cmd + self.return_face.topoSet_cmd
+
+    @property
+    def createPatch_cmd(self):
+        return self.supply_face.createPatch_cmd + self.return_face.createPatch_cmd
+
+
+class HeatEmittingBoxModel:
+    config: Any
+    base_size: float
+    box: BoxModel
+    supply_face: PatchModel
+    return_face: PatchModel
+
+    def __init__(
+            self,
+            config: Any,
+            base_size: float = 0.2
+    ):
+        self.config = config
+        self.base_size = base_size
+        self.cheek_config()
+        self._make_box()
+        self._make_supply_face()
+        self._make_return_face()
+
+    def cheek_config(self):
+        if self.config.geometry.orientation < 0:
+            self.config.geometry.orientation = int(self.config.geometry.orientation + 360)
+
+        if not (self.config.geometry.orientation == 0 or self.config.geometry.orientation == 90 or
+                self.config.geometry.orientation == 180 or self.config.geometry.orientation == 270):
+            raise ValueError(f"Invalid orientation: {self.config.geometry.orientation} for Heat Emitting Box '{self.config.uid}'")
+
+        if not (self.config.geometry.supply_face.side.name in ["top", "bottom", "left", "right", "front", "rear"]):
+            raise ValueError(f"Invalid supply face side: {self.config.geometry.supply_face.side.name} for Heat Emitting Box '"
+                             f"{self.config.uid}'")
+
+        if not (self.config.geometry.return_face.side.name in ["top", "bottom", "left", "right", "front", "rear"]):
+            raise ValueError(f"Invalid return face side: {self.config.geometry.return_face.side.name} for Heat Emitting Box '"
+                             f"{self.config.uid}'")
+
+    def _make_box(self):
+        # compute the rotated vertex of the ACU object
+        v_min, v_max = rotate_rectangular(
+            abs_vertex_1=Vertex(
+                x=self.config.geometry.location.x,
+                y=self.config.geometry.location.y,
+                z=self.config.geometry.location.z
+            ),
+            abs_vertex_2=Vertex(
+                x=self.config.geometry.location.x + self.config.geometry.size.x,
+                y=self.config.geometry.location.y,
+                z=self.config.geometry.location.z
+            ),
+            abs_vertex_3=Vertex(
+                x=self.config.geometry.location.x + self.config.geometry.size.x,
+                y=self.config.geometry.location.y + self.config.geometry.size.y,
+                z=self.config.geometry.location.z
+            ),
+            abs_vertex_4=Vertex(
+                x=self.config.geometry.location.x,
+                y=self.config.geometry.location.y + self.config.geometry.size.y,
+                z=self.config.geometry.location.z
+            ),
+            angle=self.config.geometry.orientation,
+        )
+        v_min.z = self.config.geometry.location.z
+        v_max.z = self.config.geometry.location.z + self.config.geometry.size.z
+        # create a box object that represents the ACU
+        self.box = BoxModel(
+            name=f"heat_emitting_box_wall_{self.config.valid_id}",
+            v_min=[v_min.x, v_min.y, v_min.z],
+            v_max=[v_max.x, v_max.y, v_max.z],
+            is_refinement_box=False
+        )
+
+    def _make_supply_face(self):
+        heat_emitting_box_supply_face = self.config.geometry.supply_face
+        bounding_box_min, bounding_box_max = self._get_supply_or_return_face_bounding_box(face=heat_emitting_box_supply_face)
+        self.supply_face = PatchModel(
+            name=f"heat_emitting_box_supply_{self.config.valid_id}",
+            bounding_box_min=bounding_box_min,
+            bounding_box_max=bounding_box_max
+        )
+
+    def _make_return_face(self):
+        heat_emitting_box_return_face = self.config.geometry.return_face
+        bounding_box_min, bounding_box_max = self._get_supply_or_return_face_bounding_box(face=heat_emitting_box_return_face)
+        self.return_face = PatchModel(
+            name=f"heat_emitting_box_return_{self.config.valid_id}",
             bounding_box_min=bounding_box_min,
             bounding_box_max=bounding_box_max
         )
@@ -1426,6 +1622,14 @@ class MeshBuilder:
             round_face(face=acu.geometry.supply_face, face_name=f"{acu.valid_id}_supply_face")
             round_face(face=acu.geometry.return_face, face_name=f"{acu.valid_id}_return_face")
 
+        # round the heat_emitting_box
+        for heat_emitting_box in self.room.constructions.heat_emitting_boxes.values():
+            # round the box of the heat_emitting_box
+            round_box(box_model=heat_emitting_box)
+            # round the faces of the heat_emitting_box
+            round_face(face=heat_emitting_box.geometry.supply_face, face_name=f"{heat_emitting_box.valid_id}_supply_face")
+            round_face(face=heat_emitting_box.geometry.return_face, face_name=f"{heat_emitting_box.valid_id}_return_face")
+
         # round the rack
         if self.room.constructions.racks:
             for rack in self.room.constructions.racks.values():
@@ -1509,6 +1713,17 @@ class MeshBuilder:
                 )
             )
         return acu_list
+
+    def make_heat_emitting_boxes(self, heat_emitting_boxes: Dict[str, Any]):
+        heat_emitting_boxes_list = []
+        for heat_emitting_box_name, heat_emitting_box in heat_emitting_boxes.items():
+            heat_emitting_boxes_list.append(
+                HeatEmittingBoxModel(
+                    config=heat_emitting_box,
+                    base_size=self.base_size,
+                )
+            )
+        return heat_emitting_boxes_list
 
     def make_boxes(self, boxes: Dict[str, Box]):
         box_list = []
@@ -1813,6 +2028,7 @@ class MeshBuilder:
         acus = self.room.constructions.acus
         racks = self.room.constructions.racks
         rows = self.room.constructions.rows
+        heat_emitting_boxes = self.room.constructions.heat_emitting_boxes
 
         # make geometry objects
         v_min, v_max, x_cells, y_cells, z_cells = self.make_room()
@@ -1830,6 +2046,7 @@ class MeshBuilder:
         )
         box_list, box_plane_list, box_opening_face_list = self.make_boxes(boxes=boxes)
         acu_list = self.make_acus(acus=acus)
+        heat_emitting_boxes_list = self.make_heat_emitting_boxes(heat_emitting_boxes=heat_emitting_boxes)
         rack_list = self.make_racks(racks=racks, refinement_level=refinement_level)
         row_racks_list = self.make_row_racks(rows=rows, refinement_level=refinement_level)
 
@@ -1843,21 +2060,21 @@ class MeshBuilder:
         )
         # write snappyHexMesh dict
         self.write_snappyHexMesh_dict(
-            snappy_obj_list=box_list + acu_list + rack_list + row_racks_list,
+            snappy_obj_list=box_list + acu_list + rack_list + row_racks_list + heat_emitting_boxes_list,
             location_in_mesh=location_in_mesh
         )
         # write createBaffles dict
         self.write_createBaffles_dict(
             plane_list=raised_floor + false_ceiling + box_plane_list + rack_list + row_racks_list +
-                       false_ceiling_opening_face_list + raised_floor_opening_face_list + box_opening_face_list,
+                       false_ceiling_opening_face_list + raised_floor_opening_face_list + box_opening_face_list + heat_emitting_boxes_list,
         )
         # write topoSet dict
         self.write_topoSet_dict(
-            face_set_list=acu_list + rack_list + row_racks_list,
+            face_set_list=acu_list + rack_list + row_racks_list + heat_emitting_boxes_list, 
         )
         # write createPatch dict
         self.write_createPatch_dict(
-            patch_list=acu_list + rack_list + row_racks_list
+            patch_list=acu_list + rack_list + row_racks_list + heat_emitting_boxes_list,
         )
 
         self.generate_control_dict()
