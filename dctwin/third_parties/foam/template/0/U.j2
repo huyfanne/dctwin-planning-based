@@ -73,6 +73,9 @@ boundaryField
     {% for acu_boundary in acu_boundaries %}
     {{ acu_boundary.U }}
     {% endfor %}
+    {% for heat_emitting_box_boundary in heat_emitting_box_boundaries %}
+    {{ heat_emitting_box_boundary.U }}
+    {% endfor %}
     {% for server_boundary in server_boundaries %}
     {{ server_boundary.U }}
     {% endfor %}

@@ -2066,11 +2066,11 @@ class MeshBuilder:
         # write createBaffles dict
         self.write_createBaffles_dict(
             plane_list=raised_floor + false_ceiling + box_plane_list + rack_list + row_racks_list +
-                       false_ceiling_opening_face_list + raised_floor_opening_face_list + box_opening_face_list + heat_emitting_boxes_list,
+                       false_ceiling_opening_face_list + raised_floor_opening_face_list + box_opening_face_list,
         )
         # write topoSet dict
         self.write_topoSet_dict(
-            face_set_list=acu_list + rack_list + row_racks_list + heat_emitting_boxes_list, 
+            face_set_list=acu_list + rack_list + row_racks_list + heat_emitting_boxes_list,
         )
         # write createPatch dict
         self.write_createPatch_dict(

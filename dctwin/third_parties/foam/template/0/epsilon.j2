@@ -81,6 +81,26 @@ boundaryField
         value           uniform {{ acu_epsilon }};
     }
 
+    "heat_emitting_box_wall_.*"
+    {
+        type            epsilonWallFunction;
+        value           uniform {{ acu_epsilon }};
+    }
+
+    "heat_emitting_box_supply_.*"
+    {
+        type            inletOutlet;
+        inletValue      uniform {{ acu_epsilon }};
+        value           uniform {{ acu_epsilon }};
+    }
+    
+    "heat_emitting_box_return_.*"
+    {
+        type            inletOutlet;
+        inletValue      uniform {{ acu_epsilon }};
+        value           uniform {{ acu_epsilon }};
+    }
+
     "rack_wall_.*"
     {
         type            epsilonWallFunction;
