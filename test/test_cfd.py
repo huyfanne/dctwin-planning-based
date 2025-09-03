@@ -5,7 +5,7 @@ from dctwin.utils import config
 room = Room.load("test/models/geometry/room_test_heat_emitting.json")
 config.PRESERVE_FOAM_LOG = True
 
-iterations = 50
+iterations = 500
 
 # manager = CFDManager(room=room, mesh_process=8, solve_process=8, is_gpu=True, scale_server_flow_rate=True)
 manager = CFDManager(

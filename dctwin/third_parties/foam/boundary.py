@@ -238,13 +238,10 @@ class HeatEmittingBoxBoundary(Boundary):
     def __init__(self, heat_emitting_box) -> None:
         self.heat_emitting_box_id = heat_emitting_box.valid_id
         self.object = heat_emitting_box
-        # Heat emitting boxes typically have power consumption that generates heat
-        self.power_consumption = getattr(heat_emitting_box, 'power_consumption', 0.0)  # unit: kW
         # Air flow rate through the heat emitting box
-        self.air_volume_flow_rate = getattr(heat_emitting_box, 'air_volume_flow_rate', 0.0)
+        self.air_volume_flow_rate = 0.02
         self.air_mass_flow_rate = rho_air * self.air_volume_flow_rate
-        # Heat generation capacity (similar to cooling capacity but for heat generation)
-        self.heat_generation_capacity = round(self.power_consumption, 6)  # unit: kW
+        self.power = heat_emitting_box.power
 
     @property
     def p_rgh(self) -> str:
@@ -258,30 +255,24 @@ class HeatEmittingBoxBoundary(Boundary):
     @property
     def T(self) -> str:
         t_sink = f"tSink_{self.heat_emitting_box_id}"
-        if np.isclose(self.air_volume_flow_rate, 0):
-            outlet = self.zero_gradient
-        else:
-            outlet = f"""
-    {{
-        type            uniformFixedValue;
-        value           $internalField;
-        uniformValue    
-        {{
-            type            expression;
-            expression       "max(0,t2)";
-            variables
-            (
-                "{t_sink}{{heat_emitting_box_return_{self.heat_emitting_box_id}}} = weightAverage(T)"
-                "heatGenerationCapacity = {self.heat_generation_capacity}"		
-                "airMassFlowRate = {self.air_mass_flow_rate}"
-                "t1 = {t_sink} + (heatGenerationCapacity * 1000 / (airMassFlowRate * {air_specific_heat}))"
-                "t2 = {t_sink} + (heatGenerationCapacity * 1000 / (airMassFlowRate * {air_specific_heat}))"
-            );
-        }};
-    }}"""
+        value = f"{t_sink}+{self.power / (self.air_volume_flow_rate * air_specific_heat)}"
+        outlet = f"""
+            {{
+                type            uniformFixedValue;
+                value           $internalField;
+                uniformValue
+                {{
+                    type            expression;
+                    expression       "{value}";
+                    variables
+                    (
+                        "{t_sink}{{heat_emitting_box_supply_{self.heat_emitting_box_id}}} = weightAverage(T)"
+                    );
+                    }};
+            }}"""
         return f"""
     heat_emitting_box_wall_{self.heat_emitting_box_id} {self.zero_gradient}
-    
+
     heat_emitting_box_supply_{self.heat_emitting_box_id} {self.zero_gradient}
     
     heat_emitting_box_return_{self.heat_emitting_box_id} {outlet}"""

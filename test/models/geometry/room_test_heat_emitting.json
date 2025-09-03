@@ -42,24 +42,24 @@
                         "z": 2.0
                     },
                     "supplyFace": {
-                        "length": 1.8,
+                        "length": 1,
                         "offset": {
                             "x": 0.0,
                             "y": 0.0,
                             "z": 0.0
                         },
-                        "side": "bottom",
-                        "width": 3.4
+                        "side": "front",
+                        "width": 1
                     },
                     "returnFace": {
-                        "length": 0.7,
+                        "length": 1,
                         "offset": {
                             "x": 0.0,
                             "y": 0.0,
                             "z": 0.0
                         },
-                        "side": "top",
-                        "width": 3.4
+                        "side": "rear",
+                        "width": 1
                     }
                 }
             },
@@ -310,8 +310,8 @@
                     "model": "ups",
                     "orientation": 180,
                     "location": {
-                        "x": 9.8,
-                        "y": 3.8,
+                        "x": 4.8,
+                        "y": 4.8,
                         "z": 0.9
                     }
                 }
@@ -1462,7 +1462,7 @@
         },
         "heatEmittingBoxes": {
             "ups1": {
-                "inputPower": 1000
+                "inputPower": 3000
             }
         }
     }
