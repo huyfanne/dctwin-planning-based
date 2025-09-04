@@ -2,7 +2,7 @@ from dclib import Room
 from dctwin.managers import CFDManager
 from dctwin.utils import config
 
-room = Room.load("test/models/geometry/room_test_heat_emitting.json")
+room = Room.load("test/models/geometry/k2_project.json")
 config.PRESERVE_FOAM_LOG = True
 
 iterations = 500
