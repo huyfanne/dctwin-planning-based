@@ -236,7 +236,9 @@
                 }
             }
         },
-        "powerModels": {},
+        "powerModels": {
+            "acus": {}
+        },
         "coolingModels": {
             "acus": {
                 "acu_model_1": {
@@ -493,7 +495,8 @@
                 },
                 "cooling": {
                     "model": "acu_model_1"
-                }
+                },
+                "power": {}
             },
             "ACU2": {
                 "geometry": {
@@ -507,7 +510,8 @@
                 },
                 "cooling": {
                     "model": "acu_model_1"
-                }
+                },
+                "power": {}
             }
 
         },
