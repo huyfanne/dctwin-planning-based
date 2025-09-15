@@ -105,6 +105,24 @@ boundaryField
         value           uniform 0;
 	}
 
+    "heat_emitting_box_wall_.*"
+	{
+        type            fixedFluxPressure;
+        value           uniform $internalField;
+	}
+
+    "heat_emitting_box_supply_.*"
+	{
+        type            fixedFluxPressure;
+        value           uniform $internalField;
+	}
+
+    "heat_emitting_box_return_.*"
+	{
+        type            fixedFluxPressure;
+        value           uniform $internalField;
+	}
+
 	"server_outlet_.*"
 	{
         type            fixedFluxPressure;

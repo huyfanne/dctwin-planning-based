@@ -105,6 +105,28 @@ boundaryField
 	    value           uniform 0;
 	}
 
+    "heat_emitting_box_wall_.*"
+	{
+        type            calculated;
+        value           $internalField;
+	}
+
+    "heat_emitting_box_supply_.*"
+	{
+        type            calculated;
+        value           $internalField;
+	}
+
+    "heat_emitting_box_return_.*"
+	{
+	    type            totalPressure;
+	    rho             rho;
+	    psi             none;
+	    gamma           1;
+	    p0              uniform 0;
+	    value           uniform 0;
+	}
+
 	"server_inlet_.*"
 	{
 	    type            totalPressure;

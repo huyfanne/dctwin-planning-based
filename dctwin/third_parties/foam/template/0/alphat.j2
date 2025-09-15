@@ -83,6 +83,25 @@ boundaryField
         value           $internalField;
     }
 
+    "heat_emitting_box_wall_.*"
+    {
+        type            alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+
+    "heat_emitting_box_supply_.*"
+    {
+        type            calculated;
+        value           $internalField;
+    }
+
+    "heat_emitting_box_return_.*"
+    {
+        type            calculated;
+        value           $internalField;
+    }
+
     "rack_wall_.*"
     {
         type            alphatJayatillekeWallFunction;

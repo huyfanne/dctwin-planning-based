@@ -16,7 +16,7 @@ from dclib.room import Room
 
 from dctwin.third_parties.docker_backend import DockerBackend
 from dctwin.third_parties.k8s_backend import K8sBackend
-from dctwin.third_parties.foam.boundary import ACUBoundary, RoomBoundary, ServerBoundary
+from dctwin.third_parties.foam.boundary import ACUBoundary, RoomBoundary, ServerBoundary, HeatEmittingBoxBoundary
 
 from dctwin.third_parties.foam.utils import generate_control_dict, read_internal_field
 from dctwin.utils import template_env, config
@@ -35,6 +35,7 @@ class Builder:
         self.room = room
         self.room_dz = room.geometry.height
         self.acu_dict = room.constructions.acus
+        self.heat_emitting_box_dict = room.constructions.heat_emitting_boxes
         server_dict = {}
         for rack in room.constructions.racks.values():
             for server_key, server in rack.constructions.servers.items():
@@ -79,6 +80,7 @@ class Builder:
     def render(self, source_filename, write_filename, internal_field=None) -> None:
         acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_dict)
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_dict)
+        heat_emitting_box_k, heat_emitting_box_epsilon = self.get_k_and_epsilon(self.heat_emitting_box_dict)
         with open(Path(config.cfd.case_dir, f"0/{write_filename}"), "w") as f:
             f.write(
                 template_env.get_template(f"foam/template/0/{source_filename}.j2").render(
@@ -92,11 +94,17 @@ class Builder:
                         ServerBoundary(server) 
                         for server in self.server_dict.values()
                         ],
+                    heat_emitting_box_boundaries=[
+                        HeatEmittingBoxBoundary(heat_emitting_box)
+                        for heat_emitting_box in self.heat_emitting_box_dict.values()
+                        ],
                     room_boundary=RoomBoundary(self.room),
                     acu_k=acu_k,
                     acu_epsilon=acu_epsilon,
                     server_k=server_k,
                     server_epsilon=server_epsilon,
+                    heat_emitting_box_k=heat_emitting_box_k,
+                    heat_emitting_box_epsilon=heat_emitting_box_epsilon,
                     internal_field=internal_field,
                 )
             )

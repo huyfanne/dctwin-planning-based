@@ -232,3 +232,72 @@ class ServerBoundary(Boundary):
         type        fixedValue;
         value 		$internalField;
     }}"""
+
+
+class HeatEmittingBoxBoundary(Boundary):
+    def __init__(self, heat_emitting_box) -> None:
+        self.heat_emitting_box_id = heat_emitting_box.valid_id
+        self.object = heat_emitting_box
+        # Air flow rate through the heat emitting box
+        self.air_volume_flow_rate = 0.02
+        self.air_mass_flow_rate = rho_air * self.air_volume_flow_rate
+        self.power = heat_emitting_box.power
+
+    @property
+    def p_rgh(self) -> str:
+        return f"""
+    heat_emitting_box_return_{self.heat_emitting_box_id}
+    {{
+        type        fixedValue;
+        value 		$internalField;
+    }}"""
+
+    @property
+    def T(self) -> str:
+        t_sink = f"tSink_{self.heat_emitting_box_id}"
+        value = f"{t_sink}+{self.power / (self.air_volume_flow_rate * air_specific_heat)}"
+        outlet = f"""
+            {{
+                type            uniformFixedValue;
+                value           $internalField;
+                uniformValue
+                {{
+                    type            expression;
+                    expression       "{value}";
+                    variables
+                    (
+                        "{t_sink}{{heat_emitting_box_supply_{self.heat_emitting_box_id}}} = weightAverage(T)"
+                    );
+                    }};
+            }}"""
+        return f"""
+    heat_emitting_box_wall_{self.heat_emitting_box_id} {self.zero_gradient}
+
+    heat_emitting_box_supply_{self.heat_emitting_box_id} {self.zero_gradient}
+    
+    heat_emitting_box_return_{self.heat_emitting_box_id} {outlet}"""
+
+    @property
+    def U(self) -> str:
+        if np.isclose(self.air_volume_flow_rate, 0):
+            supply = self.no_slip
+            _return = self.no_slip
+        else:
+            supply = f"""
+    {{
+        type                flowRateInletVelocity;
+        volumetricFlowRate  {self.air_volume_flow_rate};
+    }}"""
+
+        _return = f"""
+    {{
+        type                flowRateOutletVelocity;
+        volumetricFlowRate  {self.air_volume_flow_rate};
+    }}"""
+
+        return f"""
+    heat_emitting_box_wall_{self.heat_emitting_box_id} {self.no_slip}
+    
+    heat_emitting_box_supply_{self.heat_emitting_box_id} {supply}
+    
+    heat_emitting_box_return_{self.heat_emitting_box_id} {_return}"""
