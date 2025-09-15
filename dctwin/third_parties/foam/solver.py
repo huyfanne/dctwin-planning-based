@@ -211,7 +211,7 @@ class SolverBackendMixin:
             Path(config.cfd.case_dir, "case.foam").touch(exist_ok=True)
             time.sleep(1)
 
-        room.dump(config.cfd.case_dir / "model.json")
+        room.dump(config.cfd.case_dir / "base_mesh_aligned_model.json")
 
         if write_interval is not None:
             self.write_interval = write_interval

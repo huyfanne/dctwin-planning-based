@@ -6,7 +6,7 @@
     "models": {
         "curveModels": {
             "ites": {
-                "cpuPowerInputFunctionOfLoadingAndAirTemperatureCurveModels":{
+                "cpuPowerInputFunctionOfLoadingAndAirTemperatureCurveModels": {
                     "DataCenterServerPowerFLoadTemp": {
                         "type": "Biquadratic",
                         "coefficients": [
@@ -26,7 +26,7 @@
                         "outputType": "Dimensionless"
                     }
                 },
-                "airFlowFunctionOfLoadingAndAirTemperatureCurveModels":{
+                "airFlowFunctionOfLoadingAndAirTemperatureCurveModels": {
                     "DataCenterServersAirflowFLoadTemp": {
                         "type": "Biquadratic",
                         "coefficients": [
@@ -285,6 +285,35 @@
             }
         },
         "geometryModels": {
+            "acus": {
+                "acu model 1": {
+                    "supplyFace": {
+                        "side": "bottom",
+                        "width": 1.82,
+                        "length": 1.02,
+                        "offset": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        }
+                    },
+                    "returnFace": {
+                        "side": "top",
+                        "width": 1.82,
+                        "length": 1.02,
+                        "offset": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        }
+                    },
+                    "size": {
+                        "x": 1.82,
+                        "y": 1.02,
+                        "z": 1.98
+                    }
+                }
+            },
             "servers": {
                 "4U_Server": {
                     "slotOccupation": 4,
@@ -585,6 +614,9 @@
                 "constructions": {
                     "acus": {
                         "Data Hall 1A acu-1": {
+                            "geometry": {
+                                "model": "acu model 1"
+                            },
                             "cooling": {
                                 "model": "acu model 1"
                             },
@@ -649,7 +681,7 @@
                             "viewFactorToGround": 0.0
                         }
                     },
-                    "liquidFlowNetworks":{
+                    "liquidFlowNetworks": {
                         "liquid loop 1": {
                             "supplyBranches": {
                                 "liquid loop supply inlet branch": {
