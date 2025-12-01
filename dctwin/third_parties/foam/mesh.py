@@ -304,14 +304,17 @@ class ACUModel:
     box: BoxModel
     supply_face: PatchModel
     return_face: PatchModel
+    refinement_level: int = 2
 
     def __init__(
             self,
             acu: ACU,
-            base_size: float = 0.2
+            base_size: float = 0.2,
+            refinement_level: int = 2
     ):
         self.config = acu
         self.base_size = base_size
+        self.refinement_level = refinement_level
         self.cheek_config()
         self._make_box()
         self._make_supply_face()
@@ -365,7 +368,8 @@ class ACUModel:
             name=f"acu_wall_{self.config.valid_id}",
             v_min=[v_min.x, v_min.y, v_min.z],
             v_max=[v_max.x, v_max.y, v_max.z],
-            is_refinement_box=False
+            is_refinement_box=True,
+            refinement_level = self.refinement_level
         )
 
     def _make_supply_face(self):
@@ -500,14 +504,17 @@ class HeatEmittingBoxModel:
     box: BoxModel
     supply_face: PatchModel
     return_face: PatchModel
+    refinement_level: int = 2
 
     def __init__(
             self,
             config: Any,
-            base_size: float = 0.2
+            base_size: float = 0.2,
+            refinement_level: int = 2
     ):
         self.config = config
         self.base_size = base_size
+        self.refinement_level = refinement_level
         self.cheek_config()
         self._make_box()
         self._make_supply_face()
@@ -561,7 +568,8 @@ class HeatEmittingBoxModel:
             name=f"heat_emitting_box_wall_{self.config.valid_id}",
             v_min=[v_min.x, v_min.y, v_min.z],
             v_max=[v_max.x, v_max.y, v_max.z],
-            is_refinement_box=False
+            is_refinement_box=True,
+            refinement_level=self.refinement_level
         )
 
     def _make_supply_face(self):
@@ -1713,25 +1721,26 @@ class MeshBuilder:
 
         return v_min, v_max, x_cells, y_cells, z_cells
 
-    def make_acus(self, acus: Dict[str, ACU]):
+    def make_acus(self, acus: Dict[str, ACU], refinement_level: int = 2):
         acu_list = []
         for acu_name, acu in acus.items():
             acu_list.append(
                 ACUModel(
                     acu=acu,
                     base_size=self.base_size,
-                    base_size=self.base_size,
+                    refinement_level = refinement_level
                 )
             )
         return acu_list
 
-    def make_heat_emitting_boxes(self, heat_emitting_boxes: Dict[str, Any]):
+    def make_heat_emitting_boxes(self, heat_emitting_boxes: Dict[str, Any], refinement_level: int = 2):
         heat_emitting_boxes_list = []
         for heat_emitting_box_name, heat_emitting_box in heat_emitting_boxes.items():
             heat_emitting_boxes_list.append(
                 HeatEmittingBoxModel(
                     config=heat_emitting_box,
                     base_size=self.base_size,
+                    refinement_level = refinement_level
                 )
             )
         return heat_emitting_boxes_list
@@ -2056,8 +2065,8 @@ class MeshBuilder:
             v_max=v_max,
         )
         box_list, box_plane_list, box_opening_face_list = self.make_boxes(boxes=boxes)
-        acu_list = self.make_acus(acus=acus)
-        heat_emitting_boxes_list = self.make_heat_emitting_boxes(heat_emitting_boxes=heat_emitting_boxes)
+        acu_list = self.make_acus(acus=acus, refinement_level = refinement_level)
+        heat_emitting_boxes_list = self.make_heat_emitting_boxes(heat_emitting_boxes=heat_emitting_boxes, refinement_level = refinement_level)
         rack_list = self.make_racks(racks=racks, refinement_level=refinement_level)
         row_racks_list = self.make_row_racks(rows=rows, refinement_level=refinement_level)
 
