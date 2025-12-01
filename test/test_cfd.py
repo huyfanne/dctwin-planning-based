@@ -32,5 +32,5 @@ foam_new_path = Path(f"log/{room_file_name}_{next_index}/base/{room_file_name}_{
 
 if foam_old_path.exists():
     foam_old_path.replace(foam_new_path)
-else
+else:
     print("CFD simulation failed")
