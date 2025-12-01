@@ -1499,7 +1499,7 @@ class RackModel:
 
 class MeshBuilder:
     slot_height: float = 0.05  # 1U = 0.05 m
-    base_size: float = 0.2  # base_size for the background blockMesh
+    base_size: float = 0.075  # base_size for the background blockMesh
     scale: int = 3
     room: Room
     case_dir: Path
@@ -1590,19 +1590,19 @@ class MeshBuilder:
                          f"offset = ({face.offset.x}, {face.offset.y}, {face.offset.z})")
 
         def round_rack(rack):
-            base_size = round(self.base_size/2**refinement_level, 2)
+            #base_size = round(self.base_size/2**refinement_level, 2)
 
             # round the box of the rack
-            round_box(box_model=rack, base_size=base_size, mode="ceil")
+            round_box(box_model=rack, base_size=self.base_size, mode="ceil")
 
             # round the servers
             for server in rack.constructions.servers.values():
-                server.geometry.depth = round_to_base(server.geometry.depth, base_size)
+                server.geometry.depth = round_to_base(server.geometry.depth, self.base_size)
                 if server.geometry.depth != rack.geometry.size.y:
                     server.geometry.depth = rack.geometry.size.y
                     logger.warning(f"Server '{server.uid}' depth is changed to {rack.geometry.size.y}, "
                                    f"because it is not the same as the rack depth")
-                server.geometry.width = round_to_base(server.geometry.width, base_size)
+                server.geometry.width = round_to_base(server.geometry.width, self.base_size)
 
         for plane in self.room.geometry.plane:
             plane.x = round_to_base(plane.x, self.base_size)
@@ -1676,6 +1676,7 @@ class MeshBuilder:
         """
         Create the exterior geometry of the room
         """
+        #base_size: float = 0.1
         min_z = 0
         v_min, v_max = Vertex(x=0, y=0, z=min_z), Vertex(x=0, y=0, z=self.room.geometry.height)
 
@@ -1700,6 +1701,15 @@ class MeshBuilder:
         z_cells = int((v_max.z - v_min.z) / self.base_size)
         if self.base_size * z_cells != (v_max.z - v_min.z):
             v_max.z = z_cells * self.base_size - v_min.z
+        x_cells = int((v_max.x - v_min.x) / self.base_size)
+        if self.base_size * x_cells != (v_max.x - v_min.x):
+            v_max.x = x_cells * self.base_size - v_min.x
+        y_cells = int((v_max.y - v_min.y) / self.base_size)
+        if self.base_size * y_cells != (v_max.y - v_min.y):
+            v_max.y = y_cells * self.base_size - v_min.y
+        z_cells = int((v_max.z - v_min.z) / self.base_size)
+        if self.base_size * z_cells != (v_max.z - v_min.z):
+            v_max.z = z_cells * self.base_size - v_min.z
 
         return v_min, v_max, x_cells, y_cells, z_cells
 
@@ -1709,6 +1719,7 @@ class MeshBuilder:
             acu_list.append(
                 ACUModel(
                     acu=acu,
+                    base_size=self.base_size,
                     base_size=self.base_size,
                 )
             )
