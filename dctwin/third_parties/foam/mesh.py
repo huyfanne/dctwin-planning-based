@@ -1999,7 +1999,7 @@ class MeshBuilder:
 
     def write_createPatch_dict(
             self,
-            patch_list: List[ACUModel | RackModel]
+            patch_list: List[ACUModel | RackModel | HeatEmittingBoxModel]
     ):
         patches_cmd = ""
         for patch in patch_list:
@@ -2014,7 +2014,7 @@ class MeshBuilder:
 
     def write_topoSet_dict(
             self,
-            face_set_list: List[ACUModel | RackModel]
+            face_set_list: List[ACUModel | RackModel | HeatEmittingBoxModel]
     ):
         face_set_cmd = ""
         for face_set in face_set_list:
