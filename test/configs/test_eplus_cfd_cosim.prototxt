@@ -4,7 +4,7 @@ eplus_cfd_env_config {
         num_constraints: 2
     }
     cfd: {
-        geometry_file: "models/geometry/room_test.json"
+        geometry_file: "models/geometry/room_test_heat_emitting.json"
         run_cfd: true
         end_time: 50
         write_interval: 10

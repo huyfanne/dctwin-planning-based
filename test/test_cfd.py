@@ -3,7 +3,7 @@ from dctwin.managers import CFDManager
 from dctwin.utils import config
 from pathlib import Path
 
-room_json = "models/geometry/k2_project_3.json"
+room_json = "models/geometry/room_test_heat_emitting.json"
 
 room = Room.load(room_json)
 room_file_name = room_json.split("/")[-1].split(".")[0]
