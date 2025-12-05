@@ -45,9 +45,10 @@ timePrecision   6;
 
 runTimeModifiable true;
 
-{% if probes|length > 0 %}
+
 functions
 {
+{% if probes|length > 0 %}
 	probes
 	{
 		// Where to load it from
@@ -75,8 +76,33 @@ functions
             {% endfor %}
         );
    }
-}
+   {% endif %}
+
+{% if patch_names|length > 0 %}
+{% for patch_name in patch_names %}
+    {{ patch_name }}_flow_rate
+    {
+        type            surfaceFieldValue;
+        libs 			(fieldFunctionObjects);
+        enabled         true;
+        writeControl    timeStep;
+        writeInterval   1;
+        log             false;
+        writeFields     false;
+        regionType      patch;
+		writeToFile 	true;
+        name            {{ patch_name }};
+        operation       sum;
+        fields
+        (
+            phi
+        );
+    }
+{% endfor %}
 {% endif %}
+
+}
+
 
 // ************************************************************************* //
 

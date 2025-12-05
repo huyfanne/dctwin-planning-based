@@ -1,5 +1,6 @@
 import math
 import shutil
+import re
 from typing import List
 from venv import logger
 
@@ -14,6 +15,16 @@ from typing import Optional, Union
 import numpy as np
 from dclib.construction.entities import Box
 from dclib.models.geometry import Vertex
+
+def read_patch_dict():
+    patch_dict_path = config.cfd.case_dir / "system" / "createPatchDict"
+    
+    with open(patch_dict_path,"r") as file:
+        contents = file.read()
+
+        patch_names = re.findall(r'\bname\s+(\S+?);',contents)
+
+        return patch_names
 
 
 def generate_control_dict(
@@ -47,6 +58,16 @@ def generate_control_dict(
             Path(template_dir, f"foam/template/system/{system_folder}/fvSolution_cpu"),
             Path(config.cfd.case_dir, "system/fvSolution"),
         )
+    try:
+        patch_names = read_patch_dict()
+
+        with open(Path(config.cfd.case_dir, "patchNames"),"w") as f:
+            for patch in patch_names:
+                f.write(f"{patch}\n")
+    except Exception as e:
+        logger.error(f"Failed to store patches name, {e}")
+        patch_names = []
+
     with open(Path(config.cfd.case_dir, "system/controlDict"), "w") as f:
         f.write(
             template_env.get_template(
@@ -56,6 +77,7 @@ def generate_control_dict(
                 write_interval=write_interval,
                 end_time=end_time,
                 probes=probes,
+                patch_names=patch_names
             )
         )
     if process_num > 1:

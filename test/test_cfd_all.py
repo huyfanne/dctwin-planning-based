@@ -320,6 +320,11 @@ class CFDExecutor:
             print("No residuals found")
         return self.residuals
 
+    def flow_rate_monitor(self):
+        postprocessing_path = self.case_dir / "postProcessing"
+
+        
+
     def add_to_csv_report(self, failed=False, error="NA", traceback_message="NA"):
         column_titles = ['case', 'succeeded', 'error', 'traceback', 'mesh time', 'solver time', 'paraview time', 'total time', 'ux_final_residual', 'uy_final_residual', 'uz_final_residual', 'T_final_residual', 'epsilon_final_residual', 'k_final_residual']
         if failed:
