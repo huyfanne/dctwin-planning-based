@@ -1507,7 +1507,7 @@ class RackModel:
 
 class MeshBuilder:
     slot_height: float = 0.05  # 1U = 0.05 m
-    base_size: float = 0.1  # base_size for the background blockMesh
+    base_size: float = 0.2  # base_size for the background blockMesh
     scale: int = 3
     room: Room
     case_dir: Path
