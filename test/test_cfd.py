@@ -15,7 +15,7 @@ next_index = len([d for d in Path("log").iterdir()
 
 config.LOG_DIR = Path(f"log/{room_file_name}_{next_index}").absolute()
 
-iterations = 500
+iterations = 50
 
 #manager = CFDManager(room=room, mesh_process=8, solve_process=8, is_gpu=True, scale_server_flow_rate=True)
 manager = CFDManager(

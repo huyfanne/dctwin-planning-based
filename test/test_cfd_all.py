@@ -20,7 +20,7 @@ import pandas as pd
 import traceback
 
 class CFDExecutor:
-    def __init__(self, room_config_path, preserve_foam_log=True, iterations=2000):
+    def __init__(self, room_config_path, preserve_foam_log=True, iterations=50):
         self.room = Room.load(room_config_path)
         self.room_cofig_path = room_config_path
         config.PRESERVE_FOAM_LOG = preserve_foam_log
@@ -322,8 +322,19 @@ class CFDExecutor:
 
     def flow_rate_monitor(self):
         postprocessing_path = self.case_dir / "postProcessing"
-
         
+        patch_names = []
+        for (root, dirs, files) in os.walk(postprocessing_path):
+            if any(f.endswith('.dat') for f in files):
+                # Get the patch directory name (parent of the '0' directory)
+                # Structure: postProcessing/patch_name/0/surfaceFieldValue.dat
+                patch_dir = Path(root).parent.name
+                if patch_dir not in patch_names and patch_dir != 'postProcessing':
+                    patch_names.append(patch_dir)
+                
+        with open(self.case_dir / "patch_directories.json", "w") as f:
+            json.dump(patch_names,f)
+
 
     def add_to_csv_report(self, failed=False, error="NA", traceback_message="NA"):
         column_titles = ['case', 'succeeded', 'error', 'traceback', 'mesh time', 'solver time', 'paraview time', 'total time', 'ux_final_residual', 'uy_final_residual', 'uz_final_residual', 'T_final_residual', 'epsilon_final_residual', 'k_final_residual']
@@ -347,11 +358,12 @@ class CFDExecutor:
         self.create_residual_line_chart()
         self.create_pdf()
         self.add_to_csv_report()
+        self.flow_rate_monitor()
         return self
 
 # Example of how to use the CFDExecutor class
 if __name__ == "__main__":
-    directory = "models/geometry/room_tests"
+    directory = "models/geometry/flow_meter"
     csv_path = "log/combined_result.csv"
     if os.path.isfile(csv_path):
         os.remove(csv_path)
