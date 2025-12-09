@@ -20,13 +20,14 @@ import pandas as pd
 import traceback
 
 class CFDExecutor:
-    def __init__(self, room_config_path, preserve_foam_log=True, iterations=50):
+    def __init__(self, room_config_path, preserve_foam_log=True, iterations=1000):
         self.room = Room.load(room_config_path)
         self.room_cofig_path = room_config_path
         config.PRESERVE_FOAM_LOG = preserve_foam_log
         self.is_modulus = False
         self.case_dir = None
         self.residuals = []
+        self.flow_rate_df = None
         self.residuals = None
         self.execution_time = None
         room_name = room_config_path.split("/")[-1].split(".")[0]
@@ -321,20 +322,60 @@ class CFDExecutor:
         return self.residuals
 
     def flow_rate_monitor(self):
+        logger.info("Parsing flow rate...")
         postprocessing_path = self.case_dir / "postProcessing"
-        
         patch_names = []
-        for (root, dirs, files) in os.walk(postprocessing_path):
-            if any(f.endswith('.dat') for f in files):
-                # Get the patch directory name (parent of the '0' directory)
-                # Structure: postProcessing/patch_name/0/surfaceFieldValue.dat
-                patch_dir = Path(root).parent.name
-                if patch_dir not in patch_names and patch_dir != 'postProcessing':
-                    patch_names.append(patch_dir)
-                
-        with open(self.case_dir / "patch_directories.json", "w") as f:
-            json.dump(patch_names,f)
 
+        for (root, dirs, files) in os.walk(postprocessing_path): #Checks all files in postProcessing folder
+            
+            for file in files:
+                if file.endswith('.dat'): # Checks for .dat file
+                
+                # Sequence to find correct renamed file
+                    patch_dir = (Path(root).parent / "0" / "surfaceFieldValue.dat") # Finds surfacefieldvalue which contains flowrate
+
+                    if patch_dir.exists():
+                        patch_dir = \
+                        patch_dir.rename(Path(patch_dir.parent, f"{Path(root).parent.name}.dat")) # Renames file
+                    else:
+                        patch_dir = Path(root).parent / "0" / f"{Path(root).parent.name}.dat" # If file was already renamed
+                    
+                    patch_names.append(patch_dir)
+                    # Correct file found, extract contents
+
+        df_patch = pd.DataFrame()
+
+        for patch_name in patch_names:
+            patch_flow_rate = pd.read_csv(patch_name, skiprows=5, header=None,sep='\t',usecols=[1])
+            patch_flow_rate.rename(columns={1: f"{patch_name.stem}"}, inplace=True)
+            df_patch = pd.concat([df_patch, patch_flow_rate], axis=1)
+        df_patch['net_mass_flow_rate'] = df_patch.sum(axis=1)
+        df_patch['net_mass_flow_rate_abs'] = df_patch['net_mass_flow_rate'].abs()    
+        df_patch.to_csv(self.case_dir / "flow_rate.csv")
+
+        self.flow_rate_df = df_patch
+        return self.flow_rate_df
+    
+    def flow_rate_line_chart(self):
+
+        if self.flow_rate_df is None:
+            self.flow_rate_monitor()
+
+        if self.flow_rate_df is not None:
+            logger.info("Creating flow rate line chart...")
+            fig, ax = plt.subplots()
+            ax.plot(self.flow_rate_df.index, self.flow_rate_df['net_mass_flow_rate_abs'])
+            ax.set_xlabel("Timestep")
+            ax.set_ylabel("Flow Rate Imbalance [m3/s]")
+            ax.set_yscale("log")
+            ax.set_title("Flow Rate Imbalance")
+            
+            plt.savefig(self.case_dir / "flow_rate_line_chart.png")
+            plt.close()
+            return self.flow_rate_df
+        else:
+            logger.info("No flow rate data found")
+            return None
 
     def add_to_csv_report(self, failed=False, error="NA", traceback_message="NA"):
         column_titles = ['case', 'succeeded', 'error', 'traceback', 'mesh time', 'solver time', 'paraview time', 'total time', 'ux_final_residual', 'uy_final_residual', 'uz_final_residual', 'T_final_residual', 'epsilon_final_residual', 'k_final_residual']
@@ -359,11 +400,12 @@ class CFDExecutor:
         self.create_pdf()
         self.add_to_csv_report()
         self.flow_rate_monitor()
+        self.flow_rate_line_chart()
         return self
 
 # Example of how to use the CFDExecutor class
 if __name__ == "__main__":
-    directory = "models/geometry/flow_meter"
+    directory = "models/geometry/ba1604"
     csv_path = "log/combined_result.csv"
     if os.path.isfile(csv_path):
         os.remove(csv_path)
