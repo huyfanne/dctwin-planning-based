@@ -352,65 +352,6 @@ slice1Display.ColorArrayName = ["POINTS", "T"]
 slice1Display.LookupTable = tLUT
 slice1Display.Opacity = 1
 
-
-# # ----------------------------------------------------------------
-# # export line chart
-# # ----------------------------------------------------------------
-
-# Path("/data/line").mkdir(parents=True,exist_ok=True)
-
-# try:
-#     line1 = Line(registrationName="Line1")
-#     line1.Point1= [0, depth/2, height/2]
-#     line1.Point2= [width, depth/2, height/2]
-#     line1.Resolution = 1000
-
-#     plotOverLine1 = PlotOverLine(registrationName="PlotOverLine1", 
-#     Input=casefoam,Source=line1)
-
-#     line1_data = Fetch(plotOverLine1)
-#     points = numpy_support.vtk_to_numpy(line1_data.GetPoints().GetData())
-#     processed_points = np.stack(points, axis=1)
-#     line_datas = line1_data.GetPointData()
-#     point_datas_len = line_datas.GetNumberOfArrays()
-#     csv_attributes = {
-#         "T": True,
-#         "U": True,
-#         "alphat": False,
-#         "epsilon": False,
-#         "k": False,
-#         "nut": False,
-#         "p": False,
-#         "p_rgh": False,
-#         "IntegrationTime": True,
-#         "Vorticity": False,
-#         "Rotation": False,
-#         "AngularVelocity": False,
-#         "Normals": False,
-#     }
-#     data_obj = {
-#         "Points_0": processed_points[0],
-#         "Points_1": processed_points[1],
-#         "Points_2": processed_points[2],
-#     }
-
-#     for x in range(point_datas_len):
-#         name = line_datas.GetArrayName(x)
-#         if csv_attributes.get(name, False):
-#             arr = numpy_support.vtk_to_numpy(line_datas.GetArray(x))
-#             if arr.ndim > 1:
-#                 processed_arr = np.stack(arr, axis=1)
-#                 for i in range(len(processed_arr)):
-#                     data_obj[f"{name}_{i}"] = processed_arr[i]
-#             else:
-#                 data_obj[f"{name}"] = arr
-
-#     data = pd.DataFrame(data=data_obj)
-#     data.to_csv("/data/line/line.csv", index_label="Line ID")
-
-# except Exception as e:
-#     logging.critical(e,exc_info=True)
-
 # ----------------------------------------------------------------
 # export airflow csv
 # ----------------------------------------------------------------
