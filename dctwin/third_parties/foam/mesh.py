@@ -1709,15 +1709,6 @@ class MeshBuilder:
         z_cells = int((v_max.z - v_min.z) / self.base_size)
         if self.base_size * z_cells != (v_max.z - v_min.z):
             v_max.z = z_cells * self.base_size - v_min.z
-        x_cells = int((v_max.x - v_min.x) / self.base_size)
-        if self.base_size * x_cells != (v_max.x - v_min.x):
-            v_max.x = x_cells * self.base_size - v_min.x
-        y_cells = int((v_max.y - v_min.y) / self.base_size)
-        if self.base_size * y_cells != (v_max.y - v_min.y):
-            v_max.y = y_cells * self.base_size - v_min.y
-        z_cells = int((v_max.z - v_min.z) / self.base_size)
-        if self.base_size * z_cells != (v_max.z - v_min.z):
-            v_max.z = z_cells * self.base_size - v_min.z
 
         return v_min, v_max, x_cells, y_cells, z_cells
 
