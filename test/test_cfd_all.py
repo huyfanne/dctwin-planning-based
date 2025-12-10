@@ -20,7 +20,7 @@ import pandas as pd
 import traceback
 
 class CFDExecutor:
-    def __init__(self, room_config_path, preserve_foam_log=True, iterations=1000):
+    def __init__(self, room_config_path, preserve_foam_log=True, iterations=100):
         self.room = Room.load(room_config_path)
         self.room_cofig_path = room_config_path
         config.PRESERVE_FOAM_LOG = preserve_foam_log
@@ -160,12 +160,21 @@ class CFDExecutor:
 
         # Sort the image paths by filename
         image_paths.sort()
-        residual_path = self.case_dir / "final_residuals.png"
+        residual_path = self.case_dir / "initial_residuals.png"
         c.drawImage(residual_path, 1 * cm, y_position - image_height, width=image_width, height=image_height)
         y_position -= (image_height + 0.5 * cm)  # Adjust for spacing below the image
         c.drawString(1 * cm, y_position, "residual")
         y_position -= 0.5 * cm
 
+        if y_position - image_height < bottom_margin:
+            c.showPage()
+            y_position = page_height - top_margin
+        
+        flow_rate_chart_path = self.case_dir / "flow_rate_line_chart.png"
+        c.drawImage(flow_rate_chart_path, 1 * cm, y_position - image_height, width=image_width, height=image_height)
+        y_position -= (image_height + 0.5 * cm)  # Adjust for spacing below the image
+        c.drawString(1 * cm, y_position, "flow rate imbalance (m3/s)")
+        y_position -= 0.5 * cm
 
         # Add images to the PDF
         for image_path in image_paths:
@@ -397,10 +406,11 @@ class CFDExecutor:
         self.run_parse_result_job()
         self.extract_execution_time()
         self.create_residual_line_chart()
-        self.create_pdf()
+        
         self.add_to_csv_report()
         self.flow_rate_monitor()
         self.flow_rate_line_chart()
+        self.create_pdf()
         return self
 
 # Example of how to use the CFDExecutor class
