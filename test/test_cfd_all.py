@@ -11,7 +11,7 @@ import shutil
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
-import os
+import os 
 from datetime import datetime
 import matplotlib.pyplot as plt
 import fnmatch
@@ -353,11 +353,20 @@ class CFDExecutor:
                     # Correct file found, extract contents
 
         df_patch = pd.DataFrame()
+        #print(patch_names)
+        
 
         for patch_name in patch_names:
-            patch_flow_rate = pd.read_csv(patch_name, skiprows=5, header=None,sep='\t',usecols=[1])
-            patch_flow_rate.rename(columns={1: f"{patch_name.stem}"}, inplace=True)
-            df_patch = pd.concat([df_patch, patch_flow_rate], axis=1)
+            try:
+
+                patch_flow_rate = pd.read_csv(patch_name, skiprows=5, header=None,sep='\t',usecols=[1])
+                patch_flow_rate.rename(columns={1: f"{patch_name.stem}"}, inplace=True)
+            
+                df_patch = pd.concat([df_patch, patch_flow_rate], axis=1)
+            except Exception as e:
+                logger.info(f"Error concatenating patch {patch_name}: {e}")
+                continue
+
         df_patch['net_mass_flow_rate'] = df_patch.sum(axis=1)
         df_patch['net_mass_flow_rate_abs'] = df_patch['net_mass_flow_rate'].abs()    
         df_patch.to_csv(self.case_dir / "flow_rate.csv")
@@ -410,7 +419,7 @@ class CFDExecutor:
         self.add_to_csv_report()
         self.flow_rate_monitor()
         self.flow_rate_line_chart()
-        self.create_pdf()
+        #self.create_pdf()
         return self
 
 # Example of how to use the CFDExecutor class
