@@ -119,9 +119,11 @@ class BaseEnv(gym.Env):
             logger.info("Using pre-set simulation time")
             begin_month = self._config.simulation_time_config.begin_month
             begin_day_of_month = self._config.simulation_time_config.begin_day_of_month
+            begin_hour = self._config.simulation_time_config.get('begin_hour', 0)
+            begin_minute = self._config.simulation_time_config.get('begin_minute', 0)
             year = datetime.now().year
             self._starting_timestamp = datetime(
-                year=year, month=begin_month, day=begin_day_of_month
+                year=year, month=begin_month, day=begin_day_of_month, hour=begin_hour, minute=begin_minute
             )
             self._timestamp_interval = timedelta(
                 minutes=int(
@@ -132,7 +134,7 @@ class BaseEnv(gym.Env):
             self._timestamp = self._starting_timestamp
             base_env.eplus_cfd.timestamp = self._timestamp
             self._use_simulation_time = True
-            logger.info("Simulation time: %s", self._starting_timestamp)
+            logger.info(f"Simulation time: {self._starting_timestamp}")
         else:
             logger.info("Using real-world time")
             self._use_simulation_time = False
