@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 from typing import Union, Callable
 from google.protobuf import json_format
 from dctwin.utils import read_engine_config

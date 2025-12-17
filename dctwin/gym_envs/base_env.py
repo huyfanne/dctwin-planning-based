@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Callable, List, Any, Union, Tuple, Dict, Optional
 
-import gym
-from gym.utils import seeding
+import gymnasium as gym
+from gymnasium.utils import seeding
 import numpy as np
 from loguru import logger
 

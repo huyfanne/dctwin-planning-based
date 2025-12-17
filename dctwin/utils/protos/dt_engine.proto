@@ -119,10 +119,12 @@ message SimulationTimeConfig {
   // well, time format is not supported by proto2
   required int32 begin_month = 1;
   required int32 begin_day_of_month = 2;
-  required int32 end_month = 3;
-  required int32 end_day_of_month = 4;
-  required int32 number_of_timesteps_per_hour = 5;
-  optional bool use_simulation_time = 6 [default = false];
+  optional int32 begin_hour = 3;
+  optional int32 begin_minute = 4;
+  required int32 end_month = 5;
+  required int32 end_day_of_month = 6;
+  required int32 number_of_timesteps_per_hour = 7;
+  optional bool use_simulation_time = 8 [default = false];
 }
 
 message EPlusEnvConfig {
