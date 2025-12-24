@@ -20,7 +20,7 @@ import pandas as pd
 import traceback
 
 class CFDExecutor:
-    def __init__(self, room_config_path, preserve_foam_log=True, iterations=200):
+    def __init__(self, room_config_path, preserve_foam_log=True, iterations=2000):
         self.room = Room.load(room_config_path)
         self.room_cofig_path = room_config_path
         config.PRESERVE_FOAM_LOG = preserve_foam_log
@@ -41,8 +41,8 @@ class CFDExecutor:
             location_in_mesh = Vertex(x=0, y=0, z=0.)
         self.manager = CFDManager(
             room=self.room,
-            solve_process=16,
-            mesh_process=16,
+            solve_process=6,
+            mesh_process=6,
             is_gpu=False,
             end_time=iterations,
             location_in_mesh=location_in_mesh
@@ -300,6 +300,7 @@ class CFDExecutor:
                     ax.plot([i[key] for i in self.residuals], label=key)
             ax.set_xlabel("Iteration")
             ax.set_ylabel("Residual")
+            ax.set_yscale("log")
             ax.set_title("Initial Residuals")
             ax.legend()
             plt.savefig(self.case_dir / "initial_residuals.png")
@@ -310,6 +311,7 @@ class CFDExecutor:
                     ax.plot([i[key] for i in self.residuals], label=key)
             ax.set_xlabel("Iteration")
             ax.set_ylabel("Residual")
+            ax.set_yscale("log")
             ax.set_title("Final Residuals")
             ax.legend()
             plt.savefig(self.case_dir / "final_residuals.png")
@@ -344,7 +346,7 @@ class CFDExecutor:
 
 # Example of how to use the CFDExecutor class
 if __name__ == "__main__":
-    directory = "models/geometry/existing_geometry"
+    directory = "models/geometry/room_tests"
     csv_path = "log/combined_result.csv"
     if os.path.isfile(csv_path):
         os.remove(csv_path)
