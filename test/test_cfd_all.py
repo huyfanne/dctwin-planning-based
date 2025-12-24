@@ -338,7 +338,7 @@ class CFDExecutor:
         for (root, dirs, files) in os.walk(postprocessing_path): #Checks all files in postProcessing folder
             
             for file in files:
-                if file.endswith('.dat'): # Checks for .dat file
+                if file.endswith('.dat') and not(file.startswith("yPlus")): # Checks for .dat file
                 
                 # Sequence to find correct renamed file
                     patch_dir = (Path(root).parent / "0" / "surfaceFieldValue.dat") # Finds surfacefieldvalue which contains flowrate
@@ -353,7 +353,7 @@ class CFDExecutor:
                     # Correct file found, extract contents
 
         df_patch = pd.DataFrame()
-        #print(patch_names)
+        print(patch_names)
         
 
         for patch_name in patch_names:
@@ -419,7 +419,7 @@ class CFDExecutor:
         self.add_to_csv_report()
         self.flow_rate_monitor()
         self.flow_rate_line_chart()
-        #self.create_pdf()
+        self.create_pdf()
         return self
 
 # Example of how to use the CFDExecutor class

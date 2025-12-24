@@ -48,6 +48,14 @@ runTimeModifiable true;
 
 functions
 {
+	yPlusWallFunction
+	{
+		type yPlus;
+		libs (fieldFunctionObjects);
+		log false;
+	}
+
+
 {% if probes|length > 0 %}
 	probes
 	{
