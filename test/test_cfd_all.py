@@ -30,6 +30,7 @@ class CFDExecutor:
         self.flow_rate_df = None
         self.residuals = None
         self.execution_time = None
+        self.yPlus_dict = None
         room_name = room_config_path.split("/")[-1].split(".")[0]
         config.cfd.case_dir = Path(f"log/{room_name}").absolute()
         config.LOG_DIR = Path(f"log/{room_name}").absolute()
@@ -415,17 +416,26 @@ class CFDExecutor:
         yPlus_max = df_pivot.iloc[:,-2].max()
         logger.info(f"Average yPlus of all walls: {yPlus_mean}")
         logger.info(f"Maximum yPlus of all walls: {yPlus_max}")
-        #return yPlus_mean
+
+        yPlus_dict = {'average yPlus': yPlus_mean, 'max yPlus': yPlus_max}
+
+        self.yPlus_dict = yPlus_dict
+        return yPlus_dict
+
 
 
     def avg_T_parsing(self):
         pass
     def add_to_csv_report(self, failed=False, error="NA", traceback_message="NA"):
-        column_titles = ['case', 'succeeded', 'error', 'traceback', 'mesh time', 'solver time', 'paraview time', 'total time', 'ux_final_residual', 'uy_final_residual', 'uz_final_residual', 'T_final_residual', 'epsilon_final_residual', 'k_final_residual']
+        column_titles = ['case', 'succeeded', 'error', 'traceback', 'mesh time', 'solver time', 'paraview time', 'total time', 
+        'ux_final_residual', 'uy_final_residual', 'uz_final_residual', 'T_final_residual', 'epsilon_final_residual', 'k_final_residual',
+        'average yPlus', 'max yPlus']
         if failed:
-            new_data = [[self.room_cofig_path, 'False', error, traceback_message,"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"]]
+            new_data = [[self.room_cofig_path, 'False', error, traceback_message,"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"]]
         else:
-            new_data = [[self.room_cofig_path, 'True', error, traceback_message, self.execution_time['mesh_time'], self.execution_time['solver_time'], self.execution_time['paraview_time'], self.execution_time['total_time'], self.residuals[-1]['ux_final_residual'], self.residuals[-1]['uy_final_residual'], self.residuals[-1]['uz_final_residual'], self.residuals[-1]['T_final_residual'], self.residuals[-1]['epsilon_final_residual'], self.residuals[-1]['k_final_residual']]]
+            new_data = [[self.room_cofig_path, 'True', error, traceback_message, self.execution_time['mesh_time'], self.execution_time['solver_time'], self.execution_time['paraview_time'], self.execution_time['total_time'], 
+            self.residuals[-1]['ux_final_residual'], self.residuals[-1]['uy_final_residual'], self.residuals[-1]['uz_final_residual'], self.residuals[-1]['T_final_residual'], self.residuals[-1]['epsilon_final_residual'], self.residuals[-1]['k_final_residual'], 
+            self.yPlus_dict['average yPlus'], self.yPlus_dict['max yPlus']]]
         new_df = pd.DataFrame(new_data, columns=column_titles)
         file_path = 'log/combined_result.csv'
         # Check if the file already exists
@@ -440,12 +450,12 @@ class CFDExecutor:
         self.run_parse_result_job()
         self.extract_execution_time()
         self.create_residual_line_chart()
-        
+        self.yplus_parsing()
         self.add_to_csv_report()
         self.flow_rate_monitor()
         self.flow_rate_line_chart()
         self.create_pdf()
-        self.yplus_parsing()
+ 
         return self
 
 # Example of how to use the CFDExecutor class
