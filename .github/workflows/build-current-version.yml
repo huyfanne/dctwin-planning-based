@@ -47,6 +47,6 @@ jobs:
       with:
         context: .
         push: true
-        secrets: |
-          GITHUB_TOKEN=${{ secrets.GIT_TOKEN }}
+        # secrets: |
+        #   GITHUB_TOKEN=${{ secrets.GIT_TOKEN }}
         tags: ghcr.io/cap-dcwiz/dctwin:${{ steps.vars.outputs.version }}
