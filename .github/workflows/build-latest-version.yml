@@ -41,8 +41,8 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          secrets: |
-            GITHUB_TOKEN=${{ secrets.GIT_TOKEN }}
+          # secrets: |
+          #   GITHUB_TOKEN=${{ secrets.GIT_TOKEN }}
           tags: |
             ghcr.io/cap-dcwiz/dctwin:${{ env.IMAGE_VERSION_LONG }}
             ghcr.io/cap-dcwiz/dctwin:${{ env.IMAGE_VERSION_SHORT }}
