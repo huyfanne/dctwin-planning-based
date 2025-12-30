@@ -353,7 +353,7 @@ class CFDExecutor:
                     # Correct file found, extract contents
 
         df_patch = pd.DataFrame()
-        print(patch_names)
+        #print(patch_names)
         
 
         for patch_name in patch_names:
@@ -395,6 +395,31 @@ class CFDExecutor:
             logger.info("No flow rate data found")
             return None
 
+
+    def yplus_parsing(self):
+
+        postprocessing_path = self.case_dir / "postProcessing"
+        yplus_path = postprocessing_path / "yPlusWallFunction" / "0" / "yPlus.dat"
+
+        df = pd.read_csv(yplus_path, sep=r'\s+', comment='#', 
+                 names=['Time', 'patch','min', 'max', 'average'])
+
+        # ABSOLUTE CINEMA - cursor found this solution not me 
+        # Pivot: patches as rows, times as columns (using average column)
+        df_pivot = df.pivot(index='patch', columns='Time', values='average').reset_index()
+
+        # Rename time columns to 'time=1', 'time=2', etc.
+        df_pivot.columns = ['patch'] + [f'time={int(col)}' for col in df_pivot.columns[1:]]
+        
+        yPlus_mean = df_pivot.iloc[:,-1].mean()
+        yPlus_max = df_pivot.iloc[:,-2].max()
+        logger.info(f"Average yPlus of all walls: {yPlus_mean}")
+        logger.info(f"Maximum yPlus of all walls: {yPlus_max}")
+        #return yPlus_mean
+
+
+    def avg_T_parsing(self):
+        pass
     def add_to_csv_report(self, failed=False, error="NA", traceback_message="NA"):
         column_titles = ['case', 'succeeded', 'error', 'traceback', 'mesh time', 'solver time', 'paraview time', 'total time', 'ux_final_residual', 'uy_final_residual', 'uz_final_residual', 'T_final_residual', 'epsilon_final_residual', 'k_final_residual']
         if failed:
@@ -410,7 +435,7 @@ class CFDExecutor:
             new_df.to_csv(file_path, mode='a', index=False, header=False)
 
     def __call__(self, *args, **kwargs):
-        self.execute()
+        #self.execute()
         self.prepare_probes()
         self.run_parse_result_job()
         self.extract_execution_time()
@@ -420,6 +445,7 @@ class CFDExecutor:
         self.flow_rate_monitor()
         self.flow_rate_line_chart()
         self.create_pdf()
+        self.yplus_parsing()
         return self
 
 # Example of how to use the CFDExecutor class
