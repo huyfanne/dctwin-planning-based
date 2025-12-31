@@ -1546,6 +1546,7 @@ class ConfigBuilder:
         normalize_method: int = 1,
         lb: float = 0.0,
         ub: float = 1.0,
+        exclude_device: list = [],
     ) -> None:
         """
         Make observations for CPU loading
@@ -1556,9 +1557,11 @@ class ConfigBuilder:
         :return:
         """
         for ite_name, ite in self.device_key_map["ites"].items():
+            # Check if the device should be excluded, and change "exposed" to False accordingly for each device
+            device_exposed = False if ite_name in exclude_device else exposed
             # observe CPU loading
             self._make_observation(
-                exposed=exposed,
+                exposed=device_exposed,
                 variable_name=f"{ite_name} cpu loading schedule".lower(),
                 normalize_method=normalize_method,
                 lb=lb,
