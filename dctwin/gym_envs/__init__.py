@@ -9,7 +9,7 @@ from .base_env import BaseEnv
 from .eplus_env import EPlusEnv
 from .eplus_cfd_env import EplusCFDEnv
 
-from gym.envs.registration import register
+from gymnasium.envs.registration import register
 from loguru import logger
 
 

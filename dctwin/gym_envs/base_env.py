@@ -119,8 +119,8 @@ class BaseEnv(gym.Env):
             logger.info("Using pre-set simulation time")
             begin_month = self._config.simulation_time_config.begin_month
             begin_day_of_month = self._config.simulation_time_config.begin_day_of_month
-            begin_hour = self._config.simulation_time_config.get('begin_hour', 0)
-            begin_minute = self._config.simulation_time_config.get('begin_minute', 0)
+            begin_hour = self._config.simulation_time_config.begin_hour if hasattr(self._config.simulation_time_config, 'begin_hour') else 0
+            begin_minute =  self._config.simulation_time_config.begin_minute if hasattr(self._config.simulation_time_config, 'begin_minute') else 0
             year = datetime.now().year
             self._starting_timestamp = datetime(
                 year=year, month=begin_month, day=begin_day_of_month, hour=begin_hour, minute=begin_minute
@@ -138,6 +138,18 @@ class BaseEnv(gym.Env):
         else:
             logger.info("Using real-world time")
             self._use_simulation_time = False
+
+    def set_episode_idx(self, episode_idx: int) -> None:
+        """Set the episode index for the environment.
+
+        This method allows external trainers (like dcbrain) to coordinate
+        episode numbering across multiple training runs. The episode_idx
+        is used for logging organization and simulation context.
+
+        Args:
+            episode_idx: The episode number to set
+        """
+        self.episode_idx = episode_idx
 
     @property
     def actions(self):
