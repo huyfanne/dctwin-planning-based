@@ -1,4 +1,4 @@
-FROM python:3.10-slim AS builder
+FROM python:3.11-slim AS builder
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=on
@@ -8,17 +8,17 @@ COPY . /opt/src
 WORKDIR /opt/src
 RUN poetry build
 
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=on
 
 COPY --from=builder /opt/src/dist/*.whl /opt/dist/
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -y git cmake build-essential pigz libglx-mesa0 && \
-    echo "https://x-access-token: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@github.com" > ${HOME}/.git-credentials && \
+RUN --mount=type=secret,id=GITHUB_TOKEN \
+    GITHUB_TOKEN=$(cat /run/secrets/GITHUB_TOKEN)  && echo "https://x-access-token:${GITHUB_TOKEN}@github.com" > ${HOME}/.git-credentials && \
     git config --global credential.helper store && \
-    pip install --no-cache-dir /opt/dist/*.whl && \
+    apt-get update && apt-get upgrade -y && \
+    apt-get install cmake build-essential pigz libglx-mesa0 -y && \
     apt-get purge build-essential cmake -y && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
