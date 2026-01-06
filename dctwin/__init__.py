@@ -1,7 +1,7 @@
 from .registraion import make_env
 from dctwin import managers, third_parties, gym_envs, models, utils, data
 
-__version__ = "2.2.2"
+__version__ = "2.2.3"
 
 __all__ = [
     "data",

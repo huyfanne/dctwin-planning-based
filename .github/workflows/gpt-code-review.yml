@@ -1,4 +1,4 @@
-name: GPT pull request review
+name: Codium pull request review
 
 on:
   pull_request:
@@ -14,9 +14,12 @@ jobs:
       contents: write
     name: Run pr agent on every pull request, respond to user comments
     steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v5
+
       - name: PR Agent action step
         id: pragent
-        uses: Codium-ai/pr-agent@main
+        uses: codium-ai/pr-agent@v0.31
         env:
-          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
