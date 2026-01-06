@@ -101,7 +101,6 @@ class CFDConfig:
 
 
 class CDUConfig:
-
     def __init__(self, base_config) -> None:
         self.base_config: DCTwinConfig = base_config
         self.case_dir: Path = Path(os.environ.get("CFD_CASE_DIR", ""))
@@ -192,7 +191,8 @@ def read_engine_config(
 
 
 def setup_logging(
-    logging_config: LoggingConfig, engine_config: Union[Path, str] = "engine.prototxt",
+    logging_config: LoggingConfig,
+    engine_config: Union[Path, str] = "engine.prototxt",
 ) -> None:
     """Set up the logging for the current experiment."""
     time_stamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")

@@ -36,7 +36,7 @@ class EPlusEnv(BaseEnv):
         is_k8s: bool = False,
         k8s_config: dict = None,
         is_gpu: bool = False,
-        eplus_image = None,
+        eplus_image=None,
         **kwargs,
     ) -> None:
         super().__init__(

@@ -5,7 +5,6 @@ from dctwin.utils.const import air_specific_heat
 
 
 class SteadyStateThermodynamics(nn.Module):
-
     def __init__(self):
         super(SteadyStateThermodynamics, self).__init__()
 
@@ -23,5 +22,5 @@ class SteadyStateThermodynamics(nn.Module):
         :return: the return air temperature of the ACU
         """
         return supply_air_humidity_ratio + latent_heat_load / (
-                air_specific_heat * supply_air_mass_flow_rate
+            air_specific_heat * supply_air_mass_flow_rate
         )

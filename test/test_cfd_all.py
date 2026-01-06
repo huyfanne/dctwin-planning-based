@@ -11,7 +11,7 @@ import shutil
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
-import os 
+import os
 from datetime import datetime
 import matplotlib.pyplot as plt
 import fnmatch
@@ -19,8 +19,9 @@ from pathlib import Path
 import pandas as pd
 import traceback
 
+
 class CFDExecutor:
-    def __init__(self, room_config_path, preserve_foam_log=True, 
+    def __init__(self, room_config_path, preserve_foam_log=True,
                 iterations=100, only_save_latest=False, write_interval=10):
         self.room = Room.load(room_config_path)
         self.room_config_path = room_config_path
@@ -29,7 +30,7 @@ class CFDExecutor:
         self.case_dir = None
         self.flow_rate_df = None
         self.residuals = None
-        self.execution_time = None 
+        self.execution_time = None
         self.yPlus_dict = None
         room_name = room_config_path.split("/")[-1].split(".")[0]
         config.cfd.case_dir = Path(f"log/{room_name}").absolute()
@@ -38,9 +39,9 @@ class CFDExecutor:
         logger.add(config.LOG_DIR / "base/cfd.log", rotation="300 MB")
         self.case_dir = config.LOG_DIR / "base"
         if self.room.meta.name == "TDC23v2(final)22":
-            location_in_mesh = Vertex(x=1.2, y=1.2, z=0.)
+            location_in_mesh = Vertex(x=1.2, y=1.2, z=0.0)
         else:
-            location_in_mesh = Vertex(x=0, y=0, z=0.)
+            location_in_mesh = Vertex(x=0, y=0, z=0.0)
         self.manager = CFDManager(
             room=self.room,
             solve_process=6,
@@ -81,7 +82,6 @@ class CFDExecutor:
             result = [return_center.__dict__, supply_center.__dict__]
             acus.append(result)
 
-
         with open(self.case_dir / "probes.json", "w") as f:
             json.dump({"servers": servers, "acus": acus}, f)
 
@@ -103,7 +103,7 @@ class CFDExecutor:
             "HEIGHT": str(self.room.geometry.height),
             "IS_MODULUS": str(self.is_modulus),
             "MINIMUM_T_CELSIUS": str(15 if self.is_modulus else 15),
-            "MAXIMUM_T_CELSIUS": str(30 if self.is_modulus else 45)
+            "MAXIMUM_T_CELSIUS": str(30 if self.is_modulus else 45),
         }
         # Run the container
         container = client.containers.run(
@@ -111,9 +111,9 @@ class CFDExecutor:
             command=command,
             working_dir="/data",
             environment=environment,
-            volumes={self.case_dir: {'bind': '/data', 'mode': 'rw'}},
+            volumes={self.case_dir: {"bind": "/data", "mode": "rw"}},
             detach=True,
-            remove=True
+            remove=True,
         )
 
         # Stream the logs
@@ -124,7 +124,6 @@ class CFDExecutor:
         container.wait()
 
     def create_pdf(self):
-
         file_path = str(self.case_dir / "result.pdf")
         c = canvas.Canvas(file_path, pagesize=letter)
         page_width, page_height = letter
@@ -135,7 +134,9 @@ class CFDExecutor:
         c.setFont("Helvetica-Bold", 18)
         y_position = page_height - top_margin
         room_name = self.room_config_path.split("/")[-1].split(".")[0]
-        c.drawString(1 * cm, y_position, f"CFD Simulation Result Report for {room_name}")
+        c.drawString(
+            1 * cm, y_position, f"CFD Simulation Result Report for {room_name}"
+        )
 
         # Draw some text below the title
         c.setFont("Helvetica-Bold", 12)
@@ -157,22 +158,28 @@ class CFDExecutor:
         image_paths = []
         for root, dirs, files in os.walk(self.case_dir / "thermal"):
             for file in files:
-                if file.endswith('.png'):
+                if file.endswith(".png"):
                     image_path = os.path.join(root, file)
                     image_paths.append(image_path)
 
         # Sort the image paths by filename
         image_paths.sort()
         residual_path = self.case_dir / "initial_residuals.png"
-        c.drawImage(residual_path, 1 * cm, y_position - image_height, width=image_width, height=image_height)
-        y_position -= (image_height + 0.5 * cm)  # Adjust for spacing below the image
+        c.drawImage(
+            residual_path,
+            1 * cm,
+            y_position - image_height,
+            width=image_width,
+            height=image_height,
+        )
+        y_position -= image_height + 0.5 * cm  # Adjust for spacing below the image
         c.drawString(1 * cm, y_position, "residual")
         y_position -= 0.5 * cm
 
         if y_position - image_height < bottom_margin:
             c.showPage()
             y_position = page_height - top_margin
-        
+
         flow_rate_chart_path = self.case_dir / "flow_rate_line_chart.png"
         c.drawImage(flow_rate_chart_path, 1 * cm, y_position - image_height, width=image_width, height=image_height)
         y_position -= (image_height + 0.5 * cm)  # Adjust for spacing below the image
@@ -186,22 +193,33 @@ class CFDExecutor:
                 c.showPage()
                 y_position = page_height - top_margin
 
-            c.drawImage(image_path, 1 * cm, y_position - image_height, width=image_width, height=image_height)
+            c.drawImage(
+                image_path,
+                1 * cm,
+                y_position - image_height,
+                width=image_width,
+                height=image_height,
+            )
 
-            y_position -= (image_height + 0.5 * cm)  # Adjust for spacing below the image
+            y_position -= image_height + 0.5 * cm  # Adjust for spacing below the image
             c.drawString(1 * cm, y_position, image_path)
             y_position -= 0.5 * cm
 
         # Finalize the PDF
         c.showPage()
         c.save()
+
     def extract_execution_time(self):
         mesh_start = self.extract_datetime_from_logs("start meshing geometry")
         mesh_end = self.extract_datetime_from_logs("Mesh finished")
         solver_start = self.extract_datetime_from_logs("start running CFD solver")
         solver_end = self.extract_datetime_from_logs("Reading temperature from")
-        paraview_start = self.extract_datetime_from_logs("Parsing the result with paraview")
-        paraview_end = self.extract_datetime_from_logs("Parsing completed with paraview")
+        paraview_start = self.extract_datetime_from_logs(
+            "Parsing the result with paraview"
+        )
+        paraview_end = self.extract_datetime_from_logs(
+            "Parsing completed with paraview"
+        )
         total_start = mesh_start  # Assume the entire process starts with geometry
         total_end = paraview_end  # Assume the entire process ends with paraview
         if mesh_start and mesh_end:
@@ -216,50 +234,78 @@ class CFDExecutor:
             "mesh_time": mesh_time,
             "solver_time": solver_time,
             "paraview_time": paraview_time,
-            "total_time": total_time
+            "total_time": total_time,
         }
         print(self.execution_time)
-
 
     def extract_datetime_from_logs(self, search_string):
         # Escape special characters in user-defined search string for regex
         # Replace 'your_log_file.log' with the path to your log file
-        log_file_path = self.case_dir/"cfd.log"
+        log_file_path = self.case_dir / "cfd.log"
 
-        with open(log_file_path, 'r') as file:
+        with open(log_file_path, "r") as file:
             for line in file:
                 if search_string in line:
-                    datetime_str = line.split(' | ')[0]
+                    datetime_str = line.split(" | ")[0]
                     datetime_format = "%Y-%m-%d %H:%M:%S.%f"
                     log_datetime = datetime.strptime(datetime_str, datetime_format)
                     return log_datetime
+
     def extract_iteration_residuals(self):
         log_file_path = self.case_dir / "cfd.log"
         residuals = []
 
-        with open(log_file_path, 'r') as file:
+        with open(log_file_path, "r") as file:
             lines = file.readlines()
             for i, line in enumerate(lines):
                 if "Time = " in line and "ClockTime" not in line:
-                    ux_initial_residual, ux_final_residual = self.extract_residual_float(i, lines, "Ux")
-                    uy_initial_residual, uy_final_residual = self.extract_residual_float(i, lines, "Uy")
-                    uz_initial_residual, uz_final_residual = self.extract_residual_float(i, lines, "Uz")
-                    T_initial_residual, T_final_residual = self.extract_residual_float(i, lines, "T")
-                    epsilon_initial_residual, epsilon_final_residual = self.extract_residual_float(i, lines, "epsilon")
-                    k_initial_residual, k_final_residual = self.extract_residual_float(i, lines, "Solving for k")
+                    ux_initial_residual, ux_final_residual = (
+                        self.extract_residual_float(i, lines, "Ux")
+                    )
+                    uy_initial_residual, uy_final_residual = (
+                        self.extract_residual_float(i, lines, "Uy")
+                    )
+                    uz_initial_residual, uz_final_residual = (
+                        self.extract_residual_float(i, lines, "Uz")
+                    )
+                    T_initial_residual, T_final_residual = self.extract_residual_float(
+                        i, lines, "T"
+                    )
+                    epsilon_initial_residual, epsilon_final_residual = (
+                        self.extract_residual_float(i, lines, "epsilon")
+                    )
+                    k_initial_residual, k_final_residual = self.extract_residual_float(
+                        i, lines, "Solving for k"
+                    )
                     residual = {
-                        "ux_initial_residual": ux_initial_residual, "ux_final_residual": ux_final_residual,
-                        "uy_initial_residual": uy_initial_residual, "uy_final_residual": uy_final_residual,
-                        "uz_initial_residual": uz_initial_residual, "uz_final_residual": uz_final_residual,
-                        "T_initial_residual": T_initial_residual, "T_final_residual": T_final_residual,
+                        "ux_initial_residual": ux_initial_residual,
+                        "ux_final_residual": ux_final_residual,
+                        "uy_initial_residual": uy_initial_residual,
+                        "uy_final_residual": uy_final_residual,
+                        "uz_initial_residual": uz_initial_residual,
+                        "uz_final_residual": uz_final_residual,
+                        "T_initial_residual": T_initial_residual,
+                        "T_final_residual": T_final_residual,
                         "epsilon_initial_residual": epsilon_initial_residual,
                         "epsilon_final_residual": epsilon_final_residual,
-                        "k_initial_residual": k_initial_residual, "k_final_residual": k_final_residual
+                        "k_initial_residual": k_initial_residual,
+                        "k_final_residual": k_final_residual,
                     }
 
-                    if None in [ux_initial_residual, ux_final_residual, uy_initial_residual, uy_final_residual,
-                                uz_initial_residual, uz_final_residual, T_initial_residual, T_final_residual,
-                                epsilon_initial_residual, epsilon_final_residual, k_initial_residual, k_final_residual]:
+                    if None in [
+                        ux_initial_residual,
+                        ux_final_residual,
+                        uy_initial_residual,
+                        uy_final_residual,
+                        uz_initial_residual,
+                        uz_final_residual,
+                        T_initial_residual,
+                        T_final_residual,
+                        epsilon_initial_residual,
+                        epsilon_final_residual,
+                        k_initial_residual,
+                        k_final_residual,
+                    ]:
                         continue
 
                     residuals.append(residual)
@@ -273,11 +319,12 @@ class CFDExecutor:
             if "Time = " in current_line:
                 return None, None
             if key in current_line:
-                initial_residual = self.extract_value(current_line, "Initial residual =")
+                initial_residual = self.extract_value(
+                    current_line, "Initial residual ="
+                )
                 final_residual = self.extract_value(current_line, "Final residual =")
                 return initial_residual, final_residual
         return None, None
-
 
     def extract_value(self, line, key):
         """
@@ -293,7 +340,7 @@ class CFDExecutor:
         start = line.find(key)
         if start != -1:
             start += len(key)
-            end = line.find(',', start)
+            end = line.find(",", start)
             if end == -1:
                 end = None  # Ensures we capture the entire string till end if there is no comma
             value_str = line[start:end].strip()
@@ -352,12 +399,13 @@ class CFDExecutor:
                 return float(path_obj.name)
             except ValueError:
                 return float("inf")
-
         for patch_name in extracted_patch_names_list:
             patch_folder = postprocessing_path / f"{patch_name}_flow_rate"
+
             if not patch_folder.exists():
                 logger.info(f"Flow rate folder missing for patch {patch_name}")
-                continue
+
+            continue
 
             time_dirs = sorted(
                 [p for p in patch_folder.iterdir() if p.is_dir()],
@@ -366,7 +414,7 @@ class CFDExecutor:
 
             patch_df_list = []
             for time_dir in time_dirs:
-                dat_file = time_dir / "surfaceFieldValue.dat"
+dat_file = time_dir / "surfaceFieldValue.dat"
                 if not dat_file.exists():
                     continue
                 try:
@@ -378,7 +426,8 @@ class CFDExecutor:
                         names=['time', 'value'],
                         usecols=[0, 1],
                     )
-                    patch_df_list.append(temp_df)
+
+                patch_df_list.append(temp_df)
                 except Exception as e:
                     logger.info(f"Failed to read {dat_file}: {e}")
                     continue
@@ -404,7 +453,7 @@ class CFDExecutor:
 
         self.flow_rate_df = df_patch.sort_index()
         return self.flow_rate_df
-    
+
     def flow_rate_line_chart(self):
 
         if self.flow_rate_df is None:
@@ -418,7 +467,7 @@ class CFDExecutor:
             ax.set_ylabel("Flow Rate Imbalance [m3/s]")
             ax.set_yscale("log")
             ax.set_title("Flow Rate Imbalance")
-            
+
             plt.savefig(self.case_dir / "flow_rate_line_chart.png")
             plt.close()
             return self.flow_rate_df
@@ -432,16 +481,16 @@ class CFDExecutor:
         postprocessing_path = self.case_dir / "postProcessing"
         yplus_path = postprocessing_path / "yPlusWallFunction" / "0" / "yPlus.dat"
 
-        df = pd.read_csv(yplus_path, sep=r'\s+', comment='#', 
+        df = pd.read_csv(yplus_path, sep=r'\s+', comment='#',
                  names=['Time', 'patch','min', 'max', 'average'])
 
-        # ABSOLUTE CINEMA - cursor found this solution not me 
+        # ABSOLUTE CINEMA - cursor found this solution not me
         # Pivot: patches as rows, times as columns (using average column)
         df_pivot = df.pivot(index='patch', columns='Time', values='average').reset_index()
 
         # Rename time columns to 'time=1', 'time=2', etc.
         df_pivot.columns = ['patch'] + [f'time={int(col)}' for col in df_pivot.columns[1:]]
-        
+
         yPlus_mean = df_pivot.iloc[:,-1].mean()
         yPlus_max = df_pivot.iloc[:,-2].max()
         logger.info(f"Average yPlus of all walls: {yPlus_mean}")
@@ -457,22 +506,22 @@ class CFDExecutor:
     def avg_T_parsing(self):
         pass
     def add_to_csv_report(self, failed=False, error="NA", traceback_message="NA"):
-        column_titles = ['case', 'succeeded', 'error', 'traceback', 'mesh time', 'solver time', 'paraview time', 'total time', 
+        column_titles = ['case', 'succeeded', 'error', 'traceback', 'mesh time', 'solver time', 'paraview time', 'total time',
         'ux_final_residual', 'uy_final_residual', 'uz_final_residual', 'T_final_residual', 'epsilon_final_residual', 'k_final_residual',
         'average yPlus', 'max yPlus']
         if failed:
             new_data = [[self.room_config_path, 'False', error, traceback_message,"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"]]
         else:
-            new_data = [[self.room_config_path, 'True', error, traceback_message, self.execution_time['mesh_time'], self.execution_time['solver_time'], self.execution_time['paraview_time'], self.execution_time['total_time'], 
-            self.residuals[-1]['ux_final_residual'], self.residuals[-1]['uy_final_residual'], self.residuals[-1]['uz_final_residual'], self.residuals[-1]['T_final_residual'], self.residuals[-1]['epsilon_final_residual'], self.residuals[-1]['k_final_residual'], 
+            new_data = [[self.room_config_path, 'True', error, traceback_message, self.execution_time['mesh_time'], self.execution_time['solver_time'], self.execution_time['paraview_time'], self.execution_time['total_time'],
+            self.residuals[-1]['ux_final_residual'], self.residuals[-1]['uy_final_residual'], self.residuals[-1]['uz_final_residual'], self.residuals[-1]['T_final_residual'], self.residuals[-1]['epsilon_final_residual'], self.residuals[-1]['k_final_residual'],
             self.yPlus_dict['average yPlus'], self.yPlus_dict['max yPlus']]]
         new_df = pd.DataFrame(new_data, columns=column_titles)
-        file_path = 'log/combined_result.csv'
+        file_path = "log/combined_result.csv"
         # Check if the file already exists
         if not os.path.isfile(file_path):
             new_df.to_csv(file_path, index=False, header=True)
         else:
-            new_df.to_csv(file_path, mode='a', index=False, header=False)
+            new_df.to_csv(file_path, mode="a", index=False, header=False)
 
     def __call__(self, *args, **kwargs):
         self.execute()
@@ -485,8 +534,9 @@ class CFDExecutor:
         self.flow_rate_monitor()
         self.flow_rate_line_chart()
         self.create_pdf()
- 
+
         return self
+
 
 # Example of how to use the CFDExecutor class
 if __name__ == "__main__":
@@ -495,7 +545,7 @@ if __name__ == "__main__":
     if os.path.isfile(csv_path):
         os.remove(csv_path)
     for root, dirs, files in os.walk(directory):
-        for filename in fnmatch.filter(files, '*.json'):
+        for filename in fnmatch.filter(files, "*.json"):
             room_path = os.path.join(root, filename)
             try:
                 executor = CFDExecutor(room_path)
@@ -506,4 +556,6 @@ if __name__ == "__main__":
             except Exception as e:
                 traceback_message = traceback.format_exc()
                 print(f"Failed to execute CFD simulation for {room_path}")
-                executor.add_to_csv_report(failed=True, error=str(e), traceback_message=traceback_message)
+                executor.add_to_csv_report(
+                    failed=True, error=str(e), traceback_message=traceback_message
+                )

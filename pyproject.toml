@@ -53,6 +53,7 @@ mkdocs-material = "^9.5.5"
 mkdocs-material-extensions = "^1.1"
 mkdocs-section-index = "^0.3.4"
 mayavi = "^4.8.3"
+ruff = "^0.14.10"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

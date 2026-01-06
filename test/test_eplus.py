@@ -5,6 +5,7 @@ from dclib import Building
 from dctwin.third_parties import IDFBuilder, ConfigBuilder
 from dctwin.registration import make_env
 
+
 def main(building_path: str):
     # Build IDF file
     building = Building.load(building_path)

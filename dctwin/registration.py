@@ -54,7 +54,7 @@ def make_env(
         is_k8s=is_k8s,
         k8s_config=k8s_config,
         eplus_image=eplus_image,
-        **env_params
+        **env_params,
     )
 
     return env

@@ -13,6 +13,7 @@ class EplusCloudAdapter:
     """
     A class to manage the co-simulation between CloudSim and E+.
     """
+
     def __init__(
         self,
         eplus_backend: EplusDockerBackend,
@@ -27,35 +28,39 @@ class EplusCloudAdapter:
             "cloud_output", f"episode-{episode_idx}"
         )
         log_dir.mkdir(parents=True, exist_ok=True)
-        config.cloud.file_handler = open(log_dir.joinpath("cloud_log.csv"), "wt", newline='')
+        config.cloud.file_handler = open(
+            log_dir.joinpath("cloud_log.csv"), "wt", newline=""
+        )
         config.cloud.log_handler = csv.DictWriter(
             config.cloud.file_handler,
             fieldnames=(
-                ['Current Simulation Time'] +
-                ['Computing Demand GT (#CPU)'] +
-                ['Computing Demand Pred w. Runtime Update (#CPU)'] +
-                ['Computing Demand Pred w/o. Runtime Update (#CPU)'] +
-                ["Power Budget (W)"] +
-                ["Cluster Power (W)"] +
-                ["Num Incoming Jobs"] +
-                ["Num Waiting Jobs"] +
-                ["Num Running Jobs"] +
-                ["Num Finished Jobs"] +
-                ["Num Incoming Tasks"] +
-                ["Num Started Tasks"] +
-                ["Num Waiting Tasks"] +
-                ["Num Finished Tasks"] +
-                ["Num Running Task Instances"] +
-                ["Num Missed Deadline"] +
-                ["Avg CPU"] +
-                ["Avg Memory"]
+                ["Current Simulation Time"]
+                + ["Computing Demand GT (#CPU)"]
+                + ["Computing Demand Pred w. Runtime Update (#CPU)"]
+                + ["Computing Demand Pred w/o. Runtime Update (#CPU)"]
+                + ["Power Budget (W)"]
+                + ["Cluster Power (W)"]
+                + ["Num Incoming Jobs"]
+                + ["Num Waiting Jobs"]
+                + ["Num Running Jobs"]
+                + ["Num Finished Jobs"]
+                + ["Num Incoming Tasks"]
+                + ["Num Started Tasks"]
+                + ["Num Waiting Tasks"]
+                + ["Num Finished Tasks"]
+                + ["Num Running Task Instances"]
+                + ["Num Missed Deadline"]
+                + ["Avg CPU"]
+                + ["Avg Memory"]
                 # [f"{server_name}" for server_name in self.cloud_manager.cluster.servers]
-            )
+            ),
         )
         config.cloud.log_handler.writeheader()
         config.cloud.file_handler.flush()
 
-    def _post_processing(self, ):
+    def _post_processing(
+        self,
+    ):
         log_dict = {}
         log_dict.update({"Current Simulation Time": self.eplus_manager.current_time})
         log_dict.update(
@@ -67,34 +72,68 @@ class EplusCloudAdapter:
         )
         log_dict.update(
             {
-                "Computing Demand Pred w. Runtime Update (#CPU)":
-                    self.cloud_manager.cluster.get_computing_demand_pred_with_runtime_update(
-                        current_time=int(self.eplus_manager.current_time)
-                    )
+                "Computing Demand Pred w. Runtime Update (#CPU)": self.cloud_manager.cluster.get_computing_demand_pred_with_runtime_update(
+                    current_time=int(self.eplus_manager.current_time)
+                )
             }
         )
         log_dict.update(
             {
-                "Computing Demand Pred w/o. Runtime Update (#CPU)":
-                self.cloud_manager.cluster.get_computing_demand_pred_without_runtime_update(
+                "Computing Demand Pred w/o. Runtime Update (#CPU)": self.cloud_manager.cluster.get_computing_demand_pred_without_runtime_update(
                     current_time=int(self.eplus_manager.current_time)
                 )
             }
         )
         log_dict.update({"Power Budget (W)": self.cloud_manager.cluster.power_budget})
         log_dict.update({"Cluster Power (W)": self.cloud_manager.cluster.total_power})
-        log_dict.update({"Num Incoming Jobs": self.cloud_manager.cluster.num_incoming_jobs})
-        log_dict.update({"Num Waiting Jobs": len(self.cloud_manager.cluster.waiting_jobs)})
-        log_dict.update({"Num Running Jobs": len(self.cloud_manager.cluster.running_jobs)})
-        log_dict.update({"Num Running Task Instances": len(self.cloud_manager.cluster.running_task_instances)})
-        log_dict.update({"Num Incoming Tasks": self.cloud_manager.cluster.num_incoming_tasks})
-        log_dict.update({"Num Started Tasks": self.cloud_manager.cluster.num_started_tasks})
-        log_dict.update({"Num Waiting Tasks": self.cloud_manager.cluster.num_pending_tasks})
-        log_dict.update({"Num Finished Jobs": self.cloud_manager.cluster.num_finished_jobs})
-        log_dict.update({"Num Finished Tasks": self.cloud_manager.cluster.num_finished_tasks})
-        log_dict.update({"Num Missed Deadline": self.cloud_manager.cluster.num_missed_deadline})
-        log_dict.update({"Avg CPU": np.mean(list(self.cloud_manager.cluster.cpu_utilization.values()))})
-        log_dict.update({"Avg Memory": np.mean(list(self.cloud_manager.cluster.mem_utilization.values()))})
+        log_dict.update(
+            {"Num Incoming Jobs": self.cloud_manager.cluster.num_incoming_jobs}
+        )
+        log_dict.update(
+            {"Num Waiting Jobs": len(self.cloud_manager.cluster.waiting_jobs)}
+        )
+        log_dict.update(
+            {"Num Running Jobs": len(self.cloud_manager.cluster.running_jobs)}
+        )
+        log_dict.update(
+            {
+                "Num Running Task Instances": len(
+                    self.cloud_manager.cluster.running_task_instances
+                )
+            }
+        )
+        log_dict.update(
+            {"Num Incoming Tasks": self.cloud_manager.cluster.num_incoming_tasks}
+        )
+        log_dict.update(
+            {"Num Started Tasks": self.cloud_manager.cluster.num_started_tasks}
+        )
+        log_dict.update(
+            {"Num Waiting Tasks": self.cloud_manager.cluster.num_pending_tasks}
+        )
+        log_dict.update(
+            {"Num Finished Jobs": self.cloud_manager.cluster.num_finished_jobs}
+        )
+        log_dict.update(
+            {"Num Finished Tasks": self.cloud_manager.cluster.num_finished_tasks}
+        )
+        log_dict.update(
+            {"Num Missed Deadline": self.cloud_manager.cluster.num_missed_deadline}
+        )
+        log_dict.update(
+            {
+                "Avg CPU": np.mean(
+                    list(self.cloud_manager.cluster.cpu_utilization.values())
+                )
+            }
+        )
+        log_dict.update(
+            {
+                "Avg Memory": np.mean(
+                    list(self.cloud_manager.cluster.mem_utilization.values())
+                )
+            }
+        )
         # log_dict.update(self.cloud_manager.cluster.cpu_utilization)
         config.cloud.log_handler.writerow(log_dict)
         config.cloud.file_handler.flush()
@@ -113,14 +152,10 @@ class EplusCloudAdapter:
         return obs, done
 
     def send_action(
-        self,
-        capacity_budget: float,
-        eplus_actions: np.ndarray | List
+        self, capacity_budget: float, eplus_actions: np.ndarray | List
     ) -> None:
         self.step_idx += 1
-        self.cloud_manager.set_power_budget(
-            capacity_budget=capacity_budget
-        )
+        self.cloud_manager.set_power_budget(capacity_budget=capacity_budget)
         self.eplus_manager.send_action(eplus_actions)
 
     def receive_status(self) -> Tuple[Union[List[float], None, np.ndarray], bool]:

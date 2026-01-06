@@ -76,14 +76,16 @@ def generate_control_dict(
     if process_num > 1:
         process_num = int(process_num)
         if process_num > 64:
-            logger.error("The number of processes should be less than 64."
-                         "But the number of processes is %d" % process_num)
+            logger.error(
+                "The number of processes should be less than 64."
+                "But the number of processes is %d" % process_num
+            )
             exit(1)
         with open(Path(config.cfd.case_dir, "system/decomposeParDict"), "w") as f:
             f.write(
-                template_env.get_template("foam/template/system/decomposeParDict.j2").render(
-                    process_num=process_num
-                )
+                template_env.get_template(
+                    "foam/template/system/decomposeParDict.j2"
+                ).render(process_num=process_num)
             )
 
     try:
@@ -100,7 +102,8 @@ def init_foam(is_gpu: bool = False, process_num: int = 1) -> None:
     Path(config.cfd.case_dir, "case.foam").touch(exist_ok=True)
 
     shutil.copy(
-        Path(template_dir, "foam/template/constant/g"), Path(config.cfd.case_dir, "constant/g")
+        Path(template_dir, "foam/template/constant/g"),
+        Path(config.cfd.case_dir, "constant/g"),
     )
     shutil.copy(
         Path(template_dir, "foam/template/constant/thermophysicalProperties"),
@@ -113,9 +116,9 @@ def init_foam(is_gpu: bool = False, process_num: int = 1) -> None:
 
     with open(Path(config.cfd.case_dir, "constant/turbulenceProperties"), "w") as f:
         f.write(
-            template_env.get_template("foam/template/constant/turbulenceProperties.j2").render(
-                turbulence=("on" if config.cfd.SOLVER_TURBULENCE else "off")
-            )
+            template_env.get_template(
+                "foam/template/constant/turbulenceProperties.j2"
+            ).render(turbulence=("on" if config.cfd.SOLVER_TURBULENCE else "off"))
         )
 
     shutil.copy(
@@ -214,12 +217,12 @@ def read_internal_field(filename: Union[str, Path]):
 
 def is_closed(box: Box):
     if (
-        box.geometry.faces.bottom and
-        box.geometry.faces.top and
-        box.geometry.faces.left and
-        box.geometry.faces.right and
-        box.geometry.faces.front and
-        box.geometry.faces.rear
+        box.geometry.faces.bottom
+        and box.geometry.faces.top
+        and box.geometry.faces.left
+        and box.geometry.faces.right
+        and box.geometry.faces.front
+        and box.geometry.faces.rear
     ):
         return True
     return False
@@ -250,18 +253,18 @@ def round_to_base(value: float, base: float, mode: str = "round") -> float:
     return round(adjusted_value, 3)
 
 
-def rotate_vertex(
-    origin: Vertex,
-    vertex_to_be_rotated: Vertex,
-    angle: float
-):
-    qx = origin.x + np.cos(angle) * (vertex_to_be_rotated.x - origin.x) - np.sin(angle) * (vertex_to_be_rotated.y - origin.y)
-    qy = origin.y + np.sin(angle) * (vertex_to_be_rotated.x - origin.x) + np.cos(angle) * (vertex_to_be_rotated.y - origin.y)
-    return Vertex(
-        x=qx,
-        y=qy,
-        z=vertex_to_be_rotated.z
+def rotate_vertex(origin: Vertex, vertex_to_be_rotated: Vertex, angle: float):
+    qx = (
+        origin.x
+        + np.cos(angle) * (vertex_to_be_rotated.x - origin.x)
+        - np.sin(angle) * (vertex_to_be_rotated.y - origin.y)
     )
+    qy = (
+        origin.y
+        + np.sin(angle) * (vertex_to_be_rotated.x - origin.x)
+        + np.cos(angle) * (vertex_to_be_rotated.y - origin.y)
+    )
+    return Vertex(x=qx, y=qy, z=vertex_to_be_rotated.z)
 
 
 def rotate_rectangular(
@@ -278,7 +281,12 @@ def rotate_rectangular(
     rotated_vertex_4 = rotate_vertex(abs_vertex_1, abs_vertex_4, angle)
 
     # find the minimum and maximum x, y, and z coordinates of the ACU
-    rotated_vertices = [rotated_vertex_1, rotated_vertex_2, rotated_vertex_3, rotated_vertex_4]
+    rotated_vertices = [
+        rotated_vertex_1,
+        rotated_vertex_2,
+        rotated_vertex_3,
+        rotated_vertex_4,
+    ]
     min_x = min([v.x for v in rotated_vertices])
     min_y = min([v.y for v in rotated_vertices])
     min_z = min([v.z for v in rotated_vertices])

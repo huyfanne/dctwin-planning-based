@@ -8,7 +8,6 @@ from .cooling_tower import VariableSpeedCoolingTowerModel
 from .pipe import PipeModel
 
 
-
 __all__ = [
     "ChillerModel",
     "HeatExchangerModel",
@@ -17,5 +16,5 @@ __all__ = [
     "FanModel",
     "dehumidifier",
     "VariableSpeedCoolingTowerModel",
-    "PipeModel"
+    "PipeModel",
 ]

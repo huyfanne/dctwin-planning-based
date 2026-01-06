@@ -13,10 +13,7 @@ def nusseltCoefficient(Re):
     return coef, expo
 
 
-def firctionFactor(
-    rr: torch.Tensor,
-    Re: torch.Tensor
-):
+def firctionFactor(rr: torch.Tensor, Re: torch.Tensor):
     """
     Calculate the friction factor of internal fluid
     :param rr: relative roughness
@@ -36,7 +33,7 @@ def NTUHE(
     C_inside: torch.Tensor,
     C_outside: torch.Tensor,
     U_total: torch.Tensor,
-    A_HE: torch.Tensor
+    A_HE: torch.Tensor,
 ):
     """
     Calculate the NTU and effectiveness of a cross-flow heat exchanger
@@ -65,11 +62,7 @@ def NTUHE(
     return eff, NTU
 
 
-def nusseltNumberIn(
-    rr: torch.Tensor,
-    Re: torch.Tensor,
-    PrandtlNumber: torch.Tensor
-):
+def nusseltNumberIn(rr: torch.Tensor, Re: torch.Tensor, PrandtlNumber: torch.Tensor):
     """
     calculate the Nusselt number and friction factor of internal fluid
     :param rr: relative roughness
@@ -79,17 +72,14 @@ def nusseltNumberIn(
     """
     Pr = PrandtlNumber
     fr = firctionFactor(rr, Re)
-    nu = (fr / 8) * (Re - 1000) * Pr / (1 + 12.7 * (fr / 8) ** 0.5 * (Pr ** (2 / 3) - 1))
+    nu = (
+        (fr / 8) * (Re - 1000) * Pr / (1 + 12.7 * (fr / 8) ** 0.5 * (Pr ** (2 / 3) - 1))
+    )
     nu[Re <= 2300] = 4.01
     return fr, nu
 
 
-def reynolds_number(
-    fluid_velocity,
-    pipe_diameter,
-    fluid_density,
-    fluid_viscosity
-):
+def reynolds_number(fluid_velocity, pipe_diameter, fluid_density, fluid_viscosity):
     return fluid_velocity * pipe_diameter * fluid_density / fluid_viscosity
 
 

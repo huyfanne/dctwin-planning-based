@@ -45,8 +45,8 @@ def map_boundary_condition_fn(
                 )
             )
             boundary_conditions["server_powers"][server_id] = heat_load
-            boundary_conditions["server_volume_flow_rates"][
-                server_id
-            ] = volume_flow_rate
+            boundary_conditions["server_volume_flow_rates"][server_id] = (
+                volume_flow_rate
+            )
 
     return boundary_conditions

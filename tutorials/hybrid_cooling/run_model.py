@@ -4,15 +4,22 @@ from dctwin.utils import read_engine_config
 
 
 def get_action_list(step) -> list:
-    acts = [ 22, 1, 25, 0.006*2*2, 14, 27, ]
+    acts = [
+        22,
+        1,
+        25,
+        0.006 * 2 * 2,
+        14,
+        27,
+    ]
     return acts
 
 
 def get_external_inputs(step) -> dict:
     return {
-        "outdoor_temperature": 27.,
-        "Data Hall 1A server-1": 100.,
-        "Data Hall 1A server-2": 100.,
+        "outdoor_temperature": 27.0,
+        "Data Hall 1A server-1": 100.0,
+        "Data Hall 1A server-2": 100.0,
     }
 
 
@@ -35,7 +42,7 @@ def run(
                 break
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run(
         engine_config=Path("configs/dt/env.prototxt"),
     )

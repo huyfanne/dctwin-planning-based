@@ -24,8 +24,12 @@ def ode(
     :param zone_volume: zone volume (m^3)
     :return: dTr / dt
     """
-    dTrdt = (supply_air_mass_flow_rates * (supply_air_temperatures - zone_air_temperatures) / (rho_air * zone_volume) +
-             1 * sensible_heat_loads / (air_specific_heat * zone_volume / 1000)) * 60
+    dTrdt = (
+        supply_air_mass_flow_rates
+        * (supply_air_temperatures - zone_air_temperatures)
+        / (rho_air * zone_volume)
+        + 1 * sensible_heat_loads / (air_specific_heat * zone_volume / 1000)
+    ) * 60
     return dTrdt
 
 
@@ -47,7 +51,10 @@ class PINNDynamics(BaseNNDynamics):
         **kwargs: Any,
     ) -> None:
         super().__init__(
-            model=model, model_optim=model_optim, use_residual=pred_residual, **kwargs,
+            model=model,
+            model_optim=model_optim,
+            use_residual=pred_residual,
+            **kwargs,
         )
         self.zone_volume = zone_volume
 
@@ -55,7 +62,9 @@ class PINNDynamics(BaseNNDynamics):
         self,
         batch: Batch,
     ) -> torch.Tensor:
-        time = torch.as_tensor(batch.times, device=self.model.device, dtype=torch.float32)
+        time = torch.as_tensor(
+            batch.times, device=self.model.device, dtype=torch.float32
+        )
         time.requires_grad = True
         output = self.forward(
             batch.supply_air_temperature,
@@ -112,10 +121,18 @@ class PINNDynamics(BaseNNDynamics):
         current full observation and action.
         """
         size = supply_air_temperatures.shape[0]
-        supply_air_temperatures = torch.as_tensor(supply_air_temperatures, dtype=torch.float32).reshape(size, -1)
-        supply_air_mass_flow_rates = torch.as_tensor(supply_air_mass_flow_rates, dtype=torch.float32).reshape(size, -1)
-        zone_air_temperatures = torch.as_tensor(zone_air_temperatures, dtype=torch.float32).reshape(size, -1)
-        sensible_heat_loads = torch.as_tensor(sensible_heat_loads, dtype=torch.float32).reshape(size, -1)
+        supply_air_temperatures = torch.as_tensor(
+            supply_air_temperatures, dtype=torch.float32
+        ).reshape(size, -1)
+        supply_air_mass_flow_rates = torch.as_tensor(
+            supply_air_mass_flow_rates, dtype=torch.float32
+        ).reshape(size, -1)
+        zone_air_temperatures = torch.as_tensor(
+            zone_air_temperatures, dtype=torch.float32
+        ).reshape(size, -1)
+        sensible_heat_loads = torch.as_tensor(
+            sensible_heat_loads, dtype=torch.float32
+        ).reshape(size, -1)
         times = torch.as_tensor(times, dtype=torch.float32).reshape(size, -1)
 
         input_ = torch.cat(
@@ -126,7 +143,7 @@ class PINNDynamics(BaseNNDynamics):
                 sensible_heat_loads,
                 times,
             ],
-            dim=1
+            dim=1,
         )
         output = self.model(input_)
 

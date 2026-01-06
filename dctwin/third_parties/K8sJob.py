@@ -371,7 +371,6 @@ class K8sJob:
             ),
         )
 
-
     def _get_job_pods(self, exclude_pods=()):
         pod_list = self._core_api.list_namespaced_pod(self.namespace)
         return [

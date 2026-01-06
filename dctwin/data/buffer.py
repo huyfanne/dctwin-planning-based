@@ -119,11 +119,14 @@ class Buffer:
 
     def __setattr__(self, key: str, value: Any) -> None:
         """Set self.key = value."""
-        assert (key not in self._reserved_keys
-                ), "key '{}' is reserved and cannot be assigned".format(key)
+        assert key not in self._reserved_keys, (
+            "key '{}' is reserved and cannot be assigned".format(key)
+        )
         super().__setattr__(key, value)
 
-    def reset(self,) -> None:
+    def reset(
+        self,
+    ) -> None:
         """Clear all the data in replay buffer and episode statistics."""
         self.last_index = np.array([0])
         self._index = self._size = 0
@@ -173,7 +176,8 @@ class Buffer:
         to_indices = np.array(to_indices)
         if self._meta.is_empty():
             self._meta = _create_value(  # type: ignore
-                buffer._meta, self.maxsize, stack=False)
+                buffer._meta, self.maxsize, stack=False
+            )
         self._meta[to_indices] = buffer._meta[from_indices]
         return to_indices
 
@@ -210,7 +214,8 @@ class Buffer:
         except ValueError:
             if self._meta.is_empty():
                 self._meta = _create_value(  # type: ignore
-                    batch, self.maxsize, False)
+                    batch, self.maxsize, False
+                )
             else:  # dynamic key pops up in batch
                 _alloc_by_keys_diff(self._meta, batch, self.maxsize, False)
             self._meta[ptr] = batch
@@ -227,8 +232,7 @@ class Buffer:
                 return np.random.choice(self._size, batch_size)
             elif batch_size == 0:  # construct current available indices
                 return np.concatenate(
-                    [np.arange(self._index, self._size),
-                     np.arange(self._index)]
+                    [np.arange(self._index, self._size), np.arange(self._index)]
                 )
             else:
                 return np.array([], int)
@@ -236,8 +240,7 @@ class Buffer:
             if batch_size < 0:
                 return np.array([], int)
             all_indices = prev_indices = np.concatenate(
-                [np.arange(self._index, self._size),
-                 np.arange(self._index)]
+                [np.arange(self._index, self._size), np.arange(self._index)]
             )
             for _ in range(self.stack_num - 2):
                 prev_indices = self.prev(prev_indices)
@@ -308,8 +311,11 @@ class Buffer:
         """
         if isinstance(index, slice):  # change slice to np array
             # buffer[:] will get all available data
-            indices = self.sample_indices(0) if index == slice(None) \
-                else self._indices[:len(self)][index]
+            indices = (
+                self.sample_indices(0)
+                if index == slice(None)
+                else self._indices[: len(self)][index]
+            )
         else:
             indices = index  # type: ignore
         return Batch(
@@ -325,20 +331,22 @@ class Buffer:
             supply_air_mass_flow_rate=self.get(
                 indices, key="supply_air_mass_flow_rate", default_value=Batch()
             ),
-            fan_power=self.get(
-                indices, key="fan_power", default_value=Batch()
-            ),
+            fan_power=self.get(indices, key="fan_power", default_value=Batch()),
             cooling_coil_inlet_air_temperature=self.get(
                 indices, key="cooling_coil_inlet_air_temperature", default_value=Batch()
             ),
             cooling_coil_outlet_air_temperature=self.get(
-                indices, key="cooling_coil_outlet_air_temperature", default_value=Batch()
+                indices,
+                key="cooling_coil_outlet_air_temperature",
+                default_value=Batch(),
             ),
             cooling_coil_air_mass_flow_rate=self.get(
                 indices, key="cooling_coil_air_mass_flow_rate", default_value=Batch()
             ),
             cooling_coil_inlet_water_temperature=self.get(
-                indices, key="cooling_coil_inlet_water_temperature", default_value=Batch()
+                indices,
+                key="cooling_coil_inlet_water_temperature",
+                default_value=Batch(),
             ),
             cooling_coil_water_mass_flow_rate=self.get(
                 indices, key="cooling_coil_water_mass_flow_rate", default_value=Batch()
@@ -352,23 +360,23 @@ class Buffer:
             condenser_water_supply_temperature=self.get(
                 indices, key="condenser_water_supply_temperature", default_value=Batch()
             ),
-            chiller_power=self.get(
-                indices, key="chiller_power", default_value=Batch()
-            ),
+            chiller_power=self.get(indices, key="chiller_power", default_value=Batch()),
             pump_mass_flow_rate=self.get(
                 indices, key="pump_mass_flow_rate", default_value=Batch()
             ),
-            pump_power=self.get(
-                indices, key="pump_power", default_value=Batch()
-            ),
+            pump_power=self.get(indices, key="pump_power", default_value=Batch()),
             cooling_tower_return_water_temperature=self.get(
-                indices, key="cooling_tower_return_water_temperature", default_value=Batch()
+                indices,
+                key="cooling_tower_return_water_temperature",
+                default_value=Batch(),
             ),
             cooling_tower_water_mass_flow_rate=self.get(
                 indices, key="cooling_tower_water_mass_flow_rate", default_value=Batch()
             ),
             cooling_tower_supply_water_temperature=self.get(
-                indices, key="cooling_tower_supply_water_temperature", default_value=Batch()
+                indices,
+                key="cooling_tower_supply_water_temperature",
+                default_value=Batch(),
             ),
             outside_air_wetbulb_temperature=self.get(
                 indices, key="outside_air_wetbulb_temperature", default_value=Batch()
@@ -379,7 +387,5 @@ class Buffer:
             cooling_tower_fan_power=self.get(
                 indices, key="cooling_tower_fan_power", default_value=Batch()
             ),
-            times=self.get(
-                indices, key="times", default_value=Batch()
-            )
+            times=self.get(indices, key="times", default_value=Batch()),
         )

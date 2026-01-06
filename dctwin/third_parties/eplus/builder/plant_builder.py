@@ -7,11 +7,9 @@ from dclib.cooling.plant.plant_loops import (
     ChilledWaterLoops,
     CondenserWaterLoops,
     SecondaryChilledWaterLoops,
-    MetaLoop
+    MetaLoop,
 )
-from dclib.cooling.common.loop import (
-    Branch
-)
+from dclib.cooling.common.loop import Branch
 from dclib.cooling.plant.plant import Plant
 
 from .utils import (
@@ -22,7 +20,7 @@ from .utils import (
     make_plant_sizing,
     make_pump,
     get_cooling_coil,
-    make_heat_exchanger
+    make_heat_exchanger,
 )
 
 
@@ -162,7 +160,9 @@ class PlantBuilder:
                     loop=loop,
                 )
                 branch[f"Component_{component_idx}_Object_Type"] = eplus_obj.key
-                branch[f"Component_{component_idx}_Name"] = f"{acu.uid.lower()} cooling coil"
+                branch[f"Component_{component_idx}_Name"] = (
+                    f"{acu.uid.lower()} cooling coil"
+                )
                 component_idx += 1
         return branch
 
@@ -200,14 +200,14 @@ class PlantBuilder:
         plant_loop["Minimum_Loop_Temperature"] = 5
         plant_loop["Maximum_Loop_Flow_Rate"] = meta.maximum_loop_flow_rate
         plant_loop["Minimum_Loop_Flow_Rate"] = 0
-        plant_loop[
-            "Loop_Temperature_Setpoint_Node_Name"
-        ] = f"{loop_name} supply outlet node"
+        plant_loop["Loop_Temperature_Setpoint_Node_Name"] = (
+            f"{loop_name} supply outlet node"
+        )
         plant_loop["Loop_Circulation_Time"] = 0
         plant_loop["Load_Distribution_Scheme"] = meta.load_distribution_scheme
-        plant_loop[
-            "Plant_Loop_Demand_Calculation_Scheme"
-        ] = meta.plant_loop_demand_calculation_scheme
+        plant_loop["Plant_Loop_Demand_Calculation_Scheme"] = (
+            meta.plant_loop_demand_calculation_scheme
+        )
         plant_loop["Common_Pipe_Simulation"] = meta.common_pipe_simulation
         return plant_loop
 
@@ -307,7 +307,9 @@ class PlantBuilder:
         demand_loop_branches: Dict[str, Branch],
         type_: str = "chilled",
     ):
-        assert type_ in ["chilled", "condenser", "secondary"],  logger.info(f"Making {type_} water loop: {loop_name}")
+        assert type_ in ["chilled", "condenser", "secondary"], logger.info(
+            f"Making {type_} water loop: {loop_name}"
+        )
         plant_loop = self._init_plant_loop(loop_name, meta)
 
         # make branches for all supply branches in the plant loop
@@ -346,16 +348,16 @@ class PlantBuilder:
         plant_operation_schemes = self.model.newidfobject(
             key="PlantEquipmentOperationSchemes".upper(),
         )
-        plant_loop[
-            "Plant_Equipment_Operation_Scheme_Name"
-        ] = f"{loop_name} operation scheme"
+        plant_loop["Plant_Equipment_Operation_Scheme_Name"] = (
+            f"{loop_name} operation scheme"
+        )
         plant_operation_schemes["Name"] = f"{loop_name} operation scheme"
-        plant_operation_schemes[
-            "Control_Scheme_1_Object_Type"
-        ] = "PlantEquipmentOperation:CoolingLoad"
-        plant_operation_schemes[
-            "Control_Scheme_1_Name"
-        ] = f"{loop_name} cooling operation scheme"
+        plant_operation_schemes["Control_Scheme_1_Object_Type"] = (
+            "PlantEquipmentOperation:CoolingLoad"
+        )
+        plant_operation_schemes["Control_Scheme_1_Name"] = (
+            f"{loop_name} cooling operation scheme"
+        )
         plant_operation_schemes["Control_Scheme_1_Schedule_Name"] = f"Always On".upper()
 
         plant_operation_scheme = self.model.newidfobject(
@@ -364,9 +366,9 @@ class PlantBuilder:
         )
         plant_operation_scheme["Load_Range_1_Lower_Limit"] = 0
         plant_operation_scheme["Load_Range_1_Upper_Limit"] = 1000000000
-        plant_operation_scheme[
-            "Range_1_Equipment_List_Name"
-        ] = f"{loop_name} equipment list"
+        plant_operation_scheme["Range_1_Equipment_List_Name"] = (
+            f"{loop_name} equipment list"
+        )
 
         plant_equipment_list = self.model.newidfobject(
             key="PlantEquipmentList".upper(), Name=f"{loop_name} equipment list"
@@ -378,12 +380,12 @@ class PlantBuilder:
                     for component_type, components in branch.components:
                         if component_type == "chillers" and components is not None:
                             for component_name, component in components.items():
-                                plant_equipment_list[
-                                    f"Equipment_{idx}_Object_Type"
-                                ] = "Chiller:Electric:EIR"
-                                plant_equipment_list[
-                                    f"Equipment_{idx}_Name"
-                                ] = component.uid.lower()
+                                plant_equipment_list[f"Equipment_{idx}_Object_Type"] = (
+                                    "Chiller:Electric:EIR"
+                                )
+                                plant_equipment_list[f"Equipment_{idx}_Name"] = (
+                                    component.uid.lower()
+                                )
                                 idx += 1
         elif type_ == "secondary":
             for branch_name, branch in supply_loop_branches.items():
@@ -391,12 +393,12 @@ class PlantBuilder:
                     for component_type, components in branch.components:
                         if component_type == "tanks" and components is not None:
                             for component_name, component in components.items():
-                                plant_equipment_list[
-                                    f"Equipment_{idx}_Object_Type"
-                                ] = "Thermalstorage:Chilledwater:Mixed"
-                                plant_equipment_list[
-                                    f"Equipment_{idx}_Name"
-                                ] = component.uid.lower()
+                                plant_equipment_list[f"Equipment_{idx}_Object_Type"] = (
+                                    "Thermalstorage:Chilledwater:Mixed"
+                                )
+                                plant_equipment_list[f"Equipment_{idx}_Name"] = (
+                                    component.uid.lower()
+                                )
                                 idx += 1
         else:
             for branch_name, branch in supply_loop_branches.items():
@@ -404,12 +406,12 @@ class PlantBuilder:
                     for component_type, components in branch.components:
                         if component_type == "cooling_towers":
                             for component_name, component in components.items():
-                                plant_equipment_list[
-                                    f"Equipment_{idx}_Object_Type"
-                                ] = "CoolingTower:VariableSpeed"
-                                plant_equipment_list[
-                                    f"Equipment_{idx}_Name"
-                                ] = component.uid.lower()
+                                plant_equipment_list[f"Equipment_{idx}_Object_Type"] = (
+                                    "CoolingTower:VariableSpeed"
+                                )
+                                plant_equipment_list[f"Equipment_{idx}_Name"] = (
+                                    component.uid.lower()
+                                )
                                 idx += 1
 
     def _make_chilled_water_loops(
@@ -482,13 +484,13 @@ class PlantBuilder:
                     Name=f"{loop_name} exit temperature setpoint manager",
                     Control_Variable="Temperature",
                     Schedule_Name=f"{loop_name} exit temperature setpoint schedule",
-                    Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node"
+                    Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node",
                 )
                 self.model.newidfobject(
                     key="Schedule:Constant".upper(),
                     Name=f"{loop_name} exit temperature setpoint schedule",
                     Schedule_Type_Limits_Name="Temperature",
-                    Hourly_Value=condenser_loop.sizing.design_loop_exit_temperature
+                    Hourly_Value=condenser_loop.sizing.design_loop_exit_temperature,
                 )
             else:
                 self.model.newidfobject(
@@ -499,10 +501,12 @@ class PlantBuilder:
                     Offset_Temperature_Difference=condenser_loop.meta.offset_temperature_difference,
                     Maximum_Setpoint_Temperature=condenser_loop.meta.maximum_setpoint_temperature,
                     Minimum_Setpoint_Temperature=condenser_loop.meta.minimum_setpoint_temperature,
-                    Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node"
+                    Setpoint_Node_or_NodeList_Name=f"{loop_name} supply outlet node",
                 )
 
-    def _make_secondary_loops(self, secondary_loops: Dict[str, SecondaryChilledWaterLoops]):
+    def _make_secondary_loops(
+        self, secondary_loops: Dict[str, SecondaryChilledWaterLoops]
+    ):
         if secondary_loops is None:
             return
         for loop_name, secondary_loop in secondary_loops.items():
@@ -536,10 +540,11 @@ class PlantBuilder:
                         for tank_name in branch.components.tanks:
                             obj = self.model.getobject(
                                 key="THERMALSTORAGE:CHILLEDWATER:MIXED".upper(),
-                                name=tank_name
+                                name=tank_name,
                             )
-                            obj["Setpoint_Temperature_Schedule_Name"] =\
+                            obj["Setpoint_Temperature_Schedule_Name"] = (
                                 f"{loop_name} exit temperature setpoint schedule"
+                            )
 
     def make_plant(self, plant: Plant):
         """
@@ -549,6 +554,10 @@ class PlantBuilder:
         :return:
         """
         # build chiller plant system loops according to the configuration file
-        self._make_secondary_loops(plant.secondary_chilled_water_loops) if plant.secondary_chilled_water_loops else None
+        self._make_secondary_loops(
+            plant.secondary_chilled_water_loops
+        ) if plant.secondary_chilled_water_loops else None
         self._make_chilled_water_loops(plant.chilled_water_loops)
-        self._make_condenser_loops(plant.condenser_water_loops) if plant.condenser_water_loops else None
+        self._make_condenser_loops(
+            plant.condenser_water_loops
+        ) if plant.condenser_water_loops else None

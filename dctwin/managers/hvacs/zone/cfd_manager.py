@@ -162,9 +162,9 @@ class CFDManager:
                 )
                 # use reduced-order simulation if POD mode is provided
                 if not self.run_cfd and self.pod_method is not None:
-                    assert (
-                        self.object_mesh_index is not None
-                    ), "object mesh index is required for POD simulation"
+                    assert self.object_mesh_index is not None, (
+                        "object mesh index is required for POD simulation"
+                    )
                     self.pod_backend = PODK8SBackend.load(
                         self.room, self.object_mesh_index
                     )
@@ -180,9 +180,7 @@ class CFDManager:
                 self.solver_backend.docker_image = self.openfoam_image
                 self.mesh_backend.docker_image = self.openfoam_image
         else:
-            self.mesh_backend = SnappyHexBackend(
-                self.docker_client, is_gpu=self.is_gpu
-            )
+            self.mesh_backend = SnappyHexBackend(self.docker_client, is_gpu=self.is_gpu)
             if self.steady:
                 self.solver_backend = SteadySolverDockerBackend(
                     self.docker_client,
@@ -192,9 +190,9 @@ class CFDManager:
                 self.solver_backend.only_save_latest = self.only_save_latest
                 # use reduced-order simulation if POD mode is provided
                 if not self.run_cfd and self.pod_method is not None:
-                    assert (
-                        self.object_mesh_index is not None
-                    ), "object mesh index is required for POD simulation"
+                    assert self.object_mesh_index is not None, (
+                        "object mesh index is required for POD simulation"
+                    )
                     self.pod_backend = PODDockerBackend.load(
                         self.room, self.object_mesh_index
                     )
@@ -213,7 +211,7 @@ class CFDManager:
                 process_num=self.mesh_process,
                 case_dir=config.cfd.case_dir,
                 refinement_level=self.refinement_level,
-                location_in_mesh=self.location_in_mesh
+                location_in_mesh=self.location_in_mesh,
             )
         except Exception:
             raise MeshBuildError("Failed to mesh geometry")
@@ -272,6 +270,7 @@ class CFDManager:
         server_powers: server power for each server
         server_volume_flow_rates: server volume flow rate for each server
         """
+
         def __update_server_boundaries(
             _rack: Rack,
         ) -> None:
@@ -299,7 +298,6 @@ class CFDManager:
                 for rack_id, rack in row.constructions.racks.items():
                     __update_server_boundaries(rack)
 
-
     def update_boundary_conditions(
         self,
         supply_air_temperatures: Dict = None,
@@ -320,41 +318,62 @@ class CFDManager:
     def format_boundary_conditions(self) -> Dict:
         """Format boundary conditions for ACUs and servers to be used in the API"""
 
-        def _get_server_boundary_conditions(_server_id:str, _server, is_modulus):
+        def _get_server_boundary_conditions(_server_id: str, _server, is_modulus):
             boundary_conditions["server_powers"][_server_id] = _server.power.input_power
-            boundary_conditions["server_volume_flow_rates"][_server_id] = _server.volume_flow_rate
+            boundary_conditions["server_volume_flow_rates"][_server_id] = (
+                _server.volume_flow_rate
+            )
             if is_modulus:
-                server_inlet_face_center, server_outlet_face_center, server_box_center = (
-                    self.room.constructions.server_patch_positions(_server_id))
-                boundary_conditions["server_inlet_face_center"][_server_id] = server_inlet_face_center
-                boundary_conditions["server_outlet_face_center"][_server_id] = server_outlet_face_center
+                (
+                    server_inlet_face_center,
+                    server_outlet_face_center,
+                    server_box_center,
+                ) = self.room.constructions.server_patch_positions(_server_id)
+                boundary_conditions["server_inlet_face_center"][_server_id] = (
+                    server_inlet_face_center
+                )
+                boundary_conditions["server_outlet_face_center"][_server_id] = (
+                    server_outlet_face_center
+                )
 
-        boundary_conditions = {
-            "supply_air_temperatures": {},
-            "supply_air_volume_flow_rates": {},
-            "acu_supply_face_center": {},
-            "acu_return_face_center": {},
-            "server_powers": {},
-            "server_volume_flow_rates": {},
-            "server_inlet_face_center": {},
-            "server_outlet_face_center": {},
-        } if self.is_modulus else {
-            "supply_air_temperatures": {},
-            "supply_air_volume_flow_rates": {},
-            "server_powers": {},
-            "server_volume_flow_rates": {},
-        }
+        boundary_conditions = (
+            {
+                "supply_air_temperatures": {},
+                "supply_air_volume_flow_rates": {},
+                "acu_supply_face_center": {},
+                "acu_return_face_center": {},
+                "server_powers": {},
+                "server_volume_flow_rates": {},
+                "server_inlet_face_center": {},
+                "server_outlet_face_center": {},
+            }
+            if self.is_modulus
+            else {
+                "supply_air_temperatures": {},
+                "supply_air_volume_flow_rates": {},
+                "server_powers": {},
+                "server_volume_flow_rates": {},
+            }
+        )
 
         for acu_id, acu in self.room.constructions.acus.items():
+            boundary_conditions["supply_air_temperatures"][acu_id] = (
+                acu.cooling.operating.supply_air_temperature
+            )
 
-            boundary_conditions["supply_air_temperatures"][acu_id] = acu.cooling.operating.supply_air_temperature
-
-            boundary_conditions["supply_air_volume_flow_rates"][acu_id] = (acu.cooling.operating
-                                                                           .supply_air_volume_flow_rate)
+            boundary_conditions["supply_air_volume_flow_rates"][acu_id] = (
+                acu.cooling.operating.supply_air_volume_flow_rate
+            )
             if self.is_modulus:
-                acu_return_face_center, acu_supply_face_center, acu_box_center = self.room.constructions.acu_patch_positions(acu_id)
-                boundary_conditions["acu_supply_face_center"][acu_id] = acu_supply_face_center
-                boundary_conditions["acu_return_face_center"][acu_id] = acu_return_face_center
+                acu_return_face_center, acu_supply_face_center, acu_box_center = (
+                    self.room.constructions.acu_patch_positions(acu_id)
+                )
+                boundary_conditions["acu_supply_face_center"][acu_id] = (
+                    acu_supply_face_center
+                )
+                boundary_conditions["acu_return_face_center"][acu_id] = (
+                    acu_return_face_center
+                )
 
         if self.room.constructions.racks is not None:
             for rack_id, rack in self.room.constructions.racks.items():
@@ -419,7 +438,9 @@ class CFDManager:
                     if server.cooling.fan_type == "Variable":
                         server.cooling.volume_flow_rate_ratio *= scale_factor
                     if server.cooling.fan_type == "Fixed":
-                        server.cooling.volume_flow_rate = boundary_conditions["server_volume_flow_rates"][server_id]
+                        server.cooling.volume_flow_rate = boundary_conditions[
+                            "server_volume_flow_rates"
+                        ][server_id]
 
         if self.room.constructions.rows is not None:
             for row_id, row in self.room.constructions.rows.items():
@@ -428,7 +449,9 @@ class CFDManager:
                         if server.cooling.fan_type == "Variable":
                             server.cooling.volume_flow_rate_ratio *= scale_factor
                         if server.cooling.fan_type == "Fixed":
-                            server.cooling.volume_flow_rate = boundary_conditions["server_volume_flow_rates"][server_id]
+                            server.cooling.volume_flow_rate = boundary_conditions[
+                                "server_volume_flow_rates"
+                            ][server_id]
 
         sum_acu_volume_flow_rate_after = sum(
             boundary_conditions["supply_air_volume_flow_rates"].values()
@@ -464,7 +487,6 @@ class CFDManager:
 
     @staticmethod
     def mesh_check():
-
         data_path = config.cfd.case_dir.joinpath("case.foam")
         application_name = "paraview"
         system = platform.system()
@@ -545,21 +567,32 @@ class CFDManager:
                         app_found = True
                         break
                 if not app_found:
-                    logger.critical(f'No application containing "{application_name}" found')
+                    logger.critical(
+                        f'No application containing "{application_name}" found'
+                    )
             except Exception as e:
                 logger.critical("An error occurred:", e)
 
-    def _adjust_server(self, racks: Union[RackModel, RowRackModel], servers_input: OrderedDict, boundary_conditions: Dict):
+    def _adjust_server(
+        self,
+        racks: Union[RackModel, RowRackModel],
+        servers_input: OrderedDict,
+        boundary_conditions: Dict,
+    ):
         for rack_key, rack in racks.items():
-
             rack_slot_num = int(round(rack.geometry.size.z / RackModel.slot_height))
             server_slot_size = 4 if self.refinement_level == 0 else 2
             servers_num = math.ceil(rack_slot_num / server_slot_size)
-            new_rack_servers = {f"{rack_key}_server_slot_{_*server_slot_size}":{} for _ in range(servers_num)}
-            slot_to_new_slot = {slot_index: slot_index // server_slot_size for slot_index in range(rack_slot_num)}
+            new_rack_servers = {
+                f"{rack_key}_server_slot_{_ * server_slot_size}": {}
+                for _ in range(servers_num)
+            }
+            slot_to_new_slot = {
+                slot_index: slot_index // server_slot_size
+                for slot_index in range(rack_slot_num)
+            }
 
             for server_key, server in rack.constructions.servers.items():
-
                 slot_position = server.geometry.slot_position
                 slot_occupation = server.geometry.slot_occupation
                 occupied_slots = range(slot_position, slot_position + slot_occupation)
@@ -575,32 +608,46 @@ class CFDManager:
                 # Calculate the fraction of the server in each new slot
                 for new_slot_index, count in new_slot_counts.items():
                     fraction = count / slot_occupation
-                    new_rack_servers[f"{rack_key}_server_slot_{new_slot_index*server_slot_size}"].setdefault(server_key,
-                                                                                                             0)
-                    new_rack_servers[f"{rack_key}_server_slot_{new_slot_index*server_slot_size}"][server_key] = (
-                        round(fraction, 4))
+                    new_rack_servers[
+                        f"{rack_key}_server_slot_{new_slot_index * server_slot_size}"
+                    ].setdefault(server_key, 0)
+                    new_rack_servers[
+                        f"{rack_key}_server_slot_{new_slot_index * server_slot_size}"
+                    ][server_key] = round(fraction, 4)
 
             servers = OrderedDict()
             for new_server_key, server in new_rack_servers.items():
                 if bool(server):
-
                     # Calculate the total input power of the new server
                     input_power = 0
                     volume_flow_rates = 0
 
                     for server_key in server.keys():
-                        input_power += self.room.inputs.servers[server_key].input_power * server[server_key]
-                        volume_flow_rates += (boundary_conditions["server_volume_flow_rates"][server_key]
-                                              * server[server_key])
+                        input_power += (
+                            self.room.inputs.servers[server_key].input_power
+                            * server[server_key]
+                        )
+                        volume_flow_rates += (
+                            boundary_conditions["server_volume_flow_rates"][server_key]
+                            * server[server_key]
+                        )
 
                     servers_input[new_server_key] = ServerInputs()
                     servers_input[new_server_key].input_power = input_power
 
                     # Create a new server object
-                    max_key = max(server, key=lambda k: server[k]*rack.constructions.servers[k].geometry.slot_occupation)
-                    servers[new_server_key] = copy.deepcopy(rack.constructions.servers[max_key])
+                    max_key = max(
+                        server,
+                        key=lambda k: server[k]
+                        * rack.constructions.servers[k].geometry.slot_occupation,
+                    )
+                    servers[new_server_key] = copy.deepcopy(
+                        rack.constructions.servers[max_key]
+                    )
                     servers[new_server_key].uid = new_server_key
-                    servers[new_server_key].geometry.slot_position = int(new_server_key.split("_")[-1])
+                    servers[new_server_key].geometry.slot_position = int(
+                        new_server_key.split("_")[-1]
+                    )
                     servers[new_server_key].geometry.slot_occupation = server_slot_size
                     servers[new_server_key].volume_flow_rate = volume_flow_rates
 
@@ -651,7 +698,9 @@ class CFDManager:
 
         for server_key, server in self.room.inputs.servers.items():
             if server.air_volume_flow_rate:
-                boundary_conditions["server_volume_flow_rates"][server_key] = server.air_volume_flow_rate
+                boundary_conditions["server_volume_flow_rates"][server_key] = (
+                    server.air_volume_flow_rate
+                )
 
         if self.refinement_level < 2:
             servers_input = OrderedDict()
@@ -660,13 +709,13 @@ class CFDManager:
                     self._adjust_server(
                         racks=row.constructions.racks,
                         servers_input=servers_input,
-                        boundary_conditions=boundary_conditions
+                        boundary_conditions=boundary_conditions,
                     )
             if self.room.constructions.racks is not None:
                 self._adjust_server(
                     racks=self.room.constructions.racks,
                     servers_input=servers_input,
-                    boundary_conditions=boundary_conditions
+                    boundary_conditions=boundary_conditions,
                 )
             self.room.inputs.servers = servers_input
             boundary_conditions = self.format_boundary_conditions
@@ -678,14 +727,24 @@ class CFDManager:
             acus_dict = {
                 "acu_supply_face_center": boundary_conditions["acu_supply_face_center"],
                 "acu_return_face_center": boundary_conditions["acu_return_face_center"],
-                "acu_supply_temperatures": boundary_conditions["supply_air_temperatures"],
-                "acu_supply_flow_rates": boundary_conditions["supply_air_volume_flow_rates"],
+                "acu_supply_temperatures": boundary_conditions[
+                    "supply_air_temperatures"
+                ],
+                "acu_supply_flow_rates": boundary_conditions[
+                    "supply_air_volume_flow_rates"
+                ],
             }
             servers_dict = {
-                "server_inlet_face_center": boundary_conditions["server_inlet_face_center"],
-                "server_outlet_face_center": boundary_conditions["server_outlet_face_center"],
+                "server_inlet_face_center": boundary_conditions[
+                    "server_inlet_face_center"
+                ],
+                "server_outlet_face_center": boundary_conditions[
+                    "server_outlet_face_center"
+                ],
                 "server_powers": boundary_conditions["server_powers"],
-                "server_supply_flow_rates": boundary_conditions["server_volume_flow_rates"],
+                "server_supply_flow_rates": boundary_conditions[
+                    "server_volume_flow_rates"
+                ],
             }
 
             def run_modules(case_dir, acus_dict, servers_dict):
@@ -763,9 +822,9 @@ class CFDManager:
                     room=self.room,
                     object_mesh_index=self.object_mesh_index,
                     temperature=temperature,
-                    p = p,
-                    p_rgh = p_rgh,
-                    u = u
+                    p=p,
+                    p_rgh=p_rgh,
+                    u=u,
                 )
                 if self.room.constructions.sensors
                 else {}

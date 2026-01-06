@@ -19,11 +19,7 @@ iterations = 500
 
 #manager = CFDManager(room=room, mesh_process=8, solve_process=8, is_gpu=True, scale_server_flow_rate=True)
 manager = CFDManager(
-    room=room, 
-    solve_process=2, 
-    mesh_process=2, 
-    is_gpu=False, 
-    end_time=iterations,
+    room=room, solve_process=2, mesh_process=2, is_gpu=False, end_time=iterations,
     #only_save_latest=False,
     #write_interval=10
     )

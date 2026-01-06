@@ -119,11 +119,23 @@ class BaseEnv(gym.Env):
             logger.info("Using pre-set simulation time")
             begin_month = self._config.simulation_time_config.begin_month
             begin_day_of_month = self._config.simulation_time_config.begin_day_of_month
-            begin_hour = self._config.simulation_time_config.begin_hour if hasattr(self._config.simulation_time_config, 'begin_hour') else 0
-            begin_minute =  self._config.simulation_time_config.begin_minute if hasattr(self._config.simulation_time_config, 'begin_minute') else 0
+            begin_hour = (
+                self._config.simulation_time_config.begin_hour
+                if hasattr(self._config.simulation_time_config, "begin_hour")
+                else 0
+            )
+            begin_minute = (
+                self._config.simulation_time_config.begin_minute
+                if hasattr(self._config.simulation_time_config, "begin_minute")
+                else 0
+            )
             year = datetime.now().year
             self._starting_timestamp = datetime(
-                year=year, month=begin_month, day=begin_day_of_month, hour=begin_hour, minute=begin_minute
+                year=year,
+                month=begin_month,
+                day=begin_day_of_month,
+                hour=begin_hour,
+                minute=begin_minute,
             )
             self._timestamp_interval = timedelta(
                 minutes=int(
@@ -184,12 +196,8 @@ class BaseEnv(gym.Env):
             if not count_criteria(item):
                 continue
             if use_unnormed_value:
-                lb_.append(
-                    item.resizer.lb if item.resizer is not None else min_
-                )
-                ub_.append(
-                    item.resizer.ub if item.resizer is not None else max_
-                )
+                lb_.append(item.resizer.lb if item.resizer is not None else min_)
+                ub_.append(item.resizer.ub if item.resizer is not None else max_)
             else:
                 lb_.append(
                     item.resizer.resized_lb if item.resizer is not None else min_
@@ -266,9 +274,9 @@ class BaseEnv(gym.Env):
                     exit(-1)
                 value = raw_action[ra_ptr]
                 if (
-                    hasattr(a, "masking_variable_name") and
-                    a.masking_variable_name != "" and
-                    self.inspect_current_observation(a.masking_variable_name) == -1
+                    hasattr(a, "masking_variable_name")
+                    and a.masking_variable_name != ""
+                    and self.inspect_current_observation(a.masking_variable_name) == -1
                 ):  # masking using observation
                     a.set_mask(True)
                 else:
@@ -319,7 +327,9 @@ class BaseEnv(gym.Env):
         return dict(
             time=self._timestamp if hasattr(self, "_timestamp") else datetime.now(),
             task_id=self._task_id,
-            parsed_obs=self._parse_obs_fn(self) if self._parse_obs_fn is not None else None,
+            parsed_obs=self._parse_obs_fn(self)
+            if self._parse_obs_fn is not None
+            else None,
         )
 
     def _calculate_reward(self) -> float:
@@ -369,7 +379,9 @@ class BaseEnv(gym.Env):
             self._timestamp += self._timestamp_interval
 
         return (
-            self._get_observations_to_return(use_unnormed_obs=self._use_unnormed_obs,),
+            self._get_observations_to_return(
+                use_unnormed_obs=self._use_unnormed_obs,
+            ),
             self._calculate_reward(),
             done,
             False,

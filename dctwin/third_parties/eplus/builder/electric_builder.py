@@ -48,20 +48,20 @@ class ElectricSystemBuilder:
             key="Generator:Photovoltaic".upper(), defaultvalues=True
         )
         generator_obj["Name"] = generator_config.uid
-        generator_obj[
-            "Number_of_Modules_in_Series"
-        ] = generator_config.number_of_modules_in_series
-        generator_obj[
-            "Number_of_Series_Strings_in_Parallel"
-        ] = generator_config.number_of_series_strings_in_parallel
-        generator_obj[
-            "Photovoltaic_Performance_Object_Type"
-        ] = "PhotovoltaicPerformance:EquivalentOne-Diode"
+        generator_obj["Number_of_Modules_in_Series"] = (
+            generator_config.number_of_modules_in_series
+        )
+        generator_obj["Number_of_Series_Strings_in_Parallel"] = (
+            generator_config.number_of_series_strings_in_parallel
+        )
+        generator_obj["Photovoltaic_Performance_Object_Type"] = (
+            "PhotovoltaicPerformance:EquivalentOne-Diode"
+        )
         generator_obj["Module_Performance_Name"] = performance_model_obj.Name
         generator_obj["Surface_Name"] = generator_config.surface_name
-        generator_obj[
-            "Heat_Transfer_Integration_Mode"
-        ] = generator_config.heat_transfer_integration_mode
+        generator_obj["Heat_Transfer_Integration_Mode"] = (
+            generator_config.heat_transfer_integration_mode
+        )
 
         # find the surface object that is attached to the solar generator
         surface_obj = self.model.getobject(
@@ -69,7 +69,7 @@ class ElectricSystemBuilder:
         )
         surface_obj["Outside_Boundary_Condition"] = "OtherSideConditionsModel"
         surface_obj["Outside_Boundary_Condition_Object"] = (
-            f"{generator_config.surface_name} " f"outside boundary condition object"
+            f"{generator_config.surface_name} outside boundary condition object"
         )
         self.model.newidfobject(
             key="SurfaceProperty:OtherSideConditionsModel",
@@ -108,9 +108,9 @@ class ElectricSystemBuilder:
             generator_obj = self._make_generator(generator)
             obj[f"Generator_{int(idx) + 1}_Name"] = generator_name
             obj[f"Generator_{int(idx) + 1}_Object_Type"] = generator_obj["key"]
-            obj[
-                f"Generator_{int(idx) + 1}_Rated_Electric_Power_Output"
-            ] = generator.rated_electric_power_output
+            obj[f"Generator_{int(idx) + 1}_Rated_Electric_Power_Output"] = (
+                generator.rated_electric_power_output
+            )
             obj[f"Generator_{int(idx) + 1}_Availability_Schedule_Name"] = "ALWAYS ON"
 
     def _make_electric_load_center(
@@ -128,9 +128,9 @@ class ElectricSystemBuilder:
         obj["Name"] = electric_load_center_name
         obj["Electrical_Buss_Type"] = config.electrical_buss_type
         obj["Generator_List_Name"] = f"{electric_load_center_name} generators"
-        obj[
-            "Generator_Demand_Limit_Scheme_Purchased_Electric_Demand_Limit"
-        ] = config.generator_demand_limit_scheme_purchased_electric_demand_limit
+        obj["Generator_Demand_Limit_Scheme_Purchased_Electric_Demand_Limit"] = (
+            config.generator_demand_limit_scheme_purchased_electric_demand_limit
+        )
         obj["Generator_Operation_Scheme_Type"] = config.generator_operation_scheme_name
         obj["Inverter_Name"] = config.inverter.uid
         obj["Electrical_Storage_Object_Name"] = (

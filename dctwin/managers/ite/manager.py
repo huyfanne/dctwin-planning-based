@@ -10,7 +10,7 @@ from .scheduler import (
     RoundRobinScheduler,
     ShortSlackTimeFirstScheduler,
     SJFScheduler,
-    TetrisScheduler
+    TetrisScheduler,
 )
 from dctwin.models.computing.cluster import Cluster
 from .config import CloudConfig
@@ -22,19 +22,16 @@ class CloudManager:
     """
     Class to manager the simulation of building resource provisioning and job scheduling.
     """
+
     schedulers = {
         "first_fit": FistFitScheduler,
         "round_robin": RoundRobinScheduler,
         "edf": ShortSlackTimeFirstScheduler,
         "sjf": SJFScheduler,
-        "best_fit": TetrisScheduler
+        "best_fit": TetrisScheduler,
     }
 
-    def __init__(
-        self,
-        cloud_configs: CloudConfig,
-        building: Building
-    ):
+    def __init__(self, cloud_configs: CloudConfig, building: Building):
         self.num_ites = building.constructions.num_ites
         # Initialize the building workload generator
         self.job_generator = ClusterTraceJobGenerator(
@@ -55,26 +52,24 @@ class CloudManager:
             workload_duration_estimator=workload_duration_estimator,
         )
         # Initialize workload scheduler
-        self.workload_scheduler = self.schedulers[cloud_configs.schedule_policy]().attach(self.cluster)
+        self.workload_scheduler = self.schedulers[
+            cloud_configs.schedule_policy
+        ]().attach(self.cluster)
 
     def accept_workload(self, current_time: Union[int, float]) -> None:
         jobs = next(self.job_generator)
-        self.cluster.add_jobs(
-            current_time=current_time,
-            jobs=jobs
-        )
+        self.cluster.add_jobs(current_time=current_time, jobs=jobs)
 
     def update_states(self, current_time: Union[int, float]) -> None:
         self.cluster.update_job_status(current_time)
 
     def set_power_budget(self, capacity_budget: float) -> None:
-        self.workload_scheduler.set_power_budget(power_budget=capacity_budget*self.cluster.rated_power)
+        self.workload_scheduler.set_power_budget(
+            power_budget=capacity_budget * self.cluster.rated_power
+        )
 
-    def sim(
-        self,
-        current_time: Union[int, float]
-    ) -> Union[float, np.ndarray]:
+    def sim(self, current_time: Union[int, float]) -> Union[float, np.ndarray]:
         self.workload_scheduler.make_decision(current_time=current_time)
         # normalize the CPU load to [-1, 1] for the RL agent
         avg_cpu_load = np.mean(list(self.cluster.cpu_utilization.values()))
-        return [avg_cpu_load]*self.num_ites
+        return [avg_cpu_load] * self.num_ites

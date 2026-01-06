@@ -7,7 +7,6 @@ from dctwin.data import Batch
 from dctwin.data.scalars import ActuatorControlType
 
 
-
 class ITEData:
     """
     The class to reset the Cloud computing system data for the environment, including zones and plant.

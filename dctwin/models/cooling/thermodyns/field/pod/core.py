@@ -44,7 +44,6 @@ class PODBackendMixin:
         self._get_object_index()
 
     def _get_object_index(self) -> None:
-
         for rack_name, rack in self.room.constructions.racks.items():
             for server_name, _ in rack.constructions.servers.items():
                 self.server_inlet.append(
@@ -365,9 +364,9 @@ class PODBackendMixin:
         # assemble all matrices and arrays into a big linear system
         a = torch.cat([phi_server_matrix, phi_acu_matrix, phi_sensor], dim=0)
         b = torch.cat([server_array, acu_array, sen_array], dim=0)
-        assert (
-            a.shape[0] > self.num_modes
-        ), "equations are fewer than number of coefficients"
+        assert a.shape[0] > self.num_modes, (
+            "equations are fewer than number of coefficients"
+        )
         # solve the least square for optimal coefficients
         self.coefs, _ = torch.linalg.lstsq(a, b)[:2]
         self.coefs = self.coefs.view(1, -1)

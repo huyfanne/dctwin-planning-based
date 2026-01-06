@@ -13,10 +13,9 @@ class LiquidLoopManager(nn.Module):
     of a hybrid cooling system with the direct-to-chip cooling system and conventional force ventilation air cooling
     system.
     """
+
     def __init__(
-        self,
-        zones: Dict[str, Room],
-        device_key_mapping: Optional[Dict] = None
+        self, zones: Dict[str, Room], device_key_mapping: Optional[Dict] = None
     ) -> None:
         super().__init__()
         self.zones = zones
@@ -30,16 +29,23 @@ class LiquidLoopManager(nn.Module):
         """
         for zone_name, zone in self.zones.items():
             if zone.constructions.liquid_flow_networks is not None:
-                for liquid_flow_loop_name, liquid_flow_loop in zone.constructions.liquid_flow_networks.items():
+                for (
+                    liquid_flow_loop_name,
+                    liquid_flow_loop,
+                ) in zone.constructions.liquid_flow_networks.items():
                     self.add_module(
                         name=liquid_flow_loop_name,
                         module=FlowNetwork(
                             liquid_flow_loop=liquid_flow_loop,
                             key_mapping=self.device_key_mapping,
-                            learnable=True
-                        )
+                            learnable=True,
+                        ),
                     )
-        return {k: v for k, v in dict(self.named_modules()).items() if k != "" and "." not in k}
+        return {
+            k: v
+            for k, v in dict(self.named_modules()).items()
+            if k != "" and "." not in k
+        }
 
     def learn(self) -> None:
         """
@@ -58,15 +64,14 @@ class LiquidLoopManager(nn.Module):
         for model_name, model in self.models.items():
             model.collect(data)
 
-    def forward(
-        self,
-        data: Batch
-    ) -> None:
+    def forward(self, data: Batch) -> None:
         for zone_name, zone in self.zones.items():
             if zone.constructions.liquid_flow_networks is None:
                 continue
-            for liquid_flow_networks_name, liquid_flow_network in zone.constructions.liquid_flow_networks.items():
+            for (
+                liquid_flow_networks_name,
+                liquid_flow_network,
+            ) in zone.constructions.liquid_flow_networks.items():
                 self.models[liquid_flow_networks_name].forward(
-                    data=data,
-                    zone_name=zone_name
+                    data=data, zone_name=zone_name
                 )

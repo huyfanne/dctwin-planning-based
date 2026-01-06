@@ -20,8 +20,7 @@ actuator_control_type_dict = {
 
 
 class HVACData:
-    """The class to reset the HVAC data for the environment, including zones and plant.
-    """
+    """The class to reset the HVAC data for the environment, including zones and plant."""
 
     def __init__(self, model: Building):
         self._model = model
@@ -30,8 +29,14 @@ class HVACData:
     def _reset_d2c_server_data(zone: Room, obs: dict, acts: dict) -> Tuple[dict, dict]:
         if zone.constructions.liquid_flow_networks is None:
             return obs, acts
-        for fluid_network_name, fluid_network in zone.constructions.liquid_flow_networks.items():
-            for demand_branch_name, demand_branch in fluid_network.demand_branches.items():
+        for (
+            fluid_network_name,
+            fluid_network,
+        ) in zone.constructions.liquid_flow_networks.items():
+            for (
+                demand_branch_name,
+                demand_branch,
+            ) in fluid_network.demand_branches.items():
                 if demand_branch.components.servers is not None:
                     for server_name, server in demand_branch.components.servers.items():
                         obs[server_name] = Batch(
@@ -48,7 +53,9 @@ class HVACData:
             acts[acu_name] = Batch(
                 supply_temperature_sp=(),
                 supply_mass_flow_rate_sp=(),
-                on_off_schedule=torch.tensor(True, dtype=torch.bool, requires_grad=False),
+                on_off_schedule=torch.tensor(
+                    True, dtype=torch.bool, requires_grad=False
+                ),
             )
             obs[acu_name] = Batch(
                 supply_air_temperature=torch.tensor(
@@ -71,7 +78,9 @@ class HVACData:
             return obs, acts
         for dehumidifier_name, dehumidifier in zone.constructions.dehumidifiers.items():
             acts[dehumidifier_name] = Batch(
-                on_off_schedule=torch.tensor([False], dtype=torch.bool, requires_grad=False),
+                on_off_schedule=torch.tensor(
+                    [False], dtype=torch.bool, requires_grad=False
+                ),
                 relative_humidity_sp=(),
             )
             obs[dehumidifier_name] = Batch(
@@ -89,14 +98,22 @@ class HVACData:
     def _reset_cdu_data(zone: Room, obs: dict, acts: dict) -> Tuple[dict, dict]:
         if zone.constructions.liquid_flow_networks is None:
             return obs, acts
-        for fluid_network_name, fluid_network in zone.constructions.liquid_flow_networks.items():
-            for supply_branch_name, supply_branch in fluid_network.supply_branches.items():
+        for (
+            fluid_network_name,
+            fluid_network,
+        ) in zone.constructions.liquid_flow_networks.items():
+            for (
+                supply_branch_name,
+                supply_branch,
+            ) in fluid_network.supply_branches.items():
                 if supply_branch.components.cdus is not None:
                     for cdu_name, cdu in supply_branch.components.cdus.items():
                         acts[cdu_name] = Batch(
                             supply_temperature_sp=(),
                             supply_mass_flow_rate_sp=(),
-                            on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
+                            on_off_schedule=torch.tensor(
+                                [True], dtype=torch.bool, requires_grad=False
+                            ),
                         )
                         obs[cdu_name] = Batch(
                             coil_sensible_heat_load=(),
@@ -106,13 +123,16 @@ class HVACData:
                             chilled_water_return_temperature=(),
                             chilled_water_mass_flow_rate=(),
                             cooling_water_mass_flow_rate=(),
-                            electrical_power=()
+                            electrical_power=(),
                         )
         return obs, acts
 
     @staticmethod
     def _reset_ite_data(zone: Any, zone_obs: dict, acts: dict) -> Tuple[dict, dict]:
-        if zone.constructions.heat_gains is None or zone.constructions.heat_gains.ites is None:
+        if (
+            zone.constructions.heat_gains is None
+            or zone.constructions.heat_gains.ites is None
+        ):
             return zone_obs, acts
         for ite_name, ite in zone.constructions.heat_gains.ites.items():
             acts[ite_name] = Batch(
@@ -133,7 +153,9 @@ class HVACData:
                     raise ValueError("Only one chiller is allowed in a branch")
                 acts[chiller_id] = Batch(
                     supply_temperature_sp=(),
-                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
+                    on_off_schedule=torch.tensor(
+                        [True], dtype=torch.bool, requires_grad=False
+                    ),
                 )
                 obs[chiller_id] = Batch(
                     power=(),
@@ -147,16 +169,18 @@ class HVACData:
             for pump_id, pump in branch.components.pumps.items():
                 acts[pump_id] = Batch(
                     supply_mass_flow_rate_sp=(),
-                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
+                    on_off_schedule=torch.tensor(
+                        [True], dtype=torch.bool, requires_grad=False
+                    ),
                 )
-                obs[pump_id] = Batch(
-                    power=()
-                )
+                obs[pump_id] = Batch(power=())
         if branch.components.cooling_towers:
             for tower_id, tower in branch.components.cooling_towers.items():
                 acts[tower_id] = Batch(
                     supply_temperature_sp=(),
-                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
+                    on_off_schedule=torch.tensor(
+                        [True], dtype=torch.bool, requires_grad=False
+                    ),
                 )
                 obs[tower_id] = Batch(
                     fan_power=(),
@@ -165,10 +189,12 @@ class HVACData:
                     outlet_temperature=(),
                     water_mass_flow_rate=(),
                     air_mass_flow_rate=(),
-                    heat_transfer_rate=()
+                    heat_transfer_rate=(),
                 )
         if branch.components.tanks:
-            tank_water_temperature = torch.zeros(1,)
+            tank_water_temperature = torch.zeros(
+                1,
+            )
             for tank_id, tank in branch.components.tanks.items():
                 if len(branch.components.tanks) > 1:
                     raise ValueError("Only one tank is allowed in a branch")
@@ -176,7 +202,9 @@ class HVACData:
                     supply_temperature_sp=(),
                     use_side_inlet_temperature_sp=(),
                     source_side_mass_flow_rate=(),
-                    on_off_schedule=torch.tensor([True], dtype=torch.bool, requires_grad=False),
+                    on_off_schedule=torch.tensor(
+                        [True], dtype=torch.bool, requires_grad=False
+                    ),
                 )
                 obs[tank_id] = Batch(
                     tank_water_temperature=torch.tensor(
@@ -194,7 +222,9 @@ class HVACData:
                     source_side_outlet_temperature=(),
                 )
                 tank_water_temperature += obs[tank_id].tank_water_temperature
-            obs[branch_id].outlet_temperature = tank_water_temperature / len(branch.components.tanks)
+            obs[branch_id].outlet_temperature = tank_water_temperature / len(
+                branch.components.tanks
+            )
 
         return obs, acts
 
@@ -214,20 +244,32 @@ class HVACData:
             )
             if branch.side == "inlet":
                 inlet_branch.update({branch_id: branch})
-                obs, act = self._reset_branch_components_data(obs, acts, branch_id, branch)
+                obs, act = self._reset_branch_components_data(
+                    obs, acts, branch_id, branch
+                )
 
             if branch.side == "middle":
                 middle_branches.update({branch_id: branch})
-                obs, act = self._reset_branch_components_data(obs, acts, branch_id, branch)
+                obs, act = self._reset_branch_components_data(
+                    obs, acts, branch_id, branch
+                )
 
             if branch.side == "outlet":
                 outlet_branch.update({branch_id: branch})
-                obs, act = self._reset_branch_components_data(obs, acts, branch_id, branch)
-                mixed_water_temperature = torch.zeros(1,)
+                obs, act = self._reset_branch_components_data(
+                    obs, acts, branch_id, branch
+                )
+                mixed_water_temperature = torch.zeros(
+                    1,
+                )
                 for middle_branch_id, middle_branch in middle_branches.items():
                     if len(obs[middle_branch_id].outlet_temperature) != 0:
-                        mixed_water_temperature += obs[middle_branch_id].outlet_temperature
-                obs[branch_id].inlet_temperature = mixed_water_temperature / len(middle_branches)
+                        mixed_water_temperature += obs[
+                            middle_branch_id
+                        ].outlet_temperature
+                obs[branch_id].inlet_temperature = mixed_water_temperature / len(
+                    middle_branches
+                )
 
         return obs, acts
 
@@ -264,7 +306,6 @@ class HVACData:
             self._model.constructions.plant.chilled_water_loops,
             self._model.constructions.plant.condenser_water_loops,
         ]:
-
             if loops is None:
                 continue
 
@@ -272,13 +313,13 @@ class HVACData:
                 obs[loop_id] = Batch(
                     demand_side_total_mass_flow_rate=(
                         torch.tensor(
-                            [0.],
+                            [0.0],
                             dtype=torch.float32,
                         )
                     ),
                     demand_side_total_cooling_load=(
                         torch.tensor(
-                            [0.],
+                            [0.0],
                             dtype=torch.float32,
                         )
                     ),

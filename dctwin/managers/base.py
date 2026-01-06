@@ -11,10 +11,7 @@ from dctwin.utils import (
     config as base_env,
 )
 
-from dctwin.data import (
-    Action,
-    Observation
-)
+from dctwin.data import Action, Observation
 
 from dctwin.data.batch import Batch
 import torch
@@ -22,8 +19,7 @@ import torch.nn as nn
 
 
 class BaseManager(nn.Module):
-    """ Base class for all data center environments.
-    """
+    """Base class for all data center environments."""
 
     def __init__(
         self,
@@ -33,7 +29,9 @@ class BaseManager(nn.Module):
         super().__init__()
         # set up basics
         self._config = config
-        self._time_step = 1 / self._config.simulation_time_config.number_of_timesteps_per_hour * 3600  # in seconds
+        self._time_step = (
+            1 / self._config.simulation_time_config.number_of_timesteps_per_hour * 3600
+        )  # in seconds
         # Set up actions
         self._set_actions()
         # set up observations
@@ -68,7 +66,9 @@ class BaseManager(nn.Module):
         self._actions = [Action(config=ac) for ac in self._config.actions]
 
     def _set_observations(self):
-        self._observations = [Observation(config=oc) for oc in self._config.observations]
+        self._observations = [
+            Observation(config=oc) for oc in self._config.observations
+        ]
 
     def _set_simulation_time(self) -> None:
         if self._config.HasField("simulation_time_config"):
@@ -85,7 +85,10 @@ class BaseManager(nn.Module):
                 year=year, month=end_month, day=end_day_of_month + 1
             )
             self._timestamp_interval = timedelta(
-                minutes=int(60 / self._config.simulation_time_config.number_of_timesteps_per_hour)
+                minutes=int(
+                    60
+                    / self._config.simulation_time_config.number_of_timesteps_per_hour
+                )
             )
             self._timestamp = self._starting_timestamp
             self._use_simulation_time = True
@@ -117,9 +120,11 @@ class BaseManager(nn.Module):
         """
         log_dict = {}
         log_dict.update(
-            {"Timestamp": datetime.fromtimestamp(
-                self._timestamp.timestamp() + self._current_time
-            ).strftime("%Y-%m-%d %H:%M:%S")}
+            {
+                "Timestamp": datetime.fromtimestamp(
+                    self._timestamp.timestamp() + self._current_time
+                ).strftime("%Y-%m-%d %H:%M:%S")
+            }
         )
         for obj_name, obj in data.items():
             try:
@@ -127,7 +132,7 @@ class BaseManager(nn.Module):
                     try:
                         log_dict.update({f"{obj_name}:{key}": obj[key].item()})
                     except:
-                        log_dict.update({f"{obj_name}:{key}": 0.})
+                        log_dict.update({f"{obj_name}:{key}": 0.0})
             except AttributeError:
                 log_dict.update({f"{obj_name}": obj.item()})
         base_env.log_handler.writerow(log_dict)
