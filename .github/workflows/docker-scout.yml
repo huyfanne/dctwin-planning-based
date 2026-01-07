@@ -16,7 +16,7 @@ jobs:
         size: 40G
     
     - name: Check out code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Get version
       id: version
@@ -33,7 +33,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Build and push Docker image
-      uses: docker/build-push-action@v5.3.0
+      uses: docker/build-push-action@v6
       with:
         context: .
         platforms: linux/amd64
