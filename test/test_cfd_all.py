@@ -445,7 +445,7 @@ class CFDExecutor:
             new_df.to_csv(file_path, mode='a', index=False, header=False)
 
     def __call__(self, *args, **kwargs):
-        #self.execute()
+        self.execute()
         self.prepare_probes()
         self.run_parse_result_job()
         self.extract_execution_time()
