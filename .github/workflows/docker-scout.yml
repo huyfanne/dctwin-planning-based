@@ -37,6 +37,8 @@ jobs:
       with:
         context: .
         platforms: linux/amd64
+        # TODO: push: true is temporary and should be removed later
+        push: true
         secrets: |
           GITHUB_TOKEN=${{ secrets.GIT_TOKEN }}
         tags: ghcr.io/cap-dcwiz/dctwin:${{ steps.version.outputs.value }}
