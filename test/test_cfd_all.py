@@ -336,22 +336,32 @@ class CFDExecutor:
         postprocessing_path = self.case_dir / "postProcessing"
         patch_names = []
 
-        for (root, dirs, files) in os.walk(postprocessing_path): #Checks all files in postProcessing folder
+        # Read patch names from file
+        patch_names_file = self.case_dir / "patchNames"
+        extracted_patch_names_list = []
+        if patch_names_file.exists():
+            with open(patch_names_file, 'r') as f:
+                extracted_patch_names_list = [line.strip() for line in f if line.strip()]
+        else:
+            logger.warning(f"Patch names file not found: {patch_names_file}")
+        
+        # For each patch name, process the surfaceFieldValue.dat file
+        for patch_name in extracted_patch_names_list:
+            # Open directory of patch_name/0/surfaceFieldValue.dat
             
-            for file in files:
-                if file.endswith('.dat') and not(file.startswith("yPlus")): # Checks for .dat file
+            patch_dir = postprocessing_path / f"{patch_name}_flow_rate" / "0" / "surfaceFieldValue.dat"
+            
+            if patch_dir.exists():
+                # Rename the file
+                patch_dir = patch_dir.rename(patch_dir.parent / f"{patch_name}.dat")
                 
-                # Sequence to find correct renamed file
-                    patch_dir = (Path(root).parent / "0" / "surfaceFieldValue.dat") # Finds surfacefieldvalue which contains flowrate
+            else:
+                # If file was already renamed, use the renamed path
+                patch_dir = postprocessing_path / f"{patch_name}_flow_rate" / "0" / f"{patch_name}.dat"
 
-                    if patch_dir.exists():
-                        patch_dir = \
-                        patch_dir.rename(Path(patch_dir.parent, f"{Path(root).parent.name}.dat")) # Renames file
-                    else:
-                        patch_dir = Path(root).parent / "0" / f"{Path(root).parent.name}.dat" # If file was already renamed
-                    
-                    patch_names.append(patch_dir)
-                    # Correct file found, extract contents
+            patch_names.append(patch_dir)
+            # Correct file found, extract contents
+
 
         df_patch = pd.DataFrame()
         #print(patch_names)
