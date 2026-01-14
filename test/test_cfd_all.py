@@ -22,14 +22,14 @@ import traceback
 class CFDExecutor:
     def __init__(self, room_config_path, preserve_foam_log=True, iterations=100):
         self.room = Room.load(room_config_path)
-        self.room_cofig_path = room_config_path
+        self.room_config_path = room_config_path
         config.PRESERVE_FOAM_LOG = preserve_foam_log
         self.is_modulus = False
         self.case_dir = None
         self.residuals = []
         self.flow_rate_df = None
         self.residuals = None
-        self.execution_time = None
+        self.execution_time = None 
         self.yPlus_dict = None
         room_name = room_config_path.split("/")[-1].split(".")[0]
         config.cfd.case_dir = Path(f"log/{room_name}").absolute()
@@ -132,7 +132,7 @@ class CFDExecutor:
         # Add a title at the top
         c.setFont("Helvetica-Bold", 18)
         y_position = page_height - top_margin
-        room_name = self.room_cofig_path.split("/")[-1].split(".")[0]
+        room_name = self.room_config_path.split("/")[-1].split(".")[0]
         c.drawString(1 * cm, y_position, f"CFD Simulation Result Report for {room_name}")
 
         # Draw some text below the title
@@ -441,9 +441,9 @@ class CFDExecutor:
         'ux_final_residual', 'uy_final_residual', 'uz_final_residual', 'T_final_residual', 'epsilon_final_residual', 'k_final_residual',
         'average yPlus', 'max yPlus']
         if failed:
-            new_data = [[self.room_cofig_path, 'False', error, traceback_message,"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"]]
+            new_data = [[self.room_config_path, 'False', error, traceback_message,"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"]]
         else:
-            new_data = [[self.room_cofig_path, 'True', error, traceback_message, self.execution_time['mesh_time'], self.execution_time['solver_time'], self.execution_time['paraview_time'], self.execution_time['total_time'], 
+            new_data = [[self.room_config_path, 'True', error, traceback_message, self.execution_time['mesh_time'], self.execution_time['solver_time'], self.execution_time['paraview_time'], self.execution_time['total_time'], 
             self.residuals[-1]['ux_final_residual'], self.residuals[-1]['uy_final_residual'], self.residuals[-1]['uz_final_residual'], self.residuals[-1]['T_final_residual'], self.residuals[-1]['epsilon_final_residual'], self.residuals[-1]['k_final_residual'], 
             self.yPlus_dict['average yPlus'], self.yPlus_dict['max yPlus']]]
         new_df = pd.DataFrame(new_data, columns=column_titles)
@@ -470,7 +470,7 @@ class CFDExecutor:
 
 # Example of how to use the CFDExecutor class
 if __name__ == "__main__":
-    directory = "models/geometry/ba1604"
+    directory = "models/geometry/room_tests"
     csv_path = "log/combined_result.csv"
     if os.path.isfile(csv_path):
         os.remove(csv_path)
