@@ -11,7 +11,7 @@ import shutil
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
-import os
+import os 
 from datetime import datetime
 import matplotlib.pyplot as plt
 import fnmatch
@@ -20,15 +20,17 @@ import pandas as pd
 import traceback
 
 class CFDExecutor:
-    def __init__(self, room_config_path, preserve_foam_log=True, iterations=2000):
+    def __init__(self, room_config_path, preserve_foam_log=True, iterations=100):
         self.room = Room.load(room_config_path)
-        self.room_cofig_path = room_config_path
+        self.room_config_path = room_config_path
         config.PRESERVE_FOAM_LOG = preserve_foam_log
         self.is_modulus = False
         self.case_dir = None
         self.residuals = []
+        self.flow_rate_df = None
         self.residuals = None
-        self.execution_time = None
+        self.execution_time = None 
+        self.yPlus_dict = None
         room_name = room_config_path.split("/")[-1].split(".")[0]
         config.cfd.case_dir = Path(f"log/{room_name}").absolute()
         config.LOG_DIR = Path(f"log/{room_name}").absolute()
@@ -130,7 +132,7 @@ class CFDExecutor:
         # Add a title at the top
         c.setFont("Helvetica-Bold", 18)
         y_position = page_height - top_margin
-        room_name = self.room_cofig_path.split("/")[-1].split(".")[0]
+        room_name = self.room_config_path.split("/")[-1].split(".")[0]
         c.drawString(1 * cm, y_position, f"CFD Simulation Result Report for {room_name}")
 
         # Draw some text below the title
@@ -159,12 +161,21 @@ class CFDExecutor:
 
         # Sort the image paths by filename
         image_paths.sort()
-        residual_path = self.case_dir / "final_residuals.png"
+        residual_path = self.case_dir / "initial_residuals.png"
         c.drawImage(residual_path, 1 * cm, y_position - image_height, width=image_width, height=image_height)
         y_position -= (image_height + 0.5 * cm)  # Adjust for spacing below the image
         c.drawString(1 * cm, y_position, "residual")
         y_position -= 0.5 * cm
 
+        if y_position - image_height < bottom_margin:
+            c.showPage()
+            y_position = page_height - top_margin
+        
+        flow_rate_chart_path = self.case_dir / "flow_rate_line_chart.png"
+        c.drawImage(flow_rate_chart_path, 1 * cm, y_position - image_height, width=image_width, height=image_height)
+        y_position -= (image_height + 0.5 * cm)  # Adjust for spacing below the image
+        c.drawString(1 * cm, y_position, "flow rate imbalance (m3/s)")
+        y_position -= 0.5 * cm
 
         # Add images to the PDF
         for image_path in image_paths:
@@ -320,12 +331,121 @@ class CFDExecutor:
             print("No residuals found")
         return self.residuals
 
-    def add_to_csv_report(self, failed=False, error="NA", traceback_message="NA"):
-        column_titles = ['case', 'succeeded', 'error', 'traceback', 'mesh time', 'solver time', 'paraview time', 'total time', 'ux_final_residual', 'uy_final_residual', 'uz_final_residual', 'T_final_residual', 'epsilon_final_residual', 'k_final_residual']
-        if failed:
-            new_data = [[self.room_cofig_path, 'False', error, traceback_message,"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"]]
+    def flow_rate_monitor(self):
+        logger.info("Parsing flow rate...")
+        postprocessing_path = self.case_dir / "postProcessing"
+        patch_names = []
+
+        # Read patch names from file
+        patch_names_file = self.case_dir / "patchNames"
+        extracted_patch_names_list = []
+        if patch_names_file.exists():
+            with open(patch_names_file, 'r') as f:
+                extracted_patch_names_list = [line.strip() for line in f if line.strip()]
         else:
-            new_data = [[self.room_cofig_path, 'True', error, traceback_message, self.execution_time['mesh_time'], self.execution_time['solver_time'], self.execution_time['paraview_time'], self.execution_time['total_time'], self.residuals[-1]['ux_final_residual'], self.residuals[-1]['uy_final_residual'], self.residuals[-1]['uz_final_residual'], self.residuals[-1]['T_final_residual'], self.residuals[-1]['epsilon_final_residual'], self.residuals[-1]['k_final_residual']]]
+            logger.warning(f"Patch names file not found: {patch_names_file}")
+        
+        # For each patch name, process the surfaceFieldValue.dat file
+        for patch_name in extracted_patch_names_list:
+            # Open directory of patch_name/0/surfaceFieldValue.dat
+            
+            patch_dir = postprocessing_path / f"{patch_name}_flow_rate" / "0" / "surfaceFieldValue.dat"
+            
+            if patch_dir.exists():
+                # Rename the file
+                patch_dir = patch_dir.rename(patch_dir.parent / f"{patch_name}.dat")
+                
+            else:
+                # If file was already renamed, use the renamed path
+                patch_dir = postprocessing_path / f"{patch_name}_flow_rate" / "0" / f"{patch_name}.dat"
+
+            patch_names.append(patch_dir)
+            # Correct file found, extract contents
+
+
+        df_patch = pd.DataFrame()
+        #print(patch_names)
+        
+
+        for patch_name in patch_names:
+            try:
+
+                patch_flow_rate = pd.read_csv(patch_name, skiprows=5, header=None,sep='\t',usecols=[1])
+                patch_flow_rate.rename(columns={1: f"{patch_name.stem}"}, inplace=True)
+            
+                df_patch = pd.concat([df_patch, patch_flow_rate], axis=1)
+            except Exception as e:
+                logger.info(f"Error concatenating patch {patch_name}: {e}")
+                continue
+
+        df_patch['net_mass_flow_rate'] = df_patch.sum(axis=1)
+        df_patch['net_mass_flow_rate_abs'] = df_patch['net_mass_flow_rate'].abs()    
+        df_patch.to_csv(self.case_dir / "flow_rate.csv")
+
+        self.flow_rate_df = df_patch
+        return self.flow_rate_df
+    
+    def flow_rate_line_chart(self):
+
+        if self.flow_rate_df is None:
+            self.flow_rate_monitor()
+
+        if self.flow_rate_df is not None:
+            logger.info("Creating flow rate line chart...")
+            fig, ax = plt.subplots()
+            ax.plot(self.flow_rate_df.index, self.flow_rate_df['net_mass_flow_rate_abs'])
+            ax.set_xlabel("Timestep")
+            ax.set_ylabel("Flow Rate Imbalance [m3/s]")
+            ax.set_yscale("log")
+            ax.set_title("Flow Rate Imbalance")
+            
+            plt.savefig(self.case_dir / "flow_rate_line_chart.png")
+            plt.close()
+            return self.flow_rate_df
+        else:
+            logger.info("No flow rate data found")
+            return None
+
+
+    def yplus_parsing(self):
+
+        postprocessing_path = self.case_dir / "postProcessing"
+        yplus_path = postprocessing_path / "yPlusWallFunction" / "0" / "yPlus.dat"
+
+        df = pd.read_csv(yplus_path, sep=r'\s+', comment='#', 
+                 names=['Time', 'patch','min', 'max', 'average'])
+
+        # ABSOLUTE CINEMA - cursor found this solution not me 
+        # Pivot: patches as rows, times as columns (using average column)
+        df_pivot = df.pivot(index='patch', columns='Time', values='average').reset_index()
+
+        # Rename time columns to 'time=1', 'time=2', etc.
+        df_pivot.columns = ['patch'] + [f'time={int(col)}' for col in df_pivot.columns[1:]]
+        
+        yPlus_mean = df_pivot.iloc[:,-1].mean()
+        yPlus_max = df_pivot.iloc[:,-2].max()
+        logger.info(f"Average yPlus of all walls: {yPlus_mean}")
+        logger.info(f"Maximum yPlus of all walls: {yPlus_max}")
+
+        yPlus_dict = {'average yPlus': yPlus_mean, 'max yPlus': yPlus_max}
+
+        self.yPlus_dict = yPlus_dict
+        return yPlus_dict
+
+
+
+    def avg_T_parsing(self):
+        pass
+    def add_to_csv_report(self, failed=False, error="NA", traceback_message="NA"):
+        column_titles = ['case', 'succeeded', 'error', 'traceback', 'mesh time', 'solver time', 'paraview time', 'total time', 
+        'ux_final_residual', 'uy_final_residual', 'uz_final_residual', 'T_final_residual', 'epsilon_final_residual', 'k_final_residual',
+        'average yPlus', 'max yPlus']
+        if failed:
+            new_data = [[self.room_config_path, 'False', error, traceback_message,"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"]]
+        else:
+            new_data = [[self.room_config_path, 'True', error, traceback_message, self.execution_time['mesh_time'], self.execution_time['solver_time'], self.execution_time['paraview_time'], self.execution_time['total_time'], 
+            self.residuals[-1]['ux_final_residual'], self.residuals[-1]['uy_final_residual'], self.residuals[-1]['uz_final_residual'], self.residuals[-1]['T_final_residual'], self.residuals[-1]['epsilon_final_residual'], self.residuals[-1]['k_final_residual'], 
+            self.yPlus_dict['average yPlus'], self.yPlus_dict['max yPlus']]]
         new_df = pd.DataFrame(new_data, columns=column_titles)
         file_path = 'log/combined_result.csv'
         # Check if the file already exists
@@ -340,8 +460,12 @@ class CFDExecutor:
         self.run_parse_result_job()
         self.extract_execution_time()
         self.create_residual_line_chart()
-        self.create_pdf()
+        self.yplus_parsing()
         self.add_to_csv_report()
+        self.flow_rate_monitor()
+        self.flow_rate_line_chart()
+        self.create_pdf()
+ 
         return self
 
 # Example of how to use the CFDExecutor class
