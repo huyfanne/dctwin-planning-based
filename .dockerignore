@@ -1,0 +1,59 @@
+.git
+.venv
+__pycache__
+*.pyc
+node_modules
+dist
+build
+.cache
+data
+*.log
+
+# Documentation and development files
+docs/
+*.md
+README.md
+LICENSE
+CHANGELOG.md
+
+# Test files and directories
+test/
+tests/
+*.test.py
+*_test.py
+test_*.py
+
+# Tutorials and examples
+tutorials/
+examples/
+
+# CI/CD and development tools
+.github/
+.gitignore
+.yamllint
+.pylava.ini
+pylava.ini
+sonar-project.properties
+lint.sh
+
+# Development dependencies
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Poetry lock file (we use pyproject.toml)
+poetry.lock
