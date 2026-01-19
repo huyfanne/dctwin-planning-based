@@ -16,8 +16,10 @@ import numpy as np
 from dclib.construction.entities import Box
 from dclib.models.geometry import Vertex
 
+
 def read_patch_dict() -> List[str]:
     patch_dict_path = config.cfd.case_dir / "system" / "createPatchDict"
+
     with open(patch_dict_path, "r") as file:
         contents = file.read()
         patch_names = re.findall(r"\bname\s+(\S+?);", contents)

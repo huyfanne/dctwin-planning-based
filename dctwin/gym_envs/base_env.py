@@ -146,7 +146,9 @@ class BaseEnv(gym.Env):
             self._timestamp = self._starting_timestamp
             base_env.eplus_cfd.timestamp = self._timestamp
             self._use_simulation_time = True
-            logger.info(f"Simulation time: {self._starting_timestamp.strftime("%m-%d %H:%M")}")
+            logger.info(
+                f"Simulation time: {self._starting_timestamp.strftime('%m-%d %H:%M')}"
+            )
         else:
             logger.info("Using real-world time")
             self._use_simulation_time = False

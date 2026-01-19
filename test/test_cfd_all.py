@@ -181,8 +181,14 @@ class CFDExecutor:
             y_position = page_height - top_margin
 
         flow_rate_chart_path = self.case_dir / "flow_rate_line_chart.png"
-        c.drawImage(flow_rate_chart_path, 1 * cm, y_position - image_height, width=image_width, height=image_height)
-        y_position -= (image_height + 0.5 * cm)  # Adjust for spacing below the image
+        c.drawImage(
+            flow_rate_chart_path,
+            1 * cm,
+            y_position - image_height,
+            width=image_width,
+            height=image_height,
+        )
+        y_position -= image_height + 0.5 * cm  # Adjust for spacing below the image
         c.drawString(1 * cm, y_position, "flow rate imbalance (m3/s)")
         y_position -= 0.5 * cm
 
@@ -387,8 +393,10 @@ class CFDExecutor:
         patch_names_file = self.case_dir / "patchNames"
         extracted_patch_names_list: list[str] = []
         if patch_names_file.exists():
-            with open(patch_names_file, 'r') as f:
-                extracted_patch_names_list = [line.strip() for line in f if line.strip()]
+            with open(patch_names_file, "r") as f:
+                extracted_patch_names_list = [
+                    line.strip() for line in f if line.strip()
+                ]
         else:
             logger.warning(f"Patch names file not found: {patch_names_file}")
 
@@ -405,7 +413,7 @@ class CFDExecutor:
             if not patch_folder.exists():
                 logger.info(f"Flow rate folder missing for patch {patch_name}")
 
-            continue
+        continue
 
             time_dirs = sorted(
                 [p for p in patch_folder.iterdir() if p.is_dir()],
@@ -447,22 +455,23 @@ dat_file = time_dir / "surfaceFieldValue.dat"
             self.flow_rate_df = None
             return None
 
-        df_patch['net_mass_flow_rate'] = df_patch.sum(axis=1, skipna=True)
-        df_patch['net_mass_flow_rate_abs'] = df_patch['net_mass_flow_rate'].abs()
+        df_patch["net_mass_flow_rate"] = df_patch.sum(axis=1, skipna=True)
+        df_patch["net_mass_flow_rate_abs"] = df_patch["net_mass_flow_rate"].abs()
         df_patch.to_csv(self.case_dir / "flow_rate.csv")
 
         self.flow_rate_df = df_patch.sort_index()
         return self.flow_rate_df
 
     def flow_rate_line_chart(self):
-
         if self.flow_rate_df is None:
             self.flow_rate_monitor()
 
         if self.flow_rate_df is not None:
             logger.info("Creating flow rate line chart...")
             fig, ax = plt.subplots()
-            ax.plot(self.flow_rate_df.index, self.flow_rate_df['net_mass_flow_rate_abs'])
+            ax.plot(
+                self.flow_rate_df.index, self.flow_rate_df["net_mass_flow_rate_abs"]
+            )
             ax.set_xlabel("Timestep")
             ax.set_ylabel("Flow Rate Imbalance [m3/s]")
             ax.set_yscale("log")
@@ -475,46 +484,102 @@ dat_file = time_dir / "surfaceFieldValue.dat"
             logger.info("No flow rate data found")
             return None
 
-
     def yplus_parsing(self):
-
         postprocessing_path = self.case_dir / "postProcessing"
         yplus_path = postprocessing_path / "yPlusWallFunction" / "0" / "yPlus.dat"
 
-        df = pd.read_csv(yplus_path, sep=r'\s+', comment='#',
-                 names=['Time', 'patch','min', 'max', 'average'])
+        df = pd.read_csv(
+            yplus_path,
+            sep=r"\s+",
+            comment="#",
+            names=["Time", "patch", "min", "max", "average"],
+        )
 
         # ABSOLUTE CINEMA - cursor found this solution not me
         # Pivot: patches as rows, times as columns (using average column)
-        df_pivot = df.pivot(index='patch', columns='Time', values='average').reset_index()
+        df_pivot = df.pivot(
+            index="patch", columns="Time", values="average"
+        ).reset_index()
 
         # Rename time columns to 'time=1', 'time=2', etc.
-        df_pivot.columns = ['patch'] + [f'time={int(col)}' for col in df_pivot.columns[1:]]
+        df_pivot.columns = ["patch"] + [
+            f"time={int(col)}" for col in df_pivot.columns[1:]
+        ]
 
-        yPlus_mean = df_pivot.iloc[:,-1].mean()
-        yPlus_max = df_pivot.iloc[:,-2].max()
+        yPlus_mean = df_pivot.iloc[:, -1].mean()
+        yPlus_max = df_pivot.iloc[:, -2].max()
         logger.info(f"Average yPlus of all walls: {yPlus_mean}")
         logger.info(f"Maximum yPlus of all walls: {yPlus_max}")
 
-        yPlus_dict = {'average yPlus': yPlus_mean, 'max yPlus': yPlus_max}
+        yPlus_dict = {"average yPlus": yPlus_mean, "max yPlus": yPlus_max}
 
         self.yPlus_dict = yPlus_dict
         return yPlus_dict
 
-
-
     def avg_T_parsing(self):
         pass
+
     def add_to_csv_report(self, failed=False, error="NA", traceback_message="NA"):
-        column_titles = ['case', 'succeeded', 'error', 'traceback', 'mesh time', 'solver time', 'paraview time', 'total time',
-        'ux_final_residual', 'uy_final_residual', 'uz_final_residual', 'T_final_residual', 'epsilon_final_residual', 'k_final_residual',
-        'average yPlus', 'max yPlus']
+        column_titles = [
+            "case",
+            "succeeded",
+            "error",
+            "traceback",
+            "mesh time",
+            "solver time",
+            "paraview time",
+            "total time",
+            "ux_final_residual",
+            "uy_final_residual",
+            "uz_final_residual",
+            "T_final_residual",
+            "epsilon_final_residual",
+            "k_final_residual",
+            "average yPlus",
+            "max yPlus",
+        ]
         if failed:
-            new_data = [[self.room_config_path, 'False', error, traceback_message,"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"]]
+            new_data = [
+                [
+                    self.room_config_path,
+                    "False",
+                    error,
+                    traceback_message,
+                    "NA",
+                    "NA",
+                    "NA",
+                    "NA",
+                    "NA",
+                    "NA",
+                    "NA",
+                    "NA",
+                    "NA",
+                    "NA",
+                    "NA",
+                    "NA",
+                ]
+            ]
         else:
-            new_data = [[self.room_config_path, 'True', error, traceback_message, self.execution_time['mesh_time'], self.execution_time['solver_time'], self.execution_time['paraview_time'], self.execution_time['total_time'],
-            self.residuals[-1]['ux_final_residual'], self.residuals[-1]['uy_final_residual'], self.residuals[-1]['uz_final_residual'], self.residuals[-1]['T_final_residual'], self.residuals[-1]['epsilon_final_residual'], self.residuals[-1]['k_final_residual'],
-            self.yPlus_dict['average yPlus'], self.yPlus_dict['max yPlus']]]
+            new_data = [
+                [
+                    self.room_config_path,
+                    "True",
+                    error,
+                    traceback_message,
+                    self.execution_time["mesh_time"],
+                    self.execution_time["solver_time"],
+                    self.execution_time["paraview_time"],
+                    self.execution_time["total_time"],
+                    self.residuals[-1]["ux_final_residual"],
+                    self.residuals[-1]["uy_final_residual"],
+                    self.residuals[-1]["uz_final_residual"],
+                    self.residuals[-1]["T_final_residual"],
+                    self.residuals[-1]["epsilon_final_residual"],
+                    self.residuals[-1]["k_final_residual"],
+                    self.yPlus_dict["average yPlus"],
+                    self.yPlus_dict["max yPlus"],
+                ]
+            ]
         new_df = pd.DataFrame(new_data, columns=column_titles)
         file_path = "log/combined_result.csv"
         # Check if the file already exists

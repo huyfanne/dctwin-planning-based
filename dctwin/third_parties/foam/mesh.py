@@ -312,9 +312,7 @@ class ACUModel:
     return_face: PatchModel
     refinement_level: int = 2
 
-    def __init__(self, acu: ACU, base_size: float = 0.2,
-            refinement_level: int = 2
-    ):
+    def __init__(self, acu: ACU, base_size: float = 0.2, refinement_level: int = 2):
         self.config = acu
         self.base_size = base_size
         self.refinement_level = refinement_level
@@ -390,7 +388,7 @@ class ACUModel:
             v_min=[v_min.x, v_min.y, v_min.z],
             v_max=[v_max.x, v_max.y, v_max.z],
             is_refinement_box=True,
-            refinement_level = self.refinement_level
+            refinement_level=self.refinement_level,
         )
 
     def _make_supply_face(self):
@@ -607,9 +605,7 @@ class HeatEmittingBoxModel:
     return_face: PatchModel
     refinement_level: int = 2
 
-    def __init__(self, config: Any, base_size: float = 0.2,
-            refinement_level: int = 2
-    ):
+    def __init__(self, config: Any, base_size: float = 0.2, refinement_level: int = 2):
         self.config = config
         self.base_size = base_size
         self.refinement_level = refinement_level
@@ -685,7 +681,7 @@ class HeatEmittingBoxModel:
             v_min=[v_min.x, v_min.y, v_min.z],
             v_max=[v_max.x, v_max.y, v_max.z],
             is_refinement_box=True,
-            refinement_level=self.refinement_level
+            refinement_level=self.refinement_level,
         )
 
     def _make_supply_face(self):
@@ -1883,21 +1879,25 @@ class MeshBuilder:
             )
 
         def round_rack(rack):
-            #base_size = round(self.base_size / 2**refinement_level, 2)
+            # base_size = round(self.base_size / 2**refinement_level, 2)
 
             # round the box of the rack
             round_box(box_model=rack, base_size=self.base_size, mode="ceil")
 
             # round the servers
             for server in rack.constructions.servers.values():
-                server.geometry.depth = round_to_base(server.geometry.depth, self.base_size)
+                server.geometry.depth = round_to_base(
+                    server.geometry.depth, self.base_size
+                )
                 if server.geometry.depth != rack.geometry.size.y:
                     server.geometry.depth = rack.geometry.size.y
                     logger.warning(
                         f"Server '{server.uid}' depth is changed to {rack.geometry.size.y}, "
                         f"because it is not the same as the rack depth"
                     )
-                server.geometry.width = round_to_base(server.geometry.width, self.base_size)
+                server.geometry.width = round_to_base(
+                    server.geometry.width, self.base_size
+                )
 
         for plane in self.room.geometry.plane:
             plane.x = round_to_base(plane.x, self.base_size)
@@ -1988,7 +1988,7 @@ class MeshBuilder:
         """
         Create the exterior geometry of the room
         """
-        #base_size: float = 0.1
+        # base_size: float = 0.1
         min_z = 0
         v_min, v_max = (
             Vertex(x=0, y=0, z=min_z),
@@ -2024,21 +2024,21 @@ class MeshBuilder:
         for acu_name, acu in acus.items():
             acu_list.append(
                 ACUModel(
-                    acu=acu,
-                    base_size=self.base_size,
-                    refinement_level = refinement_level
+                    acu=acu, base_size=self.base_size, refinement_level=refinement_level
                 )
             )
         return acu_list
 
-    def make_heat_emitting_boxes(self, heat_emitting_boxes: Dict[str, Any], refinement_level: int = 2):
+    def make_heat_emitting_boxes(
+        self, heat_emitting_boxes: Dict[str, Any], refinement_level: int = 2
+    ):
         heat_emitting_boxes_list = []
         for heat_emitting_box_name, heat_emitting_box in heat_emitting_boxes.items():
             heat_emitting_boxes_list.append(
                 HeatEmittingBoxModel(
                     config=heat_emitting_box,
                     base_size=self.base_size,
-                    refinement_level = refinement_level
+                    refinement_level=refinement_level,
                 )
             )
         return heat_emitting_boxes_list
@@ -2311,7 +2311,9 @@ class MeshBuilder:
                 )
             )
 
-    def write_createPatch_dict(self, patch_list: List[ACUModel | RackModel | HeatEmittingBoxModel]):
+    def write_createPatch_dict(
+        self, patch_list: List[ACUModel | RackModel | HeatEmittingBoxModel]
+    ):
         patches_cmd = ""
         for patch in patch_list:
             patches_cmd += patch.createPatch_cmd
@@ -2319,7 +2321,9 @@ class MeshBuilder:
         with open(self.case_dir.joinpath("system/createPatchDict"), "w") as f:
             f.write(template.render(patches_cmd=patches_cmd))
 
-    def write_topoSet_dict(self, face_set_list: List[ACUModel | RackModel | HeatEmittingBoxModel]):
+    def write_topoSet_dict(
+        self, face_set_list: List[ACUModel | RackModel | HeatEmittingBoxModel]
+    ):
         face_set_cmd = ""
         for face_set in face_set_list:
             face_set_cmd += face_set.topoSet_cmd
@@ -2369,10 +2373,10 @@ class MeshBuilder:
             v_max=v_max,
         )
         box_list, box_plane_list, box_opening_face_list = self.make_boxes(boxes=boxes)
-        acu_list = self.make_acus(acus=acus, refinement_level = refinement_level)
+        acu_list = self.make_acus(acus=acus, refinement_level=refinement_level)
         heat_emitting_boxes_list = self.make_heat_emitting_boxes(
-            heat_emitting_boxes=heat_emitting_boxes
-        , refinement_level = refinement_level)
+            heat_emitting_boxes=heat_emitting_boxes, refinement_level=refinement_level
+        )
         rack_list = self.make_racks(racks=racks, refinement_level=refinement_level)
         row_racks_list = self.make_row_racks(
             rows=rows, refinement_level=refinement_level

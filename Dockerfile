@@ -16,7 +16,10 @@ ENV PYTHONUNBUFFERED=1 \
 COPY --from=builder /opt/src/dist/*.whl /opt/dist/
 RUN --mount=type=secret,id=GITHUB_TOKEN \
     GITHUB_TOKEN=$(cat /run/secrets/GITHUB_TOKEN)  && echo "https://x-access-token:${GITHUB_TOKEN}@github.com" > ${HOME}/.git-credentials && \
+    apt-get update && apt-get upgrade -y && \
+    apt-get install -y git cmake build-essential pigz libglx-mesa0 && \
     git config --global credential.helper store && \
+    pip install --no-cache-dir /opt/dist/*.whl && \
     apt-get update && apt-get upgrade -y && \
     apt-get install cmake build-essential pigz libglx-mesa0 -y && \
     apt-get purge build-essential cmake -y && \
