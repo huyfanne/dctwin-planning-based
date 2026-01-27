@@ -80,7 +80,12 @@ class Builder:
     def render(self, source_filename, write_filename, internal_field=None) -> None:
         acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_dict)
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_dict)
-        #heat_emitting_box_k, heat_emitting_box_epsilon = self.get_k_and_epsilon(self.heat_emitting_box_dict)
+        
+        try: 
+            heat_emitting_box_k, heat_emitting_box_epsilon = self.get_k_and_epsilon(self.heat_emitting_box_dict)
+        except: 
+            heat_emitting_box_k, heat_emitting_box_epsilon = acu_k, acu_epsilon
+
         with open(Path(config.cfd.case_dir, f"0/{write_filename}"), "w") as f:
             f.write(
                 template_env.get_template(f"foam/template/0/{source_filename}.j2").render(
@@ -103,8 +108,8 @@ class Builder:
                     acu_epsilon=acu_epsilon,
                     server_k=server_k,
                     server_epsilon=server_epsilon,
-                    #heat_emitting_box_k=heat_emitting_box_k,
-                    #heat_emitting_box_epsilon=heat_emitting_box_epsilon,
+                    heat_emitting_box_k=heat_emitting_box_k,
+                    heat_emitting_box_epsilon=heat_emitting_box_epsilon,
                     internal_field=internal_field,
                 )
             )
