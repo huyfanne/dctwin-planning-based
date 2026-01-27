@@ -5,6 +5,35 @@
     },
     "models": {
         "geometryModels": {
+            "heatEmittingBoxes": {
+                "ups": {
+                    "size": {
+                        "x": 3.6,
+                        "y": 0.9,
+                        "z": 2.0
+                    },
+                    "supplyFace": {
+                        "length": 1,
+                        "offset": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                        },
+                        "side": "front",
+                        "width": 1
+                    },
+                    "returnFace": {
+                        "length": 1,
+                        "offset": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                        },
+                        "side": "rear",
+                        "width": 1
+                    }
+                }
+            },
             "acus": {
                 "acu_model_1": {
                     "size": {
@@ -276,6 +305,7 @@
             }
         },
         "boxes": {},
+        "heatEmittingBoxes": {},
         "acus": {
             "ACU1": {
                 "geometry": {

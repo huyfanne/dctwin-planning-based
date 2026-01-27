@@ -1631,12 +1631,13 @@ class MeshBuilder:
             round_face(face=acu.geometry.return_face, face_name=f"{acu.valid_id}_return_face")
 
         # round the heat_emitting_box
-        for heat_emitting_box in self.room.constructions.heat_emitting_boxes.values():
-            # round the box of the heat_emitting_box
-            round_box(box_model=heat_emitting_box)
-            # round the faces of the heat_emitting_box
-            round_face(face=heat_emitting_box.geometry.supply_face, face_name=f"{heat_emitting_box.valid_id}_supply_face")
-            round_face(face=heat_emitting_box.geometry.return_face, face_name=f"{heat_emitting_box.valid_id}_return_face")
+        if self.room.constructions.heat_emitting_boxes:
+            for heat_emitting_box in self.room.constructions.heat_emitting_boxes.values():
+                # round the box of the heat_emitting_box
+                round_box(box_model=heat_emitting_box)
+                # round the faces of the heat_emitting_box
+                round_face(face=heat_emitting_box.geometry.supply_face, face_name=f"{heat_emitting_box.valid_id}_supply_face")
+                round_face(face=heat_emitting_box.geometry.return_face, face_name=f"{heat_emitting_box.valid_id}_return_face")
 
         # round the rack
         if self.room.constructions.racks:

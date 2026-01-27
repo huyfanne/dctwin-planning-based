@@ -26,7 +26,6 @@ class CFDExecutor:
         config.PRESERVE_FOAM_LOG = preserve_foam_log
         self.is_modulus = False
         self.case_dir = None
-        self.residuals = []
         self.flow_rate_df = None
         self.residuals = None
         self.execution_time = None 
