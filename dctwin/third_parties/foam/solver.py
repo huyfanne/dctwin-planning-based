@@ -71,9 +71,11 @@ class Builder:
     @classmethod
     def get_k_and_epsilon(cls, obj_dict: Dict) -> Tuple[float, float]:
         """Get the minimum value greater than 0"""
-        _obj_list = [acu for acu in obj_dict.values() if acu.k != 0]
+        _obj_list = [x for x in obj_dict.values() if x.k != 0]
+
         if len(_obj_list) == 0:
-            raise ValueError("Please check the ACU or Server flow rate value")
+            raise ValueError("Please specify non-zero ACU, server, and heat-emitting boxes flow rates in model and inputs")
+
         obj = min(_obj_list, key=lambda x: x.k)
         return obj.k, obj.epsilon
 
