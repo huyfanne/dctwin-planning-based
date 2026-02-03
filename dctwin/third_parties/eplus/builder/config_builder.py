@@ -1687,8 +1687,8 @@ class ConfigBuilder:
         self,
         exposed: bool = True,
         normalize_method: int = None,
-        lb: float = 1.0,
-        ub: float = 3.0,
+        lb: float = None,
+        ub: float = None,
     ) -> None:
         """
         Make observations for calculating zone-level (data hall level) PUE.
@@ -1698,17 +1698,17 @@ class ConfigBuilder:
         PUE = (Zone IT Power + Zone HVAC Power) / Zone IT Power
         
         :param exposed: whether the observation is exposed to the agent
-        :param normalize_method: the normalization method
-        :param lb: the lower bound of the normalization (default 1.0 - theoretical minimum PUE)
-        :param ub: the upper bound of the normalization (default 3.0 - typical maximum PUE)
+        :param normalize_method: this should not be normalized, it will never be exposed to let AI see it, just for PUE calculation
+        :param lb: no use, should not be normalized
+        :param ub: no use, should not be normalized
         :return: None
         """
         # Make zone IT power observations for PUE calculation
         self.make_zone_it_power_observations(
             exposed=exposed,
             normalize_method=normalize_method,
-            lb=lb * 50000 if normalize_method and lb == 1.0 else lb,
-            ub=ub * 50000 if normalize_method and ub == 3.0 else ub,
+            lb=lb,
+            ub=ub,
         )
 
     def save(self, path: Path) -> None:
