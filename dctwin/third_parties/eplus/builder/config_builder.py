@@ -448,7 +448,8 @@ class ConfigBuilder:
         normalize_method: int = None,
         lb: float = None,
         ub: float = None,
-        variable_names: Union[str, List[str]] = None
+        variable_names: Union[str, List[str]] = None,
+        exclude_device: list = []
     ) -> None:
         """
         Make observations for ACU fans
@@ -456,9 +457,13 @@ class ConfigBuilder:
         :param normalize_method: the normalization method
         :param lb: the lower bound of the normalization
         :param ub: the upper bound of the normalization
+        :param exclude_device: list of device names to exclude
         :return:
         """
         for acu_name, acu in self.device_key_map["acus"].items():
+            # Skip creation entirely for excluded devices
+            if acu_name in exclude_device:
+                continue
             # observe ACU fan power
             self._make_observation(
                 exposed=exposed,
@@ -1137,9 +1142,13 @@ class ConfigBuilder:
         normalize_method: int = None,
         lb: float = None,
         ub: float = None,
-        variable_names: Union[str, List[str]] = None
+        variable_names: Union[str, List[str]] = None,
+        exclude_device: list = []
     ) -> None:
         for zone_name, zone in self.device_key_map["zones"].items():
+            # Skip creation entirely for excluded zones
+            if zone_name in exclude_device:
+                continue
             # observe zone air temperature
             self._make_observation(
                 exposed=exposed,
@@ -1180,9 +1189,13 @@ class ConfigBuilder:
         normalize_method: int = None,
         lb: float = None,
         ub: float = None,
-        variable_names: Union[str, List[str]] = None
+        variable_names: Union[str, List[str]] = None,
+        exclude_device: list = []
     ) -> None:
         for ite_name, ite in self.device_key_map["ites"].items():
+            # Skip creation entirely for excluded devices
+            if ite_name in exclude_device:
+                continue
             # observe ITE inlet dry-bulb temperature
             self._make_observation(
                 exposed=exposed,
@@ -1447,8 +1460,13 @@ class ConfigBuilder:
         initial_value: float = 1.0,
         lb: float = 0.0,
         ub: float = 1.0,
+        device_values: dict = {},
+        disable: bool = False,
     ) -> None:
         for acu_name, acu in self.device_key_map["acus"].items():
+            # Skip if this device should be disabled
+            if device_values.get(acu_name, {}).get("disable", disable) is True:
+                continue
             fan_name = f"{acu_name} fan"
             action = self.model.eplus_env_config.actions.add()
             action.control_type = 3
@@ -1471,8 +1489,12 @@ class ConfigBuilder:
         lb: float = 0.0,
         ub: float = 1.0,
         device_values: dict = {},
+        disable: bool = False,
     ) -> None:
         for ite_name, ite in self.device_key_map["ites"].items():
+            # Skip if this device should be disabled
+            if device_values.get(ite_name, {}).get("disable", disable) is True:
+                continue
             action = self.model.eplus_env_config.actions.add()
             action.control_type = 3
             action.variable_name = f"{ite_name} cpu loading schedule".lower()
@@ -1520,6 +1542,7 @@ class ConfigBuilder:
         normalize_method: int = 1,
         lb: float = 0.0,
         ub: float = 1.0,
+        exclude_device: list = [],
     ) -> None:
         """
         Make observations for ACU on/off status
@@ -1530,6 +1553,9 @@ class ConfigBuilder:
         :return:
         """
         for acu_name, acu in self.device_key_map["acus"].items():
+            # Skip creation entirely for excluded devices
+            if acu_name in exclude_device:
+                continue
             # observe ACU on/off status
             self._make_observation(
                 exposed=exposed,
@@ -1546,6 +1572,7 @@ class ConfigBuilder:
         normalize_method: int = 1,
         lb: float = 0.0,
         ub: float = 1.0,
+        exclude_device: list = [],
     ) -> None:
         """
         Make observations for CPU loading
@@ -1556,6 +1583,9 @@ class ConfigBuilder:
         :return:
         """
         for ite_name, ite in self.device_key_map["ites"].items():
+            # Skip creation entirely for excluded devices
+            if ite_name in exclude_device:
+                continue
             # observe CPU loading
             self._make_observation(
                 exposed=exposed,
@@ -1565,6 +1595,121 @@ class ConfigBuilder:
                 ub=ub,
                 observation_type=2,
             )
+
+    def make_zone_it_power_observations(
+        self,
+        exposed: bool = True,
+        normalize_method: int = None,
+        lb: float = None,
+        ub: float = None,
+        variable_names: Union[str, List[str]] = None,
+        exclude_device: list = []
+    ) -> None:
+        """
+        Make observations for zone-level (data hall level) IT equipment power consumption.
+        This aggregates all ITE equipment power within each zone.
+        
+        :param exposed: whether the observation is exposed to the agent
+        :param normalize_method: the normalization method
+        :param lb: the lower bound of the normalization
+        :param ub: the upper bound of the normalization
+        :param variable_names: list of specific variables to observe
+        :param exclude_device: list of zone names to exclude
+        :return: None
+        """
+        for zone_name, zone in self.device_key_map["zones"].items():
+            # Skip creation entirely for excluded zones
+            if zone_name in exclude_device:
+                continue
+            # Observe zone ITE CPU power
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{zone_name} ite cpu power".lower(),
+                key_value=zone_name,
+                output_variable_name="Zone ITE CPU Electricity Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "ite cpu power" in variable_names else None
+            
+            # Observe zone ITE Fan power
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{zone_name} ite fan power".lower(),
+                key_value=zone_name,
+                output_variable_name="Zone ITE Fan Electricity Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "ite fan power" in variable_names else None
+            
+            # Observe zone ITE UPS power
+            self._make_observation(
+                exposed=exposed,
+                variable_name=f"{zone_name} ite ups power".lower(),
+                key_value=zone_name,
+                output_variable_name="Zone ITE UPS Electricity Rate",
+                reporting_frequency="timestep",
+                normalize_method=normalize_method,
+                lb=lb,
+                ub=ub,
+            ) if variable_names is None or "ite ups power" in variable_names else None
+
+    def make_zone_hvac_power_observations(
+        self,
+        exposed: bool = True,
+        normalize_method: int = None,
+        lb: float = None,
+        ub: float = None,
+        variable_names: Union[str, List[str]] = None
+    ) -> None:
+        """
+        Make observations for zone-level HVAC power by observing ACU fan power.
+        Each ACU serves a zone, so this allows tracking HVAC power per zone.
+        
+        Note: ACU fan power observations are already available through make_acu_fan_observations.
+        This is a convenience method. Users can map ACU power to zones in their reward function.
+        
+        :param exposed: whether the observation is exposed to the agent
+        :param normalize_method: the normalization method
+        :param lb: the lower bound of the normalization
+        :param ub: the upper bound of the normalization
+        :param variable_names: list of specific variables to observe
+        :return: None
+        """
+        # ACU fan power is already available through make_acu_fan_observations
+        # This is a convenience method that delegates to it
+        pass
+
+    def make_zone_pue_observations(
+        self,
+        exposed: bool = True,
+        normalize_method: int = None,
+        lb: float = None,
+        ub: float = None,
+    ) -> None:
+        """
+        Make observations for calculating zone-level (data hall level) PUE.
+        This creates observations for zone IT power components.
+        
+        Note: PUE must be calculated in post-processing by dividing:
+        PUE = (Zone IT Power + Zone HVAC Power) / Zone IT Power
+        
+        :param exposed: whether the observation is exposed to the agent
+        :param normalize_method: this should not be normalized, it will never be exposed to let AI see it, just for PUE calculation
+        :param lb: no use, should not be normalized
+        :param ub: no use, should not be normalized
+        :return: None
+        """
+        # Make zone IT power observations for PUE calculation
+        self.make_zone_it_power_observations(
+            exposed=exposed,
+            normalize_method=normalize_method,
+            lb=lb,
+            ub=ub,
+        )
 
     def save(self, path: Path) -> None:
         with open(path, "w") as f:
