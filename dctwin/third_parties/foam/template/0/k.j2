@@ -45,21 +45,21 @@ boundaryField
     "heat_emitting_box_wall_.*"
     {
         type            kqRWallFunction;
-        value           uniform {{ acu_k }};
+        value           uniform {{ heat_emitting_box_k }};
     }
 
     "heat_emitting_box_supply_.*"
     {
         type            inletOutlet;
-        inletValue      uniform {{ acu_k }};
-        value           uniform {{ acu_k }};
+        inletValue      uniform {{ heat_emitting_box_k }};
+        value           uniform {{ heat_emitting_box_k }};
     }
     
     "heat_emitting_box_return_.*"
     {
         type            inletOutlet;
-        inletValue      uniform {{ acu_k }};
-        value           uniform {{ acu_k }};
+        inletValue      uniform {{ heat_emitting_box_k }};
+        value           uniform {{ heat_emitting_box_k }};
     }
 
     "room_wall_.*"
