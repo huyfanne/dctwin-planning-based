@@ -10,7 +10,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
-jinja2 = "3.1.2"
+jinja2 = "^3.1.6"
 markupsafe = "2.0.1"
 setuptools = "^82.0.0"
 cython = ">=3.0.10"  # for successful installation of cchardet
@@ -38,7 +38,6 @@ vtk = "9.5.1"
 requests = ">2.32"
 configobj = "^5.0.8" # DO NOT DELETE: apptools which is a dependency of mayavi removed configobj as a required dependency so we need to manually install configobj https://github.com/enthought/apptools/pull/351
 reportlab = "^4.3.0"
-mayavi = "4.8.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
@@ -53,6 +52,7 @@ mkdocs-literate-nav = "^0.5.0"
 mkdocs-material = "^9.5.5"
 mkdocs-material-extensions = "^1.1"
 mkdocs-section-index = "^0.3.4"
+mayavi = "^4.8.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
