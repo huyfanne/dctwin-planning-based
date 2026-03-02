@@ -12,7 +12,7 @@ packages = [
 python = ">=3.10,<4.0"
 jinja2 = "3.1.2"
 markupsafe = "2.0.1"
-setuptools = "^78.1.1"
+setuptools = "^82.0.0"
 cython = ">=3.0.10"  # for successful installation of cchardet
 gym = "^0.26.2"
 cvxpy = "^1.2.1"
