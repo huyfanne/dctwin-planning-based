@@ -21,7 +21,7 @@ fluidfoam = "^0.2.3"
 torch = ">=2.2.0"
 gpytorch = "^1.9.0"
 tqdm = "^4.64.1"
-protobuf = ">=3.19.6,<4.24"
+protobuf = "3.19.6"
 cvxpylayers = "^0.1.5"
 sympy = "1.11.1"
 numpy = "<2.0.0"
@@ -52,7 +52,7 @@ mkdocs-literate-nav = "^0.5.0"
 mkdocs-material = "^9.5.5"
 mkdocs-material-extensions = "^1.1"
 mkdocs-section-index = "^0.3.4"
-mayavi = "4.8.2"
+mayavi = "4.8.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
