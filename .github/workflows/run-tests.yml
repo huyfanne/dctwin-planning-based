@@ -128,7 +128,9 @@ jobs:
         run: |
           git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
           poetry env use 3.10.15
-          poetry install
+          poetry run pip install "setuptools>=65" wheel vtk==9.5.1
+          poetry run pip install mayavi==4.8.3 --no-build-isolation
+          poetry install --no-interaction
 
       - name: Pull Docker images
         run: |
