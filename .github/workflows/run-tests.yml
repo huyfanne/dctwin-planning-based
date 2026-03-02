@@ -33,6 +33,11 @@ jobs:
           docker pull ghcr.io/cap-dcwiz/salome-9-debian10:latest
           docker pull ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+
       - name: Install dependencies with Poetry
         env:
           MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN }}
