@@ -33,12 +33,19 @@ jobs:
           docker pull ghcr.io/cap-dcwiz/salome-9-debian10:latest
           docker pull ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+
       - name: Install dependencies with Poetry
         env:
           MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN }}
         run: |
           git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
           poetry env use 3.10.15
+          poetry run pip install "setuptools>=65" wheel vtk==9.5.1
+          poetry run pip install mayavi==4.8.3 --no-build-isolation
           poetry install
 
       - name: Run python script
@@ -73,12 +80,19 @@ jobs:
           docker pull ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0
           docker pull ghcr.io/cap-dcwiz/energyplus-9-5-0:latest
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+
       - name: Install dependencies with Poetry
         env:
           MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN }}
         run: |
           git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
           poetry env use 3.10.15
+          poetry run pip install "setuptools>=65" wheel vtk==9.5.1
+          poetry run pip install mayavi==4.8.3 --no-build-isolation
           poetry install
 
       - name: Run python script
@@ -106,9 +120,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull Docker images
+      - name: Install system dependencies
         run: |
-          docker pull ghcr.io/cap-dcwiz/energyplus-9-5-0:latest
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
 
       - name: Install dependencies with Poetry
         env:
@@ -116,7 +131,13 @@ jobs:
         run: |
           git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
           poetry env use 3.10.15
-          poetry install
+          poetry run pip install "setuptools>=65" wheel vtk==9.5.1
+          poetry run pip install mayavi==4.8.3 --no-build-isolation
+          poetry install --no-interaction
+
+      - name: Pull Docker images
+        run: |
+          docker pull ghcr.io/cap-dcwiz/energyplus-9-5-0:latest
 
       - name: Run python script
         run: cd test && poetry run python test_eplus.py

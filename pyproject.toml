@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dctwin"
-version = "2.4.0"
+version = "2.4.1"
 
 description = "Building Multiphysics Digital Twin for Data Centers."
 authors = ["Ruihang Wang <ruihang001@ntu.edu.sg>", "Ryan Wong <ryan.wong@ntu.edu.sg>", "Zhiwei Cao <zhiwei003@ntu.edu.sg>", "Neng <xiad0001@ntu.edu.sg>"]
@@ -10,9 +10,9 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
-jinja2 = "3.1.2"
+jinja2 = "^3.1.6"
 markupsafe = "2.0.1"
-setuptools = "59.8.0"
+setuptools = "^82.0.0"
 cython = ">=3.0.10"  # for successful installation of cchardet
 gym = "^0.26.2"
 cvxpy = "^1.2.1"
@@ -21,7 +21,7 @@ fluidfoam = "^0.2.3"
 torch = ">=2.2.0"
 gpytorch = "^1.9.0"
 tqdm = "^4.64.1"
-protobuf = "3.19.0"
+protobuf = "^3.19.6"
 cvxpylayers = "^0.1.5"
 sympy = "1.11.1"
 numpy = "<2.0.0"
@@ -52,7 +52,7 @@ mkdocs-literate-nav = "^0.5.0"
 mkdocs-material = "^9.5.5"
 mkdocs-material-extensions = "^1.1"
 mkdocs-section-index = "^0.3.4"
-mayavi = "^4.8.2"
+mayavi = "^4.8.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
