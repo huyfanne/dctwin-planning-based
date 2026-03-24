@@ -53,7 +53,7 @@ functions
 		type yPlus;
 		libs (fieldFunctionObjects);
 		log false;
-		writeControl    timeStep;
+		writeControl    runTime;
 		writeInterval   {{ write_interval }};
 	}
 
@@ -68,8 +68,8 @@ functions
 		// Name of the directory for probe data
 		name probes;
 		// Write control
-		writeControl timeStep;
-		writeInterval 10;
+		writeControl runTime;
+		writeInterval {{ write_interval }};
 		// Fields to be probed
 		fields
 		(
@@ -95,8 +95,8 @@ functions
         type            surfaceFieldValue;
         libs 			(fieldFunctionObjects);
         enabled         true;
-        writeControl    timeStep;
-        writeInterval   1;
+		writeControl    runTime;
+		writeInterval   {{ write_interval }};
         log             false;
         writeFields     false;
         regionType      patch;

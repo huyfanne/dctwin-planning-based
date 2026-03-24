@@ -23,7 +23,9 @@ manager = CFDManager(
     solve_process=2, 
     mesh_process=2, 
     is_gpu=False, 
-    end_time=iterations
+    end_time=iterations,
+    #only_save_latest=False,
+    #write_interval=10
     )
 manager.run()
 

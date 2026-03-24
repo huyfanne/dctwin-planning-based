@@ -15,7 +15,11 @@ from dclib.room import Row
 from dctwin.utils import template_env
 from dctwin.third_parties.docker_backend import DockerBackend
 from dctwin.third_parties.k8s_backend import K8sBackend
-from dctwin.third_parties.foam.utils import generate_control_dict
+from dctwin.third_parties.foam.utils import (
+    generate_control_dict,
+    read_patch_dict,
+    write_patch_names_file,
+)
 
 from .utils import is_closed, round_to_base, rotate_rectangular
 
@@ -2088,6 +2092,15 @@ class MeshBuilder:
         self.write_createPatch_dict(
             patch_list=acu_list + rack_list + row_racks_list + heat_emitting_boxes_list,
         )
+
+        try:
+            patch_names = read_patch_dict()
+        except Exception as exc:
+            logger.error(f"Failed to read patch names: {exc}")
+            patch_names = []
+
+        if patch_names:
+            write_patch_names_file(patch_names)
 
         self.generate_control_dict()
 

@@ -2,7 +2,7 @@ import math
 import shutil
 import re
 from typing import List
-from venv import logger
+from loguru import logger
 
 from dclib.room import Room
 from dctwin.utils import (
@@ -16,15 +16,19 @@ import numpy as np
 from dclib.construction.entities import Box
 from dclib.models.geometry import Vertex
 
-def read_patch_dict():
+def read_patch_dict() -> List[str]:
     patch_dict_path = config.cfd.case_dir / "system" / "createPatchDict"
-    
-    with open(patch_dict_path,"r") as file:
+    with open(patch_dict_path, "r") as file:
         contents = file.read()
-
-        patch_names = re.findall(r'\bname\s+(\S+?);',contents)
-
+        patch_names = re.findall(r"\bname\s+(\S+?);", contents)
         return patch_names
+
+
+def write_patch_names_file(patch_names: List[str]) -> None:
+    patch_names_path = Path(config.cfd.case_dir, "patchNames")
+    with open(patch_names_path, "w") as f:
+        for patch in patch_names:
+            f.write(f"{patch}\n")
 
 
 def generate_control_dict(
@@ -35,7 +39,7 @@ def generate_control_dict(
     end_time: int = 500,
     process_num: int = 1,
     is_gpu: bool = False,
-) -> None:
+) -> List[str]:
     if steady is False:
         delta_t = float("1e-5")
     if probes is None:
@@ -58,16 +62,6 @@ def generate_control_dict(
             Path(template_dir, f"foam/template/system/{system_folder}/fvSolution_cpu"),
             Path(config.cfd.case_dir, "system/fvSolution"),
         )
-    try:
-        patch_names = read_patch_dict()
-
-        with open(Path(config.cfd.case_dir, "patchNames"),"w") as f:
-            for patch in patch_names:
-                f.write(f"{patch}\n")
-    except Exception as e:
-        logger.error(f"Failed to store patches name, {e}")
-        patch_names = []
-
     with open(Path(config.cfd.case_dir, "system/controlDict"), "w") as f:
         f.write(
             template_env.get_template(
@@ -77,7 +71,6 @@ def generate_control_dict(
                 write_interval=write_interval,
                 end_time=end_time,
                 probes=probes,
-                patch_names=patch_names
             )
         )
     if process_num > 1:
@@ -92,6 +85,12 @@ def generate_control_dict(
                     process_num=process_num
                 )
             )
+
+    try:
+        return read_patch_dict()
+    except FileNotFoundError:
+        logger.warning("createPatchDict not found while generating controlDict; returning empty patch list")
+        return []
 
 
 def init_foam(is_gpu: bool = False, process_num: int = 1) -> None:
@@ -136,6 +135,20 @@ def init_foam(is_gpu: bool = False, process_num: int = 1) -> None:
         )
 
     generate_control_dict()
+
+
+def write_flow_rate_dict(patch_names: List[str]) -> Optional[Path]:
+    if len(patch_names) == 0:
+        return None
+
+    flow_rate_dict_path = Path(config.cfd.case_dir, "system/flowRateDict")
+    with open(flow_rate_dict_path, "w") as f:
+        f.write(
+            template_env.get_template("foam/template/system/flowRateDict.j2").render(
+                patch_names=patch_names
+            )
+        )
+    return flow_rate_dict_path
 
 
 def generate_block_dict(room: Room) -> None:

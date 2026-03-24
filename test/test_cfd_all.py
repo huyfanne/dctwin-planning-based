@@ -20,7 +20,8 @@ import pandas as pd
 import traceback
 
 class CFDExecutor:
-    def __init__(self, room_config_path, preserve_foam_log=True, iterations=100):
+    def __init__(self, room_config_path, preserve_foam_log=True, 
+                iterations=100, only_save_latest=False, write_interval=10):
         self.room = Room.load(room_config_path)
         self.room_config_path = room_config_path
         config.PRESERVE_FOAM_LOG = preserve_foam_log
@@ -46,7 +47,9 @@ class CFDExecutor:
             mesh_process=6,
             is_gpu=False,
             end_time=iterations,
-            location_in_mesh=location_in_mesh
+            write_interval=write_interval,
+            location_in_mesh=location_in_mesh,
+            only_save_latest=only_save_latest,
         )
 
     def execute(self):
@@ -333,55 +336,73 @@ class CFDExecutor:
     def flow_rate_monitor(self):
         logger.info("Parsing flow rate...")
         postprocessing_path = self.case_dir / "postProcessing"
-        patch_names = []
 
-        # Read patch names from file
         patch_names_file = self.case_dir / "patchNames"
-        extracted_patch_names_list = []
+        extracted_patch_names_list: list[str] = []
         if patch_names_file.exists():
             with open(patch_names_file, 'r') as f:
                 extracted_patch_names_list = [line.strip() for line in f if line.strip()]
         else:
             logger.warning(f"Patch names file not found: {patch_names_file}")
-        
-        # For each patch name, process the surfaceFieldValue.dat file
-        for patch_name in extracted_patch_names_list:
-            # Open directory of patch_name/0/surfaceFieldValue.dat
-            
-            patch_dir = postprocessing_path / f"{patch_name}_flow_rate" / "0" / "surfaceFieldValue.dat"
-            
-            if patch_dir.exists():
-                # Rename the file
-                patch_dir = patch_dir.rename(patch_dir.parent / f"{patch_name}.dat")
-                
-            else:
-                # If file was already renamed, use the renamed path
-                patch_dir = postprocessing_path / f"{patch_name}_flow_rate" / "0" / f"{patch_name}.dat"
-
-            patch_names.append(patch_dir)
-            # Correct file found, extract contents
-
 
         df_patch = pd.DataFrame()
-        #print(patch_names)
-        
 
-        for patch_name in patch_names:
+        def _time_key(path_obj):
             try:
+                return float(path_obj.name)
+            except ValueError:
+                return float("inf")
 
-                patch_flow_rate = pd.read_csv(patch_name, skiprows=5, header=None,sep='\t',usecols=[1])
-                patch_flow_rate.rename(columns={1: f"{patch_name.stem}"}, inplace=True)
-            
-                df_patch = pd.concat([df_patch, patch_flow_rate], axis=1)
-            except Exception as e:
-                logger.info(f"Error concatenating patch {patch_name}: {e}")
+        for patch_name in extracted_patch_names_list:
+            patch_folder = postprocessing_path / f"{patch_name}_flow_rate"
+            if not patch_folder.exists():
+                logger.info(f"Flow rate folder missing for patch {patch_name}")
                 continue
 
-        df_patch['net_mass_flow_rate'] = df_patch.sum(axis=1)
-        df_patch['net_mass_flow_rate_abs'] = df_patch['net_mass_flow_rate'].abs()    
+            time_dirs = sorted(
+                [p for p in patch_folder.iterdir() if p.is_dir()],
+                key=_time_key,
+            )
+
+            patch_df_list = []
+            for time_dir in time_dirs:
+                dat_file = time_dir / "surfaceFieldValue.dat"
+                if not dat_file.exists():
+                    continue
+                try:
+                    temp_df = pd.read_csv(
+                        dat_file,
+                        sep=r"\s+",
+                        comment='#',
+                        header=None,
+                        names=['time', 'value'],
+                        usecols=[0, 1],
+                    )
+                    patch_df_list.append(temp_df)
+                except Exception as e:
+                    logger.info(f"Failed to read {dat_file}: {e}")
+                    continue
+
+            if not patch_df_list:
+                logger.info(f"No surfaceFieldValue data found for patch {patch_name}")
+                continue
+
+            patch_df = pd.concat(patch_df_list, ignore_index=True)
+            patch_df = patch_df.sort_values('time').drop_duplicates('time', keep='last')
+            patch_df.set_index('time', inplace=True)
+            patch_df.rename(columns={'value': patch_name}, inplace=True)
+            df_patch = pd.concat([df_patch, patch_df], axis=1)
+
+        if df_patch.empty:
+            logger.warning("No flow rate data parsed")
+            self.flow_rate_df = None
+            return None
+
+        df_patch['net_mass_flow_rate'] = df_patch.sum(axis=1, skipna=True)
+        df_patch['net_mass_flow_rate_abs'] = df_patch['net_mass_flow_rate'].abs()
         df_patch.to_csv(self.case_dir / "flow_rate.csv")
 
-        self.flow_rate_df = df_patch
+        self.flow_rate_df = df_patch.sort_index()
         return self.flow_rate_df
     
     def flow_rate_line_chart(self):

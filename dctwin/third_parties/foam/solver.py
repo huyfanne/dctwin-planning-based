@@ -8,7 +8,7 @@ import os
 import shutil
 import time
 from pathlib import Path
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List, Optional
 
 from loguru import logger
 
@@ -18,7 +18,13 @@ from dctwin.third_parties.docker_backend import DockerBackend
 from dctwin.third_parties.k8s_backend import K8sBackend
 from dctwin.third_parties.foam.boundary import ACUBoundary, RoomBoundary, ServerBoundary, HeatEmittingBoxBoundary
 
-from dctwin.third_parties.foam.utils import generate_control_dict, read_internal_field
+from dctwin.third_parties.foam.utils import (
+    generate_control_dict,
+    read_internal_field,
+    read_patch_dict,
+    write_flow_rate_dict,
+    write_patch_names_file,
+)
 from dctwin.utils import template_env, config
 
 
@@ -124,6 +130,11 @@ class SolverBackendMixin:
 
     _docker_image = "ghcr.io/cap-dcwiz/openfoam-2312-cuda-smi75:1.0.0"
 
+    def __init__(self, *args, **kwargs) -> None:
+        self.flow_rate_dict_path: Optional[Path] = None
+        self.patch_names: List[str] = []
+        super().__init__(*args, **kwargs)
+
     @property
     def docker_image(self) -> str:
         return self._docker_image
@@ -142,9 +153,22 @@ class SolverBackendMixin:
         raise NotImplementedError
 
     @property
-    def command(self) -> str:
+    def command(self) -> List[str]:
+        latest_time_flag = "-latestTime" if self.only_save_latest else ""
+        reconstruct_cmd = f"reconstructPar {latest_time_flag}".strip()
+
+        flow_rate_post_cmd = ""
+        if self.flow_rate_dict_path is not None:
+            flow_rate_post_cmd = (
+                "postProcess -dict system/flowRateDict -fields '(phi)' -noZero"
+            )
+
+        cleanup_cmd = self.cleanup_timestep_dirs() if self.only_save_latest else ""
+
+        flow_rate_segment = f"{flow_rate_post_cmd} && " if flow_rate_post_cmd else ""
+        cleanup_segment = f" && {cleanup_cmd}" if cleanup_cmd else ""
+
         if self.process_num > 1:
-            latest_time = "-latestTime" if self.only_save_latest else ""
             command = [
                 "bash",
                 "-c",
@@ -154,10 +178,12 @@ class SolverBackendMixin:
                     "decomposePar -force && "
                     "mpirun --use-hwthread-cpus --allow-run-as-root "
                     f"-np {self.process_num} {self.solver} -parallel && "
-                    f"reconstructPar {latest_time} && "
+                    f"{reconstruct_cmd} && "
                     "rm -rf /data/processor* && "
+                    f"{flow_rate_segment}"
                     "postProcess -func 'writeCellCentres' -time 0 && "
                     "postProcess -func 'writeCellVolumes' -time 0"
+                    f"{cleanup_segment}"
                 ),
             ]
         else:
@@ -168,11 +194,28 @@ class SolverBackendMixin:
                     f"source /opt/OpenFOAM/OpenFOAM-v2306/etc/bashrc && "
                     f"export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/amgx/lib && "
                     f"{self.solver} && "
+                    f"{flow_rate_segment}"
                     "postProcess -func 'writeCellCentres' -time 0 && "
                     "postProcess -func 'writeCellVolumes' -time 0"
+                    f"{cleanup_segment}"
                 ),
             ]
+
         return command
+
+    def cleanup_timestep_dirs(self) -> str:
+        # Must run inside the container after the solver: timestep folders do not
+        # exist on the host when this command string is built in Python.
+        return (
+            "latest=0; "
+            'for d in /data/*/; do [ ! -d "$d" ] && continue; '
+            'bn=$(basename "$d"); case "$bn" in *[!0-9]*) continue;; esac; '
+            '[ "$bn" -gt "$latest" ] && latest="$bn"; done; '
+            'for d in /data/*/; do [ ! -d "$d" ] && continue; '
+            'bn=$(basename "$d"); case "$bn" in *[!0-9]*) continue;; esac; '
+            '[ "$bn" = "0" ] && continue; [ "$bn" = "$latest" ] && continue; '
+            'rm -rf "$d"; done'
+        )
 
     @classmethod
     def probe_result(cls) -> list:
@@ -189,6 +232,17 @@ class SolverBackendMixin:
 
     def generate_control_dict(self, room: Room) -> None:
         raise NotImplementedError
+
+    def ensure_patch_names(self) -> List[str]:
+        if not self.patch_names:
+            self.patch_names = read_patch_dict()
+            if self.patch_names:
+                write_patch_names_file(self.patch_names)
+        return self.patch_names
+
+    def configure_flow_rate_monitoring(self) -> None:
+        patch_names = self.ensure_patch_names()
+        self.flow_rate_dict_path = write_flow_rate_dict(patch_names)
 
     def run(
         self,
@@ -274,6 +328,7 @@ class SteadySolverDockerBackend(SolverDockerBackend):
             process_num=self.process_num,
             is_gpu=self.is_gpu,
         )
+        self.configure_flow_rate_monitoring()
 
 
 class TransientSolverDockerBackend(SolverDockerBackend):
@@ -297,6 +352,7 @@ class TransientSolverDockerBackend(SolverDockerBackend):
             process_num=self.process_num,
             is_gpu=self.is_gpu,
         )
+        self.configure_flow_rate_monitoring()
 
 
 class SteadySolverK8sBackend(SolverK8SBackend):
@@ -320,6 +376,7 @@ class SteadySolverK8sBackend(SolverK8SBackend):
             process_num=self.process_num,
             is_gpu=self.is_gpu,
         )
+        self.configure_flow_rate_monitoring()
 
 
 class TransientSolverK8sBackend(SolverK8SBackend):
@@ -343,3 +400,4 @@ class TransientSolverK8sBackend(SolverK8SBackend):
             process_num=self.process_num,
             is_gpu=self.is_gpu,
         )
+        self.configure_flow_rate_monitoring()

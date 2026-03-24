@@ -1,0 +1,46 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v1912                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      flowRateDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     postProcess;
+
+startFrom       latestTime;
+
+functions
+{
+{% for patch_name in patch_names %}
+    {{ patch_name }}_flow_rate
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        enabled         true;
+        writeControl    timeStep;
+        writeInterval   1;
+        log             false;
+        writeFields     false;
+        regionType      patch;
+        writeToFile     true;
+        name            {{ patch_name }};
+        operation       sum;
+        fields
+        (
+            phi
+        );
+    }
+{% endfor %}
+}
+
+// ************************************************************************* //

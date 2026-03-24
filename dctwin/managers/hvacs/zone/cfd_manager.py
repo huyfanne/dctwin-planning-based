@@ -72,6 +72,7 @@ class CFDManager:
     :param scale_server_flow_rate: whether to scale server flow rate
     :param acu2server_flow_ratio: ratio of acu supply air flow rate to total server flow rate
     :param is_gpu: whether to use GPU for simulation
+    :param only_save_latest: keep only the last CFD timestep when True
     """
 
     def __init__(
@@ -81,7 +82,7 @@ class CFDManager:
         mesh_process: int = 8,
         steady: bool = True,
         run_cfd: bool = True,
-        write_interval: int = 50,
+        write_interval: int = 10,
         end_time: int = 1000,
         pod_method: str = "GP",
         docker_client: docker.DockerClient = None,
@@ -93,7 +94,8 @@ class CFDManager:
         refinement_level: int = 2,
         is_modulus: bool = False,
         location_in_mesh: Vertex = Vertex(x=0.,y=0.,z=0.),
-        openfoam_image = None
+        openfoam_image = None,
+        only_save_latest: bool = True,
     ) -> None:
         self.is_modulus = is_modulus
         if k8s_config is None:
@@ -129,6 +131,7 @@ class CFDManager:
         self.last_state_case = None
         self.object_mesh_index = read_object_mesh_index(room=self.room)
         self.openfoam_image = openfoam_image
+        self.only_save_latest = only_save_latest
         self._setup_default_backend()
 
     def _setup_default_backend(self) -> None:
@@ -186,6 +189,7 @@ class CFDManager:
                     process_num=self.solve_process,
                     is_gpu=self.is_gpu,
                 )
+                self.solver_backend.only_save_latest = self.only_save_latest
                 # use reduced-order simulation if POD mode is provided
                 if not self.run_cfd and self.pod_method is not None:
                     assert (
@@ -198,6 +202,7 @@ class CFDManager:
                 self.solver_backend = TransientSolverDockerBackend(
                     self.docker_client, process_num=self.solve_process
                 )
+                self.solver_backend.only_save_latest = self.only_save_latest
 
     def mesh(self) -> None:
         """Mesh the geometry"""
