@@ -21,8 +21,14 @@ import traceback
 
 
 class CFDExecutor:
-    def __init__(self, room_config_path, preserve_foam_log=True,
-                iterations=100, only_save_latest=False, write_interval=10):
+    def __init__(
+        self,
+        room_config_path,
+        preserve_foam_log=True,
+        iterations=100,
+        only_save_latest=False,
+        write_interval=10,
+    ):
         self.room = Room.load(room_config_path)
         self.room_config_path = room_config_path
         config.PRESERVE_FOAM_LOG = preserve_foam_log
@@ -407,13 +413,12 @@ class CFDExecutor:
                 return float(path_obj.name)
             except ValueError:
                 return float("inf")
+
         for patch_name in extracted_patch_names_list:
             patch_folder = postprocessing_path / f"{patch_name}_flow_rate"
-
             if not patch_folder.exists():
                 logger.info(f"Flow rate folder missing for patch {patch_name}")
-
-        continue
+                continue
 
             time_dirs = sorted(
                 [p for p in patch_folder.iterdir() if p.is_dir()],
@@ -422,20 +427,19 @@ class CFDExecutor:
 
             patch_df_list = []
             for time_dir in time_dirs:
-dat_file = time_dir / "surfaceFieldValue.dat"
+                dat_file = time_dir / "surfaceFieldValue.dat"
                 if not dat_file.exists():
                     continue
                 try:
                     temp_df = pd.read_csv(
                         dat_file,
                         sep=r"\s+",
-                        comment='#',
+                        comment="#",
                         header=None,
-                        names=['time', 'value'],
+                        names=["time", "value"],
                         usecols=[0, 1],
                     )
-
-                patch_df_list.append(temp_df)
+                    patch_df_list.append(temp_df)
                 except Exception as e:
                     logger.info(f"Failed to read {dat_file}: {e}")
                     continue
@@ -445,9 +449,9 @@ dat_file = time_dir / "surfaceFieldValue.dat"
                 continue
 
             patch_df = pd.concat(patch_df_list, ignore_index=True)
-            patch_df = patch_df.sort_values('time').drop_duplicates('time', keep='last')
-            patch_df.set_index('time', inplace=True)
-            patch_df.rename(columns={'value': patch_name}, inplace=True)
+            patch_df = patch_df.sort_values("time").drop_duplicates("time", keep="last")
+            patch_df.set_index("time", inplace=True)
+            patch_df.rename(columns={"value": patch_name}, inplace=True)
             df_patch = pd.concat([df_patch, patch_df], axis=1)
 
         if df_patch.empty:
