@@ -29,6 +29,7 @@ RUN --mount=type=secret,id=GITHUB_TOKEN \
     apt-get install -y --no-install-recommends git cmake build-essential pigz libglx-mesa0 && \
     git config --global credential.helper store && \
     pip install --no-cache-dir /opt/dist/*.whl && \
+    pip uninstall -y wheel && \
     apt-get purge -y build-essential cmake git && \
     apt-get autoremove -y && \
     apt-get clean && \
