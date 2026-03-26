@@ -47,6 +47,8 @@ jobs:
       with:
         command: cves                       # recommendations removed: requires pushed image for base layer resolution
         image: local://dctwin:${{ steps.version.outputs.value }}
+        dockerhub-user: ${{ secrets.DOCKER_USER }}
+        dockerhub-password: ${{ secrets.DOCKER_PAT }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
         summary: true
 
