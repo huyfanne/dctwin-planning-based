@@ -2347,6 +2347,7 @@ class MeshBuilder:
         self.case_dir = case_dir
         if process_num is not None:
             self.process_num = process_num
+        self.room.dump(self.case_dir / "original_model.json")
         self._align_geometry(refinement_level)
 
         # Make objects in the room (e.g., ceiling, raised floor, rack, etc.)
@@ -2434,8 +2435,6 @@ class MeshBuilder:
         self.generate_control_dict()
 
         self.run_container(user=0, case_dir=self.case_dir)
-
-        self.room.dump(self.case_dir / "original_model.json")
 
         logger.info("***** Mesh finished *****\n\n")
 
