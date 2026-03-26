@@ -35,17 +35,28 @@ jobs:
           GITHUB_TOKEN=${{ secrets.GIT_TOKEN }}
         tags: dctwin:${{ steps.version.outputs.value }}  # plain name avoids Scout trying to resolve ghcr.io metadata
 
+    - name: Debug image size
+      run: docker images dctwin:${{ steps.version.outputs.value }}
+
     - name: Authenticate to Docker
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USER }}
         password: ${{ secrets.DOCKER_PAT }}
 
-    - name: Docker Scout
+    - name: Generate SBOM
+      uses: docker/scout-action@v1
+      with:
+        command: sbom
+        image: local://dctwin:${{ steps.version.outputs.value }}
+        dockerhub-user: ${{ secrets.DOCKER_USER }}
+        dockerhub-password: ${{ secrets.DOCKER_PAT }}
+
+    - name: Docker Scout CVEs
       id: docker-scout
       uses: docker/scout-action@v1
       with:
-        command: cves                       # recommendations removed: requires pushed image for base layer resolution
+        command: cves
         image: local://dctwin:${{ steps.version.outputs.value }}
         dockerhub-user: ${{ secrets.DOCKER_USER }}
         dockerhub-password: ${{ secrets.DOCKER_PAT }}
