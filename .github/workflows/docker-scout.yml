@@ -39,7 +39,7 @@ jobs:
       id: docker-scout
       uses: docker/scout-action@v1
       with:
-        command: cves,recommendations
+        command: cves  # DEBUG: recommendations dropped (requires base image), swap back when done
         image: local://alpine:3.21  # DEBUG: stub image — swap back to real build when done
         github-token: ${{ secrets.GITHUB_TOKEN }}
         summary: true
