@@ -33,7 +33,7 @@ jobs:
         load: true                          # loads into local Docker daemon, no push
         secrets: |
           GITHUB_TOKEN=${{ secrets.GIT_TOKEN }}
-        tags: ghcr.io/cap-dcwiz/dctwin:${{ steps.version.outputs.value }}
+        tags: dctwin:${{ steps.version.outputs.value }}  # plain name avoids Scout trying to resolve ghcr.io metadata
 
     - name: Authenticate to Docker
       uses: docker/login-action@v3
@@ -46,7 +46,7 @@ jobs:
       uses: docker/scout-action@v1
       with:
         command: cves                       # recommendations removed: requires pushed image for base layer resolution
-        image: local://ghcr.io/cap-dcwiz/dctwin:${{ steps.version.outputs.value }}
+        image: local://dctwin:${{ steps.version.outputs.value }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
         summary: true
 
