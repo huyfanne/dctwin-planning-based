@@ -123,8 +123,8 @@ class EplusBackendMixin:
         assert isinstance(config.eplus.weather_file, Path)
         assert isinstance(config.eplus.idf_file, Path)
         return [
-            f"/bin/bash",
-            f"-c",
+            "/bin/bash",
+            "-c",
             f"/usr/local/EnergyPlus-9-5-0/energyplus "
             f"-w {config.eplus.weather_file.name} "
             f"-r {config.eplus.idf_file.name}",

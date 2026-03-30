@@ -337,19 +337,13 @@ class ACUModel:
                 f"Invalid orientation: {self.config.geometry.orientation} for ACU '{self.config.uid}'"
             )
 
-        if not (
-            self.config.geometry.supply_face.side.name
-            in ["top", "bottom", "left", "right", "front", "rear"]
-        ):
+        if self.config.geometry.supply_face.side.name not in ["top", "bottom", "left", "right", "front", "rear"]:
             raise ValueError(
                 f"Invalid supply face side: {self.config.geometry.supply_face.side.name} for ACU '"
                 f"{self.config.uid}'"
             )
 
-        if not (
-            self.config.geometry.return_face.side.name
-            in ["top", "bottom", "left", "right", "front", "rear"]
-        ):
+        if self.config.geometry.return_face.side.name not in ["top", "bottom", "left", "right", "front", "rear"]:
             raise ValueError(
                 f"Invalid return face side: {self.config.geometry.return_face.side.name} for ACU '"
                 f"{self.config.uid}'"
@@ -630,19 +624,13 @@ class HeatEmittingBoxModel:
                 f"Invalid orientation: {self.config.geometry.orientation} for Heat Emitting Box '{self.config.uid}'"
             )
 
-        if not (
-            self.config.geometry.supply_face.side.name
-            in ["top", "bottom", "left", "right", "front", "rear"]
-        ):
+        if self.config.geometry.supply_face.side.name not in ["top", "bottom", "left", "right", "front", "rear"]:
             raise ValueError(
                 f"Invalid supply face side: {self.config.geometry.supply_face.side.name} for Heat Emitting Box '"
                 f"{self.config.uid}'"
             )
 
-        if not (
-            self.config.geometry.return_face.side.name
-            in ["top", "bottom", "left", "right", "front", "rear"]
-        ):
+        if self.config.geometry.return_face.side.name not in ["top", "bottom", "left", "right", "front", "rear"]:
             raise ValueError(
                 f"Invalid return face side: {self.config.geometry.return_face.side.name} for Heat Emitting Box '"
                 f"{self.config.uid}'"
@@ -1923,18 +1911,20 @@ class MeshBuilder:
 
         # round the heat_emitting_box
         if self.room.constructions.heat_emitting_boxes:
-            for heat_emitting_box in self.room.constructions.heat_emitting_boxes.values():
+            for (
+                heat_emitting_box
+            ) in self.room.constructions.heat_emitting_boxes.values():
                 # round the box of the heat_emitting_box
                 round_box(box_model=heat_emitting_box)
                 # round the faces of the heat_emitting_box
                 round_face(
-                face=heat_emitting_box.geometry.supply_face,
-                face_name=f"{heat_emitting_box.valid_id}_supply_face",
-            )
+                    face=heat_emitting_box.geometry.supply_face,
+                    face_name=f"{heat_emitting_box.valid_id}_supply_face",
+                )
                 round_face(
-                face=heat_emitting_box.geometry.return_face,
-                face_name=f"{heat_emitting_box.valid_id}_return_face",
-            )
+                    face=heat_emitting_box.geometry.return_face,
+                    face_name=f"{heat_emitting_box.valid_id}_return_face",
+                )
 
         # round the rack
         if self.room.constructions.racks:

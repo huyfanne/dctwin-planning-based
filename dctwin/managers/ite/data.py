@@ -1,10 +1,9 @@
 import torch
-from typing import Any, Dict, Tuple
+from typing import Any, Tuple
 
 from dclib import Building, Room
 
 from dctwin.data import Batch
-from dctwin.data.scalars import ActuatorControlType
 
 
 class ITEData:

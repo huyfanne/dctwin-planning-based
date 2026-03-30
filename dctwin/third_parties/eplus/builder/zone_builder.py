@@ -867,7 +867,7 @@ class RoomBuilder:
             zone_splitter = self.model.newidfobject("AirLoopHVAC:ZoneSplitter".upper())
             zone_splitter["Name"] = f"{loop_name} air splitter"
             zone_splitter["Inlet_Node_Name"] = air_loop["Demand_Side_Inlet_Node_Names"]
-            zone_splitter[f"Outlet_1_Node_Name"] = (
+            zone_splitter["Outlet_1_Node_Name"] = (
                 f"{zone_name} air terminal unit {idx + 1} inlet node"
             )
 

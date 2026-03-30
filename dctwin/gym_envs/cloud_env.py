@@ -2,7 +2,6 @@ from datetime import datetime
 
 import docker
 import numpy as np
-from loguru import logger
 
 from numpy import ndarray
 from typing import Optional, Callable, List, Tuple, Union, Any, Dict

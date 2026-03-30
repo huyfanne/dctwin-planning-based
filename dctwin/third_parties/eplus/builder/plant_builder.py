@@ -358,7 +358,7 @@ class PlantBuilder:
         plant_operation_schemes["Control_Scheme_1_Name"] = (
             f"{loop_name} cooling operation scheme"
         )
-        plant_operation_schemes["Control_Scheme_1_Schedule_Name"] = f"Always On".upper()
+        plant_operation_schemes["Control_Scheme_1_Schedule_Name"] = "Always On".upper()
 
         plant_operation_scheme = self.model.newidfobject(
             key="PlantEquipmentOperation:CoolingLoad".upper(),

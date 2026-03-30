@@ -86,7 +86,9 @@ class Builder:
         _obj_list = [x for x in obj_dict.values() if x.k != 0]
 
         if len(_obj_list) == 0:
-            raise ValueError("Please specify non-zero ACU, server, and heat-emitting boxes flow rates in model and inputs")
+            raise ValueError(
+                "Please specify non-zero ACU, server, and heat-emitting boxes flow rates in model and inputs"
+            )
 
         obj = min(_obj_list, key=lambda x: x.k)
         return obj.k, obj.epsilon
@@ -97,8 +99,8 @@ class Builder:
 
         try:
             heat_emitting_box_k, heat_emitting_box_epsilon = self.get_k_and_epsilon(
-            self.heat_emitting_box_dict
-        )
+                self.heat_emitting_box_dict
+            )
         except:
             heat_emitting_box_k, heat_emitting_box_epsilon = acu_k, acu_epsilon
         with open(Path(config.cfd.case_dir, f"0/{write_filename}"), "w") as f:

@@ -1,5 +1,5 @@
 import csv
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 from datetime import datetime, timedelta
 from typing import Dict
 from pathlib import Path

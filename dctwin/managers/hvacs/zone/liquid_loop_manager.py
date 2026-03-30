@@ -1,7 +1,6 @@
 from typing import Dict, Optional, Any
 from dclib import Room
 import torch.nn as nn
-import torch
 
 from dctwin.data import Batch
 from dctwin.models.cooling.thermodyns.nodal.liquid_flow_network import FlowNetwork

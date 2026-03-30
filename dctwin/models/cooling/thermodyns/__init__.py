@@ -1,5 +1,5 @@
 from .nodal import DifferentiableODE
-from .nodal import PINNDynamics, SteadyStateThermodynamics, DifferentiableODE
+from .nodal import PINNDynamics, SteadyStateThermodynamics
 
 
 __all__ = [

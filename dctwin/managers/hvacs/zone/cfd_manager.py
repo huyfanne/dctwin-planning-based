@@ -46,7 +46,7 @@ from dctwin.utils.errors import (
     FoamSolveError,
 )
 from dctwin.third_parties.foam.mesh import RackModel, RowRackModel
-from dclib.room import Room, Rack, Server
+from dclib.room import Room, Rack
 from dclib.data import ServerInputs
 
 
@@ -93,8 +93,8 @@ class CFDManager:
         is_gpu: bool = False,
         refinement_level: int = 2,
         is_modulus: bool = False,
-        location_in_mesh: Vertex = Vertex(x=0.,y=0.,z=0.),
-        openfoam_image = None,
+        location_in_mesh: Vertex = Vertex(x=0.0, y=0.0, z=0.0),
+        openfoam_image=None,
         only_save_latest: bool = True,
     ) -> None:
         self.is_modulus = is_modulus

@@ -93,7 +93,9 @@ def generate_control_dict(
     try:
         return read_patch_dict()
     except FileNotFoundError:
-        logger.warning("createPatchDict not found while generating controlDict; returning empty patch list")
+        logger.warning(
+            "createPatchDict not found while generating controlDict; returning empty patch list"
+        )
         return []
 
 
@@ -130,12 +132,12 @@ def init_foam(is_gpu: bool = False, process_num: int = 1) -> None:
 
     if is_gpu:
         shutil.copy(
-            Path(template_dir, f"foam/template/system/steady/fvSolution_gpu"),
+            Path(template_dir, "foam/template/system/steady/fvSolution_gpu"),
             Path(config.cfd.case_dir, "system/fvSolution"),
         )
     else:
         shutil.copy(
-            Path(template_dir, f"foam/template/system/steady/fvSolution_cpu"),
+            Path(template_dir, "foam/template/system/steady/fvSolution_cpu"),
             Path(config.cfd.case_dir, "system/fvSolution"),
         )
 

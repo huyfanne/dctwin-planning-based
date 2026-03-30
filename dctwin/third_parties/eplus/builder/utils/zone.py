@@ -95,7 +95,7 @@ def make_cooling_coil(
     :return: EpBunch
     """
     obj = model.newidfobject("coil:cooling:water".upper(), Name=cooling_coil_name)
-    obj["Availability_Schedule_Name"] = f"Always On".upper()
+    obj["Availability_Schedule_Name"] = "Always On".upper()
     if branch_component_idx > 1:
         obj["Air_Inlet_Node_Name"] = branch[
             f"Component_{branch_component_idx - 1}_Outlet_Node_Name"
@@ -114,7 +114,7 @@ def make_cooling_coil(
         obj["Air_Inlet_Node_Name"] = f"{cooling_coil_name} air inlet node"
         obj["Air_Outlet_Node_Name"] = f"{cooling_coil_name} air outlet node"
         branch["Component_1_Inlet_Node_Name"] = obj["Air_Inlet_Node_Name"]
-        branch[f"Component_1_Outlet_Node_Name"] = obj["Air_Outlet_Node_Name"]
+        branch["Component_1_Outlet_Node_Name"] = obj["Air_Outlet_Node_Name"]
     # fill in info
     obj["Design_Air_Flow_Rate"] = acu.cooling.design_air_flow_rate
     obj["Design_Inlet_Air_Humidity_Ratio"] = acu.cooling.design_inlet_air_humidity_ratio
@@ -151,7 +151,7 @@ def make_fan(
     :return:
     """
     obj = model.newidfobject("fan:variablevolume".upper(), Name=fan_name)
-    obj["Availability_Schedule_Name"] = f"Always On".upper()
+    obj["Availability_Schedule_Name"] = "Always On".upper()
     loop = kwargs["loop"]
     obj["Air_Inlet_Node_Name"] = branch[
         f"Component_{branch_component_idx - 1}_Outlet_Node_Name"

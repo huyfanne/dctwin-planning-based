@@ -418,16 +418,16 @@ class BaseEnv(gym.Env):
 
     def set_episode_idx(self, episode_idx: int) -> None:
         """Set the episode index for the environment.
-        
-        This method allows external trainers (like dcbrain) to coordinate 
+
+        This method allows external trainers (like dcbrain) to coordinate
         episode numbering across multiple training runs. The episode_idx
         is used for logging organization and simulation context.
-        
+
         Args:
             episode_idx: The episode number to set
         """
         self.episode_idx = episode_idx
-        
+
     def inspect_current_observation(
         self, observation_name: str = None, use_unnormed: bool = None
     ) -> Union[None, float, int, List[Union[float, int]]]:

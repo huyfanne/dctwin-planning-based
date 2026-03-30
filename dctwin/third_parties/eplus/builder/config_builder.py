@@ -1,4 +1,4 @@
-from typing import Union, OrderedDict, List
+from typing import Union, List
 from google.protobuf import text_format
 from dctwin.utils.dt_engine_pb2 import DTEngineConfig
 from loguru import logger
@@ -452,7 +452,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None,
-        exclude_device: list = []
+        exclude_device: list = [],
     ) -> None:
         """
         Make observations for ACU fans
@@ -1150,7 +1150,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None,
-        exclude_device: list = []
+        exclude_device: list = [],
     ) -> None:
         for zone_name, zone in self.device_key_map["zones"].items():
             # Skip creation entirely for excluded zones
@@ -1197,7 +1197,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None,
-        exclude_device: list = []
+        exclude_device: list = [],
     ) -> None:
         for ite_name, ite in self.device_key_map["ites"].items():
             # Skip creation entirely for excluded devices
@@ -1609,7 +1609,7 @@ class ConfigBuilder:
         lb: float = None,
         ub: float = None,
         variable_names: Union[str, List[str]] = None,
-        exclude_device: list = []
+        exclude_device: list = [],
     ) -> None:
         """
         Make observations for zone-level (data hall level) IT equipment power consumption.
@@ -1669,7 +1669,7 @@ class ConfigBuilder:
         normalize_method: int = None,
         lb: float = None,
         ub: float = None,
-        variable_names: Union[str, List[str]] = None
+        variable_names: Union[str, List[str]] = None,
     ) -> None:
         """
         Make observations for zone-level HVAC power by observing ACU fan power.
