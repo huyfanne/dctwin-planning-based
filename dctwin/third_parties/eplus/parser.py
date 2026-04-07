@@ -286,25 +286,25 @@ class Eplus:
         self.ups_efficiency_as_load_factor = {}
         for it_equipment in self.epm.ElectricEquipment_ITE_AirCooled.select():
             name = it_equipment.name
-            self.power_as_load_temp_parameter[
-                name
-            ] = self._get_biquadratic_curve_coefficient(
-                it_equipment.cpu_power_input_function_of_loading_and_air_temperature_curve_name
+            self.power_as_load_temp_parameter[name] = (
+                self._get_biquadratic_curve_coefficient(
+                    it_equipment.cpu_power_input_function_of_loading_and_air_temperature_curve_name
+                )
             )
-            self.flow_as_load_temp_parameter[
-                name
-            ] = self._get_biquadratic_curve_coefficient(
-                it_equipment.air_flow_function_of_loading_and_air_temperature_curve_name
+            self.flow_as_load_temp_parameter[name] = (
+                self._get_biquadratic_curve_coefficient(
+                    it_equipment.air_flow_function_of_loading_and_air_temperature_curve_name
+                )
             )
-            self.power_as_fan_flow_parameter[
-                name
-            ] = self._get_quadractic_curve_coefficient(
-                it_equipment.fan_power_input_function_of_flow_curve_name
+            self.power_as_fan_flow_parameter[name] = (
+                self._get_quadractic_curve_coefficient(
+                    it_equipment.fan_power_input_function_of_flow_curve_name
+                )
             )
-            self.ups_efficiency_as_load_factor[
-                name
-            ] = self._get_quadractic_curve_coefficient(
-                it_equipment.electric_power_supply_efficiency_function_of_part_load_ratio_curve_name
+            self.ups_efficiency_as_load_factor[name] = (
+                self._get_quadractic_curve_coefficient(
+                    it_equipment.electric_power_supply_efficiency_function_of_part_load_ratio_curve_name
+                )
             )
 
     """-------------------------------Internal Curve Management API----------------------------------------"""
@@ -325,25 +325,25 @@ class Eplus:
             name = it_equipment.name
             self.design_power_input[name] = it_equipment.watts_per_unit
             self.number_of_units[name] = it_equipment.number_of_units
-            self.design_fraction_fan[
-                name
-            ] = it_equipment.design_fan_power_input_fraction
+            self.design_fraction_fan[name] = (
+                it_equipment.design_fan_power_input_fraction
+            )
             self.design_fraction_cpu[name] = 1.0 - self.design_fraction_fan[name]
-            self.design_cpu_utilization[
-                name
-            ] = it_equipment.design_power_input_schedule_name.hourly_value
-            self.ups_efficiency[
-                name
-            ] = it_equipment.design_electric_power_supply_efficiency
+            self.design_cpu_utilization[name] = (
+                it_equipment.design_power_input_schedule_name.hourly_value
+            )
+            self.ups_efficiency[name] = (
+                it_equipment.design_electric_power_supply_efficiency
+            )
             self.design_cpu_power[name] = (
                 self.design_power_input[name] * self.design_fraction_cpu[name]
             )
             self.design_fan_power[name] = (
                 self.design_power_input[name] * self.design_fraction_fan[name]
             )
-            self.design_flow_rate_per_watt[
-                name
-            ] = it_equipment.design_fan_air_flow_rate_per_power_input
+            self.design_flow_rate_per_watt[name] = (
+                it_equipment.design_fan_air_flow_rate_per_power_input
+            )
             self.design_air_volumetric_flow_rate[name] = (
                 self.design_flow_rate_per_watt[name] * self.design_power_input[name]
             )
@@ -882,12 +882,12 @@ class Eplus:
                 variable_child = ET.SubElement(root, "variable")
                 variable_child.attrib["source"] = "EnergyPlus"
                 eplus_child = ET.SubElement(variable_child, "EnergyPlus")
-                eplus_child.attrib[
-                    "name"
-                ] = observation_config.output_variable_config.key_value
-                eplus_child.attrib[
-                    "type"
-                ] = observation_config.output_variable_config.variable_name
+                eplus_child.attrib["name"] = (
+                    observation_config.output_variable_config.key_value
+                )
+                eplus_child.attrib["type"] = (
+                    observation_config.output_variable_config.variable_name
+                )
 
         # add BCVTB input schedules
         for action in action_configs:

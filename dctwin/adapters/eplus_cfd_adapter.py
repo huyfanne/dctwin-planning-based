@@ -49,7 +49,6 @@ class EplusCFDAdapter:
         pod_method: str = "GP",
         docker_client: docker.DockerClient = None,
     ) -> None:
-
         assert map_boundary_condition_fn is not None, loguru.logger.critical(
             "No map function provided !"
         )
@@ -220,9 +219,9 @@ class EplusCFDAdapter:
             it_equipment
         ) in self.eplus_manager.idf_parser.epm.ElectricEquipment_ITE_AirCooled:
             for server_id in self.idf2room_mapper[it_equipment.name]["servers"]:
-                boundary_conditions["server_volume_flow_rates"][
-                    server_id
-                ] *= scale_factor
+                boundary_conditions["server_volume_flow_rates"][server_id] *= (
+                    scale_factor
+                )
         return boundary_conditions
 
     def run(self, episode_idx) -> Tuple[np.ndarray, Any]:
@@ -294,9 +293,7 @@ class EplusCFDAdapter:
         )
         # run CFD/POD simulation
         cfd_obs = self.cfd_manager.run(
-            case_idx=self.step_idx,
-            episode_idx=self.episode_idx,
-            **boundary_conditions
+            case_idx=self.step_idx, episode_idx=self.episode_idx, **boundary_conditions
         )
         # post-processing CFD/POD simulation result to obtain return temperature
         self.cfd_sensor_obs, return_temp, zone_server_powers = self._post_process(

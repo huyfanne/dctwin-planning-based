@@ -37,9 +37,9 @@ class ScalarDataItem:
         self.variable_name = config.variable_name
         if config.HasField("normalize_config"):
             norm_config = config.normalize_config
-            assert (
-                norm_config.method == NormalizeConfig.Method.LINEAR
-            ), "Only linear resizer is implemented at this moment"
+            assert norm_config.method == NormalizeConfig.Method.LINEAR, (
+                "Only linear resizer is implemented at this moment"
+            )
             self.resizer = LinearResizer(
                 norm_config.lb,
                 norm_config.ub,
@@ -54,7 +54,10 @@ class ScalarDataItem:
         if default_value_type == "default_normed_value":
             self.set_normed_value(config.default_normed_value)
         elif default_value_type == "default_unnormed_value":
-            if config.control_type == ActionControlType.FIXED or config.control_type == DCTwinActionConfig.FIXED:
+            if (
+                config.control_type == ActionControlType.FIXED
+                or config.control_type == DCTwinActionConfig.FIXED
+            ):
                 logger.info(
                     f"Fixed value {config.default_unnormed_value} is set for {self.variable_name}"
                 )
@@ -92,7 +95,8 @@ class ScalarDataItem:
 
 class Observation(ScalarDataItem):
     def __init__(
-        self, config: DCTwinObservationConfig | EPlusObservationConfig | CFDObservationConfig,
+        self,
+        config: DCTwinObservationConfig | EPlusObservationConfig | CFDObservationConfig,
     ) -> None:
         super().__init__(config)
         self.exposed = config.exposed
@@ -134,19 +138,19 @@ class Action(ScalarDataItem):
         ):
             try:
                 self.input_source = config.input_source
-                assert (
-                    len(self.input_source) > 0
-                ), f"{self.debug_name} is pre_scheduled but input source was not specified!"
+                assert len(self.input_source) > 0, (
+                    f"{self.debug_name} is pre_scheduled but input source was not specified!"
+                )
                 if not os.path.isabs(self.input_source):
                     self.input_source = os.path.abspath(self.input_source)
                 with open(self.input_source, "r") as f:
                     self.schedule = json.load(f)
                     assert isinstance(self.schedule, list), (
-                        f"{self.debug_name}: " f"input source has to be a json list!"
+                        f"{self.debug_name}: input source has to be a json list!"
                     )
-                    assert (
-                        len(self.schedule) != 0
-                    ), f"{self.debug_name} has an input source of length 0!"
+                    assert len(self.schedule) != 0, (
+                        f"{self.debug_name} has an input source of length 0!"
+                    )
                     self.schedule_idx = 0
             except Exception:
                 logger.exception("Failed to load input source!")
@@ -159,7 +163,9 @@ class Action(ScalarDataItem):
             if hasattr(config, "masking_variable_name"):
                 self.masking_variable_name = config.masking_variable_name
                 self.mask = False
-        self.actuator_config = config.actuator_config if hasattr(config, "actuator_config") else None
+        self.actuator_config = (
+            config.actuator_config if hasattr(config, "actuator_config") else None
+        )
 
     @validator
     def __iter__(self):

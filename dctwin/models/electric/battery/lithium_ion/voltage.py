@@ -6,7 +6,6 @@ from loguru import logger
 
 
 class VoltageModel(nn.Module):
-
     def __init__(
         self,
         num_cells_in_series: int,
@@ -19,7 +18,7 @@ class VoltageModel(nn.Module):
         Qfull: torch.Tensor | float = 3.2,
         Qexp: torch.Tensor | float = 0.8075 * 3.2,
         Qnom: torch.Tensor | float = 0.976875 * 3.2,
-        C_rate: torch.Tensor | float = 0.2
+        C_rate: torch.Tensor | float = 0.2,
     ):
         super().__init__()
         # voltage parameters
@@ -50,10 +49,10 @@ class VoltageModel(nn.Module):
         """
         I = self.Qfull * self.C_rate
         self._A = self.Vfull - self.Vexp
-        self._B0 = 3. / self.Qexp
+        self._B0 = 3.0 / self.Qexp
         self._K = (
-            (self.Vfull - self.Vnom + self._A * (torch.exp(-self._B0 * self.Qnom) - 1)) *
-            (self.Qfull - self.Qnom)
+            (self.Vfull - self.Vnom + self._A * (torch.exp(-self._B0 * self.Qnom) - 1))
+            * (self.Qfull - self.Qnom)
         ) / self.Qnom
         self._E0 = self.Vfull + self._K + self.resistance * I - self._A
 
@@ -63,33 +62,23 @@ class VoltageModel(nn.Module):
                 f"A: {self._A}, B: {self._B0}, K: {self._K}, E0: {self._E0}"
             )
 
-    def compute_voltage(
-        self,
-        q_max: torch.Tensor,
-        q: torch.Tensor,
-        I: torch.Tensor
-    ):
+    def compute_voltage(self, q_max: torch.Tensor, q: torch.Tensor, I: torch.Tensor):
         """
         Calculate the battery terminal voltage based on the given charge change (q_max - q), as well as the constant
         charge current I.
         """
         it = q_max - q
-        E = self._E0 - self._K * (q_max / (q_max - it)) + self._A * torch.exp(-self._B0 * it)
+        E = (
+            self._E0
+            - self._K * (q_max / (q_max - it))
+            + self._A * torch.exp(-self._B0 * it)
+        )
         return E - self.resistance * I
 
     def calculate_voltage_for_current(
-        self,
-        I: torch.Tensor,
-        q: torch.Tensor,
-        q_max: torch.Tensor
+        self, I: torch.Tensor, q: torch.Tensor, q_max: torch.Tensor
     ):
-        voltage_per_series = torch.relu(
-            self.compute_voltage(
-                q_max=q_max,
-                q=q,
-                I=I
-            )
-        )
+        voltage_per_series = torch.relu(self.compute_voltage(q_max=q_max, q=q, I=I))
         return self.num_cells_series * voltage_per_series
 
     def update_voltage(self, q: torch.Tensor, q_max: torch.Tensor, I: torch.Tensor):
@@ -97,7 +86,9 @@ class VoltageModel(nn.Module):
         current_q_per_string = q / self.num_strings
         I_per_string = I / self.num_strings
         self.cell_voltage = torch.relu(
-            self.compute_voltage(q_max=max_q_per_string, q=current_q_per_string, I=I_per_string)
+            self.compute_voltage(
+                q_max=max_q_per_string, q=current_q_per_string, I=I_per_string
+            )
         )
 
     def calculate_max_charge_w(self, q: torch.Tensor, q_max: torch.Tensor):
@@ -114,9 +105,7 @@ class VoltageModel(nn.Module):
         max_q_per_string = q_max / self.num_strings
         I = (current_q_per_string - max_q_per_string) / self.dt_hr
         V = self.compute_voltage(
-            q_max=max_q_per_string,
-            q=current_q_per_string - I * self.dt_hr,
-            I=I
+            q_max=max_q_per_string, q=current_q_per_string - I * self.dt_hr, I=I
         )
         max_charge_power = I * V * self.num_strings * self.num_cells_series
         return max_charge_power, I * self.num_strings
@@ -139,22 +128,23 @@ class VoltageModel(nn.Module):
         # solve the optimum current I that maximizes the power output with grid search
         while I * self.dt_hr < current_q_per_string and vol >= 0:
             V = self.compute_voltage(
-                q_max=max_q_per_string,
-                q=current_q_per_string - I * self.dt_hr,
-                I=I
+                q_max=max_q_per_string, q=current_q_per_string - I * self.dt_hr, I=I
             )
             p = I * V
             if p > max_p:
                 max_p = p
                 max_I = I
             I += incr
-        return max_p * self.num_strings * self.num_cells_series, max_I * self.num_strings
+        return (
+            max_p * self.num_strings * self.num_cells_series,
+            max_I * self.num_strings,
+        )
 
     def calculate_current_for_target_w(
         self,
         P_watts: torch.Tensor | float,
         q: torch.Tensor | float,
-        q_max: torch.Tensor | float
+        q_max: torch.Tensor | float,
     ):
         """
         Calculate the current for the target power in watts given the current charge and maximum available charge.
@@ -164,7 +154,9 @@ class VoltageModel(nn.Module):
         if P_watts == 0:
             return 0.0
 
-        target_power_per_cell = torch.abs(P_watts) / (self.num_cells_series * self.num_strings)
+        target_power_per_cell = torch.abs(P_watts) / (
+            self.num_cells_series * self.num_strings
+        )
         current_charge_per_string = q / self.num_strings
         max_charge_per_string = q_max / self.num_strings
 
@@ -172,7 +164,7 @@ class VoltageModel(nn.Module):
             V = self.compute_voltage(
                 q_max=max_charge_per_string,
                 q=current_charge_per_string - I * self.dt_hr,
-                I=I
+                I=I,
             )
             return I * V - target_power_per_cell
 
@@ -180,7 +172,7 @@ class VoltageModel(nn.Module):
             V = self.compute_voltage(
                 q_max=max_charge_per_string,
                 q=current_charge_per_string - I * self.dt_hr,
-                I=I
+                I=I,
             )
             return I * V - target_power_per_cell
 
@@ -192,20 +184,24 @@ class VoltageModel(nn.Module):
         direction = 1.0 if P_watts > 0 else -1.0
 
         if self.cell_voltage is not None:
-            x = torch.tensor([target_power_per_cell / self.cell_voltage * self.dt_hr], dtype=torch.float64)
+            x = torch.tensor(
+                [target_power_per_cell / self.cell_voltage * self.dt_hr],
+                dtype=torch.float64,
+            )
         else:
-            x = torch.tensor([target_power_per_cell / self.Vnom * self.dt_hr], dtype=torch.float64)
+            x = torch.tensor(
+                [target_power_per_cell / self.Vnom * self.dt_hr], dtype=torch.float64
+            )
 
         # find the current that satisfies the power demand with differentiable root finding function in xitorch library
         x = rootfinder(
             fcn=f,
             y0=x,
-
         )
         V = self.compute_voltage(
             q_max=max_charge_per_string,
             q=current_charge_per_string - x * self.dt_hr,
-            I=x
+            I=x,
         )
         P = x * V * self.num_cells_series * self.num_strings
         return P, x * self.num_strings * direction

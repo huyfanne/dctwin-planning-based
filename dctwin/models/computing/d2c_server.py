@@ -8,29 +8,24 @@ from dctwin.utils.const import water_specific_heat, air_specific_heat
 
 
 class ChipThermoModel(nn.Module):
-
     def __init__(
         self,
-        chip_heat_transfer_area: float | torch.Tensor = 0.26*0.11,  # heat transfer area of the chip
+        chip_heat_transfer_area: float | torch.Tensor = 0.26
+        * 0.11,  # heat transfer area of the chip
         chip_thickness: float | torch.Tensor = 0.03,  # for typical Intel CPU chip
-        conductivity_silicon: float | torch.Tensor = 148.,  # for copper
+        conductivity_silicon: float | torch.Tensor = 148.0,  # for copper
         alpha: float | torch.Tensor = 1.0,
         learnable: bool = True,
     ) -> None:
         super(ChipThermoModel, self).__init__()
-        self.alpha = nn.Parameter(
-            torch.tensor(alpha), requires_grad=learnable
-        )
+        self.alpha = nn.Parameter(torch.tensor(alpha), requires_grad=learnable)
         self.chip_thickness = nn.Parameter(
-            torch.tensor(chip_thickness),
-            requires_grad=learnable
+            torch.tensor(chip_thickness), requires_grad=learnable
         )
         self.chip_heat_transfer_area = nn.Parameter(
-            torch.tensor(chip_heat_transfer_area),
-            requires_grad=learnable
+            torch.tensor(chip_heat_transfer_area), requires_grad=learnable
         )
         self.conductivity_silicon = conductivity_silicon
-
 
     def forward(
         self,
@@ -61,28 +56,27 @@ class ChipThermoModel(nn.Module):
         assert liquid_mass_flow_rate.item() > 1e-6, ValueError(
             f"Invalid liquid mass flow rate: {liquid_mass_flow_rate.item()}"
         )
-        T_max = (
-            T_in +
-            self.alpha * power / self.chip_heat_transfer_area * (
-                1/h_water + self.chip_thickness/self.conductivity_silicon +
-                self.chip_heat_transfer_area/(liquid_mass_flow_rate * water_specific_heat)
-            )
+        T_max = T_in + self.alpha * power / self.chip_heat_transfer_area * (
+            1 / h_water
+            + self.chip_thickness / self.conductivity_silicon
+            + self.chip_heat_transfer_area
+            / (liquid_mass_flow_rate * water_specific_heat)
         )
         return T_max
 
 
 class HybridCoolingLoadDistributionModel(nn.Module):
-
     def __init__(
         self,
         num_turn: int = 4,
         air_heat_transfer_multiplication_factor: float | torch.Tensor = 5.0,
-        pipe_diameter: float | torch.Tensor = 0.05,  # pipe diameter of the liquid cooling system
+        pipe_diameter: float
+        | torch.Tensor = 0.05,  # pipe diameter of the liquid cooling system
         chip_characteristic_length: float | torch.Tensor = 0.04,  # length of the chip
         cold_plate_thickness: float | torch.Tensor = 0.01,
-        conductivity_solid: float | torch.Tensor = 400.,  # for copper
+        conductivity_solid: float | torch.Tensor = 400.0,  # for copper
         air_ventilation_area: float | torch.Tensor = 0.04 * 1.0,
-        learnable: bool = True
+        learnable: bool = True,
     ) -> None:
         """
         Simulate the dynamic cooling load distribution of the air-side and water-side. The model is based on the
@@ -95,7 +89,8 @@ class HybridCoolingLoadDistributionModel(nn.Module):
         super(HybridCoolingLoadDistributionModel, self).__init__()
         self.num_turn = num_turn
         self.air_heat_transfer_multiplication_factor = nn.Parameter(
-            torch.tensor(air_heat_transfer_multiplication_factor), requires_grad=learnable
+            torch.tensor(air_heat_transfer_multiplication_factor),
+            requires_grad=learnable,
         )
         self.pipe_diameter = nn.Parameter(
             torch.tensor(pipe_diameter), requires_grad=learnable
@@ -103,9 +98,7 @@ class HybridCoolingLoadDistributionModel(nn.Module):
         self.chip_characteristic_length = nn.Parameter(
             torch.tensor(chip_characteristic_length)
         )
-        self.cold_plate_thickness = nn.Parameter(
-            torch.tensor(cold_plate_thickness)
-        )
+        self.cold_plate_thickness = nn.Parameter(torch.tensor(cold_plate_thickness))
         self.air_ventilation_area = air_ventilation_area
 
         # constant numbers
@@ -123,37 +116,52 @@ class HybridCoolingLoadDistributionModel(nn.Module):
         m_water_in: torch.Tensor,
         T_air_in: torch.Tensor,
         m_air_in: torch.Tensor,
-        power: torch.Tensor
+        power: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         reynolds_air = (
-            (m_air_in / self.air_ventilation_area * self.chip_characteristic_length) / self.viscosity_air
-        )
-        nu_air = 0.664 * reynolds_air**0.6 * self.prandtl_air ** (1/3)  # 0
+            m_air_in / self.air_ventilation_area * self.chip_characteristic_length
+        ) / self.viscosity_air
+        nu_air = 0.664 * reynolds_air**0.6 * self.prandtl_air ** (1 / 3)  # 0
         reynolds_water = (
-            (m_water_in / (torch.pi * self.pipe_diameter**2 / 4) * self.pipe_diameter) / self.viscosity_water
-        )
-        nu_water = 0.023 * reynolds_water**0.8 * self.prandtl_water**(1/3)
+            m_water_in / (torch.pi * self.pipe_diameter**2 / 4) * self.pipe_diameter
+        ) / self.viscosity_water
+        nu_water = 0.023 * reynolds_water**0.8 * self.prandtl_water ** (1 / 3)
 
         h_air = nu_air * self.conductivity_air / self.chip_characteristic_length
         h_water = nu_water * self.conductivity_water / self.pipe_diameter
-        heat_transfer_area_water = torch.pi * self.pipe_diameter * self.chip_characteristic_length * self.num_turn
-        heat_transfer_area_air = self.chip_characteristic_length**2 * self.air_heat_transfer_multiplication_factor
-
-        M = (
-            self.cold_plate_thickness*0.5 / (self.conductivity_solid * heat_transfer_area_water) +
-            1.0 / (h_water * heat_transfer_area_water)
+        heat_transfer_area_water = (
+            torch.pi
+            * self.pipe_diameter
+            * self.chip_characteristic_length
+            * self.num_turn
         )
-        N = (
-            self.cold_plate_thickness / (self.conductivity_solid * heat_transfer_area_air) +
-            1. / (h_air * heat_transfer_area_air)
+        heat_transfer_area_air = (
+            self.chip_characteristic_length**2
+            * self.air_heat_transfer_multiplication_factor
         )
 
-        eta_nominator = (-T_water_in + T_air_in) + power * N + power / (m_water_in * air_specific_heat)
+        M = self.cold_plate_thickness * 0.5 / (
+            self.conductivity_solid * heat_transfer_area_water
+        ) + 1.0 / (h_water * heat_transfer_area_water)
+        N = self.cold_plate_thickness / (
+            self.conductivity_solid * heat_transfer_area_air
+        ) + 1.0 / (h_air * heat_transfer_area_air)
+
+        eta_nominator = (
+            (-T_water_in + T_air_in)
+            + power * N
+            + power / (m_water_in * air_specific_heat)
+        )
         eta_denominator = power * (
-            M + N + 1.0 / (m_water_in * water_specific_heat) + 1.0 / (m_air_in * air_specific_heat)
+            M
+            + N
+            + 1.0 / (m_water_in * water_specific_heat)
+            + 1.0 / (m_air_in * air_specific_heat)
         )
         eta = eta_nominator / (eta_denominator + 1e-9)
-        assert 0. <= eta.item() <= 1., ValueError(f"Invalid eta value {eta.item()} found, eta should be in [0, 1] !")
+        assert 0.0 <= eta.item() <= 1.0, ValueError(
+            f"Invalid eta value {eta.item()} found, eta should be in [0, 1] !"
+        )
         return eta, h_air, h_water
 
 
@@ -162,6 +170,7 @@ class D2CServerModel(nn.Module):
     Implement the learnable chiller model. The model can take part load ratio as input and output the electric input.
     The power model is a quadratic function of the part load ratio which the parameters are learnable.
     """
+
     def __init__(
         self,
         config: Server,
@@ -185,7 +194,7 @@ class D2CServerModel(nn.Module):
         cooling_load_distribution_model = HybridCoolingLoadDistributionModel()
         return {
             "chip_max_temperature_model": chip_thermo_model,
-            "cooling_load_distribution_model": cooling_load_distribution_model
+            "cooling_load_distribution_model": cooling_load_distribution_model,
         }
 
     def forward(
@@ -193,7 +202,7 @@ class D2CServerModel(nn.Module):
         server_power: torch.Tensor,
         inlet_liquid_temperature: torch.Tensor,
         inlet_liquid_mass_flow_rate: torch.Tensor,
-        inlet_air_temperature: torch.Tensor = 25.,
+        inlet_air_temperature: torch.Tensor = 25.0,
         inlet_air_mass_flow_rate: torch.Tensor = 0.05,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
@@ -204,7 +213,7 @@ class D2CServerModel(nn.Module):
             m_water_in=inlet_liquid_mass_flow_rate,
             T_air_in=inlet_air_temperature,
             m_air_in=inlet_air_mass_flow_rate,
-            power=server_power
+            power=server_power,
         )
         liquid_cooled_power = server_power * eta
         # server total power
@@ -216,7 +225,7 @@ class D2CServerModel(nn.Module):
             T_in=inlet_liquid_temperature,
             power=liquid_cooled_power,
             liquid_mass_flow_rate=inlet_liquid_mass_flow_rate,
-            h_water=h_water
+            h_water=h_water,
         )
         return liquid_outlet_temperature, cpu_max_temperature, liquid_cooled_power
 

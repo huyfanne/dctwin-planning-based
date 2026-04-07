@@ -24,9 +24,7 @@ logger.info(building.constructions.condenser_water_pump_keys)
 logger.info("Cooling Towers:")
 logger.info(building.constructions.cooling_tower_keys)
 
-builder = IDFBuilder(
-    building=building
-)
+builder = IDFBuilder(building=building)
 builder.make()
 builder.save(
     idf_save_path="models/idf/dc.idf",

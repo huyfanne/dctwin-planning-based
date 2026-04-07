@@ -82,7 +82,7 @@ def read_mesh_coordinates() -> np.ndarray:
 
 
 def read_temperature(solution_dir: Path, end_time: str = "500"):
-    logger.info(f"Reading temperature from " f"{solution_dir.joinpath(end_time, 'T')}")
+    logger.info(f"Reading temperature from {solution_dir.joinpath(end_time, 'T')}")
     temperature = fluidfoam.readof.readscalar(
         solution_dir, end_time, "T", verbose=False
     )
@@ -100,9 +100,7 @@ def read_temperature_fields(end_time: str = "500") -> np.ndarray:
             temperature = read_temperature(subfloder, end_time=end_time)
             temperatures.append(temperature)
         except Exception:
-            raise FileNotFoundError(
-                f"fail to read temperature for " f"{subfloder.name}"
-            )
+            raise FileNotFoundError(f"fail to read temperature for {subfloder.name}")
     return np.asarray(temperatures)
 
 
@@ -238,28 +236,26 @@ def save_json_file(path: Union[Path, str], saved_dict: Dict) -> None:
 
 
 def read_u(solution_dir: Path, end_time: str = "500"):
-    logger.info(f"Reading u from " f"{solution_dir.joinpath(end_time, 'U')}")
+    logger.info(f"Reading u from {solution_dir.joinpath(end_time, 'U')}")
     u = fluidfoam.readof.readvector(solution_dir, end_time, "U", verbose=False)
     return u
 
 
 def read_p_rgh(solution_dir: Path, end_time: str = "500"):
-    logger.info(f"Reading p_rgh from " f"{solution_dir.joinpath(end_time, 'p_rgh')}")
-    p_rgh = fluidfoam.readof.readscalar(
-        solution_dir, end_time, "p_rgh", verbose=False
-    )
+    logger.info(f"Reading p_rgh from {solution_dir.joinpath(end_time, 'p_rgh')}")
+    p_rgh = fluidfoam.readof.readscalar(solution_dir, end_time, "p_rgh", verbose=False)
     return p_rgh
 
 
 def read_p(solution_dir: Path, end_time: str = "500"):
-    logger.info(f"Reading p from " f"{solution_dir.joinpath(end_time, 'p')}")
-    p = fluidfoam.readof.readscalar(
-        solution_dir, end_time, "p", verbose=False
-    )
+    logger.info(f"Reading p from {solution_dir.joinpath(end_time, 'p')}")
+    p = fluidfoam.readof.readscalar(solution_dir, end_time, "p", verbose=False)
     return p
 
 
-def read_probe_data(case, file_name, key, results, room, offset=1, conversion=lambda x: x):
+def read_probe_data(
+    case, file_name, key, results, room, offset=1, conversion=lambda x: x
+):
     results[key] = {}
     with open(f"{case}/postProcessing/probes/0/{file_name}") as f:
         for line in f:
@@ -268,7 +264,9 @@ def read_probe_data(case, file_name, key, results, room, offset=1, conversion=la
             else:
                 for idx, sensor_key in enumerate(room.constructions.sensors.keys()):
                     if key in ["T", "p", "p_rgh"]:
-                        results[key][sensor_key] = conversion(line.split()[idx + offset])
+                        results[key][sensor_key] = conversion(
+                            line.split()[idx + offset]
+                        )
                     elif key in ["U"]:
                         pattern = r"\(.*?\)"
                         results[key][sensor_key] = conversion(
@@ -283,7 +281,7 @@ def read_sensor_results(
     temperature: Optional[Union[np.ndarray, torch.Tensor]] = None,
     p: Optional[Union[np.ndarray, torch.Tensor]] = None,
     p_rgh: Optional[Union[np.ndarray, torch.Tensor]] = None,
-    u: Optional[Union[np.ndarray, torch.Tensor]] = None
+    u: Optional[Union[np.ndarray, torch.Tensor]] = None,
 ):
     results = {
         "T": {},
@@ -303,17 +301,21 @@ def read_sensor_results(
             else temperature
         )
         for sensor_id, index in object_mesh_index["sensors"].items():
-            logger.info(f"sensor_id: {sensor_id}, index: {index}, temperature shape: {temperature.shape}")
+            logger.info(
+                f"sensor_id: {sensor_id}, index: {index}, temperature shape: {temperature.shape}"
+            )
             results["T"][sensor_id] = round(float(temperature.squeeze()[index]), 2)
     else:
         # read from postProcessing folder
         assert room is not None, "room is not provided"
         post_process_time = time.time()
         while True:
-            if (Path(f"{case}/postProcessing/probes/0/T").exists() and
-                    Path(f"{case}/postProcessing/probes/0/U").exists() and
-                    Path(f"{case}/postProcessing/probes/0/p").exists() and
-                    Path(f"{case}/postProcessing/probes/0/p_rgh").exists()):
+            if (
+                Path(f"{case}/postProcessing/probes/0/T").exists()
+                and Path(f"{case}/postProcessing/probes/0/U").exists()
+                and Path(f"{case}/postProcessing/probes/0/p").exists()
+                and Path(f"{case}/postProcessing/probes/0/p_rgh").exists()
+            ):
                 break
             else:
                 if time.time() - post_process_time > 100:
@@ -324,17 +326,19 @@ def read_sensor_results(
                     elif not Path(f"{case}/postProcessing/probes/0/p").exists():
                         logger.critical(f"{case}/postProcessing/probes/0/p not found")
                     elif not Path(f"{case}/postProcessing/probes/0/p_rgh").exists():
-                        logger.critical(f"{case}/postProcessing/probes/0/p_rgh not found")
+                        logger.critical(
+                            f"{case}/postProcessing/probes/0/p_rgh not found"
+                        )
                     exit(-1)
                 continue
 
         read_probe_data(
             case=case,
             file_name="T",
-            key= "T",
+            key="T",
             conversion=lambda x: round(float(x) - 273.15, 2),
             results=results,
-            room=room
+            room=room,
         )
         read_probe_data(
             case=case,
@@ -342,7 +346,7 @@ def read_sensor_results(
             key="p",
             conversion=lambda x: round(float(x), 2),
             results=results,
-            room=room
+            room=room,
         )
         read_probe_data(
             case=case,
@@ -350,16 +354,18 @@ def read_sensor_results(
             key="p_rgh",
             conversion=lambda x: round(float(x), 2),
             results=results,
-            room=room
+            room=room,
         )
         read_probe_data(
             case=case,
             file_name="U",
             key="U",
             offset=0,
-            conversion=lambda x: list(map(lambda _:round(_, 2), eval(x.replace(" ", ",")))),
+            conversion=lambda x: list(
+                map(lambda _: round(_, 2), eval(x.replace(" ", ",")))
+            ),
             results=results,
-            room=room
+            room=room,
         )
 
     return results

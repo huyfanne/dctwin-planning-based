@@ -1,6 +1,7 @@
 """
 Implementation of various performance curves for facilities
 """
+
 import abc
 
 import torch.nn as nn
@@ -63,7 +64,6 @@ class QuadraticCurve(Curve):
         init_params: torch.Tensor,
         requires_grad: bool = False,
     ) -> None:
-
         assert len(init_params) == 3, "QuadraticCurve should take 3 parameters."
         super().__init__(init_params=init_params, requires_grad=requires_grad)
 
@@ -80,9 +80,12 @@ class QuadraticCurve(Curve):
     ) -> None:
         coefs = curve_fit(
             lambda x, a, b, c: a + b * x + c * x**2,
-            x.view(-1).detach().numpy(), y.view(-1).detach().numpy()
+            x.view(-1).detach().numpy(),
+            y.view(-1).detach().numpy(),
         )[0]
-        self.params.data = torch.tensor(coefs, dtype=torch.float32, requires_grad=self.learnable)
+        self.params.data = torch.tensor(
+            coefs, dtype=torch.float32, requires_grad=self.learnable
+        )
 
 
 class BiQuadraticCurve(Curve):
@@ -90,6 +93,7 @@ class BiQuadraticCurve(Curve):
     BiQuadratic curve in the form of:
     y = a + bx + cx^2 + dy + ey^2 + fxy
     """
+
     def __init__(
         self,
         init_params: torch.Tensor,
@@ -103,10 +107,14 @@ class BiQuadraticCurve(Curve):
         x: torch.Tensor,
         y: torch.Tensor,
     ) -> torch.Tensor:
-        return self.params[0] + \
-               self.params[1] * x + self.params[2] * x**2 + \
-               self.params[3] * y + self.params[4] * y**2 + \
-               self.params[5] * x * y
+        return (
+            self.params[0]
+            + self.params[1] * x
+            + self.params[2] * x**2
+            + self.params[3] * y
+            + self.params[4] * y**2
+            + self.params[5] * x * y
+        )
 
     def learn(
         self,
@@ -115,14 +123,19 @@ class BiQuadraticCurve(Curve):
     ) -> None:
         assert self.learnable, "The parameters are not learnable."
         coefs = curve_fit(
-            lambda x, a, b, c, d, e, f: a * x ** 2 + b * y ** 2 + c * x * y + d * x + e * y + f,
-            x.view(-1).detach().numpy(), y.view(-1).detach().numpy()
+            lambda x, a, b, c, d, e, f: a * x**2
+            + b * y**2
+            + c * x * y
+            + d * x
+            + e * y
+            + f,
+            x.view(-1).detach().numpy(),
+            y.view(-1).detach().numpy(),
         )[0]
         self.params.data = torch.tensor(coefs, dtype=torch.float32)
 
 
 class CubicCurve(Curve):
-
     """
     Cubic curve in the form of:
     y = a + bx + cx^2 + dx^3
@@ -135,15 +148,21 @@ class CubicCurve(Curve):
         init_params: torch.Tensor,
         requires_grad: bool = True,
     ) -> None:
-
         assert len(init_params) == 4, "CubicCurve should take 4 parameters."
-        super(CubicCurve, self).__init__(init_params=init_params, requires_grad=requires_grad)
+        super(CubicCurve, self).__init__(
+            init_params=init_params, requires_grad=requires_grad
+        )
 
     def forward(
         self,
         x: torch.Tensor,
     ) -> torch.Tensor:
-        return self.params[0] + self.params[1] * x + self.params[2] * x**2 + self.params[3] * x**3
+        return (
+            self.params[0]
+            + self.params[1] * x
+            + self.params[2] * x**2
+            + self.params[3] * x**3
+        )
 
     def learn(
         self,
@@ -152,6 +171,7 @@ class CubicCurve(Curve):
     ) -> None:
         coefs = curve_fit(
             lambda x, a, b, c, d: a + b * x + c * (x**2) + d * (x**3),
-            x.view(-1).detach().numpy(), y.view(-1).detach().numpy()
+            x.view(-1).detach().numpy(),
+            y.view(-1).detach().numpy(),
         )[0]
         self.params.data = torch.tensor(coefs, dtype=torch.float32)

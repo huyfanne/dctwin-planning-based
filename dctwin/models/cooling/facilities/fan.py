@@ -17,6 +17,7 @@ class FanModel(nn.Module):
     electric consumption. The power model is a cubic function of the air mass flow rate which the parameters are
     learnable.
     """
+
     def __init__(
         self,
         config: ACU,
@@ -31,10 +32,14 @@ class FanModel(nn.Module):
         self.learnable = learnable
         # define the model parameters
         self.design_volume_flow_rate = config.cooling.design_air_flow_rate
-        if config.cooling.design_air_flow_rate != "" and config.cooling.pressure_rise != "":
+        if (
+            config.cooling.design_air_flow_rate != ""
+            and config.cooling.pressure_rise != ""
+        ):
             self.design_power = (
-                config.cooling.design_air_flow_rate * config.cooling.pressure_rise /
-                (config.power.fan_total_efficiency)
+                config.cooling.design_air_flow_rate
+                * config.cooling.pressure_rise
+                / (config.power.fan_total_efficiency)
             )
         else:
             logger.warning(
@@ -49,9 +54,9 @@ class FanModel(nn.Module):
                     config.power.fan_power_coefficient_3,
                     config.power.fan_power_coefficient_4,
                 ],
-                dtype=torch.float32
+                dtype=torch.float32,
             ),
-            requires_grad=learnable
+            requires_grad=learnable,
         )
         # initialize the replay buffer
         self.buffer = Buffer(size=100)
@@ -59,21 +64,27 @@ class FanModel(nn.Module):
         self.device = device
 
     def collect(self, data: dict):
-        assert "air mass flow rate" in self.key_mapping.keys(), "The \"air mass flow rate\" key is not provided."
-        assert "power" in self.key_mapping.keys(), "The \"power\" key is not provided."
-        assert self.key_mapping["air mass flow rate"] in data.keys(),\
+        assert "air mass flow rate" in self.key_mapping.keys(), (
+            'The "air mass flow rate" key is not provided.'
+        )
+        assert "power" in self.key_mapping.keys(), 'The "power" key is not provided.'
+        assert self.key_mapping["air mass flow rate"] in data.keys(), (
             f"{self.key_mapping['air mass flow rate']} is not included in the data dictionary."
-        assert self.key_mapping["power"] in data.keys(),\
+        )
+        assert self.key_mapping["power"] in data.keys(), (
             f"{self.key_mapping['power']} is not included in the data dictionary."
+        )
         self.buffer.add(
             Batch(
                 supply_air_mass_flow_rate=data[self.key_mapping["air mass flow rate"]],
-                fan_power=data[self.key_mapping["power"]]
+                fan_power=data[self.key_mapping["power"]],
             )
         )
 
     def forward(self, mass_flow_rate: np.ndarray | torch.Tensor) -> torch.Tensor:
-        mass_flow_rate = torch.as_tensor(mass_flow_rate, device=self.device, dtype=torch.float32)
+        mass_flow_rate = torch.as_tensor(
+            mass_flow_rate, device=self.device, dtype=torch.float32
+        )
         flow_fraction = mass_flow_rate / (self.design_volume_flow_rate * rho_air)
         assert torch.all(flow_fraction <= 1), "The air mass flow rate must be positive."
         return self.design_power * self.power_curve(flow_fraction)
@@ -84,12 +95,17 @@ class FanModel(nn.Module):
             mask = batch.supply_air_mass_flow_rate > 0
             batch = batch[mask]
             if len(batch) > 3:
-                flow_fraction = batch.supply_air_mass_flow_rate / (self.design_volume_flow_rate * rho_air)
+                flow_fraction = batch.supply_air_mass_flow_rate / (
+                    self.design_volume_flow_rate * rho_air
+                )
                 power_fraction = batch.fan_power / self.design_power
                 self.power_curve.learn(
                     torch.tensor(flow_fraction, dtype=torch.float32),
-                    torch.tensor(power_fraction, dtype=torch.float32)
+                    torch.tensor(power_fraction, dtype=torch.float32),
                 )
             else:
                 from loguru import logger
-                logger.warning(f"Insufficient data for learning the fan model of {self.uid}.")
+
+                logger.warning(
+                    f"Insufficient data for learning the fan model of {self.uid}."
+                )

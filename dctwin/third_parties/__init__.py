@@ -21,5 +21,5 @@ __all__ = [
     "TransientSolverK8sBackend",
     "IDFBuilder",
     "ConfigBuilder",
-    "CDUConfigBuilder"
+    "CDUConfigBuilder",
 ]

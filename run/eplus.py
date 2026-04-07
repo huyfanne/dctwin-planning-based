@@ -1,4 +1,4 @@
-from dctwin.registraion import make_env
+from dctwin.registration import make_env
 from pathlib import Path
 from dctwin.utils import config as env_config
 import os

@@ -9,7 +9,6 @@ $\Gamma_\textup{eff}$ is the diffusion coefficient;
 $Q$ is the sensible heat load
 """
 
-
 from .pod import PODDockerBackend, PODK8SBackend, PODBackendMixin
 
 __all__ = [

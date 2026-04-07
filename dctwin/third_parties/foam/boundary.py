@@ -255,7 +255,9 @@ class HeatEmittingBoxBoundary(Boundary):
     @property
     def T(self) -> str:
         t_sink = f"tSink_{self.heat_emitting_box_id}"
-        value = f"{t_sink}+{self.power / (self.air_volume_flow_rate * air_specific_heat)}"
+        value = (
+            f"{t_sink}+{self.power / (self.air_volume_flow_rate * air_specific_heat)}"
+        )
         outlet = f"""
             {{
                 type            uniformFixedValue;

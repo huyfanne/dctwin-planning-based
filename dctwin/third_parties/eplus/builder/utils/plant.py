@@ -4,7 +4,6 @@ HVAC system components in the EnergyPlus model. The make functions are called by
 To add a new HVAC system component, you need to add a new make function here and make it callable in the manager.
 """
 
-
 from eppy.modeleditor import IDF
 from eppy.bunch_subclass import EpBunch
 
@@ -99,36 +98,36 @@ def make_pump(
     obj["Design_Pump_Head"] = pump.cooling.design_pump_head
     obj["Skin_Loss_Radiative_Fraction"] = pump.cooling.skin_loss_radiative_fraction
     obj["Impeller_Diameter"] = pump.cooling.impeller_diameter
-    obj[
-        "Design_Minimum_Flow_Rate_Fraction"
-    ] = pump.cooling.design_minimum_flow_rate_fraction
+    obj["Design_Minimum_Flow_Rate_Fraction"] = (
+        pump.cooling.design_minimum_flow_rate_fraction
+    )
 
     """Fill in power model parameters"""
     obj["Pump_Curve_Name"] = pump.power.pump_curve_name
     obj["Design_Power_Sizing_Method"] = pump.power.design_power_sizing_method
-    obj[
-        "Design_Electric_Power_per_Unit_Flow_Rate"
-    ] = pump.power.design_electric_power_per_unit_flow_rate
-    obj[
-        "Design_Shaft_Power_per_Unit_Flow_Rate_per_Unit_Head"
-    ] = pump.power.design_shaft_power_per_unit_flow_rate_per_unit_head
+    obj["Design_Electric_Power_per_Unit_Flow_Rate"] = (
+        pump.power.design_electric_power_per_unit_flow_rate
+    )
+    obj["Design_Shaft_Power_per_Unit_Flow_Rate_per_Unit_Head"] = (
+        pump.power.design_shaft_power_per_unit_flow_rate_per_unit_head
+    )
     obj["Design_Power_Consumption"] = pump.power.design_power_consumption
     obj["Motor_Efficiency"] = pump.power.motor_efficiency
-    obj[
-        "Fraction_of_Motor_Inefficiencies_to_Fluid_Stream"
-    ] = pump.power.fraction_of_motor_inefficiencies_to_fluid_stream
-    obj[
-        "Coefficient_1_of_the_Part_Load_Performance_Curve"
-    ] = pump.power.coefficient_1_of_the_part_load_performance_curve
-    obj[
-        "Coefficient_2_of_the_Part_Load_Performance_Curve"
-    ] = pump.power.coefficient_2_of_the_part_load_performance_curve
-    obj[
-        "Coefficient_3_of_the_Part_Load_Performance_Curve"
-    ] = pump.power.coefficient_3_of_the_part_load_performance_curve
-    obj[
-        "Coefficient_4_of_the_Part_Load_Performance_Curve"
-    ] = pump.power.coefficient_4_of_the_part_load_performance_curve
+    obj["Fraction_of_Motor_Inefficiencies_to_Fluid_Stream"] = (
+        pump.power.fraction_of_motor_inefficiencies_to_fluid_stream
+    )
+    obj["Coefficient_1_of_the_Part_Load_Performance_Curve"] = (
+        pump.power.coefficient_1_of_the_part_load_performance_curve
+    )
+    obj["Coefficient_2_of_the_Part_Load_Performance_Curve"] = (
+        pump.power.coefficient_2_of_the_part_load_performance_curve
+    )
+    obj["Coefficient_3_of_the_Part_Load_Performance_Curve"] = (
+        pump.power.coefficient_3_of_the_part_load_performance_curve
+    )
+    obj["Coefficient_4_of_the_Part_Load_Performance_Curve"] = (
+        pump.power.coefficient_4_of_the_part_load_performance_curve
+    )
 
     """Fill in control model parameters"""
     obj["Pump_Control_Type"] = pump.control.pump_control_type
@@ -162,9 +161,9 @@ def get_cooling_coil(
     obj = model.getobject(
         "coil:cooling:water".upper(), f"{acu.uid.lower()} cooling coil"
     )
-    assert (
-        obj is not None
-    ), f"Cannot find the cooling coil object: {acu.uid.lower()} cooling coil"
+    assert obj is not None, (
+        f"Cannot find the cooling coil object: {acu.uid.lower()} cooling coil"
+    )
     obj = fill_inlet_outlet(
         obj=obj,
         branch=branch,
@@ -210,43 +209,43 @@ def make_chiller(
         )
         obj["Reference_Capacity"] = chiller.cooling.reference_capacity
         obj["Reference_COP"] = chiller.cooling.reference_cop
-        obj[
-            "Reference_Leaving_Chilled_Water_Temperature"
-        ] = chiller.cooling.reference_leaving_chilled_water_temperature
-        obj[
-            "Reference_Entering_Condenser_Fluid_Temperature"
-        ] = chiller.cooling.reference_entering_condenser_fluid_temperature
-        obj[
-            "Reference_Chilled_Water_Flow_Rate"
-        ] = chiller.cooling.reference_chilled_water_flow_rate
-        obj[
-            "Reference_Condenser_Fluid_Flow_Rate"
-        ] = chiller.cooling.reference_condenser_fluid_flow_rate
+        obj["Reference_Leaving_Chilled_Water_Temperature"] = (
+            chiller.cooling.reference_leaving_chilled_water_temperature
+        )
+        obj["Reference_Entering_Condenser_Fluid_Temperature"] = (
+            chiller.cooling.reference_entering_condenser_fluid_temperature
+        )
+        obj["Reference_Chilled_Water_Flow_Rate"] = (
+            chiller.cooling.reference_chilled_water_flow_rate
+        )
+        obj["Reference_Condenser_Fluid_Flow_Rate"] = (
+            chiller.cooling.reference_condenser_fluid_flow_rate
+        )
         obj["Optimum_Part_Load_Ratio"] = chiller.cooling.optimum_part_load_ratio
         obj["Minimum_Part_Load_Ratio"] = chiller.cooling.minimum_part_load_ratio
         obj["Maximum_Part_Load_Ratio"] = chiller.cooling.maximum_part_load_ratio
         obj["Minimum_Unloading_Ratio"] = chiller.cooling.minimum_unloading_ratio
         obj["Heat_Recovery_Inlet_Node_Name"] = ""  # no heat recovery by default
         obj["Heat_Recovery_Outlet_Node_Name"] = ""
-        obj[
-            "Leaving_Chilled_Water_Lower_Temperature_Limit"
-        ] = chiller.cooling.leaving_chilled_water_lower_temperature_limit
+        obj["Leaving_Chilled_Water_Lower_Temperature_Limit"] = (
+            chiller.cooling.leaving_chilled_water_lower_temperature_limit
+        )
         obj["Chiller_Flow_Mode"] = chiller.cooling.chiller_flow_mode
         obj["Condenser_Type"] = chiller.cooling.condenser_type
         obj["Sizing_Factor"] = chiller.cooling.sizing_factor
         obj["Basin_Heater_Capacity"] = chiller.cooling.basin_heater_capacity
-        obj[
-            "Basin_Heater_Setpoint_Temperature"
-        ] = chiller.cooling.basin_heater_setpoint_temperature
-        obj[
-            "Design_Heat_Recovery_Water_Flow_Rate"
-        ] = chiller.cooling.design_heat_recovery_water_flow_rate
+        obj["Basin_Heater_Setpoint_Temperature"] = (
+            chiller.cooling.basin_heater_setpoint_temperature
+        )
+        obj["Design_Heat_Recovery_Water_Flow_Rate"] = (
+            chiller.cooling.design_heat_recovery_water_flow_rate
+        )
         obj["EndUse_Subcategory"] = "General"
 
         # Add performance curves for the chiller
-        obj[
-            "Cooling_Capacity_Function_of_Temperature_Curve_Name"
-        ] = f"{chiller.uid.lower()} cooling capacity function of temperature curve"
+        obj["Cooling_Capacity_Function_of_Temperature_Curve_Name"] = (
+            f"{chiller.uid.lower()} cooling capacity function of temperature curve"
+        )
         model.newidfobject(
             key="Curve:Biquadratic".upper(),
             Name=obj["Cooling_Capacity_Function_of_Temperature_Curve_Name"],
@@ -369,25 +368,51 @@ def make_thermal_storage_tank(
         )
         obj["Tank_Volume"] = storage_tank.cooling.tank_volume
         obj["Setpoint_Temperature_Schedule_Name"] = ""
-        obj["Deadband_Temperature_Difference"] = storage_tank.cooling.deadband_temperature_difference
-        obj["Minimum_Temperature_Limit"] = storage_tank.cooling.minimum_temperature_limit
+        obj["Deadband_Temperature_Difference"] = (
+            storage_tank.cooling.deadband_temperature_difference
+        )
+        obj["Minimum_Temperature_Limit"] = (
+            storage_tank.cooling.minimum_temperature_limit
+        )
         obj["Nominal_Cooling_Capacity"] = storage_tank.cooling.nominal_cooling_capacity
-        obj["Ambient_Temperature_Indicator"] = storage_tank.cooling.ambient_temperature_indicator
-        obj["Ambient_Temperature_Schedule_Name"] = storage_tank.control.ambient_temperature_schedule_name
-        obj["Ambient_Temperature_Zone_Name"] = storage_tank.cooling.ambient_temperature_zone_name
-        obj["Ambient_Temperature_Outdoor_Air_Node_Name"] =\
+        obj["Ambient_Temperature_Indicator"] = (
+            storage_tank.cooling.ambient_temperature_indicator
+        )
+        obj["Ambient_Temperature_Schedule_Name"] = (
+            storage_tank.control.ambient_temperature_schedule_name
+        )
+        obj["Ambient_Temperature_Zone_Name"] = (
+            storage_tank.cooling.ambient_temperature_zone_name
+        )
+        obj["Ambient_Temperature_Outdoor_Air_Node_Name"] = (
             storage_tank.cooling.ambient_temperature_outdoor_air_node_name
-        obj["Heat_Gain_Coefficient_from_Ambient_Temperature"] =\
+        )
+        obj["Heat_Gain_Coefficient_from_Ambient_Temperature"] = (
             storage_tank.cooling.heat_gain_coefficient_from_ambient_temperature
-        obj["Use_Side_Heat_Transfer_Effectiveness"] = storage_tank.cooling.use_side_heat_transfer_effectiveness
-        obj["Use_Side_Availability_Schedule_Name"] = storage_tank.control.use_side_availability_schedule_name
-        obj["Use_Side_Design_Flow_Rate"] = storage_tank.cooling.use_side_design_flow_rate
-        obj["Source_Side_Heat_Transfer_Effectiveness"] = storage_tank.cooling.source_side_heat_transfer_effectiveness
-        obj["Source_Side_Availability_Schedule_Name"] = storage_tank.control.source_side_availability_schedule_name
-        obj["Source_Side_Design_Flow_Rate"] = storage_tank.cooling.source_side_design_flow_rate
+        )
+        obj["Use_Side_Heat_Transfer_Effectiveness"] = (
+            storage_tank.cooling.use_side_heat_transfer_effectiveness
+        )
+        obj["Use_Side_Availability_Schedule_Name"] = (
+            storage_tank.control.use_side_availability_schedule_name
+        )
+        obj["Use_Side_Design_Flow_Rate"] = (
+            storage_tank.cooling.use_side_design_flow_rate
+        )
+        obj["Source_Side_Heat_Transfer_Effectiveness"] = (
+            storage_tank.cooling.source_side_heat_transfer_effectiveness
+        )
+        obj["Source_Side_Availability_Schedule_Name"] = (
+            storage_tank.control.source_side_availability_schedule_name
+        )
+        obj["Source_Side_Design_Flow_Rate"] = (
+            storage_tank.cooling.source_side_design_flow_rate
+        )
         obj["Tank_Recovery_Time"] = storage_tank.cooling.tank_recovery_time
     elif kwargs["type_"] == "chilled" and kwargs["side"] == "demand":
-        obj = model.getobject("thermalstorage:chilledwater:mixed".upper(), storage_tank.uid.lower())
+        obj = model.getobject(
+            "thermalstorage:chilledwater:mixed".upper(), storage_tank.uid.lower()
+        )
         obj = fill_inlet_outlet(
             branch_component_idx=branch_component_idx,
             obj=obj,
@@ -430,33 +455,33 @@ def make_heat_exchanger(
             inlet_key_name="Loop_Supply_Side_Inlet_Node_Name",
             outlet_key_name="Loop_Supply_Side_Outlet_Node_Name",
         )
-        obj[
-            "Loop_Demand_Side_Design_Flow_Rate"
-        ] = hx.cooling.loop_demand_side_design_flow_rate
-        obj[
-            "Loop_Supply_Side_Design_Flow_Rate"
-        ] = hx.cooling.loop_supply_side_design_flow_rate
+        obj["Loop_Demand_Side_Design_Flow_Rate"] = (
+            hx.cooling.loop_demand_side_design_flow_rate
+        )
+        obj["Loop_Supply_Side_Design_Flow_Rate"] = (
+            hx.cooling.loop_supply_side_design_flow_rate
+        )
         obj["Heat_Exchange_Model_Type"] = hx.cooling.heat_exchanger_model_type
-        obj[
-            "Heat_Exchanger_UFactor_Times_Area_Value"
-        ] = hx.cooling.heat_exchanger_u_factor_times_area_value
+        obj["Heat_Exchanger_UFactor_Times_Area_Value"] = (
+            hx.cooling.heat_exchanger_u_factor_times_area_value
+        )
         obj["Control_Type"] = hx.cooling.control_type
-        obj[
-            "Minimum_Temperature_Difference_to_Activate_Heat_Exchanger"
-        ] = hx.cooling.minimum_temperature_difference_to_activate_heat_exchanger
-        obj[
-            "Heat_Transfer_Metering_End_Use_Type"
-        ] = hx.cooling.heat_transfer_metering_end_use_type
-        obj[
-            "Component_Override_Cooling_Control_Temperature_Mode"
-        ] = hx.cooling.component_override_cooling_control_temperature_mode
+        obj["Minimum_Temperature_Difference_to_Activate_Heat_Exchanger"] = (
+            hx.cooling.minimum_temperature_difference_to_activate_heat_exchanger
+        )
+        obj["Heat_Transfer_Metering_End_Use_Type"] = (
+            hx.cooling.heat_transfer_metering_end_use_type
+        )
+        obj["Component_Override_Cooling_Control_Temperature_Mode"] = (
+            hx.cooling.component_override_cooling_control_temperature_mode
+        )
         obj["Sizing_Factor"] = hx.cooling.sizing_factor
-        obj[
-            "Operation_Minimum_Temperature_Limit"
-        ] = hx.cooling.operation_minimum_temperature_limit
-        obj[
-            "Operation_Maximum_Temperature_Limit"
-        ] = hx.cooling.operation_maximum_temperature_limit
+        obj["Operation_Minimum_Temperature_Limit"] = (
+            hx.cooling.operation_minimum_temperature_limit
+        )
+        obj["Operation_Maximum_Temperature_Limit"] = (
+            hx.cooling.operation_maximum_temperature_limit
+        )
 
     elif kwargs["type_"] == "condenser" and kwargs["side"] == "demand":
         obj = model.getobject("HeatExchanger:FluidToFluid".upper(), hx.uid.lower())
@@ -509,55 +534,55 @@ def make_cooling_tower(
         config=cooling_tower,
     )
     obj["Basin_Heater_Capacity"] = cooling_tower.cooling.basin_heater_capacity
-    obj[
-        "Basin_Heater_Operating_Schedule_Name"
-    ] = cooling_tower.cooling.basin_heater_operating_schedule_name
-    obj[
-        "Basin_Heater_Setpoint_Temperature"
-    ] = cooling_tower.cooling.basin_heater_setpoint_temperature
+    obj["Basin_Heater_Operating_Schedule_Name"] = (
+        cooling_tower.cooling.basin_heater_operating_schedule_name
+    )
+    obj["Basin_Heater_Setpoint_Temperature"] = (
+        cooling_tower.cooling.basin_heater_setpoint_temperature
+    )
     obj["Blowdown_Calculation_Mode"] = cooling_tower.cooling.blowdown_calculation_mode
-    obj[
-        "Blowdown_Concentration_Ratio"
-    ] = cooling_tower.cooling.blowdown_concentration_ratio
-    obj[
-        "Blowdown_Makeup_Water_Usage_Schedule_Name"
-    ] = cooling_tower.cooling.blowdown_makeup_water_usage_schedule_name
+    obj["Blowdown_Concentration_Ratio"] = (
+        cooling_tower.cooling.blowdown_concentration_ratio
+    )
+    obj["Blowdown_Makeup_Water_Usage_Schedule_Name"] = (
+        cooling_tower.cooling.blowdown_makeup_water_usage_schedule_name
+    )
 
     obj["Number_of_Cells"] = cooling_tower.cooling.number_of_cells
     obj["Cell_Control"] = cooling_tower.cooling.cell_control
-    obj[
-        "Cell_Minimum_Water_Flow_Rate_Fraction"
-    ] = cooling_tower.cooling.cell_minimum_water_flow_rate_fraction
-    obj[
-        "Cell_Maximum_Water_Flow_Rate_Fraction"
-    ] = cooling_tower.cooling.cell_maximum_water_flow_rate_fraction
+    obj["Cell_Minimum_Water_Flow_Rate_Fraction"] = (
+        cooling_tower.cooling.cell_minimum_water_flow_rate_fraction
+    )
+    obj["Cell_Maximum_Water_Flow_Rate_Fraction"] = (
+        cooling_tower.cooling.cell_maximum_water_flow_rate_fraction
+    )
 
     obj["Design_Air_Flow_Rate"] = cooling_tower.cooling.design_air_flow_rate
-    obj[
-        "Design_Approach_Temperature"
-    ] = cooling_tower.cooling.design_approach_temperature
-    obj[
-        "Design_Inlet_Air_WetBulb_Temperature"
-    ] = cooling_tower.cooling.design_inlet_air_wet_bulb_temperature
+    obj["Design_Approach_Temperature"] = (
+        cooling_tower.cooling.design_approach_temperature
+    )
+    obj["Design_Inlet_Air_WetBulb_Temperature"] = (
+        cooling_tower.cooling.design_inlet_air_wet_bulb_temperature
+    )
     obj["Design_Range_Temperature"] = cooling_tower.cooling.design_range_temperature
     obj["Design_Water_Flow_Rate"] = cooling_tower.cooling.design_water_flow_rate
-    obj[
-        "Minimum_Air_Flow_Rate_Ratio"
-    ] = cooling_tower.cooling.minimum_air_flow_rate_ratio
+    obj["Minimum_Air_Flow_Rate_Ratio"] = (
+        cooling_tower.cooling.minimum_air_flow_rate_ratio
+    )
 
     obj["Evaporation_Loss_Factor"] = cooling_tower.cooling.evaporation_loss_factor
     obj["Evaporation_Loss_Mode"] = cooling_tower.cooling.evaporation_loss_mode
-    obj[
-        "Fraction_of_Tower_Capacity_in_Free_Convection_Regime"
-    ] = cooling_tower.cooling.fraction_of_tower_capacity_in_free_convection_regime
+    obj["Fraction_of_Tower_Capacity_in_Free_Convection_Regime"] = (
+        cooling_tower.cooling.fraction_of_tower_capacity_in_free_convection_regime
+    )
     obj["Supply_Water_Storage_Tank_Name"] = ""
     obj["Outdoor_Air_Inlet_Node_Name"] = ""
 
     """Fill in power-related parameters"""
     obj["Design_Fan_Power"] = cooling_tower.power.design_fan_power
-    obj[
-        "Fan_Power_Ratio_Function_of_Air_Flow_Rate_Ratio_Curve_Name"
-    ] = f"{cooling_tower.uid.lower()} fan power ratio function of air flow rate ratio curve"
+    obj["Fan_Power_Ratio_Function_of_Air_Flow_Rate_Ratio_Curve_Name"] = (
+        f"{cooling_tower.uid.lower()} fan power ratio function of air flow rate ratio curve"
+    )
     model.newidfobject(
         key="Curve:Cubic".upper(),
         Name=obj["Fan_Power_Ratio_Function_of_Air_Flow_Rate_Ratio_Curve_Name"],

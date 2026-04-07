@@ -13,7 +13,6 @@ from .utils.parameter_calc import NTUHE, nusseltCoefficient, nusseltNumberIn
 
 
 class HeatExchangerModel(nn.Module):
-
     def __init__(
         self,
         config: HeatExchanger,
@@ -33,7 +32,7 @@ class HeatExchangerModel(nn.Module):
         tol: float = 0.01,
         max_root_finding_iter: int = 100,
         max_learning_iter: int = 2000,
-        min_loss: float = 0.002
+        min_loss: float = 0.002,
     ) -> None:
         """
         A PIML-based model for cooling coil inside an ACU. It leverages the geometry information of the cooling coil as
@@ -56,44 +55,40 @@ class HeatExchangerModel(nn.Module):
         key_mapping = None if key_mapping == {} else key_mapping
         self.config = config
         self.uid = config.uid
-        self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+        self.device = (
+            torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+        )
         self.tube_diameter = nn.Parameter(
-            torch.tensor(tube_diameter, dtype=torch.float32),
-            requires_grad=False
+            torch.tensor(tube_diameter, dtype=torch.float32), requires_grad=False
         )
         self.tube_length = nn.Parameter(
-            torch.tensor(tube_length, dtype=torch.float32),
-            requires_grad=learnable
+            torch.tensor(tube_length, dtype=torch.float32), requires_grad=learnable
         )
         self.tube_thickness = nn.Parameter(
-            torch.tensor(tube_thickness, dtype=torch.float32),
-            requires_grad=False
+            torch.tensor(tube_thickness, dtype=torch.float32), requires_grad=False
         )
         self.num_row = nn.Parameter(
-            torch.tensor(row_number, dtype=torch.float32),
-            requires_grad=learnable
+            torch.tensor(row_number, dtype=torch.float32), requires_grad=learnable
         )
         self.num_transverse = nn.Parameter(
             torch.tensor(transverse_number, dtype=torch.float32),
-            requires_grad=learnable
+            requires_grad=learnable,
         )
         self.row_pitch = nn.Parameter(
-            torch.tensor(row_pitch, dtype=torch.float32),
-            requires_grad=False
+            torch.tensor(row_pitch, dtype=torch.float32), requires_grad=False
         )
         self.transverse_pitch = nn.Parameter(
-            torch.tensor(transverse_pitch, dtype=torch.float32),
-            requires_grad=False
+            torch.tensor(transverse_pitch, dtype=torch.float32), requires_grad=False
         )
         self.tube_roughness = nn.Parameter(
-            torch.tensor(tube_roughness, dtype=torch.float32),
-            requires_grad=False
+            torch.tensor(tube_roughness, dtype=torch.float32), requires_grad=False
         )
         self.tube_kappa = nn.Parameter(
             torch.tensor(thermal_conductivity, dtype=torch.float32), requires_grad=False
         )
         self.H_he = torch.nn.Parameter(
-            (self.num_transverse * transverse_pitch + 2 * tube_diameter), requires_grad=False
+            (self.num_transverse * transverse_pitch + 2 * tube_diameter),
+            requires_grad=False,
         )
         self.standard_atomos_pressure = 101325
 
@@ -112,18 +107,41 @@ class HeatExchangerModel(nn.Module):
     def _correct_nusselt_number(self, nu: torch.Tensor) -> torch.Tensor:
         if self.num_row < 20:
             N_list = torch.tensor([1, 2, 3, 4, 5, 7, 10, 13, 16])  # row number list
-            N_list = torch.abs(N_list - torch.tensor(self.num_row))  # difference between row number and row number list
-            coef2_list = [0.7, 0.8, 0.86, 0.9, 0.92, 0.95, 0.97, 0.98, 0.99]  # correction coefficient list
-            min_id = torch.where(N_list == torch.min(N_list))[0]  # minimum difference id
+            N_list = torch.abs(
+                N_list - torch.tensor(self.num_row)
+            )  # difference between row number and row number list
+            coef2_list = [
+                0.7,
+                0.8,
+                0.86,
+                0.9,
+                0.92,
+                0.95,
+                0.97,
+                0.98,
+                0.99,
+            ]  # correction coefficient list
+            min_id = torch.where(N_list == torch.min(N_list))[
+                0
+            ]  # minimum difference id
             coef2 = coef2_list[min_id[0]]  # correction coefficient
             nu *= coef2  # corrected external fluid Nusselt number
         return nu
 
     def _cal_physical_property(
-        self,
-        T_water_in: torch.Tensor,
-        T_air_in: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        self, T_water_in: torch.Tensor, T_air_in: torch.Tensor
+    ) -> Tuple[
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+    ]:
         rho_i = torch.zeros(T_water_in.shape)
         Cp_i = torch.zeros(T_water_in.shape)
         k_i = torch.zeros(T_water_in.shape)
@@ -136,44 +154,84 @@ class HeatExchangerModel(nn.Module):
         Pr_o = torch.zeros(T_air_in.shape)
         for idx, val in enumerate(T_water_in):
             rho_i[idx] = PropsSI(
-                'D', 'P', self.standard_atomos_pressure, 'T',
-                val.item() + 273.15, self.internal_fluid_name
+                "D",
+                "P",
+                self.standard_atomos_pressure,
+                "T",
+                val.item() + 273.15,
+                self.internal_fluid_name,
             )
             rho_o[idx] = PropsSI(
-                'D', 'P', self.standard_atomos_pressure, 'T',
-                val.item() + 273.15, self.extern_fluid_name
+                "D",
+                "P",
+                self.standard_atomos_pressure,
+                "T",
+                val.item() + 273.15,
+                self.extern_fluid_name,
             )
             Cp_i[idx] = PropsSI(
-                'C', 'P', self.standard_atomos_pressure, 'T',
-                val.item() + 273.15, self.internal_fluid_name
+                "C",
+                "P",
+                self.standard_atomos_pressure,
+                "T",
+                val.item() + 273.15,
+                self.internal_fluid_name,
             )
             Cp_o[idx] = PropsSI(
-                'C', 'P', self.standard_atomos_pressure,
-                'T', val.item() + 273.15, self.extern_fluid_name
+                "C",
+                "P",
+                self.standard_atomos_pressure,
+                "T",
+                val.item() + 273.15,
+                self.extern_fluid_name,
             )
             k_i[idx] = PropsSI(
-                'CONDUCTIVITY', 'P', self.standard_atomos_pressure,
-                'T', val.item() + 273.15, self.internal_fluid_name
+                "CONDUCTIVITY",
+                "P",
+                self.standard_atomos_pressure,
+                "T",
+                val.item() + 273.15,
+                self.internal_fluid_name,
             )
             k_o[idx] = PropsSI(
-                'CONDUCTIVITY', 'P', self.standard_atomos_pressure,
-                'T', val.item() + 273.15, self.extern_fluid_name
+                "CONDUCTIVITY",
+                "P",
+                self.standard_atomos_pressure,
+                "T",
+                val.item() + 273.15,
+                self.extern_fluid_name,
             )
             miu_i[idx] = PropsSI(
-                'V', 'P', self.standard_atomos_pressure,
-                'T', val.item() + 273.15, self.internal_fluid_name
+                "V",
+                "P",
+                self.standard_atomos_pressure,
+                "T",
+                val.item() + 273.15,
+                self.internal_fluid_name,
             )
             miu_o[idx] = PropsSI(
-                'V', 'P', self.standard_atomos_pressure,
-                'T', val.item() + 273.15, self.extern_fluid_name
+                "V",
+                "P",
+                self.standard_atomos_pressure,
+                "T",
+                val.item() + 273.15,
+                self.extern_fluid_name,
             )
             Pr_i[idx] = PropsSI(
-                'PRANDTL', 'P', self.standard_atomos_pressure,
-                'T', val.item() + 273.15, self.internal_fluid_name
+                "PRANDTL",
+                "P",
+                self.standard_atomos_pressure,
+                "T",
+                val.item() + 273.15,
+                self.internal_fluid_name,
             )
             Pr_o[idx] = PropsSI(
-                'PRANDTL', 'P', self.standard_atomos_pressure,
-                'T', val.item() + 273.15, self.extern_fluid_name
+                "PRANDTL",
+                "P",
+                self.standard_atomos_pressure,
+                "T",
+                val.item() + 273.15,
+                self.extern_fluid_name,
             )
         return rho_i, Cp_i, k_i, miu_i, Pr_i, rho_o, Cp_o, k_o, miu_o, Pr_o
 
@@ -186,11 +244,21 @@ class HeatExchangerModel(nn.Module):
     def collect(self, data: dict) -> None:
         self.buffer.add(
             Batch(
-                cooling_coil_inlet_air_temperature=data[self.key_mapping["inlet air temperature"]],
-                cooling_coil_outlet_air_temperature=data[self.key_mapping["outlet air temperature"]],
-                cooling_coil_air_mass_flow_rate=data[self.key_mapping["air mass flow rate"]],
-                cooling_coil_water_mass_flow_rate=data[self.key_mapping["water mass flow rate"]],
-                cooling_coil_inlet_water_temperature=data[self.key_mapping["inlet water temperature"]],
+                cooling_coil_inlet_air_temperature=data[
+                    self.key_mapping["inlet air temperature"]
+                ],
+                cooling_coil_outlet_air_temperature=data[
+                    self.key_mapping["outlet air temperature"]
+                ],
+                cooling_coil_air_mass_flow_rate=data[
+                    self.key_mapping["air mass flow rate"]
+                ],
+                cooling_coil_water_mass_flow_rate=data[
+                    self.key_mapping["water mass flow rate"]
+                ],
+                cooling_coil_inlet_water_temperature=data[
+                    self.key_mapping["inlet water temperature"]
+                ],
             )
         )
 
@@ -199,7 +267,9 @@ class HeatExchangerModel(nn.Module):
             pbar = tqdm(range(self.max_learning_iter))
             self.train()
             for _ in pbar:
-                batch, indices = self.buffer.sample(batch_size=32)  # sample all data from the buffer
+                batch, indices = self.buffer.sample(
+                    batch_size=32
+                )  # sample all data from the buffer
                 mask = batch.cooling_coil_air_mass_flow_rate > 0
                 batch = batch[mask]
                 self.opt.zero_grad()
@@ -219,13 +289,17 @@ class HeatExchangerModel(nn.Module):
                 )
                 loss = nn.MSELoss()(
                     T_air_out,
-                    torch.tensor(batch.cooling_coil_outlet_air_temperature, dtype=torch.float32)
+                    torch.tensor(
+                        batch.cooling_coil_outlet_air_temperature, dtype=torch.float32
+                    ),
                 )
                 loss.backward(retain_graph=True)
                 if torch.isnan(self.num_row.grad):
-                    self.num_row.grad = torch.nan_to_num(self.num_row.grad, nan=0.)
+                    self.num_row.grad = torch.nan_to_num(self.num_row.grad, nan=0.0)
                 if torch.isnan(self.num_transverse.grad):
-                    self.num_transverse.grad = torch.nan_to_num(self.num_transverse.grad, nan=0.)
+                    self.num_transverse.grad = torch.nan_to_num(
+                        self.num_transverse.grad, nan=0.0
+                    )
                 self.opt.step()
                 self._project_ws()  # project the parameters to the positive region to make them feasible
                 pbar.set_description(f"Loss: {loss.item():.4f}")
@@ -237,8 +311,15 @@ class HeatExchangerModel(nn.Module):
         T_air_in: torch.Tensor,
         m_air: torch.Tensor,
         T_water_in: torch.Tensor,
-        m_water: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        m_water: torch.Tensor,
+    ) -> Tuple[
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+    ]:
         """
         Calculate the outlet temperatures of the cooling coil
         :param T_air_in: inlet air temperature
@@ -247,51 +328,85 @@ class HeatExchangerModel(nn.Module):
         :param m_water: water mass flow rate
         :return:
         """
-        rho_i, Cp_i, k_i, miu_i, Pr_i, rho_o, Cp_o, k_o, miu_o, Pr_o = self._cal_physical_property(
-            T_water_in=T_water_in,
-            T_air_in=T_air_in
+        rho_i, Cp_i, k_i, miu_i, Pr_i, rho_o, Cp_o, k_o, miu_o, Pr_o = (
+            self._cal_physical_property(T_water_in=T_water_in, T_air_in=T_air_in)
         )
         # tube inside
         v_water = m_water / rho_i  # internal fluid volumetric flow rate
-        u_i = v_water / (self.num_row * self.num_transverse) / (torch.pi / 4 * self.tube_diameter ** 2)
-        Re_i = rho_i * u_i * self.tube_diameter / miu_i  # internal fluid Reynolds number
+        u_i = (
+            v_water
+            / (self.num_row * self.num_transverse)
+            / (torch.pi / 4 * self.tube_diameter**2)
+        )
+        Re_i = (
+            rho_i * u_i * self.tube_diameter / miu_i
+        )  # internal fluid Reynolds number
         rr_i = self.tube_roughness / self.tube_diameter  # relative roughness
-        fr, nu_i = nusseltNumberIn(rr_i, Re_i, Pr_i)  # friction factor and Nusselt number
-        h_i = nu_i * k_i / self.tube_diameter  # internal fluid heat transfer coefficient
+        fr, nu_i = nusseltNumberIn(
+            rr_i, Re_i, Pr_i
+        )  # friction factor and Nusselt number
+        h_i = (
+            nu_i * k_i / self.tube_diameter
+        )  # internal fluid heat transfer coefficient
 
-        dP_i = fr * (self.tube_length / self.tube_diameter) * (rho_i * u_i ** 2) / 2  # internal fluid pressure drop
-        pump_power_i = (self.num_row * self.num_transverse) * dP_i * (m_water / rho_i)  # internal fluid pumping power
+        dP_i = (
+            fr * (self.tube_length / self.tube_diameter) * (rho_i * u_i**2) / 2
+        )  # internal fluid pressure drop
+        pump_power_i = (
+            (self.num_row * self.num_transverse) * dP_i * (m_water / rho_i)
+        )  # internal fluid pumping power
 
         # tube outside
         u_o = m_air / rho_o / (self.tube_length * self.H_he)  # external fluid velocity
-        u_omax = self.transverse_pitch / (self.transverse_pitch - self.tube_diameter) * u_o
-        Re_omax = rho_o * u_omax * self.tube_diameter / miu_o  # maximum external fluid Reynolds number
-        coef1, expo1 = nusseltCoefficient(Re_omax)  # coefficient and exponent of Nusselt number
-        Nu_o = coef1 * (Re_omax ** expo1) * (Pr_o ** 0.36)  # external fluid Nusselt number
+        u_omax = (
+            self.transverse_pitch / (self.transverse_pitch - self.tube_diameter) * u_o
+        )
+        Re_omax = (
+            rho_o * u_omax * self.tube_diameter / miu_o
+        )  # maximum external fluid Reynolds number
+        coef1, expo1 = nusseltCoefficient(
+            Re_omax
+        )  # coefficient and exponent of Nusselt number
+        Nu_o = coef1 * (Re_omax**expo1) * (Pr_o**0.36)  # external fluid Nusselt number
 
         # correct the outside Nusselt number when the row number is less than 20
         Nu_o = self._correct_nusselt_number(Nu_o)
-        h_o = Nu_o * k_o / self.tube_diameter   # external fluid heat transfer coefficient
+        h_o = (
+            Nu_o * k_o / self.tube_diameter
+        )  # external fluid heat transfer coefficient
 
         f_o = 0.2  # external fluid friction factor
-        dP_o = self.num_row * (rho_o * u_omax ** 2 / 2) * f_o  # external fluid pressure drop
+        dP_o = (
+            self.num_row * (rho_o * u_omax**2 / 2) * f_o
+        )  # external fluid pressure drop
         pump_power_o = dP_o * (m_air / rho_o)  # external fluid pumping power
 
         # pumping power, U value and NTU value
         pump_power = pump_power_i + pump_power_o  # W, pumping power
         U = 1 / (
-            1 / h_i + 1 / h_o + torch.log((self.tube_thickness + self.tube_diameter) / self.tube_diameter) *
-            self.tube_diameter / self.tube_kappa
+            1 / h_i
+            + 1 / h_o
+            + torch.log((self.tube_thickness + self.tube_diameter) / self.tube_diameter)
+            * self.tube_diameter
+            / self.tube_kappa
         )  # W/m2K, overall heat transfer coefficient
-        A = self.num_transverse * self.num_row * (torch.pi * self.tube_diameter * self.tube_length)
+        A = (
+            self.num_transverse
+            * self.num_row
+            * (torch.pi * self.tube_diameter * self.tube_length)
+        )
 
         C_i = m_water * Cp_i  # W/K, internal fluid heat capacity
         C_o = m_air * Cp_o  # W/K, external fluid heat capacity
         C_min = torch.minimum(C_i, C_o)  # W/K, minimum heat capacity
-        eff, NTU = NTUHE(C_i, C_o, U, A)  # efficiency and number transfer unit of heat exchanger
+        eff, NTU = NTUHE(
+            C_i, C_o, U, A
+        )  # efficiency and number transfer unit of heat exchanger
         Q_max = C_min * (T_air_in - T_water_in)  # W, maximum heat transfer
         heat_transfer_rate = eff * Q_max - pump_power  # W, heat transfer
-        T_air_out = T_air_in - heat_transfer_rate / C_o  # degree C, external fluid outlet temperature
+        T_air_out = (
+            T_air_in - heat_transfer_rate / C_o
+        )  # degree C, external fluid outlet temperature
         T_water_out = T_water_in + (heat_transfer_rate + pump_power) / C_i
         with torch.no_grad():
             sensible_cooling_load = m_air * Cp_o * (T_air_in - T_air_out)
@@ -317,11 +432,13 @@ class HeatExchangerModel(nn.Module):
             m_inside_fluid_min = torch.tensor(0.0, dtype=torch.float32)
             m_inside_fluid_max = m_outside_fluid.item()
             m_inside_fluid = (m_inside_fluid_min + m_inside_fluid_max) / 2
-            T_inside_fluid_outlet, T_outside_fluid_outlet, NTU, eff, Q, power = self.forward(
-                T_air_in=T_outside_fluid_inlet,
-                m_air=m_outside_fluid,
-                T_water_in=T_inside_fluid_inlet,
-                m_water=m_inside_fluid
+            T_inside_fluid_outlet, T_outside_fluid_outlet, NTU, eff, Q, power = (
+                self.forward(
+                    T_air_in=T_outside_fluid_inlet,
+                    m_air=m_outside_fluid,
+                    T_water_in=T_inside_fluid_inlet,
+                    m_water=m_inside_fluid,
+                )
             )
             # bi-section main loop
             for iteration in range(1, self.max_root_finding_iter + 1):
@@ -330,11 +447,13 @@ class HeatExchangerModel(nn.Module):
                 else:
                     m_inside_fluid_max = m_inside_fluid
                 m_inside_fluid = (m_inside_fluid_min + m_inside_fluid_max) / 2
-                T_inside_fluid_outlet, T_outside_fluid_outlet, NTU, eff, Q, power = self.forward(
-                    T_air_in=T_outside_fluid_inlet,
-                    m_air=m_outside_fluid,
-                    T_water_in=T_inside_fluid_inlet,
-                    m_water=m_inside_fluid
+                T_inside_fluid_outlet, T_outside_fluid_outlet, NTU, eff, Q, power = (
+                    self.forward(
+                        T_air_in=T_outside_fluid_inlet,
+                        m_air=m_outside_fluid,
+                        T_water_in=T_inside_fluid_inlet,
+                        m_water=m_inside_fluid,
+                    )
                 )
                 if torch.abs(T_outside_fluid_outlet - T_outside_fluid_sp) < self.tol:
                     break
@@ -347,18 +466,18 @@ class HeatExchangerModel(nn.Module):
                 )
         # insert gradient calculation
         m_inside_fluid_star = m_inside_fluid.clone().requires_grad_(True)
-        T_inside_fluid_outlet, T_outside_fluid_outlet, NTU, eff, Q, power = self.forward(
-            T_air_in=T_outside_fluid_inlet,
-            m_air=m_outside_fluid,
-            T_water_in=T_inside_fluid_inlet,
-            m_water=m_inside_fluid_star
+        T_inside_fluid_outlet, T_outside_fluid_outlet, NTU, eff, Q, power = (
+            self.forward(
+                T_air_in=T_outside_fluid_inlet,
+                m_air=m_outside_fluid,
+                T_water_in=T_inside_fluid_inlet,
+                m_water=m_inside_fluid_star,
+            )
         )
-        g = T_outside_fluid_outlet - T_outside_fluid_sp  # g should be close to zero (up to tolerance)
-        J = torch.autograd.grad(
-            g,
-            m_inside_fluid_star,
-            retain_graph=True
-        )[0]
+        g = (
+            T_outside_fluid_outlet - T_outside_fluid_sp
+        )  # g should be close to zero (up to tolerance)
+        J = torch.autograd.grad(g, m_inside_fluid_star, retain_graph=True)[0]
         # reengage the gradient calculation by inserting the gradient into the computation graph
         m_inside_fluid_star = m_inside_fluid_star - g
         m_inside_fluid_star.register_hook(

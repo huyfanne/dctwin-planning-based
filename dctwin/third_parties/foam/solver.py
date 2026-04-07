@@ -3,6 +3,7 @@ form.k.value = 1.5 * Math.pow(form.Tu.value/100,2) * Math.pow(form.u_freestream.
 form.epsilon.value = 0.09 * Math.pow(form.k.value,1.5) / form.Tu_L.value
 form.omega.value = form.epsilon.value / (0.09 * form.k.value)
 """
+
 import abc
 import os
 import shutil
@@ -16,7 +17,12 @@ from dclib.room import Room
 
 from dctwin.third_parties.docker_backend import DockerBackend
 from dctwin.third_parties.k8s_backend import K8sBackend
-from dctwin.third_parties.foam.boundary import ACUBoundary, RoomBoundary, ServerBoundary, HeatEmittingBoxBoundary
+from dctwin.third_parties.foam.boundary import (
+    ACUBoundary,
+    RoomBoundary,
+    ServerBoundary,
+    HeatEmittingBoxBoundary,
+)
 
 from dctwin.third_parties.foam.utils import (
     generate_control_dict,
@@ -80,7 +86,9 @@ class Builder:
         _obj_list = [x for x in obj_dict.values() if x.k != 0]
 
         if len(_obj_list) == 0:
-            raise ValueError("Please specify non-zero ACU, server, and heat-emitting boxes flow rates in model and inputs")
+            raise ValueError(
+                "Please specify non-zero ACU, server, and heat-emitting boxes flow rates in model and inputs"
+            )
 
         obj = min(_obj_list, key=lambda x: x.k)
         return obj.k, obj.epsilon
@@ -88,29 +96,28 @@ class Builder:
     def render(self, source_filename, write_filename, internal_field=None) -> None:
         acu_k, acu_epsilon = self.get_k_and_epsilon(self.acu_dict)
         server_k, server_epsilon = self.get_k_and_epsilon(self.server_dict)
-        
-        try: 
-            heat_emitting_box_k, heat_emitting_box_epsilon = self.get_k_and_epsilon(self.heat_emitting_box_dict)
-        except: 
-            heat_emitting_box_k, heat_emitting_box_epsilon = acu_k, acu_epsilon
 
+        try:
+            heat_emitting_box_k, heat_emitting_box_epsilon = self.get_k_and_epsilon(
+                self.heat_emitting_box_dict
+            )
+        except:
+            heat_emitting_box_k, heat_emitting_box_epsilon = acu_k, acu_epsilon
         with open(Path(config.cfd.case_dir, f"0/{write_filename}"), "w") as f:
             f.write(
-                template_env.get_template(f"foam/template/0/{source_filename}.j2").render(
+                template_env.get_template(
+                    f"foam/template/0/{source_filename}.j2"
+                ).render(
                     init_temperature=24 + 273.15,
                     p_rgh=round(self.room_dz * 9.81, 10),
-                    acu_boundaries=[
-                        ACUBoundary(acu)
-                        for acu in self.acu_dict.values()
-                        ],
+                    acu_boundaries=[ACUBoundary(acu) for acu in self.acu_dict.values()],
                     server_boundaries=[
-                        ServerBoundary(server) 
-                        for server in self.server_dict.values()
-                        ],
+                        ServerBoundary(server) for server in self.server_dict.values()
+                    ],
                     heat_emitting_box_boundaries=[
                         HeatEmittingBoxBoundary(heat_emitting_box)
                         for heat_emitting_box in self.heat_emitting_box_dict.values()
-                        ],
+                    ],
                     room_boundary=RoomBoundary(self.room),
                     acu_k=acu_k,
                     acu_epsilon=acu_epsilon,

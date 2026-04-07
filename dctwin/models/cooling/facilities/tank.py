@@ -29,16 +29,24 @@ class ThermalStorageTankModel(nn.Module):
         self.volume = config.cooling.tank_volume
         self.tank_mass = rho_water * self.volume  # kg
         self.epsilon_source = nn.Parameter(
-            torch.tensor(config.cooling.source_side_heat_transfer_effectiveness, dtype=torch.float32),
-            requires_grad=learnable
+            torch.tensor(
+                config.cooling.source_side_heat_transfer_effectiveness,
+                dtype=torch.float32,
+            ),
+            requires_grad=learnable,
         )
         self.epsilon_use = nn.Parameter(
-            torch.tensor(config.cooling.use_side_heat_transfer_effectiveness, dtype=torch.float32),
-            requires_grad=learnable
+            torch.tensor(
+                config.cooling.use_side_heat_transfer_effectiveness, dtype=torch.float32
+            ),
+            requires_grad=learnable,
         )
         self.tank_UA = nn.Parameter(
-            torch.tensor(config.cooling.heat_gain_coefficient_from_ambient_temperature, dtype=torch.float32),
-            requires_grad=learnable
+            torch.tensor(
+                config.cooling.heat_gain_coefficient_from_ambient_temperature,
+                dtype=torch.float32,
+            ),
+            requires_grad=learnable,
         )
         self.opt = torch.optim.Adam(self.parameters(), lr=1e-1)
         self.min_loss = 1e-3
@@ -54,7 +62,9 @@ class ThermalStorageTankModel(nn.Module):
                 T_tank_next=data[self.key_mapping["tank water temperature next"]],
                 T_outdoor=data[self.key_mapping["outlet air temperature"]],
                 T_use_in=data[self.key_mapping["use side water inlet temperature"]],
-                T_source_in=data[self.key_mapping["source side water inlet temperature"]],
+                T_source_in=data[
+                    self.key_mapping["source side water inlet temperature"]
+                ],
                 m_use=data[self.key_mapping["use side water mass flow rate"]],
                 m_source=data[self.key_mapping["source side water mass flow rate"]],
             )
@@ -77,7 +87,7 @@ class ThermalStorageTankModel(nn.Module):
                     T_source_in=batch.T_source_in,
                     m_use=batch.m_use,
                     m_source=batch.m_source,
-                    time=batch.time
+                    time=batch.time,
                 )
                 loss = torch.mean((T_tank_next - batch.T_tank_next) ** 2)
                 loss.backward()
@@ -118,49 +128,35 @@ class ThermalStorageTankModel(nn.Module):
         :return: the tank temperature at the next time step
         """
         T_tank_current = torch.as_tensor(
-            T_tank_current,
-            device=self.device,
-            dtype=torch.float32
+            T_tank_current, device=self.device, dtype=torch.float32
         )
-        T_outdoor = torch.as_tensor(
-            T_outdoor,
-            device=self.device,
-            dtype=torch.float32
-        )
-        T_use_in = torch.as_tensor(
-            T_use_in,
-            device=self.device,
-            dtype=torch.float32
-        )
+        T_outdoor = torch.as_tensor(T_outdoor, device=self.device, dtype=torch.float32)
+        T_use_in = torch.as_tensor(T_use_in, device=self.device, dtype=torch.float32)
         T_source_in = torch.as_tensor(
-            T_source_in,
-            device=self.device,
-            dtype=torch.float32
+            T_source_in, device=self.device, dtype=torch.float32
         )
-        m_use = torch.as_tensor(
-            m_use,
-            device=self.device,
-            dtype=torch.float32
-        )
-        m_source = torch.as_tensor(
-            m_source,
-            device=self.device,
-            dtype=torch.float32
-        )
-        time = torch.as_tensor(
-            time,
-            device=self.device,
-            dtype=torch.float32
-        )
+        m_use = torch.as_tensor(m_use, device=self.device, dtype=torch.float32)
+        m_source = torch.as_tensor(m_source, device=self.device, dtype=torch.float32)
+        time = torch.as_tensor(time, device=self.device, dtype=torch.float32)
 
-        a = self.tank_UA * T_outdoor / water_specific_heat + \
-            self.epsilon_use * m_use * T_use_in + \
-            self.epsilon_source * m_source * T_source_in
+        a = (
+            self.tank_UA * T_outdoor / water_specific_heat
+            + self.epsilon_use * m_use * T_use_in
+            + self.epsilon_source * m_source * T_source_in
+        )
         a = a / self.tank_mass
-        b = - (self.tank_UA / water_specific_heat + self.epsilon_use * m_use + self.epsilon_source * m_source)
+        b = -(
+            self.tank_UA / water_specific_heat
+            + self.epsilon_use * m_use
+            + self.epsilon_source * m_source
+        )
         b = b / self.tank_mass
         T_tank_next = ((a / b) + T_tank_current) * torch.exp(b * time) - (a / b)
-        source_side_cooling_load = m_source * (T_tank_current - T_source_in) * water_specific_heat
-        use_side_cooling_load = m_use * (T_use_in - T_tank_current) * water_specific_heat
+        source_side_cooling_load = (
+            m_source * (T_tank_current - T_source_in) * water_specific_heat
+        )
+        use_side_cooling_load = (
+            m_use * (T_use_in - T_tank_current) * water_specific_heat
+        )
 
         return T_tank_next, source_side_cooling_load, use_side_cooling_load

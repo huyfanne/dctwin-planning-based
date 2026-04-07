@@ -10,8 +10,4 @@ from .ode import DifferentiableODE
 from .steady_state import SteadyStateThermodynamics
 
 
-__all__ = [
-    "DifferentiableODE",
-    "PINNDynamics",
-    "SteadyStateThermodynamics"
-]
+__all__ = ["DifferentiableODE", "PINNDynamics", "SteadyStateThermodynamics"]

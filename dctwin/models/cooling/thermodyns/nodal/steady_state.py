@@ -5,7 +5,6 @@ from dctwin.utils.const import air_specific_heat
 
 
 class SteadyStateThermodynamics(nn.Module):
-
     def __init__(self):
         super(SteadyStateThermodynamics, self).__init__()
 

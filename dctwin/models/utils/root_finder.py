@@ -10,7 +10,7 @@ def solve_root(
     x_res,  # value of x that solves f(x,Par) = 0
     f,  # function
     x_0,  # 1st bound of interval that contains the solution
-    x_1  # 2nd bound of interval that contains the solution
+    x_1,  # 2nd bound of interval that contains the solution
 ) -> Tuple[int, float | torch.Tensor]:
     """
     PURPOSE OF THIS SUBROUTINE:

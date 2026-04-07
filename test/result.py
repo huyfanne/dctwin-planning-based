@@ -211,7 +211,16 @@ T_LUT_RGB_POINTS = [
     0.05882353,
     0,
 ]
-T_PWF_POINTS = [minimum_t_full_range_kelvin, 0.0, 0.5, 0.0, maximum_t_full_range_kelvin, 1.0, 0.5, 0.0]
+T_PWF_POINTS = [
+    minimum_t_full_range_kelvin,
+    0.0,
+    0.5,
+    0.0,
+    maximum_t_full_range_kelvin,
+    1.0,
+    0.5,
+    0.0,
+]
 diff = maximum_t_kelvin - minimum_t_kelvin
 diff = diff / 43
 final = []
@@ -251,23 +260,23 @@ renderView1.ViewSize = [1680, 1016]
 renderView1.AxesGrid = "GridAxes3DActor"
 renderView1.CenterOfRotation = [6.300000190734863, 3.0, 1.9997654735052492]
 renderView1.StereoType = "Crystal Eyes"
-adjusted_height = max(width, depth)*3
+adjusted_height = max(width, depth) * 3
 renderView1.CameraPosition = [
-    width/2,  # same x as the focal point
-    depth/2,  # same y as the focal point
-    adjusted_height   # z height above the point; adjust as needed for your dataset
+    width / 2,  # same x as the focal point
+    depth / 2,  # same y as the focal point
+    adjusted_height,  # z height above the point; adjust as needed for your dataset
 ]
 
 renderView1.CameraFocalPoint = [
-    width/2, # focus on x
-    depth/2, # focus on y
-    0   # focus on z
+    width / 2,  # focus on x
+    depth / 2,  # focus on y
+    0,  # focus on z
 ]
 
 renderView1.CameraViewUp = [
     0,  # x direction
     1,  # y direction up
-    0   # z direction
+    0,  # z direction
 ]
 renderView1.CameraFocalDisk = 1.0
 renderView1.CameraParallelScale = 7.258852565264085
@@ -454,9 +463,9 @@ try:
     data = pd.DataFrame(data=final_data_obj)
     data.to_csv("/data/thermal/thermal.csv", index_label="Point ID")
 
-    print(f'thermal: {len(data_obj["Points_0"])}')
+    print(f"thermal: {len(data_obj['Points_0'])}")
     print(f"divider: {divider}")
-    print(f'thermal_reduced: {len(final_data_obj["Points_0"])}')
+    print(f"thermal_reduced: {len(final_data_obj['Points_0'])}")
 
 except Exception as e:
     logging.critical(e, exc_info=True)

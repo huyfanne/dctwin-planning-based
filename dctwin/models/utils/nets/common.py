@@ -178,8 +178,13 @@ class Net(nn.Module):
         self.use_dueling = dueling_param is not None
         output_dim = action_dim if not self.use_dueling and not concat else 0
         self.model = MLP(
-            input_dim, output_dim, hidden_sizes, norm_layer, activation, device,
-            linear_layer
+            input_dim,
+            output_dim,
+            hidden_sizes,
+            norm_layer,
+            activation,
+            device,
+            linear_layer,
         )
         self.output_dim = self.model.output_dim
         if self.use_dueling:  # dueling DQN
@@ -188,14 +193,16 @@ class Net(nn.Module):
             if not concat:
                 q_output_dim, v_output_dim = action_dim, num_atoms
             q_kwargs: Dict[str, Any] = {
-                **q_kwargs, "input_dim": self.output_dim,
+                **q_kwargs,
+                "input_dim": self.output_dim,
                 "output_dim": q_output_dim,
-                "device": self.device
+                "device": self.device,
             }
             v_kwargs: Dict[str, Any] = {
-                **v_kwargs, "input_dim": self.output_dim,
+                **v_kwargs,
+                "input_dim": self.output_dim,
                 "output_dim": v_output_dim,
-                "device": self.device
+                "device": self.device,
             }
             self.Q, self.V = MLP(**q_kwargs), MLP(**v_kwargs)
             self.output_dim = self.Q.output_dim
@@ -278,16 +285,17 @@ class Recurrent(nn.Module):
             # we store the stack data in [bsz, len, ...] format
             # but pytorch rnn needs [len, bsz, ...]
             obs, (hidden, cell) = self.nn(
-                obs, (
+                obs,
+                (
                     state["hidden"].transpose(0, 1).contiguous(),
-                    state["cell"].transpose(0, 1).contiguous()
-                )
+                    state["cell"].transpose(0, 1).contiguous(),
+                ),
             )
         obs = self.fc2(obs[:, -1])
         # please ensure the first dim is batch size: [bsz, len, ...]
         return obs, {
             "hidden": hidden.transpose(0, 1).detach(),
-            "cell": cell.transpose(0, 1).detach()
+            "cell": cell.transpose(0, 1).detach(),
         }
 
 
@@ -310,7 +318,7 @@ class EnsembleLinear(nn.Module):
         super().__init__()
 
         # To be consistent with PyTorch default initializer
-        k = np.sqrt(1. / in_feature)
+        k = np.sqrt(1.0 / in_feature)
         weight_data = torch.rand((ensemble_size, in_feature, out_feature)) * 2 * k - k
         self.weight = nn.Parameter(weight_data, requires_grad=True)
 

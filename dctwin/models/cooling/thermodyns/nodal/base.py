@@ -48,7 +48,9 @@ class BaseNNDynamics(nn.Module):
         mass_flows = [20, 200]
         heat_loads = [100, 1250]
         t = np.linspace(time[0], time[1], 10)
-        temp_zone_initials = np.linspace(temp_zone_initials[0], temp_zone_initials[1], 10)
+        temp_zone_initials = np.linspace(
+            temp_zone_initials[0], temp_zone_initials[1], 10
+        )
         temp_ins = np.linspace(temp_ins[0], temp_ins[1], 10)
         mass_flows = np.linspace(mass_flows[0], mass_flows[1], 20)
         heat_loads = np.linspace(heat_loads[0], heat_loads[1], 20)
@@ -58,12 +60,24 @@ class BaseNNDynamics(nn.Module):
                     for temp_in in temp_ins:
                         for time_ in t:
                             data.update(
-                                supply_air_temperature=np.asarray([temp_in]).reshape(1, -1),
-                                supply_air_mass_flow_rate=np.asarray([mass_flow]).reshape(1, -1),
-                                zone_air_temperature=np.asarray([temp_zone]).reshape(1, -1),
-                                sensible_heat_load=np.asarray([heat_load]).reshape(1, -1),
-                                chilled_water_supply_temperature=np.asarray([0]).reshape(1, -1),
-                                chilled_water_supply_mass_flow_rate=np.asarray([0]).reshape(1, -1),
+                                supply_air_temperature=np.asarray([temp_in]).reshape(
+                                    1, -1
+                                ),
+                                supply_air_mass_flow_rate=np.asarray(
+                                    [mass_flow]
+                                ).reshape(1, -1),
+                                zone_air_temperature=np.asarray([temp_zone]).reshape(
+                                    1, -1
+                                ),
+                                sensible_heat_load=np.asarray([heat_load]).reshape(
+                                    1, -1
+                                ),
+                                chilled_water_supply_temperature=np.asarray(
+                                    [0]
+                                ).reshape(1, -1),
+                                chilled_water_supply_mass_flow_rate=np.asarray(
+                                    [0]
+                                ).reshape(1, -1),
                                 times=np.asarray([time_]).reshape(1, -1),
                             )
                             buffer.add(data)
@@ -75,7 +89,7 @@ class BaseNNDynamics(nn.Module):
         variable: torch.Tensor,
         order: int = 1,
     ) -> torch.Tensor:
-        """ Compute neural network derivative with respect to input features """
+        """Compute neural network derivative with respect to input features"""
         df_value = torch.zeros(output.shape, device=output.device)
         for _ in range(order):
             df_value = torch.autograd.grad(
@@ -90,7 +104,7 @@ class BaseNNDynamics(nn.Module):
 
     @abstractmethod
     def _compute_loss(self, batch: Batch, **kwargs) -> torch.Tensor:
-        """ Compute the loss value """
+        """Compute the loss value"""
 
     @abstractmethod
     def forward(
@@ -111,7 +125,9 @@ class BaseNNDynamics(nn.Module):
         # check if target_obs is given, can be a subset of observation
         if target_obs is not None:
             size = target_obs.shape[0]
-            target_obs = torch.as_tensor(target_obs, dtype=torch.float32).reshape(size, -1)
+            target_obs = torch.as_tensor(target_obs, dtype=torch.float32).reshape(
+                size, -1
+            )
             assert len(output) == len(target_obs)
         else:
             target_obs = obs
@@ -131,15 +147,17 @@ class BaseNNDynamics(nn.Module):
         log_per_epoch: int = 10,
         test_per_epoch: int = 10,
     ) -> None:
-        """ Train the dynamics model with gradient descent """
+        """Train the dynamics model with gradient descent"""
         if train_buffer is None:
             train_buffer = self.train_buffer
         train_size = len(train_buffer)
-        best_test_loss = float('inf')
+        best_test_loss = float("inf")
         if verbose:
-            logger.info(f"Start training the {__class__.__name__}-based dynamics model ...")
+            logger.info(
+                f"Start training the {__class__.__name__}-based dynamics model ..."
+            )
         for e in range(epoch):
-            step, total_train_loss, total_test_loss = 0., 0., 0.
+            step, total_train_loss, total_test_loss = 0.0, 0.0, 0.0
             self.model.train()
             for i in range(0, train_size, batch_size):
                 self.optimizer.zero_grad()

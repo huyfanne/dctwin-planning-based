@@ -21,7 +21,6 @@ from .utils import (
 
 
 class RoomBuilder:
-
     def __init__(self, model: IDF) -> None:
         self.model = model
 
@@ -37,65 +36,65 @@ class RoomBuilder:
             ite["Name"] = ite_config.uid.lower()
             ite["Zone_Name"] = zone_name
             ite["Air_Flow_Calculation_Method"] = ite_config.air_flow_calculation_method
-            ite[
-                "Design_Power_Input_Calculation_Method"
-            ] = ite_config.design_power_input_calculation_method
+            ite["Design_Power_Input_Calculation_Method"] = (
+                ite_config.design_power_input_calculation_method
+            )
             ite["Watts_per_Unit"] = ite_config.watts_per_unit
             ite["Number_of_Units"] = ite_config.number_of_units
             ite["Watts_per_Zone_Floor_Area"] = ite_config.watts_per_zone_floor_area
-            ite[
-                "Design_Power_Input_Schedule_Name"
-            ] = f"{ite_config.uid} operation schedule"
+            ite["Design_Power_Input_Schedule_Name"] = (
+                f"{ite_config.uid} operation schedule"
+            )
             ite["CPU_Loading_Schedule_Name"] = f"{ite_config.uid} cpu schedule"
-            ite[
-                "Design_Fan_Power_Input_Fraction"
-            ] = ite_config.design_fan_power_input_fraction
-            ite[
-                "Design_Fan_Air_Flow_Rate_per_Power_Input"
-            ] = ite_config.design_fan_air_flow_rate_per_power_input
-            ite[
-                "Design_Entering_Air_Temperature"
-            ] = ite_config.design_entering_air_temperature
+            ite["Design_Fan_Power_Input_Fraction"] = (
+                ite_config.design_fan_power_input_fraction
+            )
+            ite["Design_Fan_Air_Flow_Rate_per_Power_Input"] = (
+                ite_config.design_fan_air_flow_rate_per_power_input
+            )
+            ite["Design_Entering_Air_Temperature"] = (
+                ite_config.design_entering_air_temperature
+            )
             ite["Environmental_Class"] = ite_config.environmental_class
             ite["Air_Inlet_Connection_Type"] = ite_config.air_inlet_connection_type
-            ite[
-                "Air_Inlet_Room_Air_Model_Node_Name"
-            ] = ite_config.air_inlet_room_air_model_node_name
-            ite[
-                "Air_Outlet_Room_Air_Model_Node_Name"
-            ] = ite_config.air_outlet_room_air_model_node_name
+            ite["Air_Inlet_Room_Air_Model_Node_Name"] = (
+                ite_config.air_inlet_room_air_model_node_name
+            )
+            ite["Air_Outlet_Room_Air_Model_Node_Name"] = (
+                ite_config.air_outlet_room_air_model_node_name
+            )
             ite["Supply_Air_Node_Name"] = ite_config.supply_air_node_name
-            ite[
-                "Design_Recirculation_Fraction"
-            ] = ite_config.design_recirculation_fraction
+            ite["Design_Recirculation_Fraction"] = (
+                ite_config.design_recirculation_fraction
+            )
             ite[
                 "Recirculation_Function_of_Loading_and_Supply_Temperature_Curve_Name"
             ] = f"{ite['Name']} recirculation function of loading and supply temperature curve"
-            ite[
-                "Design_Electric_Power_Supply_Efficiency"
-            ] = ite_config.design_electric_power_supply_efficiency
+            ite["Design_Electric_Power_Supply_Efficiency"] = (
+                ite_config.design_electric_power_supply_efficiency
+            )
             ite[
                 "Electric_Power_Supply_Efficiency_Function_of_Part_Load_Ratio_Curve_Name"
             ] = f"{ite['Name']} electric power supply efficiency function of part load ratio curve"
-            ite[
-                "Fraction_of_Electric_Power_Supply_Losses_to_Zone"
-            ] = ite_config.fraction_of_electric_power_supply_losses_to_zone
+            ite["Fraction_of_Electric_Power_Supply_Losses_to_Zone"] = (
+                ite_config.fraction_of_electric_power_supply_losses_to_zone
+            )
             ite["CPU_EndUse_Subcategory"] = ite_config.cpu_enduse_subcategory
             ite["Fan_EndUse_Subcategory"] = ite_config.fan_enduse_subcategory
-            ite[
-                "Electric_Power_Supply_EndUse_Subcategory"
-            ] = ite_config.electric_power_supply_enduse_subcategory
+            ite["Electric_Power_Supply_EndUse_Subcategory"] = (
+                ite_config.electric_power_supply_enduse_subcategory
+            )
 
             # Add performance curves
             ite[
                 "CPU_Power_Input_Function_of_Loading_and_Air_Temperature_Curve_Name"
             ] = f"{ite['Name']} cpu power input function of loading and supply Temperature curve"
-            ite[
-                "Air_Flow_Function_of_Loading_and_Air_Temperature_Curve_Name"
-            ] = f"{ite['Name']} air flow function of loading and air temperature curve"
-            ite[
-                "Fan_Power_Input_Function_of_Flow_Curve_Name"
-            ] = f"{ite['Name']} fan power input function of flow curve"
+            ite["Air_Flow_Function_of_Loading_and_Air_Temperature_Curve_Name"] = (
+                f"{ite['Name']} air flow function of loading and air temperature curve"
+            )
+            ite["Fan_Power_Input_Function_of_Flow_Curve_Name"] = (
+                f"{ite['Name']} fan power input function of flow curve"
+            )
             ite[
                 "Recirculation_Function_of_Loading_and_Supply_Temperature_Curve_Name"
             ] = f"{ite['Name']} recirculation function of loading and supply temperature curve"
@@ -231,21 +230,37 @@ class RoomBuilder:
             occupancy["Name"] = config.uid.lower()
             occupancy["Zone_or_ZoneList_Name"] = zone_name
             occupancy["Number_of_People_Schedule_Name"] = "Always On".upper()
-            occupancy["Number_of_People_Calculation_Method"] = config.number_of_people_calculation_method
+            occupancy["Number_of_People_Calculation_Method"] = (
+                config.number_of_people_calculation_method
+            )
             occupancy["Number_of_People"] = config.number_of_people
             occupancy["People_per_Zone_Floor_Area"] = config.people_per_zone_floor_area
             occupancy["Zone_Floor_Area_per_Person"] = config.zone_floor_area_per_person
             occupancy["Fraction_Radiant"] = config.fraction_radiant
             occupancy["Sensible_Heat_Fraction"] = config.sensible_heat_fraction
             occupancy["Activity_Level_Schedule_Name"] = "Always On".upper()
-            occupancy["Carbon_Dioxide_Generation_Rate"] = config.carbon_dioxide_generation_rate
-            occupancy["Enable_ASHRAE_55_Comfort_Warnings"] = config.enable_ashrae_55_comfort_warnings
-            occupancy["Mean_Radiant_Temperature_Calculation_Type"] = config.mean_radiant_temperature_calculation_type
-            occupancy["Surface_NameAngle_Factor_List_Name"] = config.surface_name_angle_factor_list_name
-            occupancy["Work_Efficiency_Schedule_Name"] = config.work_efficiency_schedule_name
-            occupancy["Clothing_Insulation_Calculation_Method"] = config.clothing_insulation_calculation_method
+            occupancy["Carbon_Dioxide_Generation_Rate"] = (
+                config.carbon_dioxide_generation_rate
+            )
+            occupancy["Enable_ASHRAE_55_Comfort_Warnings"] = (
+                config.enable_ashrae_55_comfort_warnings
+            )
+            occupancy["Mean_Radiant_Temperature_Calculation_Type"] = (
+                config.mean_radiant_temperature_calculation_type
+            )
+            occupancy["Surface_NameAngle_Factor_List_Name"] = (
+                config.surface_name_angle_factor_list_name
+            )
+            occupancy["Work_Efficiency_Schedule_Name"] = (
+                config.work_efficiency_schedule_name
+            )
+            occupancy["Clothing_Insulation_Calculation_Method"] = (
+                config.clothing_insulation_calculation_method
+            )
 
-    def _make_electrical_equipment(self, zone_name: str, config: ElectricEquipment) -> None:
+    def _make_electrical_equipment(
+        self, zone_name: str, config: ElectricEquipment
+    ) -> None:
         if config:
             electrical_equipment = self.model.newidfobject(
                 key="ElectricEquipment".upper()
@@ -253,9 +268,13 @@ class RoomBuilder:
             electrical_equipment["Name"] = config.uid.lower()
             electrical_equipment["Zone_or_ZoneList_Name"] = zone_name
             electrical_equipment["Schedule_Name"] = "Always On".upper()
-            electrical_equipment["Design_Level_Calculation_Method"] = config.design_level_calculation_method
+            electrical_equipment["Design_Level_Calculation_Method"] = (
+                config.design_level_calculation_method
+            )
             electrical_equipment["Design_Level"] = config.design_level
-            electrical_equipment["Watts_per_Zone_Floor_Area"] = config.watts_per_zone_floor_area
+            electrical_equipment["Watts_per_Zone_Floor_Area"] = (
+                config.watts_per_zone_floor_area
+            )
             electrical_equipment["Watts_per_Person"] = config.watts_per_person
             electrical_equipment["Fraction_Latent"] = config.fraction_latent
             electrical_equipment["Fraction_Radiant"] = config.fraction_radiant
@@ -269,7 +288,9 @@ class RoomBuilder:
             light["Zone_or_ZoneList_Name"] = zone_name
             light["Lighting_Level"] = config.lighting_power
             light["Schedule_Name"] = "Always On".upper()
-            light["Design_Level_Calculation_Method"] = config.design_level_calculation_method
+            light["Design_Level_Calculation_Method"] = (
+                config.design_level_calculation_method
+            )
             light["Lighting_Level"] = config.lighting_power
             light["Watts_per_Zone_Floor_Area"] = config.watts_per_zone_floor_area
             light["Watts_per_Person"] = config.watts_per_person
@@ -277,76 +298,82 @@ class RoomBuilder:
             light["Fraction_Visible"] = config.fraction_visible
             light["Fraction_Replaceable"] = config.fraction_replaceable
             light["EndUse_Subcategory"] = config.end_use_subcategory
-            light["Return_Air_Fraction_Calculated_from_Plenum_Temperature"] = config.return_air_fraction_calculated_from_plenum_temperature
-            light["Return_Air_Fraction_Function_of_Plenum_Temperature_Coefficient_1"] = config.return_air_fraction_function_of_plenum_temperature_coefficient_1
-            light["Return_Air_Fraction_Function_of_Plenum_Temperature_Coefficient_2"] = config.return_air_fraction_function_of_plenum_temperature_coefficient_2
-            
+            light["Return_Air_Fraction_Calculated_from_Plenum_Temperature"] = (
+                config.return_air_fraction_calculated_from_plenum_temperature
+            )
+            light[
+                "Return_Air_Fraction_Function_of_Plenum_Temperature_Coefficient_1"
+            ] = config.return_air_fraction_function_of_plenum_temperature_coefficient_1
+            light[
+                "Return_Air_Fraction_Function_of_Plenum_Temperature_Coefficient_2"
+            ] = config.return_air_fraction_function_of_plenum_temperature_coefficient_2
+
     def _make_zone_sizing(self, zone_name: str, config: SizingZone) -> None:
         sizing = self.model.newidfobject(key="Sizing:Zone".upper())
         sizing["Zone_or_ZoneList_Name"] = zone_name
-        sizing[
-            "Zone_Cooling_Design_Supply_Air_Temperature_Input_Method"
-        ] = config.zone_heating_design_supply_air_temperature_input_method
-        sizing[
-            "Zone_Cooling_Design_Supply_Air_Temperature"
-        ] = config.zone_cooling_design_supply_air_temperature
-        sizing[
-            "Zone_Cooling_Design_Supply_Air_Temperature_Difference"
-        ] = config.zone_cooling_design_supply_air_temperature_difference
-        sizing[
-            "Zone_Heating_Design_Supply_Air_Temperature_Input_Method"
-        ] = config.zone_heating_design_supply_air_temperature_input_method
-        sizing[
-            "Zone_Heating_Design_Supply_Air_Temperature"
-        ] = config.zone_heating_design_supply_air_temperature
-        sizing[
-            "Zone_Heating_Design_Supply_Air_Temperature_Difference"
-        ] = config.zone_heating_design_supply_air_temperature_difference
-        sizing[
-            "Zone_Cooling_Design_Supply_Air_Humidity_Ratio"
-        ] = config.zone_cooling_design_supply_air_humidity_ratio
-        sizing[
-            "Zone_Heating_Design_Supply_Air_Humidity_Ratio"
-        ] = config.zone_heating_design_supply_air_humidity_ratio
+        sizing["Zone_Cooling_Design_Supply_Air_Temperature_Input_Method"] = (
+            config.zone_heating_design_supply_air_temperature_input_method
+        )
+        sizing["Zone_Cooling_Design_Supply_Air_Temperature"] = (
+            config.zone_cooling_design_supply_air_temperature
+        )
+        sizing["Zone_Cooling_Design_Supply_Air_Temperature_Difference"] = (
+            config.zone_cooling_design_supply_air_temperature_difference
+        )
+        sizing["Zone_Heating_Design_Supply_Air_Temperature_Input_Method"] = (
+            config.zone_heating_design_supply_air_temperature_input_method
+        )
+        sizing["Zone_Heating_Design_Supply_Air_Temperature"] = (
+            config.zone_heating_design_supply_air_temperature
+        )
+        sizing["Zone_Heating_Design_Supply_Air_Temperature_Difference"] = (
+            config.zone_heating_design_supply_air_temperature_difference
+        )
+        sizing["Zone_Cooling_Design_Supply_Air_Humidity_Ratio"] = (
+            config.zone_cooling_design_supply_air_humidity_ratio
+        )
+        sizing["Zone_Heating_Design_Supply_Air_Humidity_Ratio"] = (
+            config.zone_heating_design_supply_air_humidity_ratio
+        )
         sizing["Design_Specification_Outdoor_Air_Object_Name"] = f"SZ DSOA {zone_name}"
-        sizing[
-            "Design_Specification_Zone_Air_Distribution_Object_Name"
-        ] = config.design_specification_zone_air_distribution_object_name
+        sizing["Design_Specification_Zone_Air_Distribution_Object_Name"] = (
+            config.design_specification_zone_air_distribution_object_name
+        )
         sizing["Zone_Heating_Sizing_Factor"] = config.zone_heating_sizing_factor
         sizing["Zone_Cooling_Sizing_Factor"] = config.zone_cooling_sizing_factor
         sizing["Cooling_Design_Air_Flow_Method"] = config.cooling_design_air_flow_method
         sizing["Cooling_Design_Air_Flow_Rate"] = config.cooling_design_air_flow_rate
-        sizing[
-            "Cooling_Minimum_Air_Flow_per_Zone_Floor_Area"
-        ] = config.cooling_minimum_air_flow_per_zone_floor_area
+        sizing["Cooling_Minimum_Air_Flow_per_Zone_Floor_Area"] = (
+            config.cooling_minimum_air_flow_per_zone_floor_area
+        )
         sizing["Cooling_Minimum_Air_Flow"] = config.cooling_minimum_air_flow
-        sizing[
-            "Cooling_Minimum_Air_Flow_Fraction"
-        ] = config.cooling_minimum_air_flow_fraction
+        sizing["Cooling_Minimum_Air_Flow_Fraction"] = (
+            config.cooling_minimum_air_flow_fraction
+        )
         sizing["Heating_Design_Air_Flow_Method"] = config.heating_design_air_flow_method
         sizing["Heating_Design_Air_Flow_Rate"] = config.heating_design_air_flow_rate
-        sizing[
-            "Heating_Maximum_Air_Flow_per_Zone_Floor_Area"
-        ] = config.heating_maximum_air_flow_per_zone_floor_area
+        sizing["Heating_Maximum_Air_Flow_per_Zone_Floor_Area"] = (
+            config.heating_maximum_air_flow_per_zone_floor_area
+        )
         sizing["Heating_Maximum_Air_Flow"] = config.heating_maximum_air_flow
-        sizing[
-            "Heating_Maximum_Air_Flow_Fraction"
-        ] = config.heating_maximum_air_flow_fraction
-        sizing[
-            "Design_Specification_Zone_Air_Distribution_Object_Name"
-        ] = config.design_specification_zone_air_distribution_object_name
-        sizing[
-            "Account_for_Dedicated_Outdoor_Air_System"
-        ] = config.account_for_dedicated_outdoor_air_system
-        sizing[
-            "Dedicated_Outdoor_Air_System_Control_Strategy"
-        ] = config.dedicated_outdoor_air_system_control_strategy
-        sizing[
-            "Dedicated_Outdoor_Air_Low_Setpoint_Temperature_for_Design"
-        ] = config.dedicated_outdoor_air_low_setpoint_temperature_for_design
-        sizing[
-            "Dedicated_Outdoor_Air_High_Setpoint_Temperature_for_Design"
-        ] = config.dedicated_outdoor_air_high_setpoint_temperature_for_design
+        sizing["Heating_Maximum_Air_Flow_Fraction"] = (
+            config.heating_maximum_air_flow_fraction
+        )
+        sizing["Design_Specification_Zone_Air_Distribution_Object_Name"] = (
+            config.design_specification_zone_air_distribution_object_name
+        )
+        sizing["Account_for_Dedicated_Outdoor_Air_System"] = (
+            config.account_for_dedicated_outdoor_air_system
+        )
+        sizing["Dedicated_Outdoor_Air_System_Control_Strategy"] = (
+            config.dedicated_outdoor_air_system_control_strategy
+        )
+        sizing["Dedicated_Outdoor_Air_Low_Setpoint_Temperature_for_Design"] = (
+            config.dedicated_outdoor_air_low_setpoint_temperature_for_design
+        )
+        sizing["Dedicated_Outdoor_Air_High_Setpoint_Temperature_for_Design"] = (
+            config.dedicated_outdoor_air_high_setpoint_temperature_for_design
+        )
 
         self.model.newidfobject(
             key="DesignSpecification:OutdoorAir".upper(),
@@ -365,7 +392,6 @@ class RoomBuilder:
         acus: Dict[str, ACU],
         dehumidifiers: Dict[str, Dehumidifier],
     ) -> None:
-
         def make_zone_thermostat(
             model: IDF,
             zone_name: str,
@@ -379,12 +405,12 @@ class RoomBuilder:
                 key="ThermostatSetpoint:DualSetpoint".upper()
             )
             thermostat["Name"] = f"{zone_name} thermostat"
-            thermostat[
-                "Heating_Setpoint_Temperature_Schedule_Name"
-            ] = f"{zone_name} heating setpoint schedule"
-            thermostat[
-                "Cooling_Setpoint_Temperature_Schedule_Name"
-            ] = f"{zone_name} cooling setpoint schedule"
+            thermostat["Heating_Setpoint_Temperature_Schedule_Name"] = (
+                f"{zone_name} heating setpoint schedule"
+            )
+            thermostat["Cooling_Setpoint_Temperature_Schedule_Name"] = (
+                f"{zone_name} cooling setpoint schedule"
+            )
 
             model.newidfobject(
                 key="ZoneControl:Thermostat".upper(),
@@ -423,7 +449,11 @@ class RoomBuilder:
             if num_dehumidifier == 0:
                 return
 
-            dehumidifying_schedule_name = f"{zone_name} dehumidifying relative humidity setpoint schedule" if config.dehumidifying_setpoint else ""
+            dehumidifying_schedule_name = (
+                f"{zone_name} dehumidifying relative humidity setpoint schedule"
+                if config.dehumidifying_setpoint
+                else ""
+            )
 
             model.newidfobject(
                 key="ZoneControl:Humidistat".upper(),
@@ -450,7 +480,7 @@ class RoomBuilder:
             model=self.model,
             zone_name=zone_name,
             config=control_states.thermostats,
-            acus=acus
+            acus=acus,
         )
 
         make_zone_humidistat(
@@ -487,9 +517,9 @@ class RoomBuilder:
         controller_list["Controller_1_Name"] = f"{oa['Name']} controller"
         controller = self.model.newidfobject(key="Controller:OutdoorAir".upper())
         controller["Name"] = f"{oa['Name']} controller"
-        controller[
-            "Relief_Air_Outlet_Node_Name"
-        ] = f"{oa['Name']} relief air outlet node"
+        controller["Relief_Air_Outlet_Node_Name"] = (
+            f"{oa['Name']} relief air outlet node"
+        )
         controller["Return_Air_Node_Name"] = air_loop["Supply_Side_Inlet_Node_Name"]
         controller["Mixed_Air_Node_Name"] = f"{oa['Name']} mixed air node"
         controller["Actuator_Node_Name"] = f"{oa['Name']} outside air inlet node"
@@ -516,10 +546,7 @@ class RoomBuilder:
             oa=oa,
             air_loop=air_loop,
         )
-        self._make_oa_controller(
-            oa=oa_eplus,
-            air_loop=air_loop
-        )
+        self._make_oa_controller(oa=oa_eplus, air_loop=air_loop)
         self.model.newidfobject(
             "SetpointManager:MixedAir".upper(),
             Name=f"{oa_eplus['Name']} mixed air manager",
@@ -546,6 +573,7 @@ class RoomBuilder:
         :param dehumidifiers: a dictionary of dehumidifier objects
         :return: None
         """
+
         def make_equipment_connections(
             model: IDF,
             zone_name: str,
@@ -557,7 +585,9 @@ class RoomBuilder:
                 Zone_Name=zone_name,
                 Zone_Conditioning_Equipment_List_Name=f"{zone_name} equipment list",
                 Zone_Air_Inlet_Node_or_NodeList_Name=f"{zone_name} inlets",
-                Zone_Air_Exhaust_Node_or_NodeList_Name=f"{zone_name} exhausts" if num_dehumidifier != 0 else "",
+                Zone_Air_Exhaust_Node_or_NodeList_Name=f"{zone_name} exhausts"
+                if num_dehumidifier != 0
+                else "",
                 Zone_Air_Node_Name=f"{zone_name} air node",
                 Zone_Return_Air_Node_or_NodeList_Name=f"{zone_name} returns",
             )
@@ -582,8 +612,12 @@ class RoomBuilder:
                 zone_returns[f"Node_{i + 1}_Name"] = f"{zone_name} return node {i + 1}"
 
             for i in range(num_dehumidifier):
-                zone_inlets[f"Node_{i + 1 + num_acu}_Name"] = f"{zone_name} dehumidifier outlet node {i + 1}"
-                zone_exhausts[f"Node_{i + 1}_Name"] = f"{zone_name} dehumidifier inlet node {i + 1}"
+                zone_inlets[f"Node_{i + 1 + num_acu}_Name"] = (
+                    f"{zone_name} dehumidifier outlet node {i + 1}"
+                )
+                zone_exhausts[f"Node_{i + 1}_Name"] = (
+                    f"{zone_name} dehumidifier inlet node {i + 1}"
+                )
 
         def make_air_distribution_units(
             model: IDF,
@@ -592,16 +626,16 @@ class RoomBuilder:
             num_acu: int,
         ) -> None:
             for i in range(num_acu):
-                zone_equipment_list[
-                    f"Zone_Equipment_{i + 1}_Object_Type"
-                ] = "ZoneHVAC:AirDistributionUnit"
-                zone_equipment_list[
-                    f"Zone_Equipment_{i + 1}_Name"
-                ] = f"{zone_name} air distribution unit {i + 1}"
+                zone_equipment_list[f"Zone_Equipment_{i + 1}_Object_Type"] = (
+                    "ZoneHVAC:AirDistributionUnit"
+                )
+                zone_equipment_list[f"Zone_Equipment_{i + 1}_Name"] = (
+                    f"{zone_name} air distribution unit {i + 1}"
+                )
                 zone_equipment_list[f"Zone_Equipment_{i + 1}_Cooling_Sequence"] = i + 1
                 zone_equipment_list[
                     f"Zone_Equipment_{i + 1}_Heating_or_NoLoad_Sequence"
-                ] = (i + 1)
+                ] = i + 1
                 zone_equipment_list[
                     f"Zone_Equipment_{i + 1}_Sequential_Cooling_Fraction_Schedule_Name"
                 ] = ""
@@ -635,16 +669,18 @@ class RoomBuilder:
         ) -> None:
             # dehumidifiers
             for i, (dehumidifier_key, dehumidifier) in enumerate(dehumidifiers.items()):
+                zone_equipment_list[f"Zone_Equipment_{i + 1 + num_acu}_Object_Type"] = (
+                    "ZoneHVAC:Dehumidifier:DX"
+                )
+                zone_equipment_list[f"Zone_Equipment_{i + 1 + num_acu}_Name"] = (
+                    f"{dehumidifier.uid.lower()}"
+                )
                 zone_equipment_list[
-                    f"Zone_Equipment_{i + 1 + num_acu}_Object_Type"
-                ] = "ZoneHVAC:Dehumidifier:DX"
-                zone_equipment_list[
-                    f"Zone_Equipment_{i + 1 + num_acu}_Name"
-                ] = f"{dehumidifier.uid.lower()}"
-                zone_equipment_list[f"Zone_Equipment_{i + 1 + num_acu}_Cooling_Sequence"] = i + 1 + num_acu
+                    f"Zone_Equipment_{i + 1 + num_acu}_Cooling_Sequence"
+                ] = i + 1 + num_acu
                 zone_equipment_list[
                     f"Zone_Equipment_{i + 1 + num_acu}_Heating_or_NoLoad_Sequence"
-                ] = (i + 1 + num_acu)
+                ] = i + 1 + num_acu
                 zone_equipment_list[
                     f"Zone_Equipment_{i + 1 + num_acu}_Sequential_Cooling_Fraction_Schedule_Name"
                 ] = ""
@@ -664,7 +700,9 @@ class RoomBuilder:
                     Maximum_DryBulb_Temperature_for_Dehumidifier_Operation=dehumidifier.cooling.maximum_dry_bulb_temperature,
                     OffCycle_Parasitic_Electric_Load=dehumidifier.power.off_cycle_parasitic_electric_load,
                 )
-                obj["Water_Removal_Curve_Name"] = f"{dehumidifier.uid.lower()} water removal curve"
+                obj["Water_Removal_Curve_Name"] = (
+                    f"{dehumidifier.uid.lower()} water removal curve"
+                )
                 model.newidfobject(
                     key="Curve:Biquadratic".upper(),
                     Name=obj["Water_Removal_Curve_Name"],
@@ -679,7 +717,9 @@ class RoomBuilder:
                     Minimum_Value_of_y=0,
                     Maximum_Value_of_y=100,
                 )
-                obj["Energy_Factor_Curve_Name"] = f"{dehumidifier.uid.lower()} energy factor curve"
+                obj["Energy_Factor_Curve_Name"] = (
+                    f"{dehumidifier.uid.lower()} energy factor curve"
+                )
                 model.newidfobject(
                     key="Curve:Biquadratic".upper(),
                     Name=obj["Energy_Factor_Curve_Name"],
@@ -694,20 +734,28 @@ class RoomBuilder:
                     Minimum_Value_of_y=0,
                     Maximum_Value_of_y=100,
                 )
-                obj["Part_Load_Fraction_Correlation_Curve_Name"] = f"{dehumidifier.uid.lower()} part load ratio curve"
+                obj["Part_Load_Fraction_Correlation_Curve_Name"] = (
+                    f"{dehumidifier.uid.lower()} part load ratio curve"
+                )
                 model.newidfobject(
                     key="Curve:Quadratic".upper(),
                     Name=obj["Part_Load_Fraction_Correlation_Curve_Name"],
-                    Coefficient1_Constant=dehumidifier.power.part_load_fraction_correlation_curve[0],
-                    Coefficient2_x=dehumidifier.power.part_load_fraction_correlation_curve[1],
-                    Coefficient3_x2=dehumidifier.power.part_load_fraction_correlation_curve[2],
+                    Coefficient1_Constant=dehumidifier.power.part_load_fraction_correlation_curve[
+                        0
+                    ],
+                    Coefficient2_x=dehumidifier.power.part_load_fraction_correlation_curve[
+                        1
+                    ],
+                    Coefficient3_x2=dehumidifier.power.part_load_fraction_correlation_curve[
+                        2
+                    ],
                     Minimum_Value_of_x=0,
                     Maximum_Value_of_x=1,
                 )
 
         if len(acus) == 0:
             return
-        num_acus = len(acus) 
+        num_acus = len(acus)
         num_dehumidifiers = len(dehumidifiers) if dehumidifiers is not None else 0
 
         # step 1: create the zone equipment connections
@@ -740,7 +788,7 @@ class RoomBuilder:
         acus: Dict[str, ACU],
         sizing: SizingSystem,
     ) -> None:
-        """ Create the air loops for the zone HVAC system
+        """Create the air loops for the zone HVAC system
         Please refer to the EnergyPlus documentation for more information about the AirLoopHVAC object:
         https://bigladdersoftware.com/epx/docs/9-5/input-output-reference/group-air-distribution.html#airloophvac
         :param zone_name: the name of the zone
@@ -776,12 +824,12 @@ class RoomBuilder:
                 type_="air",
                 loop=air_loop,
             )
-            branch[
-                f"Component_{branch_component_idx}_Object_Type"
-            ] = "Coil:Cooling:Water".upper()
-            branch[
-                f"Component_{branch_component_idx}_Name"
-            ] = f"{acu.uid.lower()} cooling coil"
+            branch[f"Component_{branch_component_idx}_Object_Type"] = (
+                "Coil:Cooling:Water".upper()
+            )
+            branch[f"Component_{branch_component_idx}_Name"] = (
+                f"{acu.uid.lower()} cooling coil"
+            )
             # make coil controller
             controller_list = self.model.newidfobject(
                 "AirLoopHVAC:ControllerList".upper(),
@@ -819,9 +867,9 @@ class RoomBuilder:
             zone_splitter = self.model.newidfobject("AirLoopHVAC:ZoneSplitter".upper())
             zone_splitter["Name"] = f"{loop_name} air splitter"
             zone_splitter["Inlet_Node_Name"] = air_loop["Demand_Side_Inlet_Node_Names"]
-            zone_splitter[
-                f"Outlet_1_Node_Name"
-            ] = f"{zone_name} air terminal unit {idx + 1} inlet node"
+            zone_splitter["Outlet_1_Node_Name"] = (
+                f"{zone_name} air terminal unit {idx + 1} inlet node"
+            )
 
             # make air return path
             self.model.newidfobject(
@@ -841,19 +889,19 @@ class RoomBuilder:
             )
 
             # make air loop availability manager
-            air_loop[
-                "Availability_Manager_List_Name"
-            ] = f"{loop_name} availability manager list"
+            air_loop["Availability_Manager_List_Name"] = (
+                f"{loop_name} availability manager list"
+            )
             availability_manager = self.model.newidfobject(
                 "AvailabilityManagerAssignmentList".upper(),
                 Name=f"{loop_name} availability manager list",
             )
-            availability_manager[
-                "Availability_Manager_1_Object_Type"
-            ] = "AvailabilityManager:Scheduled"
-            availability_manager[
-                "Availability_Manager_1_Name"
-            ] = f"{loop_name} availability manager"
+            availability_manager["Availability_Manager_1_Object_Type"] = (
+                "AvailabilityManager:Scheduled"
+            )
+            availability_manager["Availability_Manager_1_Name"] = (
+                f"{loop_name} availability manager"
+            )
             self.model.newidfobject(
                 "AvailabilityManager:Scheduled".upper(),
                 Name=f"{loop_name} availability manager",
@@ -935,7 +983,9 @@ class RoomBuilder:
         (2) airloops system
         https://bigladdersoftware.com/epx/docs/9-5/input-output-reference/group-air-distribution.html#airloophvac
         """
-        self._make_zone_hvac_equipment(zone_name=zone_name, acus=acus, dehumidifiers=dehumidifiers, meta=meta)
+        self._make_zone_hvac_equipment(
+            zone_name=zone_name, acus=acus, dehumidifiers=dehumidifiers, meta=meta
+        )
         self._make_zone_hvac_airloops(zone_name=zone_name, acus=acus, sizing=sizing)
 
     def make_rooms(self, rooms: Dict[str, Room]) -> None:
@@ -948,38 +998,48 @@ class RoomBuilder:
                 sizing=config.sizing.sizing_system,
                 meta=config.meta,
             )
-            if config.constructions.heat_gains is not None and config.constructions.heat_gains.ites is not None:
+            if (
+                config.constructions.heat_gains is not None
+                and config.constructions.heat_gains.ites is not None
+            ):
                 self._make_ites(
-                    zone_name=room_name,
-                    ites=config.constructions.heat_gains.ites
+                    zone_name=room_name, ites=config.constructions.heat_gains.ites
                 )
-            if config.constructions.heat_gains is not None and config.constructions.heat_gains.light is not None:
+            if (
+                config.constructions.heat_gains is not None
+                and config.constructions.heat_gains.light is not None
+            ):
                 self._make_lightning(
-                    zone_name=room_name,
-                    config=config.constructions.heat_gains.light
+                    zone_name=room_name, config=config.constructions.heat_gains.light
                 )
-            if config.constructions.heat_gains is not None and config.constructions.heat_gains.people is not None:
+            if (
+                config.constructions.heat_gains is not None
+                and config.constructions.heat_gains.people is not None
+            ):
                 self._make_occupancy(
-                    zone_name=room_name,
-                    config=config.constructions.heat_gains.people
+                    zone_name=room_name, config=config.constructions.heat_gains.people
                 )
-            if config.constructions.heat_gains is not None and config.constructions.heat_gains.light is not None:
+            if (
+                config.constructions.heat_gains is not None
+                and config.constructions.heat_gains.light is not None
+            ):
                 self._make_lightning(
-                    zone_name=room_name,
-                    config=config.constructions.heat_gains.light
+                    zone_name=room_name, config=config.constructions.heat_gains.light
                 )
-            if config.constructions.heat_gains is not None and config.constructions.heat_gains.electric_equipment is not None:
+            if (
+                config.constructions.heat_gains is not None
+                and config.constructions.heat_gains.electric_equipment is not None
+            ):
                 self._make_electrical_equipment(
                     zone_name=room_name,
-                    config=config.constructions.heat_gains.electric_equipment
+                    config=config.constructions.heat_gains.electric_equipment,
                 )
             self._make_zone_sizing(
-                zone_name=room_name,
-                config=config.sizing.sizing_zone
+                zone_name=room_name, config=config.sizing.sizing_zone
             )
             self._make_zone_control(
                 zone_name=room_name,
                 control_states=config.control_states,
-                acus = config.constructions.acus,
-                dehumidifiers = config.constructions.dehumidifiers,
+                acus=config.constructions.acus,
+                dehumidifiers=config.constructions.dehumidifiers,
             )

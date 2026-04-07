@@ -3,12 +3,10 @@ from dclib.models.composite import Models
 
 
 class ModelBuilder:
-
     def __init__(self, model: IDF):
         self.model = model
 
     def _make_materials(self, model_config: Models):
-
         for material_name, material_config in model_config.material_models.items():
             material = self.model.newidfobject(key="Material".upper())
             material["Name"] = material_name
@@ -28,9 +26,9 @@ class ModelBuilder:
             construction = self.model.newidfobject(key="Construction".upper())
             construction["Name"] = construction_name
             for idx, material in enumerate(construction_config.materials):
-                construction[
-                    f"Outside_Layer" if idx == 0 else f"Layer_{idx + 1}"
-                ] = material
+                construction["Outside_Layer" if idx == 0 else f"Layer_{idx + 1}"] = (
+                    material
+                )
 
     def _make_curves(self):
         pass

@@ -36,7 +36,7 @@ class LithiumIonBattery(nn.Module):
         Qfull: torch.Tensor | float = 3.2,
         Qexp: torch.Tensor | float = 0.8075 * 3.2,
         Qnom: torch.Tensor | float = 0.976875 * 3.2,
-        C_rate: torch.Tensor | float = 0.2
+        C_rate: torch.Tensor | float = 0.2,
     ):
         super().__init__()
         self.capacity_model = CapacityModel(
@@ -44,7 +44,7 @@ class LithiumIonBattery(nn.Module):
             initial_soc=initial_fractional_state_of_charge,
             min_soc=0.0,
             max_soc=100.0,
-            dt_hr=dt_hr
+            dt_hr=dt_hr,
         )
         self.voltage_model = VoltageModel(
             num_cells_in_series=num_cells_in_series,
@@ -57,7 +57,7 @@ class LithiumIonBattery(nn.Module):
             Qfull=Qfull,
             Qexp=Qexp,
             Qnom=Qnom,
-            C_rate=C_rate
+            C_rate=C_rate,
         )
         self.thermal_model = ThermalModel(
             dt_hr=dt_hr,
@@ -66,7 +66,9 @@ class LithiumIonBattery(nn.Module):
             Cp=battery_specific_heat_capacity,
             h=heat_transfer_coefficient_between_battery_and_ambient,
             resistance=resistance * num_cells_in_series / num_cells_in_strings,
-            T_room_init=T_room_init if isinstance(T_room_init, torch.Tensor) else torch.tensor(T_room_init)
+            T_room_init=T_room_init
+            if isinstance(T_room_init, torch.Tensor)
+            else torch.tensor(T_room_init),
         )
         self.lifetime_model = NMCLifetimeModel(
             dt_hr=dt_hr,
@@ -79,7 +81,9 @@ class LithiumIonBattery(nn.Module):
         self.Q_max = torch.tensor(Qfull)
         self.I = torch.zeros(1)
         self.P = torch.zeros(1)
-        self.max_discharge_P, self.max_discharge_I = self.calculate_max_discharge_power_kw()
+        self.max_discharge_P, self.max_discharge_I = (
+            self.calculate_max_discharge_power_kw()
+        )
         self.max_charge_P, self.max_charge_I = self.calculate_max_charge_power_kw()
         self.lifetime_counter = torch.zeros(1)
 
@@ -89,7 +93,7 @@ class LithiumIonBattery(nn.Module):
         """
         if power_kw == 0:
             return torch.zeros(1), torch.zeros(1)
-        if power_kw < 0.:  # charging
+        if power_kw < 0.0:  # charging
             max_power, current = self.calculate_max_charge_power_kw()
             if max_power > power_kw:
                 logger.warning(
@@ -106,9 +110,9 @@ class LithiumIonBattery(nn.Module):
                 power_kw = max_power
                 return power_kw, current
         return self.voltage_model.calculate_current_for_target_w(
-            P_watts=power_kw * 1000.,
+            P_watts=power_kw * 1000.0,
             q=self.capacity_model.q0,
-            q_max=self.capacity_model.q_max
+            q_max=self.capacity_model.q_max,
         )
 
     def calculate_voltage_for_current(self, I: torch.Tensor | float):
@@ -126,8 +130,7 @@ class LithiumIonBattery(nn.Module):
         Calculate the maximum discharge power in kW.
         """
         max_discharge_power, max_I = self.voltage_model.calculate_max_discharge_w(
-            q=self.capacity_model.q0,
-            q_max=self.capacity_model.q_max
+            q=self.capacity_model.q0, q_max=self.capacity_model.q_max
         )
         return max_discharge_power * 0.001, max_I
 
@@ -136,28 +139,21 @@ class LithiumIonBattery(nn.Module):
         Calculate the maximum charge power in kW.
         """
         max_charge_power, max_I = self.voltage_model.calculate_max_charge_w(
-            q=self.capacity_model.q0,
-            q_max=self.capacity_model.q_max
+            q=self.capacity_model.q0, q_max=self.capacity_model.q_max
         )
         return max_charge_power * 0.001, max_I
 
-    def run_thermal_model(
-        self,
-        I: torch.Tensor | float
-    ):
+    def run_thermal_model(self, I: torch.Tensor | float):
         return self.thermal_model.update_battery_temperature(I)
 
-    def run_capacity_model(
-        self,
-        I: torch.Tensor | float
-    ):
+    def run_capacity_model(self, I: torch.Tensor | float):
         return self.capacity_model.update_capacity(I=I)
 
     def run_voltage_model(self, I: torch.Tensor | float):
         return self.voltage_model.update_voltage(
             q=self.capacity_model.q0 - I * self.voltage_model.dt_hr,
             q_max=self.capacity_model.q_max,
-            I=I
+            I=I,
         )
 
     def run_lifetime_model(self):
@@ -165,7 +161,7 @@ class LithiumIonBattery(nn.Module):
             charge_changed=self.capacity_model.change_mode,
             prev_dod=self.capacity_model.prev_dod,
             dod=self.capacity_model.dod,
-            T_battery=self.thermal_model.T_batt
+            T_battery=self.thermal_model.T_batt,
         )
 
     def update_state(self, I: torch.Tensor | float):
@@ -173,7 +169,9 @@ class LithiumIonBattery(nn.Module):
         self.Q = self.capacity_model.q0
         self.Q_max = self.capacity_model.q_max
         self.V = self.voltage_model.cell_voltage * self.voltage_model.num_cells_series
-        self.max_discharge_P, self.max_discharge_I = self.calculate_max_discharge_power_kw()
+        self.max_discharge_P, self.max_discharge_I = (
+            self.calculate_max_discharge_power_kw()
+        )
         self.max_charge_P, self.max_charge_I = self.calculate_max_charge_power_kw()
         self.P = I * self.V * 0.001  # convert to kW
 
@@ -181,7 +179,7 @@ class LithiumIonBattery(nn.Module):
         self,
         P_kw: Optional[torch.Tensor | float] = None,
         I: Optional[torch.Tensor | float] = None,
-        T_room: torch.Tensor | float = None
+        T_room: torch.Tensor | float = None,
     ):
         # fixed power charge/discharge mode
         if I is None:
@@ -203,14 +201,14 @@ if __name__ == "__main__":
     model = LithiumIonBattery(
         num_cells_in_series=198,
         num_cells_in_strings=2,
-        initial_fractional_state_of_charge=100.,
-        battery_mass=342.,
+        initial_fractional_state_of_charge=100.0,
+        battery_mass=342.0,
         battery_surface_area=4.26,
-        battery_specific_heat_capacity=1500.,
+        battery_specific_heat_capacity=1500.0,
         heat_transfer_coefficient_between_battery_and_ambient=7.5,
         dc_to_dc_charging_efficiency=0.95,
-        dt_hr=1.0/10,
-        C_rate=0.2
+        dt_hr=1.0 / 10,
+        C_rate=0.2,
     )
 
     """
@@ -327,13 +325,14 @@ if __name__ == "__main__":
     plt.legend()
     plt.show()
 """
+
     def simulate_battery_cycle(
         model: LithiumIonBattery,
         discharge_power_kw: float | torch.Tensor,
         charge_power_kw: float | torch.Tensor,
         total_time_discharge: float | torch.Tensor,
         total_time_charge: float | torch.Tensor,
-        num_cycles: int
+        num_cycles: int,
     ):
         # Arrays to store results
         res_soc = []
@@ -378,7 +377,7 @@ if __name__ == "__main__":
         charge_power_kw=charge_power_kw,
         total_time_discharge=total_time_discharge,
         total_time_charge=total_time_charge,
-        num_cycles=num_cycles
+        num_cycles=num_cycles,
     )
 
     # Plotting results
@@ -409,4 +408,6 @@ if __name__ == "__main__":
 
     plt.tight_layout()
     plt.show()
-    plt.savefig("/home/ztw/dctwin/dctwin/models/electric/battery/lithium_ion/plot_chargedischarge.png")
+    plt.savefig(
+        "/home/ztw/dctwin/dctwin/models/electric/battery/lithium_ion/plot_chargedischarge.png"
+    )

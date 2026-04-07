@@ -9,7 +9,6 @@ from dclib.ite.servers.server import Server
 
 
 class Cluster:
-
     def __init__(
         self,
         servers: Dict[str, Server],
@@ -40,41 +39,74 @@ class Cluster:
 
         self.time_step: Union[int, float] = time_step
         self.num_time_step_per_hour: int = 3600 // time_step
-        self.computing_demand_gt: np.ndarray = np.zeros(num_steps + 1)  # +1 for last time step, avoiding out of bound
-        self.computing_demand_pred_with_run_time_update: np.ndarray = np.zeros(num_steps + 1)
-        self.computing_demand_pred_without_run_time_update: np.ndarray = np.zeros(num_steps + 1)
+        self.computing_demand_gt: np.ndarray = np.zeros(
+            num_steps + 1
+        )  # +1 for last time step, avoiding out of bound
+        self.computing_demand_pred_with_run_time_update: np.ndarray = np.zeros(
+            num_steps + 1
+        )
+        self.computing_demand_pred_without_run_time_update: np.ndarray = np.zeros(
+            num_steps + 1
+        )
 
     def start_instance(self, server_id: str, job_id: str, task_id: str, clock: float):
         """
         Start a task instance on a server.
         """
-        next_ptr = self.running_jobs[job_id].running_tasks[task_id].next_instance_pointer
-        self.running_jobs[job_id].running_tasks[task_id].task_instances[next_ptr].allocated_server_name = server_id
+        next_ptr = (
+            self.running_jobs[job_id].running_tasks[task_id].next_instance_pointer
+        )
+        self.running_jobs[job_id].running_tasks[task_id].task_instances[
+            next_ptr
+        ].allocated_server_name = server_id
         self.servers[server_id].computing.run_task_instance(
             self.running_jobs[job_id].running_tasks[task_id].task_instances[next_ptr]
         )
-        self.running_jobs[job_id].running_tasks[task_id].task_instances[next_ptr].started = True
-        self.running_jobs[job_id].running_tasks[task_id].task_instances[next_ptr].finished = False
-        self.running_jobs[job_id].running_tasks[task_id].task_instances[next_ptr].released = False
-        self.running_jobs[job_id].running_tasks[task_id].task_instances[next_ptr].start_time = clock
-        self.running_jobs[job_id].running_tasks[task_id].task_instances[next_ptr].finish_time = \
-            self.running_jobs[job_id].running_tasks[task_id].task_instances[next_ptr].duration + clock
+        self.running_jobs[job_id].running_tasks[task_id].task_instances[
+            next_ptr
+        ].started = True
+        self.running_jobs[job_id].running_tasks[task_id].task_instances[
+            next_ptr
+        ].finished = False
+        self.running_jobs[job_id].running_tasks[task_id].task_instances[
+            next_ptr
+        ].released = False
+        self.running_jobs[job_id].running_tasks[task_id].task_instances[
+            next_ptr
+        ].start_time = clock
+        self.running_jobs[job_id].running_tasks[task_id].task_instances[
+            next_ptr
+        ].finish_time = (
+            self.running_jobs[job_id]
+            .running_tasks[task_id]
+            .task_instances[next_ptr]
+            .duration
+            + clock
+        )
         # update cluster power after start a task instance
         cpu_util = (
-            self.running_jobs[job_id].running_tasks[task_id].task_instances[next_ptr].cpu /
-            self.servers[server_id].computing.cpu_capacity
+            self.running_jobs[job_id]
+            .running_tasks[task_id]
+            .task_instances[next_ptr]
+            .cpu
+            / self.servers[server_id].computing.cpu_capacity
         )
         mem_util = (
-            self.running_jobs[job_id].running_tasks[task_id].task_instances[next_ptr].memory /
-            self.servers[server_id].computing.mem_capacity)
+            self.running_jobs[job_id]
+            .running_tasks[task_id]
+            .task_instances[next_ptr]
+            .memory
+            / self.servers[server_id].computing.mem_capacity
+        )
         disk_util = (
-            self.running_jobs[job_id].running_tasks[task_id].task_instances[next_ptr].disk /
-            self.servers[server_id].computing.disk_capacity
+            self.running_jobs[job_id]
+            .running_tasks[task_id]
+            .task_instances[next_ptr]
+            .disk
+            / self.servers[server_id].computing.disk_capacity
         )
         self.total_cluster_power += self.servers[server_id].power.calc(
-            cpu=cpu_util,
-            mem=mem_util,
-            disk=disk_util
+            cpu=cpu_util, mem=mem_util, disk=disk_util
         )
         # move the ptr to the next task instance
         self.running_jobs[job_id].running_tasks[task_id].next_instance_pointer += 1
@@ -103,32 +135,38 @@ class Cluster:
                 if self.workload_duration_estimator is None:
                     task_dur_str, task_dur, task_dur_dist = None, None, None
                 else:
-                    task_dur_str, task_dur, task_dur_dist = self.workload_duration_estimator.predict(
-                        timestamp=current_time + 1943400,
-                        current_flav_str=flav_str,
-                        prev_dur_str=prev_dur_str,
-                        num_tasks_in_batch=num_tasks,
+                    task_dur_str, task_dur, task_dur_dist = (
+                        self.workload_duration_estimator.predict(
+                            timestamp=current_time + 1943400,
+                            current_flav_str=flav_str,
+                            prev_dur_str=prev_dur_str,
+                            num_tasks_in_batch=num_tasks,
+                        )
                     )
                 # get the task lifetime estimation
                 waiting_task.duration_estimation = task_dur
                 waiting_task.duration_distribution = task_dur_dist
                 waiting_task.slack_time = np.clip(
                     waiting_task.deadline - waiting_task.duration, 0, np.inf
-                )   # slack time is the time left for the task to finish after the task is submitted
+                )  # slack time is the time left for the task to finish after the task is submitted
                 prev_dur_str = task_dur_str
                 # update the true computing demand with the perfect incoming task information
                 end_idx_true = int(waiting_task.duration // self.time_step + time_idx)
                 self.computing_demand_gt[time_idx:end_idx_true] += waiting_task.cpu
                 # only calculate the estimated computing demand when the duration estimator is available
                 if self.workload_duration_estimator is not None:
-                    end_idx_pred = int(waiting_task.duration_estimation // self.time_step + time_idx)
-                    self.computing_demand_pred_without_run_time_update[time_idx:end_idx_pred] += waiting_task.cpu
-                    self.computing_demand_pred_with_run_time_update[time_idx:end_idx_pred] += waiting_task.cpu
+                    end_idx_pred = int(
+                        waiting_task.duration_estimation // self.time_step + time_idx
+                    )
+                    self.computing_demand_pred_without_run_time_update[
+                        time_idx:end_idx_pred
+                    ] += waiting_task.cpu
+                    self.computing_demand_pred_with_run_time_update[
+                        time_idx:end_idx_pred
+                    ] += waiting_task.cpu
 
             # add the job to the waiting queue
-            self.waiting_jobs.update(
-                {job_name: job}
-            )
+            self.waiting_jobs.update({job_name: job})
 
     def update_job_status(self, clock: float):
         """
@@ -143,27 +181,52 @@ class Cluster:
             for task_name, task in job.running_tasks.items():
                 for task_instance in task.task_instances:
                     # update the task instance status
-                    finished_condition1 = task_instance.started and task_instance.finish_time < clock
-                    finished_condition2 = task_instance.started and task_instance.finish_time - task.submission_time > task.deadline
+                    finished_condition1 = (
+                        task_instance.started and task_instance.finish_time < clock
+                    )
+                    finished_condition2 = (
+                        task_instance.started
+                        and task_instance.finish_time - task.submission_time
+                        > task.deadline
+                    )
                     if finished_condition1 or finished_condition2:
                         if not task_instance.released:
-                            task_instance.running_time_at_one_slot = task_instance.remaining_time
-                            task_instance.running_time += task_instance.running_time_at_one_slot
+                            task_instance.running_time_at_one_slot = (
+                                task_instance.remaining_time
+                            )
+                            task_instance.running_time += (
+                                task_instance.running_time_at_one_slot
+                            )
                             task_instance.remaining_time = 0
                             # see if the task instance is finished before the deadline
-                            if task_instance.finish_time - task.submission_time > task.deadline:
+                            if (
+                                task_instance.finish_time - task.submission_time
+                                > task.deadline
+                            ):
                                 self.num_missed_deadline += 1
                             task_instance.finished = True
                             # update cluster power after finish a task instance
-                            task_cpu_util = (task_instance.cpu / self.servers[task_instance.allocated_server_name].
-                                             computing.cpu_capacity)
-                            task_mem_util = (task_instance.memory / self.servers[task_instance.allocated_server_name].
-                                             computing.mem_capacity)
-                            task_disk_util = (task_instance.disk / self.servers[task_instance.allocated_server_name].
-                                              computing.disk_capacity)
-                            self.total_cluster_power -= self.servers[task_instance.allocated_server_name].power.calc(
-                                task_cpu_util, task_mem_util, task_disk_util
+                            task_cpu_util = (
+                                task_instance.cpu
+                                / self.servers[
+                                    task_instance.allocated_server_name
+                                ].computing.cpu_capacity
                             )
+                            task_mem_util = (
+                                task_instance.memory
+                                / self.servers[
+                                    task_instance.allocated_server_name
+                                ].computing.mem_capacity
+                            )
+                            task_disk_util = (
+                                task_instance.disk
+                                / self.servers[
+                                    task_instance.allocated_server_name
+                                ].computing.disk_capacity
+                            )
+                            self.total_cluster_power -= self.servers[
+                                task_instance.allocated_server_name
+                            ].power.calc(task_cpu_util, task_mem_util, task_disk_util)
                             # update the number of finished task instances
                             self.num_finished_task_instances += 1
                     else:
@@ -176,26 +239,45 @@ class Cluster:
                             current_idx = int(clock // self.time_step)
                             start_idx = int(task_instance.start_time // self.time_step)
                             if task_instance.running_time > task.duration_estimation:
-                                for dur_bin_idx, dur_boundary in self.workload_duration_estimator.dur_map.items():
-                                    if dur_boundary["min"] <= task_instance.running_time <= dur_boundary["max"]:
+                                for (
+                                    dur_bin_idx,
+                                    dur_boundary,
+                                ) in self.workload_duration_estimator.dur_map.items():
+                                    if (
+                                        dur_boundary["min"]
+                                        <= task_instance.running_time
+                                        <= dur_boundary["max"]
+                                    ):
                                         break
                                 dur_bin_idx = int(dur_bin_idx)
-                                prob_elapsed_time = torch.sum(task.duration_distribution[:dur_bin_idx])
+                                prob_elapsed_time = torch.sum(
+                                    task.duration_distribution[:dur_bin_idx]
+                                )
                                 # update the duration distribution using observed elapsed time
                                 task.duration_distribution[:dur_bin_idx] = 0
-                                task.duration_distribution[dur_bin_idx:] /= (1 - prob_elapsed_time)
+                                task.duration_distribution[dur_bin_idx:] /= (
+                                    1 - prob_elapsed_time
+                                )
                                 # update duration estimation
-                                adjusted_dur_bin = torch.distributions.Categorical(
-                                    probs=task.duration_distribution
-                                ).sample().item()
-                                # adjusted_dur_bin = adjusted_dur_bin if adjusted_dur_bin < 23 else 22
-                                task.duration_estimation =\
-                                    self.workload_duration_estimator.convert_time_index_to_duration(
-                                        adjusted_dur_bin
+                                adjusted_dur_bin = (
+                                    torch.distributions.Categorical(
+                                        probs=task.duration_distribution
                                     )
-                                adjusted_end_idx = int(task.duration_estimation // self.time_step + start_idx)
+                                    .sample()
+                                    .item()
+                                )
+                                # adjusted_dur_bin = adjusted_dur_bin if adjusted_dur_bin < 23 else 22
+                                task.duration_estimation = self.workload_duration_estimator.convert_time_index_to_duration(
+                                    adjusted_dur_bin
+                                )
+                                adjusted_end_idx = int(
+                                    task.duration_estimation // self.time_step
+                                    + start_idx
+                                )
                                 # update the computing demand estimation
-                                self.computing_demand_pred_with_run_time_update[current_idx:adjusted_end_idx]+=task.cpu
+                                self.computing_demand_pred_with_run_time_update[
+                                    current_idx:adjusted_end_idx
+                                ] += task.cpu
 
         # Stop the finished task instances, running jobs and running tasks
         finished_job_id = []
@@ -203,26 +285,37 @@ class Cluster:
             finished_task_id = []
             for task_name, task in job.running_tasks.items():
                 for task_instance in task.task_instances:
-                    finished_condition1 = task_instance.started and task_instance.finish_time < clock
+                    finished_condition1 = (
+                        task_instance.started and task_instance.finish_time < clock
+                    )
                     finished_condition2 = (
-                        task_instance.started and task_instance.finish_time - task.submission_time > task.deadline
+                        task_instance.started
+                        and task_instance.finish_time - task.submission_time
+                        > task.deadline
                     )
                     if finished_condition1 or finished_condition2:
                         if not task_instance.released:
-                            self.servers[task_instance.allocated_server_name].computing.stop_task_instance(
-                                task_instance
-                            )
+                            self.servers[
+                                task_instance.allocated_server_name
+                            ].computing.stop_task_instance(task_instance)
                             task_instance.released = True
-                            if task_instance.task_instance_index == len(task.task_instances) - 1:
+                            if (
+                                task_instance.task_instance_index
+                                == len(task.task_instances) - 1
+                            ):
                                 task.finished = True
                                 finished_task_id.append(task_name)
                                 # update the number of finished tasks
                                 self.num_finished_tasks += 1
                         # update the computing demand estimation
                         task_start_idx = int(task.submission_time // self.time_step)
-                        end_idx_pred = int(task.duration_estimation // self.time_step + task_start_idx)
+                        end_idx_pred = int(
+                            task.duration_estimation // self.time_step + task_start_idx
+                        )
                         current_idx = int(clock // self.time_step)
-                        self.computing_demand_pred_with_run_time_update[current_idx:end_idx_pred] -= task.cpu
+                        self.computing_demand_pred_with_run_time_update[
+                            current_idx:end_idx_pred
+                        ] -= task.cpu
 
             for task_id in finished_task_id:
                 job.running_tasks.pop(task_id)
@@ -265,13 +358,17 @@ class Cluster:
                 job.waiting_tasks.pop(task_name)
 
     def get_computing_demand_true(self, current_time: int):
-        return self.computing_demand_gt[current_time//self.time_step - 1]
+        return self.computing_demand_gt[current_time // self.time_step - 1]
 
     def get_computing_demand_pred_with_runtime_update(self, current_time: int):
-        return self.computing_demand_pred_with_run_time_update[current_time//self.time_step - 1]
+        return self.computing_demand_pred_with_run_time_update[
+            current_time // self.time_step - 1
+        ]
 
     def get_computing_demand_pred_without_runtime_update(self, current_time: int):
-        return self.computing_demand_pred_without_run_time_update[current_time//self.time_step - 1]
+        return self.computing_demand_pred_without_run_time_update[
+            current_time // self.time_step - 1
+        ]
 
     def reset(self):
         self.running_jobs = {}
@@ -292,7 +389,8 @@ class Cluster:
             job = self.running_jobs[job_id]
             num_started_jobs = self.num_started_jobs + 1
             average_job_waiting_time = (
-                self.average_job_waiting_time * self.num_started_jobs + (current_time - job.submission_time)
+                self.average_job_waiting_time * self.num_started_jobs
+                + (current_time - job.submission_time)
             ) / num_started_jobs
             self.average_job_waiting_time = average_job_waiting_time
             self.num_started_jobs = num_started_jobs
@@ -301,7 +399,11 @@ class Cluster:
     def rated_power(self):
         res = 0.0
         for server_name, server in self.servers.items():
-            res += server.power.rated_cpu_power + server.power.rated_mem_power + server.power.rated_disk_power
+            res += (
+                server.power.rated_cpu_power
+                + server.power.rated_mem_power
+                + server.power.rated_disk_power
+            )
         return res
 
     @property
@@ -310,30 +412,48 @@ class Cluster:
 
     @property
     def cpu_capacity(self):
-        cpu_capacity = {server_name: server.computing.cpu_capacity for server_name, server in self.servers.items()}
+        cpu_capacity = {
+            server_name: server.computing.cpu_capacity
+            for server_name, server in self.servers.items()
+        }
         return sum(list(cpu_capacity.values()))
 
     @property
     def mem_capacity(self):
-        mem_capacity = {server_name: server.computing.cpu_capacity for server_name, server in self.servers.items()}
+        mem_capacity = {
+            server_name: server.computing.cpu_capacity
+            for server_name, server in self.servers.items()
+        }
         return sum(list(mem_capacity.values()))
 
     @property
     def disk_capacity(self):
-        disk_capacity = {server_name: server.computing.disk_capacity for server_name, server in self.servers.items()}
+        disk_capacity = {
+            server_name: server.computing.disk_capacity
+            for server_name, server in self.servers.items()
+        }
         return sum(list(disk_capacity.values()))
 
     @property
     def remaining_cpu(self):
-        return {server_name: server.computing.remaining_cpu for server_name, server in self.servers.items()}
+        return {
+            server_name: server.computing.remaining_cpu
+            for server_name, server in self.servers.items()
+        }
 
     @property
     def remaining_mem(self):
-        return {server_name: server.computing.remaining_mem for server_name, server in self.servers.items()}
+        return {
+            server_name: server.computing.remaining_mem
+            for server_name, server in self.servers.items()
+        }
 
     @property
     def remaining_disk(self):
-        return {server_name: server.computing.remaining_disk for server_name, server in self.servers.items()}
+        return {
+            server_name: server.computing.remaining_disk
+            for server_name, server in self.servers.items()
+        }
 
     @property
     def num_pending_tasks(self):
@@ -362,41 +482,65 @@ class Cluster:
 
     @property
     def cpu_utilization(self):
-        return {server_name: 1 - server.computing.remaining_cpu / server.computing.cpu_capacity
-                for server_name, server in self.servers.items()}
+        return {
+            server_name: 1
+            - server.computing.remaining_cpu / server.computing.cpu_capacity
+            for server_name, server in self.servers.items()
+        }
 
     @property
     def mem_utilization(self):
-        return {server_name: 1 - server.computing.remaining_mem / server.computing.mem_capacity
-                for server_name, server in self.servers.items()}
+        return {
+            server_name: 1
+            - server.computing.remaining_mem / server.computing.mem_capacity
+            for server_name, server in self.servers.items()
+        }
 
     @property
     def disk_utilization(self):
-        return {server_name: 1 - server.computing.remaining_disk / server.computing.disk_capacity
-                for server_name, server in self.servers.items()}
+        return {
+            server_name: 1
+            - server.computing.remaining_disk / server.computing.disk_capacity
+            for server_name, server in self.servers.items()
+        }
 
     @property
     def server_power(self):
-        server_power = {server_name: 0.0 for server_name, server in self.servers.items()}
+        server_power = {
+            server_name: 0.0 for server_name, server in self.servers.items()
+        }
         for job_name, job in self.running_jobs.items():
             for task_name, task in job.running_tasks.items():
                 for instance in task.task_instances:
                     if instance.started and not instance.finished:
                         instance_cpu_util = (
-                            instance.cpu / self.servers[instance.allocated_server_name].computing.cpu_capacity
+                            instance.cpu
+                            / self.servers[
+                                instance.allocated_server_name
+                            ].computing.cpu_capacity
                         )
                         instance_mem_util = (
-                            instance.memory / self.servers[instance.allocated_server_name].computing.mem_capacity
+                            instance.memory
+                            / self.servers[
+                                instance.allocated_server_name
+                            ].computing.mem_capacity
                         )
                         instance_disk_util = (
-                            instance.disk / self.servers[instance.allocated_server_name].computing.disk_capacity
+                            instance.disk
+                            / self.servers[
+                                instance.allocated_server_name
+                            ].computing.disk_capacity
                         )
-                        instance_power = self.servers[instance.allocated_server_name].power.calc(
+                        instance_power = self.servers[
+                            instance.allocated_server_name
+                        ].power.calc(
                             cpu=instance_cpu_util,
                             mem=instance_mem_util,
-                            disk=instance_disk_util
+                            disk=instance_disk_util,
                         )
-                        instance_energy = instance_power * instance.running_time_at_one_slot
+                        instance_energy = (
+                            instance_power * instance.running_time_at_one_slot
+                        )
                         server_power[instance.allocated_server_name] += instance_energy
         for server_name, power in server_power.items():
             server_power[server_name] = power / self.time_step

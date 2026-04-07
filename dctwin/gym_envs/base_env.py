@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Callable, List, Any, Union, Tuple, Dict, Optional
 
-import gym
-from gym.utils import seeding
+import gymnasium as gym
+from gymnasium.utils import seeding
 import numpy as np
 from loguru import logger
 
@@ -119,9 +119,23 @@ class BaseEnv(gym.Env):
             logger.info("Using pre-set simulation time")
             begin_month = self._config.simulation_time_config.begin_month
             begin_day_of_month = self._config.simulation_time_config.begin_day_of_month
+            begin_hour = (
+                self._config.simulation_time_config.begin_hour
+                if hasattr(self._config.simulation_time_config, "begin_hour")
+                else 0
+            )
+            begin_minute = (
+                self._config.simulation_time_config.begin_minute
+                if hasattr(self._config.simulation_time_config, "begin_minute")
+                else 0
+            )
             year = datetime.now().year
             self._starting_timestamp = datetime(
-                year=year, month=begin_month, day=begin_day_of_month
+                year=year,
+                month=begin_month,
+                day=begin_day_of_month,
+                hour=begin_hour,
+                minute=begin_minute,
             )
             self._timestamp_interval = timedelta(
                 minutes=int(
@@ -132,9 +146,24 @@ class BaseEnv(gym.Env):
             self._timestamp = self._starting_timestamp
             base_env.eplus_cfd.timestamp = self._timestamp
             self._use_simulation_time = True
+            logger.info(
+                f"Simulation time: {self._starting_timestamp.strftime('%m-%d %H:%M')}"
+            )
         else:
             logger.info("Using real-world time")
             self._use_simulation_time = False
+
+    def set_episode_idx(self, episode_idx: int) -> None:
+        """Set the episode index for the environment.
+
+        This method allows external trainers (like dcbrain) to coordinate
+        episode numbering across multiple training runs. The episode_idx
+        is used for logging organization and simulation context.
+
+        Args:
+            episode_idx: The episode number to set
+        """
+        self.episode_idx = episode_idx
 
     @property
     def actions(self):
@@ -169,12 +198,8 @@ class BaseEnv(gym.Env):
             if not count_criteria(item):
                 continue
             if use_unnormed_value:
-                lb_.append(
-                    item.resizer.lb if item.resizer is not None else min_
-                )
-                ub_.append(
-                    item.resizer.ub if item.resizer is not None else max_
-                )
+                lb_.append(item.resizer.lb if item.resizer is not None else min_)
+                ub_.append(item.resizer.ub if item.resizer is not None else max_)
             else:
                 lb_.append(
                     item.resizer.resized_lb if item.resizer is not None else min_
@@ -251,9 +276,9 @@ class BaseEnv(gym.Env):
                     exit(-1)
                 value = raw_action[ra_ptr]
                 if (
-                    hasattr(a, "masking_variable_name") and
-                    a.masking_variable_name != "" and
-                    self.inspect_current_observation(a.masking_variable_name) == -1
+                    hasattr(a, "masking_variable_name")
+                    and a.masking_variable_name != ""
+                    and self.inspect_current_observation(a.masking_variable_name) == -1
                 ):  # masking using observation
                     a.set_mask(True)
                 else:
@@ -304,7 +329,9 @@ class BaseEnv(gym.Env):
         return dict(
             time=self._timestamp if hasattr(self, "_timestamp") else datetime.now(),
             task_id=self._task_id,
-            parsed_obs=self._parse_obs_fn(self) if self._parse_obs_fn is not None else None,
+            parsed_obs=self._parse_obs_fn(self)
+            if self._parse_obs_fn is not None
+            else None,
         )
 
     def _calculate_reward(self) -> float:
@@ -354,7 +381,9 @@ class BaseEnv(gym.Env):
             self._timestamp += self._timestamp_interval
 
         return (
-            self._get_observations_to_return(use_unnormed_obs=self._use_unnormed_obs,),
+            self._get_observations_to_return(
+                use_unnormed_obs=self._use_unnormed_obs,
+            ),
             self._calculate_reward(),
             done,
             False,
@@ -389,16 +418,16 @@ class BaseEnv(gym.Env):
 
     def set_episode_idx(self, episode_idx: int) -> None:
         """Set the episode index for the environment.
-        
-        This method allows external trainers (like dcbrain) to coordinate 
+
+        This method allows external trainers (like dcbrain) to coordinate
         episode numbering across multiple training runs. The episode_idx
         is used for logging organization and simulation context.
-        
+
         Args:
             episode_idx: The episode number to set
         """
         self.episode_idx = episode_idx
-        
+
     def inspect_current_observation(
         self, observation_name: str = None, use_unnormed: bool = None
     ) -> Union[None, float, int, List[Union[float, int]]]:

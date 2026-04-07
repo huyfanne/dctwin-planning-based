@@ -15,7 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10.15'
+          python-version: '3.11'
 
       - name: Install Poetry
         run: |
@@ -43,7 +43,7 @@ jobs:
           MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN }}
         run: |
           git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
-          poetry env use 3.10.15
+          poetry env use 3.11
           poetry run pip install "setuptools>=65" wheel vtk==9.5.1
           poetry run pip install mayavi==4.8.3 --no-build-isolation
           poetry install
@@ -61,7 +61,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10.15'
+          python-version: '3.11'
 
       - name: Install Poetry
         run: |
@@ -90,7 +90,7 @@ jobs:
           MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN }}
         run: |
           git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
-          poetry env use 3.10.15
+          poetry env use 3.11
           poetry run pip install "setuptools>=65" wheel vtk==9.5.1
           poetry run pip install mayavi==4.8.3 --no-build-isolation
           poetry install
@@ -99,7 +99,8 @@ jobs:
         run: cd test && poetry run python test_eplus_cfd_cosim.py
 
   run-eplus:
-    runs-on: ubuntu-latest
+    runs-on:
+      labels: large_4c
     steps:
       - name: Check out code
         uses: actions/checkout@v5
@@ -107,7 +108,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10.15'
+          python-version: '3.11'
 
       - name: Install Poetry
         run: |
@@ -130,7 +131,7 @@ jobs:
           MY_SECRET_VALUE: ${{ secrets.GIT_TOKEN }}
         run: |
           git config --global http.https://github.com/.extraheader "Authorization: Basic $(echo -n $MY_SECRET_VALUE | base64)"
-          poetry env use 3.10.15
+          poetry env use 3.11
           poetry run pip install "setuptools>=65" wheel vtk==9.5.1
           poetry run pip install mayavi==4.8.3 --no-build-isolation
           poetry install --no-interaction

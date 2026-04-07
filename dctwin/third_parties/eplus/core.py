@@ -123,8 +123,8 @@ class EplusBackendMixin:
         assert isinstance(config.eplus.weather_file, Path)
         assert isinstance(config.eplus.idf_file, Path)
         return [
-            f"/bin/bash",
-            f"-c",
+            "/bin/bash",
+            "-c",
             f"/usr/local/EnergyPlus-9-5-0/energyplus "
             f"-w {config.eplus.weather_file.name} "
             f"-r {config.eplus.idf_file.name}",
@@ -297,13 +297,15 @@ class EplusBackendMixin:
         """
         obs, terminated = self._get_parsed_msg()
         if terminated:
-            logger.critical(
-                "Eplus terminated unexpectedly. "
-                "Likely to be the wrongly estimated simulation time. "
-                "Please check env._curSimTim"
+            # If we're basically at/over the planned end, treat as normal completion
+            if self._cur_sim_time >= self._end_sim_time:
+                logger.debug("Eplus ended at episode boundary")
+                self.close()
+                return obs, True
+            raise RuntimeError(
+                "Eplus terminated unexpectedly before episode end. "
+                f"_cur_sim_time={self._cur_sim_time}, _end_sim_time={self._end_sim_time}"
             )
-            # disable for eureka deployment due to 1 time step simulation
-            exit(0)
         if self._cur_sim_time >= self._end_sim_time:
             logger.debug("Came to the end of one episode, terminating")
             done = True

@@ -52,7 +52,6 @@ class EPlusOutputFormatter:
 
     @classmethod
     def _count_severe_errors(cls, file: str) -> int:
-
         if not os.path.isfile(file):
             return -1  # Error count is unknown
         fd = open(file)

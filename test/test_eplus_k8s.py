@@ -3,7 +3,7 @@ import numpy as np
 
 from dclib import Building
 from dctwin.third_parties.eplus import IDFBuilder, ConfigBuilder
-from dctwin.registraion import make_env
+from dctwin.registration import make_env
 
 
 if __name__ == "__main__":

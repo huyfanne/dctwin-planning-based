@@ -19,8 +19,9 @@ def _is_batch_set(obj: Any) -> bool:
         # "for element in obj" will just unpack the first dimension,
         # but obj.tolist() will flatten ndarray of objects
         # so do not use obj.tolist()
-        return obj.dtype == object and \
-            all(isinstance(element, (dict, Batch)) for element in obj)
+        return obj.dtype == object and all(
+            isinstance(element, (dict, Batch)) for element in obj
+        )
     elif isinstance(obj, (list, tuple)):
         if len(obj) > 0 and all(isinstance(element, (dict, Batch)) for element in obj):
             return True
@@ -50,8 +51,9 @@ def _is_number(value: Any) -> bool:
 
 
 def _to_array_with_correct_type(obj: Any) -> np.ndarray:
-    if isinstance(obj, np.ndarray) and \
-            issubclass(obj.dtype.type, (np.bool_, np.number)):
+    if isinstance(obj, np.ndarray) and issubclass(
+        obj.dtype.type, (np.bool_, np.number)
+    ):
         return obj  # most often case
     # convert the value to np.ndarray
     # convert to object obj type if neither bool nor number
@@ -95,9 +97,11 @@ def _create_value(
     if has_shape:
         shape = (size, *inst.shape) if stack else (size, *inst.shape[1:])
     if isinstance(inst, np.ndarray):
-        target_type = inst.dtype.type if issubclass(
-            inst.dtype.type, (np.bool_, np.number)
-        ) else object
+        target_type = (
+            inst.dtype.type
+            if issubclass(inst.dtype.type, (np.bool_, np.number))
+            else object
+        )
         return np.full(
             shape, fill_value=None if target_type == object else 0, dtype=target_type
         )
@@ -115,25 +119,34 @@ def _create_value(
 
 
 def _assert_type_keys(keys: Iterable[str]) -> None:
-    assert all(isinstance(key, str) for key in keys), \
+    assert all(isinstance(key, str) for key in keys), (
         f"keys should all be string, but got {keys}"
+    )
 
 
 def _parse_value(obj: Any) -> Optional[Union["Batch", np.ndarray, torch.Tensor]]:
     if isinstance(obj, Batch):  # most often case
         return obj
-    elif (isinstance(obj, np.ndarray) and
-          issubclass(obj.dtype.type, (np.bool_, np.number))) or \
-            isinstance(obj, torch.Tensor) or obj is None:  # third often case
+    elif (
+        (
+            isinstance(obj, np.ndarray)
+            and issubclass(obj.dtype.type, (np.bool_, np.number))
+        )
+        or isinstance(obj, torch.Tensor)
+        or obj is None
+    ):  # third often case
         return obj
     elif _is_number(obj):  # second often case, but it is more time-consuming
         return np.asanyarray(obj)
     elif isinstance(obj, dict):
         return Batch(obj)
     else:
-        if not isinstance(obj, np.ndarray) and \
-                isinstance(obj, Collection) and len(obj) > 0 and \
-                all(isinstance(element, torch.Tensor) for element in obj):
+        if (
+            not isinstance(obj, np.ndarray)
+            and isinstance(obj, Collection)
+            and len(obj) > 0
+            and all(isinstance(element, torch.Tensor) for element in obj)
+        ):
             try:
                 return torch.stack(obj)  # type: ignore
             except RuntimeError as exception:
@@ -182,7 +195,9 @@ class Batch:
 
     def __init__(
         self,
-        batch_dict: Optional[Union[dict, "Batch", Sequence[Union[dict, "Batch"]], np.ndarray]] = None,
+        batch_dict: Optional[
+            Union[dict, "Batch", Sequence[Union[dict, "Batch"]], np.ndarray]
+        ] = None,
         copy: bool = False,
         **kwargs: Any,
     ) -> None:
@@ -265,9 +280,10 @@ class Batch:
             except KeyError:
                 if isinstance(val, Batch):
                     self.__dict__[key][index] = Batch()
-                elif isinstance(val, torch.Tensor) or \
-                        (isinstance(val, np.ndarray) and
-                         issubclass(val.dtype.type, (np.bool_, np.number))):
+                elif isinstance(val, torch.Tensor) or (
+                    isinstance(val, np.ndarray)
+                    and issubclass(val.dtype.type, (np.bool_, np.number))
+                ):
                     self.__dict__[key][index] = 0
                 else:
                     self.__dict__[key][index] = None
@@ -357,9 +373,12 @@ class Batch:
 
         for batch_key, obj in self.items():
             if isinstance(obj, torch.Tensor):
-                if dtype is not None and obj.dtype != dtype or \
-                        obj.device.type != device.type or \
-                        device.index != obj.device.index:
+                if (
+                    dtype is not None
+                    and obj.dtype != dtype
+                    or obj.device.type != device.type
+                    or device.index != obj.device.index
+                ):
                     if dtype is not None:
                         obj = obj.type(dtype)
                     self.__dict__[batch_key] = obj.to(device)
@@ -402,9 +421,11 @@ class Batch:
         # collect non-empty keys
         keys_map = [
             set(
-                batch_key for batch_key, obj in batch.items()
+                batch_key
+                for batch_key, obj in batch.items()
                 if not (isinstance(obj, Batch) and obj.is_empty())
-            ) for batch in batches
+            )
+            for batch in batches
         ]
         keys_shared = set.intersection(*keys_map)
         values_shared = [[batch[key] for batch in batches] for key in keys_shared]
@@ -437,11 +458,10 @@ class Batch:
                 if isinstance(value, Batch) and value.is_empty():
                     continue
                 try:
-                    self.__dict__[key][sum_lens[i]:sum_lens[i + 1]] = value
+                    self.__dict__[key][sum_lens[i] : sum_lens[i + 1]] = value
                 except KeyError:
-                    self.__dict__[key] = \
-                        _create_value(value, sum_lens[-1], stack=False)
-                    self.__dict__[key][sum_lens[i]:sum_lens[i + 1]] = value
+                    self.__dict__[key] = _create_value(value, sum_lens[-1], stack=False)
+                    self.__dict__[key][sum_lens[i] : sum_lens[i + 1]] = value
 
     def cat_(self, batches: Union["Batch", Sequence[Union[dict, "Batch"]]]) -> None:
         """Concatenate a list of (or one) Batch objects into current batch."""
@@ -524,9 +544,11 @@ class Batch:
         # collect non-empty keys
         keys_map = [
             set(
-                batch_key for batch_key, obj in batch.items()
+                batch_key
+                for batch_key, obj in batch.items()
                 if not (isinstance(obj, Batch) and obj.is_empty())
-            ) for batch in batches
+            )
+            for batch in batches
         ]
         keys_shared = set.intersection(*keys_map)
         values_shared = [[batch[key] for batch in batches] for key in keys_shared]
@@ -539,8 +561,9 @@ class Batch:
                 self.__dict__[shared_key] = Batch.stack(value, axis)
             else:  # most often case is np.ndarray
                 try:
-                    self.__dict__[shared_key] = \
-                        _to_array_with_correct_type(np.stack(value, axis))
+                    self.__dict__[shared_key] = _to_array_with_correct_type(
+                        np.stack(value, axis)
+                    )
                 except ValueError:
                     warnings.warn(
                         "You are using tensors with different shape,"
@@ -734,13 +757,15 @@ class Batch:
                     data_shape.append(list(obj.shape))
                 except AttributeError:
                     data_shape.append([])
-            return list(map(min, zip(*data_shape))) if len(data_shape) > 1 \
+            return (
+                list(map(min, zip(*data_shape)))
+                if len(data_shape) > 1
                 else data_shape[0]
+            )
 
-    def split(self,
-              size: int,
-              shuffle: bool = True,
-              merge_last: bool = False) -> Iterator["Batch"]:
+    def split(
+        self, size: int, shuffle: bool = True, merge_last: bool = False
+    ) -> Iterator["Batch"]:
         """Split whole data into multiple small batches.
 
         :param int size: divide the data batch with the given size, but one
@@ -761,4 +786,4 @@ class Batch:
             if merge_last and idx + size + size >= length:
                 yield self[indices[idx:]]
                 break
-            yield self[indices[idx:idx + size]]
+            yield self[indices[idx : idx + size]]

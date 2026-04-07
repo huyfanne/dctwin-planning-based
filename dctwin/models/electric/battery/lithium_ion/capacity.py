@@ -9,34 +9,49 @@ class ChargeMode:
 
 
 class CapacityModel(nn.Module):
-
     def __init__(
         self,
         q_max: torch.Tensor | float,
         initial_soc: torch.Tensor | float,
         min_soc: torch.Tensor | float = 0.0,
         max_soc: torch.Tensor | float = 100.0,
-        dt_hr: torch.Tensor | float = 1.0
+        dt_hr: torch.Tensor | float = 1.0,
     ):
         super().__init__()
         # capacity parameters
         self.q_max = q_max if isinstance(q_max, torch.Tensor) else torch.tensor(q_max)
-        self.q_max_init = q_max if isinstance(q_max, torch.Tensor) else torch.tensor(q_max)
-        self.initial_soc = initial_soc if isinstance(initial_soc, torch.Tensor) else torch.tensor(initial_soc)
-        self.min_soc = min_soc if isinstance(min_soc, torch.Tensor) else torch.tensor(min_soc)
-        self.max_soc = max_soc if isinstance(max_soc, torch.Tensor) else torch.tensor(max_soc)
+        self.q_max_init = (
+            q_max if isinstance(q_max, torch.Tensor) else torch.tensor(q_max)
+        )
+        self.initial_soc = (
+            initial_soc
+            if isinstance(initial_soc, torch.Tensor)
+            else torch.tensor(initial_soc)
+        )
+        self.min_soc = (
+            min_soc if isinstance(min_soc, torch.Tensor) else torch.tensor(min_soc)
+        )
+        self.max_soc = (
+            max_soc if isinstance(max_soc, torch.Tensor) else torch.tensor(max_soc)
+        )
         self.dt_hr = dt_hr if isinstance(dt_hr, torch.Tensor) else torch.tensor(dt_hr)
         # capacity state
         # [Ah] - Total capacity at current timestep
-        self.q0 = self. q_max * initial_soc / 100.
+        self.q0 = self.q_max * initial_soc / 100.0
         # [Ah] - Maximum capacity considering lifetime degradation at current timestep
-        self.q_max_lifetime = q_max if isinstance(q_max, torch.Tensor) else torch.tensor(q_max)
+        self.q_max_lifetime = (
+            q_max if isinstance(q_max, torch.Tensor) else torch.tensor(q_max)
+        )
         # [A] - Cell current at current timestep
         self.cell_current = torch.zeros(1)
         # [A] - Cell current loss at current timestep
         self.I_losses = torch.zeros(1)
         # [0 - 100%] - State of charge (SOC) at current timestep
-        self.soc = initial_soc if isinstance(initial_soc, torch.Tensor) else torch.tensor(initial_soc)
+        self.soc = (
+            initial_soc
+            if isinstance(initial_soc, torch.Tensor)
+            else torch.tensor(initial_soc)
+        )
         # [0 - 100%] - State of charge (SOC) at previous timestep
         self.soc_prev = initial_soc
         # Charge mode at current timestep
@@ -79,9 +94,9 @@ class CapacityModel(nn.Module):
 
         self.change_mode = False
         if (
-            self.charge_mode != self.prev_charge and
-            self.charge_mode != ChargeMode.NO_CHARGE and
-            self.prev_charge != ChargeMode.NO_CHARGE
+            self.charge_mode != self.prev_charge
+            and self.charge_mode != ChargeMode.NO_CHARGE
+            and self.prev_charge != ChargeMode.NO_CHARGE
         ):
             self.change_mode = True
             self.prev_charge = self.charge_mode
@@ -97,13 +112,13 @@ class CapacityModel(nn.Module):
         if self.q0 > self.q_max:
             self.q0 = self.q_max
         if self.q_max > 0:
-            self.soc = 100. * (self.q0 / self.q_max)
+            self.soc = 100.0 * (self.q0 / self.q_max)
         else:
-            self.soc = 0.
+            self.soc = 0.0
 
         if self.soc > 100.0:
-            self.soc = torch.tensor(100.)
-        elif self.soc < 0.:
+            self.soc = torch.tensor(100.0)
+        elif self.soc < 0.0:
             self.soc = torch.zeros(1)
 
     def update_capacity(self, I: torch.Tensor | float):
