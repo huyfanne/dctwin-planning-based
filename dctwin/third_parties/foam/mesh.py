@@ -337,13 +337,27 @@ class ACUModel:
                 f"Invalid orientation: {self.config.geometry.orientation} for ACU '{self.config.uid}'"
             )
 
-        if self.config.geometry.supply_face.side.name not in ["top", "bottom", "left", "right", "front", "rear"]:
+        if self.config.geometry.supply_face.side.name not in [
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "front",
+            "rear",
+        ]:
             raise ValueError(
                 f"Invalid supply face side: {self.config.geometry.supply_face.side.name} for ACU '"
                 f"{self.config.uid}'"
             )
 
-        if self.config.geometry.return_face.side.name not in ["top", "bottom", "left", "right", "front", "rear"]:
+        if self.config.geometry.return_face.side.name not in [
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "front",
+            "rear",
+        ]:
             raise ValueError(
                 f"Invalid return face side: {self.config.geometry.return_face.side.name} for ACU '"
                 f"{self.config.uid}'"
@@ -624,13 +638,27 @@ class HeatEmittingBoxModel:
                 f"Invalid orientation: {self.config.geometry.orientation} for Heat Emitting Box '{self.config.uid}'"
             )
 
-        if self.config.geometry.supply_face.side.name not in ["top", "bottom", "left", "right", "front", "rear"]:
+        if self.config.geometry.supply_face.side.name not in [
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "front",
+            "rear",
+        ]:
             raise ValueError(
                 f"Invalid supply face side: {self.config.geometry.supply_face.side.name} for Heat Emitting Box '"
                 f"{self.config.uid}'"
             )
 
-        if self.config.geometry.return_face.side.name not in ["top", "bottom", "left", "right", "front", "rear"]:
+        if self.config.geometry.return_face.side.name not in [
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "front",
+            "rear",
+        ]:
             raise ValueError(
                 f"Invalid return face side: {self.config.geometry.return_face.side.name} for Heat Emitting Box '"
                 f"{self.config.uid}'"
