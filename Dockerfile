@@ -12,8 +12,9 @@ RUN poetry build && \
     pip uninstall -y poetry && \
     rm -rf /root/.cache/pip/* && \
     rm -rf /root/.cache/pypoetry/* && \
-    find /opt/src -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true && \
-    find /opt/src -type f -name "*.pyc" -delete 2>/dev/null || true
+    (find /opt/src -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null; \
+     find /opt/src -type f -name "*.pyc" -delete 2>/dev/null; \
+     exit 0)
 
 
 FROM python:3.11-slim AS runtime
@@ -34,13 +35,14 @@ RUN --mount=type=secret,id=GITHUB_TOKEN \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ${HOME}/.git-credentials /root/.cache/pip/* && \
-    find /usr/local/lib/python*/site-packages -type d -name "*.dist-info" -exec rm -rf {} + 2>/dev/null || true && \
-    find /usr/local/lib/python*/site-packages -type d -name "tests" -exec rm -rf {} + 2>/dev/null || true && \
-    find /usr/local/lib/python*/site-packages -type d -name "test" -exec rm -rf {} + 2>/dev/null || true && \
-    find /usr/local/lib/python*/site-packages -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true && \
-    find /usr/local/lib/python*/site-packages -type f -name "*.pyc" -delete 2>/dev/null || true && \
-    find /usr/local/lib/python*/site-packages -type f -name "*.pyo" -delete 2>/dev/null || true && \
-    find /usr/local/lib/python*/site-packages -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
+    (find /usr/local/lib/python*/site-packages -type d -name "*.dist-info" -exec rm -rf {} + 2>/dev/null; \
+     find /usr/local/lib/python*/site-packages -type d -name "tests" -exec rm -rf {} + 2>/dev/null; \
+     find /usr/local/lib/python*/site-packages -type d -name "test" -exec rm -rf {} + 2>/dev/null; \
+     find /usr/local/lib/python*/site-packages -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null; \
+     find /usr/local/lib/python*/site-packages -type f -name "*.pyc" -delete 2>/dev/null; \
+     find /usr/local/lib/python*/site-packages -type f -name "*.pyo" -delete 2>/dev/null; \
+     find /usr/local/lib/python*/site-packages -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null; \
+     exit 0)
 
 WORKDIR /opt/app
 
