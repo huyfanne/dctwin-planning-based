@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional, Protocol, Sequence
+from typing import Any, Callable, Optional, Protocol, Sequence
 
 
 @dataclass(frozen=True)
@@ -65,8 +65,11 @@ class Evaluator(Protocol):
     """Protocol implemented by the dctwin oracle (Plan 2) and the MockEvaluator."""
 
     def evaluate(
-        self, candidates: Sequence[Setpoints], forecast: Optional[Any] = None
+        self, candidates: Sequence[Setpoints], forecast: Optional[Any] = None,
+        on_result: Optional[Callable[[], None]] = None,
     ) -> list[WeeklyKPI]:
+        """`on_result`, if given, is called once per candidate as it finishes
+        (for live progress); evaluation order is not guaranteed under a pool."""
         ...
 
 

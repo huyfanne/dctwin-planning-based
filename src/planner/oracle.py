@@ -3,7 +3,7 @@ from __future__ import annotations
 import concurrent.futures as cf
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Any, Callable, Optional, Sequence
 
 from planner.kpi import OracleSettings
 from planner.oracle_worker import EvalTask, evaluate_one
@@ -48,7 +48,8 @@ class ParallelEnvOracle(Evaluator):
         self._worker = worker_fn if worker_fn is not None else evaluate_one
 
     def evaluate(self, candidates: Sequence[Setpoints],
-                 forecast: Optional[Any] = None) -> list[WeeklyKPI]:
+                 forecast: Optional[Any] = None,
+                 on_result: Optional[Callable[[], None]] = None) -> list[WeeklyKPI]:
         cfg = self.config
         hours_per_step = 1.0 / cfg.timesteps_per_hour
 
@@ -83,7 +84,12 @@ class ParallelEnvOracle(Evaluator):
 
         # 3) run (serial for tests, process pool in production)
         if not cfg.use_process_pool:
-            return [self._safe_run(t) for t in tasks]
+            out: list[WeeklyKPI] = []
+            for t in tasks:
+                out.append(self._safe_run(t))
+                if on_result is not None:
+                    on_result()
+            return out
 
         results: list[WeeklyKPI] = [_infeasible()] * len(tasks)
         ex = cf.ProcessPoolExecutor(max_workers=cfg.n_workers)
@@ -99,6 +105,8 @@ class ParallelEnvOracle(Evaluator):
                     results[i] = fut.result()
                 except Exception:  # noqa: BLE001 - worker crash
                     results[i] = _infeasible()
+                if on_result is not None:
+                    on_result()  # one tick per completed candidate (any order)
         except cf.TimeoutError:
             pass  # unfinished candidates remain _infeasible()
         finally:

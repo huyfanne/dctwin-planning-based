@@ -59,13 +59,23 @@ class BeamPlanner:
         self.config = config or BeamConfig()
 
     def plan(self, forecast: Optional[Any] = None,
-             on_level: Optional[Callable[[int, int, float], None]] = None) -> PlanResult:
+             on_level: Optional[Callable[[int, int, float], None]] = None,
+             on_eval: Optional[Callable[[int], None]] = None) -> PlanResult:
         cfg = self.config
         if cfg.grid < 2:
             raise ValueError("BeamConfig.grid must be >= 2")
 
         evals = 0
         history: list[float] = []
+
+        # per-candidate progress: on_eval(cumulative_count) fires as each
+        # candidate finishes, so the UI ticks within a level (not only between).
+        done = [0]
+
+        def _on_result() -> None:
+            done[0] += 1
+            if on_eval is not None:
+                on_eval(done[0])
 
         # ---- Level 0: coarse grid (also capped by max_evals) ----
         candidates = _coarse_grid(self.space, cfg.grid)
@@ -75,7 +85,7 @@ class BeamPlanner:
             #  end of the first dimension entirely)
             stride = math.ceil(len(candidates) / cfg.max_evals)
             candidates = candidates[::stride][: cfg.max_evals]
-        scored = self._score_batch(candidates, forecast)
+        scored = self._score_batch(candidates, forecast, _on_result)
         evals += len(candidates)
         beam = self._top_b(scored, cfg.beam_width)
         history.append(beam[0][2])
@@ -101,7 +111,7 @@ class BeamPlanner:
             neigh = neigh[: cfg.max_evals - evals]
             if not neigh:
                 break
-            scored_n = self._score_batch(neigh, forecast)
+            scored_n = self._score_batch(neigh, forecast, _on_result)
             evals += len(neigh)
 
             prev_best = beam[0][2]
@@ -119,8 +129,9 @@ class BeamPlanner:
         feasible = best_sc != INFEASIBLE
         return PlanResult(best_s, best_kpi, best_sc, evals, feasible, history)
 
-    def _score_batch(self, candidates: Sequence[Setpoints], forecast) -> list[_Scored]:
-        kpis = self.evaluator.evaluate(candidates, forecast)
+    def _score_batch(self, candidates: Sequence[Setpoints], forecast,
+                     on_result: Optional[Callable[[], None]] = None) -> list[_Scored]:
+        kpis = self.evaluator.evaluate(candidates, forecast, on_result=on_result)
         return [(c, k, score(k, self.weights)) for c, k in zip(candidates, kpis)]
 
     @staticmethod

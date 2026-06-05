@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional, Sequence
+from typing import Any, Callable, Optional, Sequence
 
 from planner.types import Setpoints, WeeklyKPI
 
@@ -57,8 +57,14 @@ class MockEvaluator:
         )
 
     def evaluate(
-        self, candidates: Sequence[Setpoints], forecast: Optional[Any] = None
+        self, candidates: Sequence[Setpoints], forecast: Optional[Any] = None,
+        on_result: Optional[Callable[[], None]] = None,
     ) -> list[WeeklyKPI]:
         self.call_count += 1
         self.evaluated.extend(candidates)
-        return [self._kpi(s) for s in candidates]
+        out = []
+        for s in candidates:
+            out.append(self._kpi(s))
+            if on_result is not None:
+                on_result()
+        return out

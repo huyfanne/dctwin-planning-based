@@ -71,6 +71,12 @@ def evaluate_one(task: EvalTask) -> WeeklyKPI:
     from planner.env_actions import mapper_from_env
     from planner.monitor import discover_monitor
 
+    # dctwin's per-run post-processing is a fixed 10s sleep + a CSV grouping we
+    # never use (we read observations live), so it is pure overhead on every
+    # candidate. No-op it in the worker to roughly halve per-eval wall-clock.
+    import dctwin.third_parties.eplus.core as _eplus_core
+    _eplus_core.EplusBackendMixin._post_process = staticmethod(lambda: None)
+
     env = None
     try:
         dt_config.set_log_dir(task.log_dir)

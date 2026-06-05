@@ -88,8 +88,17 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
                             log_root=str(plan_dir / "oracle")),
     )
 
+    # shared progress state: on_eval ticks the evaluation count within a level,
+    # on_level updates the level + best score when a level completes.
+    state = {"level": 0, "evals": 0, "best_score": None}
+
     def on_level(level, evals, best):
-        progress_cb({"level": level, "evals": evals, "best_score": best})
+        state.update(level=level, evals=evals, best_score=best)
+        progress_cb(dict(state))
+
+    def on_eval(done):
+        state["evals"] = done
+        progress_cb(dict(state))
 
     rec = run_weekly_plan(
         PlanRequest(week_start=date.fromisoformat(params["week_start"]),
@@ -100,7 +109,7 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
                     timesteps_per_hour=int(params.get("timesteps_per_hour", 4))),
         evaluator=oracle, forecaster=forecaster,
         baseline_energy_kwh=params.get("baseline_energy_kwh"),
-        on_level=on_level,
+        on_level=on_level, on_eval=on_eval,
     )
     store.save_recommendation(plan_id, rec)
 

@@ -27,6 +27,7 @@ def run_weekly_plan(
     baseline_energy_kwh: Optional[float] = None,
     weights: Optional[ObjectiveWeights] = None,
     on_level: Optional[Callable[[int, int, float], None]] = None,
+    on_eval: Optional[Callable[[int], None]] = None,
 ) -> dict:
     """Forecast -> best-first search -> recommendation dict. The DRY planning core.
 
@@ -41,7 +42,7 @@ def run_weekly_plan(
     forecast = forecaster.forecast(request.week_start, n_steps)
 
     planner = BeamPlanner(space, evaluator, weights, beam)
-    result = planner.plan(forecast, on_level=on_level)
+    result = planner.plan(forecast, on_level=on_level, on_eval=on_eval)
 
     if result.feasible:
         best, kpi, status = result.best, result.best_kpi, "pending_approval"

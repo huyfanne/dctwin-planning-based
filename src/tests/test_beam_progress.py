@@ -25,3 +25,16 @@ def test_plan_works_without_callback():
                           BeamConfig(grid=3, beam_width=2, levels=1))
     res = planner.plan()           # no on_level -> still works
     assert res.feasible
+
+
+def test_on_eval_ticks_once_per_candidate():
+    # on_eval fires per candidate with a monotonically increasing cumulative
+    # count, so the UI shows progress *within* a level (not only between levels).
+    ticks = []
+    ev = MockEvaluator(MockSurface(inlet_cap=999.0))
+    planner = BeamPlanner(DEFAULT_SEARCH_SPACE, ev, ObjectiveWeights(),
+                          BeamConfig(grid=3, beam_width=2, levels=1, neighbors=6))
+    res = planner.plan(on_eval=lambda done: ticks.append(done))
+    assert ticks == list(range(1, len(ticks) + 1))     # 1,2,3,... strictly
+    assert ticks[-1] == res.evals                       # ends at total evals
+    assert len(ticks) == len(ev.evaluated)              # one tick per candidate
