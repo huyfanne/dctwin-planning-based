@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -69,11 +70,20 @@ class PlanStore:
         return json.loads(p.read_text()) if p.exists() else None
 
     def write_progress(self, plan_id: str, progress: dict) -> None:
-        (self.plan_dir(plan_id) / "progress.json").write_text(json.dumps(progress))
+        # Non-finite floats (e.g. best_score = +inf when all candidates are
+        # infeasible) are invalid JSON and break the API response; store as null.
+        safe = {k: (None if isinstance(v, float) and not math.isfinite(v) else v)
+                for k, v in progress.items()}
+        (self.plan_dir(plan_id) / "progress.json").write_text(json.dumps(safe))
 
     def read_progress(self, plan_id: str) -> dict:
         p = self.plan_dir(plan_id) / "progress.json"
-        return json.loads(p.read_text()) if p.exists() else {}
+        if not p.exists():
+            return {}
+        data = json.loads(p.read_text())
+        # defensively scrub any non-finite values from older files
+        return {k: (None if isinstance(v, float) and not math.isfinite(v) else v)
+                for k, v in data.items()}
 
     def list_plans(self) -> list[dict]:
         with self._conn() as c:

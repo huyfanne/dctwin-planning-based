@@ -39,6 +39,19 @@ def test_progress_roundtrip(tmp_path):
     assert store.read_progress("p1")["evals"] == 50
 
 
+def test_progress_sanitizes_non_finite(tmp_path):
+    # all-infeasible search -> best_score = +inf; must store as null (valid JSON,
+    # not "Infinity") so the API response doesn't 500.
+    store = PlanStore(runs_dir=str(tmp_path / "runs"), db_path=str(tmp_path / "index.db"))
+    store.create_plan("p1", week_start="2013-11-11", params={})
+    store.write_progress("p1", {"level": 0, "evals": 8, "best_score": float("inf")})
+    got = store.read_progress("p1")
+    assert got["best_score"] is None
+    assert got["evals"] == 8
+    raw = (tmp_path / "runs" / "p1" / "progress.json").read_text()
+    assert "Infinity" not in raw
+
+
 def test_set_status(tmp_path):
     store = PlanStore(runs_dir=str(tmp_path / "runs"), db_path=str(tmp_path / "index.db"))
     store.create_plan("p1", week_start="2013-11-11", params={})
