@@ -1,122 +1,88 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from 'react';
+import { setToken } from './api';
+import Dashboard from './pages/Dashboard';
+import NewPlan from './pages/NewPlan';
+import Review from './pages/Review';
+import History from './pages/History';
+import DigitalTwin3D from './pages/DigitalTwin3D';
 
-function App() {
-  const [count, setCount] = useState(0)
+type Page = 'dashboard' | 'newplan' | 'review' | 'history' | 'twin3d';
+
+const NAV: { id: Page; label: string }[] = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'newplan',   label: 'New Plan' },
+  { id: 'review',    label: 'Review' },
+  { id: 'history',   label: 'History' },
+  { id: 'twin3d',    label: 'Digital Twin (3D)' },
+];
+
+export default function App() {
+  const [page, setPage] = useState<Page>('dashboard');
+  const [tokenDraft, setTokenDraft] = useState('');
+  const [tokenSaved, setTokenSaved] = useState(false);
+  // reviewPlanId can be set from History to deep-link to a specific plan
+  const [reviewPlanId, setReviewPlanId] = useState<string | undefined>(undefined);
+
+  function handleSetToken() {
+    setToken(tokenDraft.trim());
+    setTokenSaved(true);
+    setTimeout(() => setTokenSaved(false), 1800);
+  }
+
+  function openReview(id: string) {
+    setReviewPlanId(id);
+    setPage('review');
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app-shell">
+      <header className="app-header">
+        {/* Logo */}
+        <a className="app-logo" onClick={() => setPage('dashboard')} role="button" style={{ cursor: 'pointer' }}>
+          <span className="logo-dot" />
+          DCTwin
+        </a>
 
-      <div className="ticks"></div>
+        {/* Nav */}
+        <nav className="app-nav">
+          {NAV.map(n => (
+            <button
+              key={n.id}
+              className={page === n.id ? 'active' : ''}
+              onClick={() => {
+                if (n.id !== 'review') setReviewPlanId(undefined);
+                setPage(n.id);
+              }}
+            >
+              {n.label}
+            </button>
+          ))}
+        </nav>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        {/* Token input */}
+        <div className="token-input-wrap">
+          <span className="token-label">API Token</span>
+          <input
+            type="password"
+            className="token-input"
+            placeholder="Bearer token…"
+            value={tokenDraft}
+            onChange={e => setTokenDraft(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSetToken()}
+          />
+          <button className="token-btn" onClick={handleSetToken}>
+            {tokenSaved ? '✓ Saved' : 'Set'}
+          </button>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      </header>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      <main className="app-content">
+        {page === 'dashboard' && <Dashboard onReview={openReview} />}
+        {page === 'newplan'   && <NewPlan onDone={id => { setReviewPlanId(id); setPage('review'); }} />}
+        {page === 'review'    && <Review planId={reviewPlanId} />}
+        {page === 'history'   && <History onReview={openReview} />}
+        {page === 'twin3d'    && <DigitalTwin3D />}
+      </main>
+    </div>
+  );
 }
-
-export default App
