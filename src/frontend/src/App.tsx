@@ -1,5 +1,4 @@
 import { lazy, Suspense, useState } from 'react';
-import { setToken } from './api';
 import Dashboard from './pages/Dashboard';
 import NewPlan from './pages/NewPlan';
 import Review from './pages/Review';
@@ -19,18 +18,8 @@ const NAV: { id: Page; label: string }[] = [
 
 export default function App() {
   const [page, setPage] = useState<Page>('dashboard');
-  const [tokenDraft, setTokenDraft] = useState('');
-  const [tokenSaved, setTokenSaved] = useState(false);
   // reviewPlanId can be set from History to deep-link to a specific plan
   const [reviewPlanId, setReviewPlanId] = useState<string | undefined>(undefined);
-
-  function handleSetToken() {
-    setToken(tokenDraft.trim());
-    setTokenSaved(true);
-    // Pages fetch on mount; reload so every view re-fetches with the new token
-    // (the token is already persisted to localStorage by setToken).
-    setTimeout(() => window.location.reload(), 350);
-  }
 
   function openReview(id: string) {
     setReviewPlanId(id);
@@ -62,21 +51,6 @@ export default function App() {
           ))}
         </nav>
 
-        {/* Token input */}
-        <div className="token-input-wrap">
-          <span className="token-label">API Token</span>
-          <input
-            type="password"
-            className="token-input"
-            placeholder="Bearer token…"
-            value={tokenDraft}
-            onChange={e => setTokenDraft(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSetToken()}
-          />
-          <button className="token-btn" onClick={handleSetToken}>
-            {tokenSaved ? '✓ Saved' : 'Set'}
-          </button>
-        </div>
       </header>
 
       <main className="app-content">

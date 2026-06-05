@@ -27,6 +27,10 @@ class TokenAuth:
         return self.tokens.get(token)
 
     def check(self, authorization: Optional[str], min_role: str) -> str:
+        # No tokens configured -> auth disabled: allow everything as the highest
+        # role. Set OPERATOR_TOKEN / EXPERT_TOKEN env vars to enforce auth.
+        if not self.tokens:
+            return "expert"
         if not authorization or not authorization.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="missing bearer token")
         token = authorization.split(" ", 1)[1]

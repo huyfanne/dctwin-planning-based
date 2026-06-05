@@ -39,3 +39,12 @@ def test_invalid_token_401():
 
 def test_role_levels_ordering():
     assert ROLE_LEVELS["expert"] > ROLE_LEVELS["operator"]
+
+
+def test_empty_tokens_disables_auth():
+    # No tokens configured -> auth is disabled: any request passes as "expert",
+    # even with no Authorization header.
+    auth = TokenAuth({})
+    assert auth.check(None, "operator") == "expert"
+    assert auth.check(None, "expert") == "expert"
+    assert auth.check("Bearer anything", "expert") == "expert"

@@ -50,10 +50,4 @@ describe('App', () => {
     fireEvent.click(screen.getByText('History'));
     expect(screen.getByText('HistoryPage')).toBeInTheDocument();
   });
-
-  it('renders API token input', () => {
-    render(<App />);
-    expect(screen.getByPlaceholderText(/bearer token/i)).toBeInTheDocument();
-    expect(screen.getByText('Set')).toBeInTheDocument();
-  });
 });
