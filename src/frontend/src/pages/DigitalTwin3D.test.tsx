@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ReactNode } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import DigitalTwin3D from './DigitalTwin3D';
 
 // react-three-fiber cannot render under jsdom (no WebGL), so we stub the GL
@@ -119,9 +119,22 @@ describe('DigitalTwin3D', () => {
     expect(screen.getByText('Data Hall GF 1A')).toBeInTheDocument();
     expect(screen.getByText('Data Hall 2F 3A')).toBeInTheDocument();
     expect(screen.getAllByText('Data Hall 1F 2A').length).toBeGreaterThanOrEqual(1);
-    // controlled hall is badged, and the HUD summarizes the building
-    expect(screen.getByText(/CONTROLLED/)).toBeInTheDocument();
+    // controlled hall is badged (label + detail panel), HUD summarizes building
+    expect(screen.getAllByText(/CONTROLLED/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/3 HALLS \/ 3 LEVELS/)).toBeInTheDocument();
+  });
+
+  it('selecting a hall shows that hall’s details', async () => {
+    render(<DigitalTwin3D />);
+    await waitFor(() => expect(screen.getByTestId('canvas')).toBeInTheDocument());
+    // default selection is the controlled hall -> no MONITORED badge yet
+    expect(screen.queryByText('MONITORED')).toBeNull();
+    // click a context hall's label -> detail panel switches to it
+    fireEvent.click(screen.getByText('Data Hall 2F 3A'));
+    await waitFor(() => expect(screen.getByText('MONITORED')).toBeInTheDocument());
+    // panel shows geometry fields
+    expect(screen.getByText('Footprint')).toBeInTheDocument();
+    expect(screen.getByText('ITE racks')).toBeInTheDocument();
   });
 
   it('shows the plan selector populated from listPlans', async () => {

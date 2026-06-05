@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   getTopology, listPlans, getPlan,
   type Topology, type PlanSummary, type PlanDetail,
@@ -57,6 +57,7 @@ export default function DigitalTwin3D() {
   const [detail, setDetail] = useState<PlanDetail | null>(null);
   const [showLabels, setShowLabels] = useState(false);
   const [showContext, setShowContext] = useState(true);
+  const [selectedHallCode, setSelectedHallCode] = useState<string | null>(null);
   const [topoErr, setTopoErr] = useState<string | null>(null);
   const [loadingTopo, setLoadingTopo] = useState(true);
   const [loadingPlan, setLoadingPlan] = useState(false);
@@ -133,6 +134,12 @@ export default function DigitalTwin3D() {
   }
 
   const hasPlan = !!rec;
+  const halls = topo.building.halls;
+  // selected hall to inspect (defaults to the controlled one)
+  const selHall =
+    halls.find((h) => h.code === selectedHallCode) ??
+    halls.find((h) => h.controlled) ??
+    halls[0];
 
   return (
     <div className="animate-in">
@@ -191,6 +198,8 @@ export default function DigitalTwin3D() {
               inletMax={inletAnchor}
               showLabels={showLabels}
               showContext={showContext}
+              selectedCode={selHall?.code}
+              onSelectHall={setSelectedHallCode}
             />
           </SceneBoundary>
         </div>
@@ -229,17 +238,63 @@ export default function DigitalTwin3D() {
           />
         </div>
 
-        {/* Bottom-left: thermal legend + plan context */}
-        <div style={{ position: 'absolute', bottom: 14, left: 14, pointerEvents: 'none' }}>
-          <div className="metric-label" style={{ fontSize: 9, marginBottom: 5 }}>Cold Aisle → Hot Aisle</div>
-          <div style={{
-            width: 200, height: 8, borderRadius: 4,
-            background: `linear-gradient(90deg, ${tempColor(sat, sat, inletAnchor)}, ${tempColor((sat + inletAnchor) / 2, sat, inletAnchor)}, ${tempColor(inletAnchor, sat, inletAnchor)})`,
-            border: '1px solid var(--border-bright)',
-          }} />
-          <div className="flex justify-between mono" style={{ width: 200, fontSize: 9, color: 'var(--text-secondary)', marginTop: 3 }}>
-            <span>{sat.toFixed(0)}°C</span>
-            <span>{inletAnchor.toFixed(0)}°C</span>
+        {/* Bottom-left: selected-hall detail card + thermal legend */}
+        <div style={{ position: 'absolute', bottom: 14, left: 14, display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 256 }}>
+          {selHall && (
+            <div style={{
+              pointerEvents: 'none',
+              background: 'rgba(13,19,32,0.88)',
+              border: `1px solid ${selHall.controlled ? 'var(--cyan)' : 'var(--border-bright)'}`,
+              borderRadius: 8, padding: '10px 12px', backdropFilter: 'blur(6px)',
+              boxShadow: selHall.controlled ? '0 0 16px rgba(0,200,255,0.18)' : 'none',
+            }}>
+              <div className="flex items-center justify-between" style={{ gap: 8, marginBottom: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: selHall.controlled ? 'var(--cyan)' : 'var(--text-primary)' }}>
+                  {selHall.code}
+                </span>
+                <span className="badge" style={{
+                  fontSize: 9,
+                  color: selHall.controlled ? 'var(--green)' : 'var(--text-muted)',
+                  borderColor: selHall.controlled ? 'var(--green)' : 'var(--border-bright)',
+                }}>
+                  {selHall.controlled ? '◆ CONTROLLED' : 'MONITORED'}
+                </span>
+              </div>
+              <div className="mono" style={{ fontSize: 10.5, color: 'var(--text-secondary)', display: 'grid', gridTemplateColumns: 'auto 1fr', columnGap: 14, rowGap: 3 }}>
+                {([
+                  ['Level', selHall.level],
+                  ['Footprint', `${selHall.size[0].toFixed(1)} × ${selHall.size[1].toFixed(1)} m`],
+                  ['Height', `${selHall.size[2].toFixed(1)} m`],
+                  ['Floor (z)', `${selHall.z0.toFixed(1)}–${(selHall.z0 + selHall.size[2]).toFixed(1)} m`],
+                  ['Area', `${(selHall.size[0] * selHall.size[1]).toFixed(0)} m²`],
+                  ['Volume', `${(selHall.size[0] * selHall.size[1] * selHall.size[2]).toFixed(0)} m³`],
+                  ['ITE racks', String(selHall.ite)],
+                ] as [string, string][]).map(([k, v]) => (
+                  <Fragment key={k}>
+                    <span>{k}</span>
+                    <span style={{ textAlign: 'right', color: 'var(--text-primary)' }}>{v}</span>
+                  </Fragment>
+                ))}
+              </div>
+              <div style={{ fontSize: 9, marginTop: 8, color: selHall.controlled ? 'var(--green)' : 'var(--text-muted)' }}>
+                {selHall.controlled
+                  ? `${topo.crahs.length} ACUs actuated · live setpoints/KPIs above`
+                  : 'Not actuated — monitored only'}
+              </div>
+            </div>
+          )}
+
+          <div style={{ pointerEvents: 'none' }}>
+            <div className="metric-label" style={{ fontSize: 9, marginBottom: 5 }}>Cold Aisle → Hot Aisle</div>
+            <div style={{
+              width: 200, height: 8, borderRadius: 4,
+              background: `linear-gradient(90deg, ${tempColor(sat, sat, inletAnchor)}, ${tempColor((sat + inletAnchor) / 2, sat, inletAnchor)}, ${tempColor(inletAnchor, sat, inletAnchor)})`,
+              border: '1px solid var(--border-bright)',
+            }} />
+            <div className="flex justify-between mono" style={{ width: 200, fontSize: 9, color: 'var(--text-secondary)', marginTop: 3 }}>
+              <span>{sat.toFixed(0)}°C</span>
+              <span>{inletAnchor.toFixed(0)}°C</span>
+            </div>
           </div>
         </div>
 
@@ -249,7 +304,7 @@ export default function DigitalTwin3D() {
             <span className="mono" style={{ fontSize: 10, color: 'var(--text-secondary)' }}>loading plan…</span>
           ) : hasPlan ? (
             <span className="mono" style={{ fontSize: 10, color: 'var(--text-secondary)' }}>
-              animating recommended setpoints · drag to orbit
+              animating recommended setpoints · drag to orbit · click a hall to inspect
             </span>
           ) : (
             <span className="mono" style={{ fontSize: 10, color: 'var(--amber)' }}>

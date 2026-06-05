@@ -19,10 +19,15 @@ interface Props {
   showLabels?: boolean;
   /** show every hall/level (true) or just the controlled hall (false). */
   showContext?: boolean;
+  /** code of the currently selected hall (highlighted). */
+  selectedCode?: string;
+  /** called when a hall box/label is clicked. */
+  onSelectHall?: (code: string) => void;
 }
 
 export default function HallScene({
   topo, sat, flow, inletMax, showLabels = false, showContext = true,
+  selectedCode, onSelectHall,
 }: Props) {
   const building = topo.building;
   const [W, D] = building.footprint;
@@ -76,7 +81,14 @@ export default function HallScene({
 
       {/* All halls / levels as stacked glass boxes */}
       {visibleHalls.map((h) => (
-        <HallBox key={h.code} hall={h} buildingHeight={H} showLabel={showContext || h.controlled} />
+        <HallBox
+          key={h.code}
+          hall={h}
+          buildingHeight={H}
+          showLabel={showContext || h.controlled}
+          selected={h.code === selectedCode}
+          onSelect={onSelectHall}
+        />
       ))}
 
       {/* Controlled-hall detail, lifted into the stack at its real level */}
