@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 import math
 from dataclasses import dataclass
-from typing import Any, Optional, Sequence
+from typing import Any, Callable, Optional, Sequence
 
 import numpy as np
 
@@ -58,7 +58,8 @@ class BeamPlanner:
         self.weights = weights or ObjectiveWeights()
         self.config = config or BeamConfig()
 
-    def plan(self, forecast: Optional[Any] = None) -> PlanResult:
+    def plan(self, forecast: Optional[Any] = None,
+             on_level: Optional[Callable[[int, int, float], None]] = None) -> PlanResult:
         cfg = self.config
         if cfg.grid < 2:
             raise ValueError("BeamConfig.grid must be >= 2")
@@ -78,6 +79,8 @@ class BeamPlanner:
         evals += len(candidates)
         beam = self._top_b(scored, cfg.beam_width)
         history.append(beam[0][2])
+        if on_level is not None:
+            on_level(0, evals, beam[0][2])
 
         # half the coarse spacing per dim, halved again each refine level
         step = np.array(
@@ -105,6 +108,8 @@ class BeamPlanner:
             beam = self._top_b(beam + scored_n, cfg.beam_width)
             new_best = beam[0][2]
             history.append(new_best)
+            if on_level is not None:
+                on_level(len(history) - 1, evals, new_best)
             step = step / 2.0
 
             if prev_best != INFEASIBLE and abs(prev_best - new_best) < cfg.epsilon * max(abs(prev_best), 1.0):
