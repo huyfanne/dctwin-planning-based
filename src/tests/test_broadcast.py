@@ -54,3 +54,10 @@ def test_broadcast_full_gds_vector_endpoints():
 def test_broadcast_rejects_empty_spec():
     with pytest.raises(ValueError):
         BroadcastPolicy([])
+
+
+def test_expand_passes_through_out_of_range():
+    spec = [ActionEntry(ControlKind.SAT, 20.0, 26.0)]
+    bp = BroadcastPolicy(spec)
+    out = bp.expand(Setpoints(sat_c=29.0, flow_kg_s=0.0, chwst_c=0.0))
+    assert out[0] > 1.0  # pass-through (not clamped); caller pre-clips
