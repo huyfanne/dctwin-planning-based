@@ -86,3 +86,20 @@ def test_returned_candidate_within_bounds():
     assert 20.0 <= s.sat_c <= 26.0
     assert 4.8 <= s.flow_kg_s <= 13.8
     assert 13.0 <= s.chwst_c <= 19.0
+
+
+def test_coarse_grid_subsample_is_unbiased():
+    # grid**3 (1000) > max_evals (100): the subsample must span the full SAT range,
+    # not just the lexicographic head.
+    ev = MockEvaluator(MockSurface(inlet_cap=999.0))
+    planner = BeamPlanner(DEFAULT_SEARCH_SPACE, ev, ObjectiveWeights(),
+                          BeamConfig(grid=10, beam_width=3, levels=0, max_evals=100))
+    planner.plan()
+    sats = {round(s.sat_c, 3) for s in ev.evaluated}
+    assert min(sats) <= 21.0 and max(sats) >= 25.0
+    assert len(ev.evaluated) <= 100
+
+
+def test_default_neighbors_includes_diagonals():
+    from planner.beam_search import BeamConfig
+    assert BeamConfig().neighbors == 8

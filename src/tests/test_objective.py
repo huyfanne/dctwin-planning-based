@@ -57,3 +57,8 @@ def test_rh_tolerance_boundary_when_hard():
     w = ObjectiveWeights(rh_hard=True, rh_tol_steps=3)
     assert is_feasible(_kpi(rh_viol=3), w)
     assert not is_feasible(_kpi(rh_viol=4), w)
+
+
+def test_non_finite_energy_is_infeasible():
+    assert score(_kpi(energy=float("nan")), ObjectiveWeights()) == INFEASIBLE
+    assert score(_kpi(energy=float("inf")), ObjectiveWeights()) == INFEASIBLE

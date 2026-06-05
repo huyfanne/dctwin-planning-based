@@ -44,9 +44,10 @@ def score(kpi: WeeklyKPI, w: ObjectiveWeights) -> float:
     """Lower is better. Infeasible candidates score +inf and never enter the beam."""
     if not is_feasible(kpi, w):
         return INFEASIBLE
-    return (
+    val = (
         kpi.total_hvac_energy_kwh
         + w.lambda_temp * kpi.inlet_excess_degc_steps
         + w.lambda_rh * kpi.rh_excursion_steps
         + w.lambda_zone * kpi.zone_temp_band_steps
     )
+    return val if math.isfinite(val) else INFEASIBLE

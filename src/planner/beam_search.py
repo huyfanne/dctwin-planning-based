@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+import math
 from dataclasses import dataclass
 from typing import Any, Optional, Sequence
 
@@ -15,7 +16,7 @@ class BeamConfig:
     grid: int = 5            # g: coarse grid points per dim
     beam_width: int = 5      # B: frontier size kept each level
     levels: int = 3          # L: refine levels after the coarse grid
-    neighbors: int = 6       # local samples per beam node per refine level
+    neighbors: int = 8       # local samples per beam node per refine level
     max_evals: int = 400     # hard cap on total evaluations
     epsilon: float = 1e-3    # early-stop best-score improvement threshold
 
@@ -66,7 +67,13 @@ class BeamPlanner:
         history: list[float] = []
 
         # ---- Level 0: coarse grid (also capped by max_evals) ----
-        candidates = _coarse_grid(self.space, cfg.grid)[: cfg.max_evals]
+        candidates = _coarse_grid(self.space, cfg.grid)
+        if len(candidates) > cfg.max_evals:
+            # uniform stride subsample spans the full range of every dim
+            # (a head-slice of the lexicographic product would drop the high
+            #  end of the first dimension entirely)
+            stride = math.ceil(len(candidates) / cfg.max_evals)
+            candidates = candidates[::stride][: cfg.max_evals]
         scored = self._score_batch(candidates, forecast)
         evals += len(candidates)
         beam = self._top_b(scored, cfg.beam_width)
@@ -100,7 +107,7 @@ class BeamPlanner:
             history.append(new_best)
             step = step / 2.0
 
-            if prev_best != INFEASIBLE and abs(prev_best - new_best) < cfg.epsilon:
+            if prev_best != INFEASIBLE and abs(prev_best - new_best) < cfg.epsilon * max(abs(prev_best), 1.0):
                 break
 
         best_s, best_kpi, best_sc = beam[0]
@@ -127,6 +134,10 @@ class BeamPlanner:
             np.array([0.0, 0.0, -step[2]]),
             np.array([step[0], step[1], 0.0]),
             np.array([-step[0], -step[1], 0.0]),
+            np.array([step[0], 0.0, step[2]]),
+            np.array([-step[0], 0.0, -step[2]]),
+            np.array([0.0, step[1], step[2]]),
+            np.array([0.0, -step[1], -step[2]]),
         ][:n]
         out: list[Setpoints] = []
         for off in offsets:
