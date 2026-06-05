@@ -350,13 +350,14 @@ React (Vite + TypeScript)  ──JSON/WebSocket──►  FastAPI  ──►  We
 | `GET /api/plans/{id}` | any | `recommendation.json` + status + KPIs |
 | `WS /api/plans/{id}/progress` | any | live evals/total + current-best stream |
 | `GET /api/plans/{id}/trajectory` | any | per-step series (ai + baseline) for plots |
+| `GET /api/topology` | any | schematic 1F-2A hall layout (CRAHs, rack rows/aisles, plant) for the 3D view |
 | `PATCH /api/plans/{id}/setpoints` | expert | edit setpoints before approval |
 | `POST /api/plans/{id}/approve` \| `/reject` | expert | the supervision gate |
 | `POST /api/plans/{id}/deploy` | expert | sim-only deploy → realized KPIs |
 
 ### 14.3 Frontend (React + Vite + TS)
 
-Four views, built with the frontend-design skill: **Dashboard** (latest plan: setpoints, KPIs, status badge), **New Plan** (params + live progress: progress bar, evals, best-score-per-level chart), **Review & Approve** (plan-vs-baseline KPI table + per-step inlet/power/PUE plots, setpoint editor, approve/reject), **History** (past plans, predicted-vs-realized energy trend). Charting via Recharts.
+Five views, built with the frontend-design skill: **Dashboard** (latest plan: setpoints, KPIs, status badge), **New Plan** (params + live progress: progress bar, evals, best-score-per-level chart), **Review & Approve** (plan-vs-baseline KPI table + per-step inlet/power/PUE plots, setpoint editor, approve/reject), **History** (past plans, predicted-vs-realized energy trend), and **Digital Twin (3D)** (§14.5). Charting via Recharts; 3D via three + @react-three/fiber + @react-three/drei.
 
 ### 14.4 Layout additions
 
@@ -367,9 +368,17 @@ src/
 │   ├── jobs.py            #   background worker + job store
 │   ├── store.py           #   runs/<id>/ + SQLite index access
 │   ├── auth.py            #   token auth + operator/expert roles
-│   └── schemas.py         #   pydantic request/response models
-└── frontend/              # React app (Plan 4): src/pages/{Dashboard,NewPlan,Review,History}
+│   ├── schemas.py         #   pydantic request/response models
+│   └── topology.py        #   schematic 1F-2A hall layout from building.json (3D view)
+└── frontend/              # React app: src/pages/{Dashboard,NewPlan,Review,History,DigitalTwin3D}
+                           #   + src/three/{HallScene,Airflow,CRAH,RackRows,Plant}.tsx
 ```
+
+### 14.5 Digital Twin (3D) view
+
+A detailed, interactive **schematic 3D** of the **controlled 1F 2A hall** (the model has no real geometry — 0 detailed surfaces, zones at origin — so the layout is generated from the logical topology). Backend `webapp/topology.py::build_hall_topology(building_json, dt_prototxt, hall="1f 2a")` produces a deterministic schematic: hall box, **22 CRAH units** along the perimeter, **server-rack rows** in **cold/hot-aisle** pairs, and a **plant block** (chiller/cooling tower/pumps) with CHW pipe links; served at `GET /api/topology`.
+
+Frontend (`react-three-fiber` + `drei`): renders the hall shell, CRAH boxes, instanced racks, and plant/pipes with **OrbitControls** + click-to-inspect, plus a **HUD** of the selected plan's 3 setpoints + KPIs. **Rack coloring** is a thermal gradient anchored on the plan (**SAT → max inlet**, cold-aisle blue → hot-aisle red). **Airflow animation**: a particle system flowing **CRAH → cold aisle → racks → hot aisle → return**, with **particle speed ∝ the CRAH airflow setpoint** and **color ∝ SAT→inlet** (driven by `useFrame`), so changing the recommended airflow visibly changes the flow. Data: `GET /api/topology` (static) + `GET /api/plans/{id}` (setpoints/KPIs). v1 uses the schematic SAT→inlet_max gradient for racks; real per-rack inlet temps from a trajectory run are a noted follow-up.
 
 ## 15. Open questions / future work
 

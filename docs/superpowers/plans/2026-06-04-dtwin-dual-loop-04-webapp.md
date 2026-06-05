@@ -1442,6 +1442,89 @@ git commit -m "docs(dtwin): web app run instructions"
 
 ---
 
+## PART C — Digital Twin (3D) view (spec §14.5)
+
+> Use the **frontend-design skill** for Task 11's 3D scene. The model has no real
+> geometry, so the layout is a deterministic schematic generated from building.json.
+
+## Task 10: Topology endpoint (`webapp/topology.py` + route)
+
+**Files:** Create `webapp/topology.py`; modify `webapp/main.py` (+route); Test `tests/test_topology.py`.
+
+- [ ] **Step 1 — failing test** `tests/test_topology.py`:
+
+```python
+from webapp.topology import build_hall_topology
+
+
+def test_topology_has_22_crahs_and_racks_and_plant(tmp_path):
+    topo = build_hall_topology(
+        building_json="models/building.json",
+        dt_prototxt="configs/dt/dt.prototxt",
+        hall="1f 2a",
+    )
+    assert topo["hall"]["name"].lower().endswith("1f 2a")
+    assert len(topo["crahs"]) == 22                      # the 22 controlled ACUs
+    assert all("pos" in c and len(c["pos"]) == 3 for c in topo["crahs"])
+    assert len(topo["rack_rows"]) >= 2
+    assert {r["aisle"] for r in topo["rack_rows"]} <= {"cold", "hot"}
+    assert topo["plant"]["chiller"] >= 1
+    # deterministic layout: same call -> identical positions
+    topo2 = build_hall_topology("models/building.json", "configs/dt/dt.prototxt", "1f 2a")
+    assert [c["pos"] for c in topo["crahs"]] == [c["pos"] for c in topo2["crahs"]]
+```
+
+- [ ] **Step 2 — run, confirm FAIL** (`ModuleNotFoundError: webapp.topology`). Requires the GDS assets copied into `src/` (M0).
+
+- [ ] **Step 3 — implement** `webapp/topology.py`: pure functions. Count CRAHs by reading `dt.prototxt` AGENT_CONTROLLED `..._acu_N_supply_air_temperature_setpoint` actions for the hall (22 for 1f 2a); derive rack count from `building.json` ITE entries / `room2ite_map`. Assign **deterministic schematic positions**: hall box (e.g. 30×20×4 m), 22 CRAHs evenly along the two long walls, rack rows down the middle alternating cold/hot aisles, a plant block offset to one side with link endpoints to the CRAHs. Read plant counts (chiller/coolingTower/pumps) from `building.json` `constructions.plant` / `models.coolingModels`. Return the dict shape asserted above (`hall`, `crahs`, `rack_rows`, `plant`, `links`).
+
+- [ ] **Step 4 — run, confirm PASS.** `cd src && .venv-dtwin/bin/python -m pytest tests/test_topology.py -v`
+
+- [ ] **Step 5 — add the route** in `webapp/main.py`:
+
+```python
+    from webapp.topology import build_hall_topology
+
+    @app.get("/api/topology")
+    def get_topology(hall: str = "1f 2a", role: str = Depends(operator)):
+        return build_hall_topology("models/building.json", "configs/dt/dt.prototxt", hall)
+```
+Add a TestClient test in `tests/test_api.py` asserting `GET /api/topology` returns 22 crahs (skip/xfail if assets absent). Commit:
+```bash
+git add src/webapp/topology.py src/webapp/main.py src/tests/test_topology.py src/tests/test_api.py
+git commit -m "feat(dtwin): /api/topology schematic 1F-2A hall layout"
+```
+
+---
+
+## Task 11: 3D Digital-Twin view (react-three-fiber) — **use frontend-design skill**
+
+**Files:** `frontend/` deps (`three`, `@react-three/fiber`, `@react-three/drei`); Create `frontend/src/pages/DigitalTwin3D.tsx`, `frontend/src/three/{HallScene,CRAH,RackRows,Plant,Airflow}.tsx`; extend `frontend/src/api.ts` (`getTopology`); Test `frontend/src/three/airflow.test.ts`.
+
+- [ ] **Step 1: deps** — `cd src/frontend && npm install three @react-three/fiber @react-three/drei && npm install -D @types/three`
+
+- [ ] **Step 2: API client** — add to `api.ts`:
+```ts
+export interface Topology { hall: {name:string; size:[number,number,number]};
+  crahs: {id:string; pos:[number,number,number]}[];
+  rack_rows: {pos:[number,number,number]; aisle:"cold"|"hot"; nracks:number}[];
+  plant: Record<string, number>; links: any[]; }
+export const getTopology = (hall = "1f 2a") =>
+  req<Topology>(`/api/topology?hall=${encodeURIComponent(hall)}`);
+```
+
+- [ ] **Step 3: pure airflow helper + vitest test** `frontend/src/three/airflow.ts` — `particleSpeed(flowSetpoint, lb, ub)` returns a normalized speed in [0.2,1] (so airflow setpoint visibly drives flow); `tempColor(t, sat, inletMax)` maps temp→blue..red. Test these pure functions (no WebGL).
+
+- [ ] **Step 4: scene components** (frontend-design skill drives the look): `HallScene` (Canvas + OrbitControls + lights + hall shell), `CRAH` (box w/ label), `RackRows` (instanced rack boxes colored by `tempColor`), `Plant` (chiller/tower/pump blocks + pipes), `Airflow` (particle system via `useFrame`, speed from `particleSpeed(plan.airflow)`, color from SAT→inlet). `DigitalTwin3D.tsx` fetches `getTopology()` + the selected plan, composes the scene, and shows a HUD (3 setpoints + KPIs) + a plan selector.
+
+- [ ] **Step 5: smoke test + build** — vitest render test that `DigitalTwin3D` mounts with mocked `getTopology`/`getPlan` (mock the Canvas), then `npm run build`. Commit:
+```bash
+git add src/frontend/src src/frontend/package.json
+git commit -m "feat(dtwin): 3D digital-twin hall view with airflow animation"
+```
+
+---
+
 ## Self-Review
 
 **Spec coverage (Plan 4 = spec §14 web application, M8):**
