@@ -13,7 +13,8 @@ FC = "models/forecaster.pkl"
 @pytest.mark.skipif(not (Path(DT).exists() and Path(FC).exists()),
                     reason="model assets / fitted forecaster not present")
 def test_tiny_weekly_plan_then_baseline_acceptance(tmp_path, monkeypatch):
-    # shrink the planning window to 1 day and the search to a 2^3 grid for speed
+    # shrink the planning window to 1 day for speed; grid=3/levels=1 is the
+    # smallest search verified to find a feasible, energy-reducing plan.
     from planner import week_config
     orig = week_config.compute_week_period
     monkeypatch.setattr(week_config, "compute_week_period",
@@ -23,7 +24,7 @@ def test_tiny_weekly_plan_then_baseline_acceptance(tmp_path, monkeypatch):
     WeeklyPlanTemplate()(
         dt_engine_config=DT, forecaster_config=FC,
         week_start=date(2013, 11, 11), days=1,
-        grid=2, beam_width=2, levels=0, n_workers=2,
+        grid=3, beam_width=3, levels=1, n_workers=8,
     )
 
     rec = json.loads(Path("log/recommendation.json").read_text())
