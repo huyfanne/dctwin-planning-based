@@ -23,6 +23,10 @@ class Bounds:
     lb: float
     ub: float
 
+    def __post_init__(self) -> None:
+        if self.lb > self.ub:
+            raise ValueError(f"Bounds: lb ({self.lb}) > ub ({self.ub})")
+
     def clip(self, x: float) -> float:
         return max(self.lb, min(self.ub, x))
 

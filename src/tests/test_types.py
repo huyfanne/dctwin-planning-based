@@ -1,5 +1,3 @@
-import math
-
 from planner.types import Setpoints, Bounds, SearchSpace, WeeklyKPI, DEFAULT_SEARCH_SPACE
 
 
@@ -8,6 +6,8 @@ def test_bounds_clip_inside_and_outside():
     assert b.clip(23.0) == 23.0
     assert b.clip(10.0) == 20.0
     assert b.clip(99.0) == 26.0
+    assert b.clip(20.0) == 20.0
+    assert b.clip(26.0) == 26.0
 
 
 def test_setpoints_as_tuple_order():
@@ -33,4 +33,11 @@ def test_weekly_kpi_defaults():
         inlet_violation_steps=0, rh_violation_steps=0, feasible=True,
     )
     assert k.inlet_excess_degc_steps == 0.0
+    assert k.rh_excursion_steps == 0.0
     assert k.zone_temp_band_steps == 0.0
+
+
+def test_bounds_rejects_inverted():
+    import pytest
+    with pytest.raises(ValueError):
+        Bounds(26.0, 20.0)
