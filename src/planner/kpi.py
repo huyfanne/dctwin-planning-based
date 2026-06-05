@@ -40,6 +40,7 @@ def aggregate_kpi(samples: list[StepSample], hours_per_step: float,
 
     energy_kwh = 0.0
     pue_sum = 0.0
+    pue_count = 0
     inlet_temp_max = float("-inf")
     inlet_violation_steps = 0
     inlet_excess = 0.0
@@ -52,6 +53,7 @@ def aggregate_kpi(samples: list[StepSample], hours_per_step: float,
         energy_kwh += hvac_w * hours_per_step / 1000.0
         if smp.it_power_w > 0:
             pue_sum += smp.total_power_w / smp.it_power_w
+            pue_count += 1
 
         step_inlet_max = max(smp.inlet_temps) if smp.inlet_temps else float("-inf")
         inlet_temp_max = max(inlet_temp_max, step_inlet_max)
@@ -75,7 +77,7 @@ def aggregate_kpi(samples: list[StepSample], hours_per_step: float,
 
     return WeeklyKPI(
         total_hvac_energy_kwh=energy_kwh,
-        pue_mean=pue_sum / len(samples),
+        pue_mean=pue_sum / pue_count if pue_count else float("inf"),
         inlet_temp_max=inlet_temp_max,
         inlet_violation_steps=inlet_violation_steps,
         rh_violation_steps=rh_violation_steps,
