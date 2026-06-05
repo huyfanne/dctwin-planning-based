@@ -74,3 +74,20 @@ def test_empty_samples_sentinels():
     assert k.feasible is False
     assert math.isinf(k.total_hvac_energy_kwh)
     assert k.inlet_violation_steps >= 10 ** 9
+
+
+def test_warmup_steps_excluded():
+    # first 6 (warmup) samples spike inlet>26; later steps are clean -> 0 violations
+    hot = _sample(2000.0, 1000.0, [45.0])
+    cool = _sample(2000.0, 1000.0, [24.0])
+    samples = [hot] * 6 + [cool] * 4
+    k = aggregate_kpi(samples, hours_per_step=0.25,
+                      settings=OracleSettings(inlet_cap=26.0))
+    assert k.inlet_violation_steps == 0
+    assert k.inlet_temp_max == 24.0
+
+
+def test_warmup_not_dropped_when_too_few_samples():
+    hot = _sample(2000.0, 1000.0, [45.0])
+    k = aggregate_kpi([hot, hot], 0.25, OracleSettings(inlet_cap=26.0))
+    assert k.inlet_violation_steps == 2   # 2 <= warmup_steps (6) -> kept

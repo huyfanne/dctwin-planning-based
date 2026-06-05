@@ -40,3 +40,22 @@ def test_discover_requires_power_observations():
     env = _FakeEnv(["data hall 1f 2a ite-1 inlet dry-bulb temperature"])
     with pytest.raises(ValueError):
         discover_monitor(env)
+
+
+def test_hall_filter_scopes_thermal_sensors_only():
+    env = _FakeEnv([
+        "total power",
+        "total it power",
+        "data hall 1f 2a ite-1 inlet dry-bulb temperature",   # controlled hall
+        "data hall gf 1a ite-1 inlet dry-bulb temperature",   # other hall
+        "data hall 1f 2a ite-1 inlet relative humidity",
+        "data hall gf 1a ite-1 inlet relative humidity",
+    ])
+    m = discover_monitor(env, hall="1f 2a")
+    # power stays facility-wide; thermal sensors scoped to the controlled hall
+    assert m.total_power_name == "total power"
+    assert m.inlet_temp_names == ["data hall 1f 2a ite-1 inlet dry-bulb temperature"]
+    assert m.inlet_rh_names == ["data hall 1f 2a ite-1 inlet relative humidity"]
+    # default (no hall) keeps all sensors
+    m_all = discover_monitor(env)
+    assert len(m_all.inlet_temp_names) == 2

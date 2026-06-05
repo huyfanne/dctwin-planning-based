@@ -24,6 +24,10 @@ class OracleSettings:
     rh_max: float = 60.0
     zone_target: float = 32.0
     zone_band: float = 1.0
+    # Discard the initial control-startup transient (the BCVTB loop spikes for a
+    # few steps before setpoints propagate through the HVAC system) before scoring.
+    # Guarded so tiny test runs (<= warmup_steps samples) are unaffected.
+    warmup_steps: int = 6
 
 
 def aggregate_kpi(samples: list[StepSample], hours_per_step: float,
@@ -36,6 +40,8 @@ def aggregate_kpi(samples: list[StepSample], hours_per_step: float,
         )
 
     s = settings
+    if len(samples) > s.warmup_steps:
+        samples = samples[s.warmup_steps:]
     soft_threshold = s.inlet_cap - s.inlet_soft_margin
 
     energy_kwh = 0.0

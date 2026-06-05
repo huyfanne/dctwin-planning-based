@@ -23,6 +23,7 @@ class EvalTask:
     hours_per_step: float
     settings_kwargs: dict[str, Any]
     bcvtb_host: str = "172.17.0.1"          # host the EnergyPlus container connects back to
+    monitored_hall: str = "1f 2a"           # scope thermal KPI to the controlled hall ("" = all)
 
 
 def read_step_sample(unwrapped, monitor: MonitorSpec) -> StepSample:
@@ -80,7 +81,7 @@ def evaluate_one(task: EvalTask) -> WeeklyKPI:
         if backend is not None and task.bcvtb_host:
             backend._host = task.bcvtb_host
         broadcaster = mapper_from_env(env)
-        monitor = discover_monitor(env)
+        monitor = discover_monitor(env, hall=task.monitored_hall)
         action = broadcaster.expand(Setpoints(*task.candidate))
         return run_episode(env, action, monitor, task.hours_per_step,
                            OracleSettings(**task.settings_kwargs))

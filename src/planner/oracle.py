@@ -24,6 +24,9 @@ class OracleConfig:
     # so we use the docker0 bridge gateway, which the container can reach and where
     # the host's 0.0.0.0-bound socket is already listening.
     bcvtb_host: str = "172.17.0.1"
+    # Scope the thermal KPI (inlet/zone) to the controlled hall; we only actuate
+    # the 1F 2A ACUs, so other halls' sensors are uncontrollable noise ("" = all).
+    monitored_hall: str = "1f 2a"
 
 
 def _infeasible() -> WeeklyKPI:
@@ -73,6 +76,7 @@ class ParallelEnvOracle(Evaluator):
                 hours_per_step=hours_per_step,
                 settings_kwargs=cfg.settings.__dict__,
                 bcvtb_host=cfg.bcvtb_host,
+                monitored_hall=cfg.monitored_hall,
             )
             for i, c in enumerate(candidates)
         ]

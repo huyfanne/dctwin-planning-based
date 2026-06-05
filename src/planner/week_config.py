@@ -53,5 +53,6 @@ def write_week_config(
     stc.end_day_of_month = period.end_day
     if timesteps_per_hour is not None:
         stc.number_of_timesteps_per_hour = timesteps_per_hour
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     Path(out_path).write_text(text_format.MessageToString(cfg))
     return str(out_path)

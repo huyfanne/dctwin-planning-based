@@ -12,8 +12,14 @@ class MonitorSpec:
     zone_temp_names: list[str] = field(default_factory=list)
 
 
-def discover_monitor(env) -> MonitorSpec:
-    """Scan a dctwin env's observations and classify the ones we read each step."""
+def discover_monitor(env, hall: str = "") -> MonitorSpec:
+    """Scan a dctwin env's observations and classify the ones we read each step.
+
+    Power (total / IT) is facility-wide. The thermal sensors (inlet temp/RH, zone
+    temp) are scoped to `hall` (a case-insensitive substring, e.g. "1f 2a") when
+    given, so the thermal KPI reflects only the controlled hall -- sensors in
+    halls we do not actuate would otherwise pin the KPI to a constant value.
+    """
     unwrapped = getattr(env, "unwrapped", env)
     names = [o.variable_name for o in unwrapped.observations]
 
@@ -30,4 +36,9 @@ def discover_monitor(env) -> MonitorSpec:
         if n.lower().endswith(" air temperature") and "acu" not in n.lower()
         and "inlet" not in n.lower()
     ]
+    if hall:
+        h = hall.lower()
+        inlet_temps = [n for n in inlet_temps if h in n.lower()]
+        inlet_rhs = [n for n in inlet_rhs if h in n.lower()]
+        zones = [n for n in zones if h in n.lower()]
     return MonitorSpec(total, it, inlet_temps, inlet_rhs, zones)
