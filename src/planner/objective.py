@@ -13,6 +13,13 @@ class ObjectiveWeights:
     """Soft-penalty weights and hard-constraint tolerances.
 
     Energy (kWh) is the dominant term; lambdas are small margin tie-breakers.
+
+    The hard feasibility gate uses the integer step COUNTS
+    (`inlet_violation_steps`, `rh_violation_steps`); the soft penalty uses the
+    float magnitude ACCUMULATORS (`inlet_excess_degc_steps`,
+    `rh_excursion_steps`, `zone_temp_band_steps`). An evaluator must set the
+    matching count and accumulator consistently. `rh_tol_steps` only takes
+    effect when `rh_hard=True`.
     """
 
     lambda_temp: float = 1.0      # weight on inlet margin excess (deg C * steps)
