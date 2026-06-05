@@ -13,6 +13,20 @@ def _good_kpi(task):
                      rh_violation_steps=0, feasible=True)
 
 
+def _pool_good(task):
+    from planner.types import WeeklyKPI
+    return WeeklyKPI(total_hvac_energy_kwh=100.0 + task.candidate[0], pue_mean=1.2,
+                     inlet_temp_max=24.0, inlet_violation_steps=0,
+                     rh_violation_steps=0, feasible=True)
+
+
+def _pool_slow(task):
+    import time
+    time.sleep(2.0)
+    from planner.types import WeeklyKPI
+    return WeeklyKPI(0.0, 1.0, 0.0, 0, 0, True)
+
+
 class _FakeForecast:
     def __init__(self, tmp_path):
         self.week_start = __import__("datetime").date(2013, 11, 11)
@@ -64,3 +78,22 @@ def test_materializes_forecast(monkeypatch, tmp_path):
                             config=OracleConfig(use_process_pool=False, log_root=str(tmp_path)))
     orc.evaluate([Setpoints(22.0, 8.0, 17.0)], forecast=fc)
     assert fc.materialized is True
+
+
+def test_process_pool_preserves_order(monkeypatch, tmp_path):
+    _stub_week_config(monkeypatch)
+    orc = ParallelEnvOracle("ignored.prototxt", worker_fn=_pool_good,
+                            config=OracleConfig(n_workers=2, use_process_pool=True,
+                                                log_root=str(tmp_path)))
+    out = orc.evaluate([Setpoints(20.0, 8.0, 17.0), Setpoints(26.0, 8.0, 17.0)],
+                       forecast=_FakeForecast(tmp_path))
+    assert [round(k.total_hvac_energy_kwh) for k in out] == [120, 126]
+
+
+def test_process_pool_timeout_marks_infeasible(monkeypatch, tmp_path):
+    _stub_week_config(monkeypatch)
+    orc = ParallelEnvOracle("ignored.prototxt", worker_fn=_pool_slow,
+                            config=OracleConfig(n_workers=1, use_process_pool=True,
+                                                timeout_s=0.1, log_root=str(tmp_path)))
+    out = orc.evaluate([Setpoints(22.0, 8.0, 17.0)], forecast=_FakeForecast(tmp_path))
+    assert out[0].feasible is False

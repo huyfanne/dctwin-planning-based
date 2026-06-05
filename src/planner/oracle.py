@@ -33,10 +33,11 @@ class ParallelEnvOracle(Evaluator):
     """Score candidate weekly setpoints with real full-week EnergyPlus runs."""
 
     def __init__(self, base_prototxt: str, config: Optional[OracleConfig] = None,
-                 project_root: str = "."):
+                 project_root: str = ".", worker_fn=None):
         self.base_prototxt = base_prototxt
         self.config = config or OracleConfig()
         self.project_root = project_root
+        self._worker = worker_fn if worker_fn is not None else evaluate_one
 
     def evaluate(self, candidates: Sequence[Setpoints],
                  forecast: Optional[Any] = None) -> list[WeeklyKPI]:
@@ -71,19 +72,27 @@ class ParallelEnvOracle(Evaluator):
             return [self._safe_run(t) for t in tasks]
 
         results: list[WeeklyKPI] = [_infeasible()] * len(tasks)
-        with cf.ProcessPoolExecutor(max_workers=cfg.n_workers) as ex:
-            futs = {ex.submit(evaluate_one, t): i for i, t in enumerate(tasks)}
-            for fut in cf.as_completed(futs):
+        ex = cf.ProcessPoolExecutor(max_workers=cfg.n_workers)
+        futs = {ex.submit(self._worker, t): i for i, t in enumerate(tasks)}
+        # batch deadline backstop: per-candidate cap * number of candidates.
+        # (a truly hung worker can't be killed by ProcessPoolExecutor; the dctwin
+        #  worker is responsible for its own per-run container kill — spec section 11.)
+        deadline = cfg.timeout_s * max(len(tasks), 1)
+        try:
+            for fut in cf.as_completed(futs, timeout=deadline):
                 i = futs[fut]
                 try:
-                    results[i] = fut.result(timeout=cfg.timeout_s)
-                except Exception:  # noqa: BLE001 - timeout or worker crash
+                    results[i] = fut.result()
+                except Exception:  # noqa: BLE001 - worker crash
                     results[i] = _infeasible()
+        except cf.TimeoutError:
+            pass  # unfinished candidates remain _infeasible()
+        finally:
+            ex.shutdown(wait=False, cancel_futures=True)
         return results
 
-    @staticmethod
-    def _safe_run(task: EvalTask) -> WeeklyKPI:
+    def _safe_run(self, task: EvalTask) -> WeeklyKPI:
         try:
-            return evaluate_one(task)
+            return self._worker(task)
         except Exception:  # noqa: BLE001
             return _infeasible()
