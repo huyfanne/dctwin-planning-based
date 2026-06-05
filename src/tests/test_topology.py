@@ -40,6 +40,34 @@ def test_building_has_all_stacked_halls():
         assert h["level"] in {"GF", "1F", "2F", "—"}
 
 
+def test_building_per_hall_infrastructure():
+    topo = build_hall_topology("models/building.json", "configs/dt/dt.prototxt", "1f 2a")
+    b = topo["building"]
+    # shared plant from building.json coolingModels
+    assert b["plant"]["chiller"] >= 1 and b["plant"]["pumps"] >= 1
+    by_code = {h["code"]: h for h in b["halls"]}
+    # every hall carries verified infra + its own equipment layout
+    total_acus = 0
+    for h in b["halls"]:
+        i = h["infra"]
+        assert set(i) >= {"acuTotal", "acuControlled", "iteObjects", "iteUnits", "itPowerKw", "hvac"}
+        assert i["acuTotal"] >= 1
+        assert len(h["crahs"]) == i["acuTotal"]          # one ACU box per air loop
+        assert len(h["rackRows"]) >= 2
+        total_acus += i["acuTotal"]
+    # 28 air loops total = 22 in 1F 2A + 1 each in the other 6
+    assert total_acus == 28
+    ctrl = by_code["Data Hall 1F 2A"]
+    assert ctrl["controlled"] and ctrl["infra"]["acuTotal"] == 22 and ctrl["infra"]["acuControlled"] == 22
+    assert ctrl["infra"]["iteObjects"] == 22
+    # context halls have ACUs but none are agent-controlled
+    for code in ("Data Hall Gf 1A", "Data Hall 2F 3A", "Super Core Room 1F"):
+        # code casing comes from _hall_label; match case-insensitively
+        h = next(x for x in b["halls"] if x["code"].lower() == code.lower())
+        assert h["infra"]["acuControlled"] == 0
+        assert h["infra"]["itPowerKw"] > 0
+
+
 def test_parse_zone_bboxes_world_coords():
     from webapp.topology import parse_zone_bboxes
     boxes = parse_zone_bboxes("models/idf/building.idf")

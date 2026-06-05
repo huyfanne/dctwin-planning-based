@@ -264,11 +264,13 @@ export default function DigitalTwin3D() {
                 {([
                   ['Level', selHall.level],
                   ['Footprint', `${selHall.size[0].toFixed(1)} × ${selHall.size[1].toFixed(1)} m`],
-                  ['Height', `${selHall.size[2].toFixed(1)} m`],
                   ['Floor (z)', `${selHall.z0.toFixed(1)}–${(selHall.z0 + selHall.size[2]).toFixed(1)} m`],
-                  ['Area', `${(selHall.size[0] * selHall.size[1]).toFixed(0)} m²`],
+                  ['IT power', `${(selHall.infra.itPowerKw / 1000).toFixed(2)} MW`],
+                  ['ACUs', selHall.infra.acuControlled > 0
+                    ? `${selHall.infra.acuTotal}  (${selHall.infra.acuControlled} controlled)`
+                    : `${selHall.infra.acuTotal}  (scheduled)`],
+                  ['ITE', `${selHall.infra.iteObjects} obj · ${selHall.infra.iteUnits.toLocaleString()} units`],
                   ['Volume', `${(selHall.size[0] * selHall.size[1] * selHall.size[2]).toFixed(0)} m³`],
-                  ['ITE racks', String(selHall.ite)],
                 ] as [string, string][]).map(([k, v]) => (
                   <Fragment key={k}>
                     <span>{k}</span>
@@ -276,10 +278,9 @@ export default function DigitalTwin3D() {
                   </Fragment>
                 ))}
               </div>
-              <div style={{ fontSize: 9, marginTop: 8, color: selHall.controlled ? 'var(--green)' : 'var(--text-muted)' }}>
-                {selHall.controlled
-                  ? `${topo.crahs.length} ACUs actuated · live setpoints/KPIs above`
-                  : 'Not actuated — monitored only'}
+              <div style={{ fontSize: 9, marginTop: 8, lineHeight: 1.4, color: selHall.controlled ? 'var(--green)' : 'var(--text-muted)' }}>
+                {selHall.infra.hvac}
+                {selHall.controlled && ' · live setpoints/KPIs above'}
               </div>
             </div>
           )}

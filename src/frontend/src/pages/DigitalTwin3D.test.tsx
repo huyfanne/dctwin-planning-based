@@ -48,10 +48,29 @@ const TOPO = {
   building: {
     footprint: [42.46, 22.55],
     height: 24.5,
+    plant: { chiller: 1, coolingTower: 1, pumps: 3 },
     halls: [
-      { code: 'Data Hall GF 1A', level: 'GF', origin: [0, 0, 0], size: [42.46, 22.55, 3.5], z0: 0, controlled: false, ite: 1 },
-      { code: 'Data Hall 1F 2A', level: '1F', origin: [0, 0, 7], size: [42.46, 22.55, 3.5], z0: 7, controlled: true, ite: 22 },
-      { code: 'Data Hall 2F 3A', level: '2F', origin: [0, 0, 14], size: [42.46, 22.55, 3.5], z0: 14, controlled: false, ite: 1 },
+      {
+        code: 'Data Hall GF 1A', level: 'GF', origin: [0, 0, 0], size: [42.46, 22.55, 3.5], z0: 0,
+        controlled: false, ite: 1,
+        infra: { acuTotal: 1, acuControlled: 0, iteObjects: 1, iteUnits: 1000, itPowerKw: 4000, hvac: '1 ACU · scheduled SAT 23°C · water-cooled VAV' },
+        crahs: [{ id: 'crah-1', pos: [21, 0, 1.75], wall: 'south' }],
+        rackRows: [{ id: 'row-1', pos: [21, 8, 0], aisle: 'cold', nracks: 8 }, { id: 'row-2', pos: [21, 14, 0], aisle: 'hot', nracks: 8 }],
+      },
+      {
+        code: 'Data Hall 1F 2A', level: '1F', origin: [0, 0, 7], size: [42.46, 22.55, 3.5], z0: 7,
+        controlled: true, ite: 22,
+        infra: { acuTotal: 22, acuControlled: 22, iteObjects: 22, iteUnits: 22000, itPowerKw: 2000, hvac: '22 ACUs · agent-controlled SAT + airflow · water-cooled VAV' },
+        crahs: [{ id: 'crah-1', pos: [10, 0, 1.75], wall: 'south' }, { id: 'crah-2', pos: [20, 22, 1.75], wall: 'north' }],
+        rackRows: [{ id: 'row-1', pos: [21, 8, 0], aisle: 'cold', nracks: 8 }, { id: 'row-2', pos: [21, 14, 0], aisle: 'hot', nracks: 8 }],
+      },
+      {
+        code: 'Data Hall 2F 3A', level: '2F', origin: [0, 0, 14], size: [42.46, 22.55, 3.5], z0: 14,
+        controlled: false, ite: 1,
+        infra: { acuTotal: 1, acuControlled: 0, iteObjects: 1, iteUnits: 1000, itPowerKw: 4000, hvac: '1 ACU · scheduled SAT 23°C · water-cooled VAV' },
+        crahs: [{ id: 'crah-1', pos: [21, 0, 1.75], wall: 'south' }],
+        rackRows: [{ id: 'row-1', pos: [21, 8, 0], aisle: 'cold', nracks: 8 }, { id: 'row-2', pos: [21, 14, 0], aisle: 'hot', nracks: 8 }],
+      },
     ],
   },
 };
@@ -132,9 +151,10 @@ describe('DigitalTwin3D', () => {
     // click a context hall's label -> detail panel switches to it
     fireEvent.click(screen.getByText('Data Hall 2F 3A'));
     await waitFor(() => expect(screen.getByText('MONITORED')).toBeInTheDocument());
-    // panel shows geometry fields
+    // panel shows infrastructure fields
     expect(screen.getByText('Footprint')).toBeInTheDocument();
-    expect(screen.getByText('ITE racks')).toBeInTheDocument();
+    expect(screen.getByText('IT power')).toBeInTheDocument();
+    expect(screen.getByText('ACUs')).toBeInTheDocument();
   });
 
   it('shows the plan selector populated from listPlans', async () => {

@@ -20,6 +20,14 @@ export interface TopoCRAH { id: string; pos: Vec3; wall?: string; }
 export interface TopoRackRow { id?: string; pos: Vec3; aisle: 'cold' | 'hot'; nracks: number; }
 export interface TopoPlant { chiller: number; coolingTower: number; pumps: number; pos?: Vec3; }
 export interface TopoLink { from: string; to: string; }
+export interface HallInfra {
+  acuTotal: number;        // air-handling units serving the hall (IDF air loops)
+  acuControlled: number;   // agent-controlled ACUs (prototxt); 0 = scheduled
+  iteObjects: number;      // ElectricEquipment:ITE objects
+  iteUnits: number;        // total modeled ITE units
+  itPowerKw: number;       // total IT power (kW)
+  hvac: string;            // one-line HVAC summary
+}
 export interface BuildingHall {
   code: string;            // e.g. "Data Hall 1F 2A"
   level: string;           // "GF" | "1F" | "2F" | "—"
@@ -27,11 +35,15 @@ export interface BuildingHall {
   size: Vec3;              // [width_x, depth_y, height_z] (m)
   z0: number;              // floor height in the stack (m)
   controlled: boolean;     // true for the operator-controlled hall
-  ite: number;             // ITE rack count
+  ite: number;             // ITE object count (back-compat)
+  infra: HallInfra;
+  crahs: TopoCRAH[];       // this hall's ACU layout
+  rackRows: TopoRackRow[]; // this hall's rack layout
 }
 export interface Building {
   footprint: [number, number];  // [width_x, depth_y] (m)
   height: number;               // top of the stack (m)
+  plant: TopoPlant;             // shared cooling plant (chiller/tower/pumps)
   halls: BuildingHall[];        // stacked ground -> top
 }
 export interface Topology {

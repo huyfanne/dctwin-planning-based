@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
-import type { Topology } from '../api';
+import type { BuildingHall, Topology } from '../api';
 import { THEME } from './scene';
 import CRAH from './CRAH';
 import RackRows from './RackRows';
@@ -19,10 +19,39 @@ interface Props {
   showLabels?: boolean;
   /** show every hall/level (true) or just the controlled hall (false). */
   showContext?: boolean;
-  /** code of the currently selected hall (highlighted). */
+  /** code of the currently selected hall (highlighted + its equipment shown). */
   selectedCode?: string;
   /** called when a hall box/label is clicked. */
   onSelectHall?: (code: string) => void;
+}
+
+/** A hall's equipment (ACUs + rack rows, optionally animated airflow), lifted to
+ *  its real z-level in the building stack. */
+function HallEquipment({
+  hall, buildingHeight, sat, flow, inletMax, showLabels, withAirflow,
+}: {
+  hall: BuildingHall; buildingHeight: number;
+  sat: number; flow: number; inletMax: number;
+  showLabels: boolean; withAirflow: boolean;
+}) {
+  return (
+    <group position={[0, hall.z0 - buildingHeight / 2, 0]}>
+      {hall.crahs.map((c) => (
+        <CRAH key={c.id} crah={c} size={hall.size} showLabel={showLabels} />
+      ))}
+      <RackRows rows={hall.rackRows} size={hall.size} sat={sat} inletMax={inletMax} />
+      {withAirflow && (
+        <Airflow
+          crahs={hall.crahs}
+          rackRows={hall.rackRows}
+          size={hall.size}
+          flow={flow}
+          sat={sat}
+          inletMax={inletMax}
+        />
+      )}
+    </group>
+  );
 }
 
 export default function HallScene({
@@ -34,11 +63,11 @@ export default function HallScene({
   const H = building.height;
   const radius = Math.max(W, H, D);
 
-  // Controlled hall: where the detailed equipment lives, lifted to its z-level.
   const ctrl = building.halls.find((h) => h.controlled);
-  const ctrlSize = topo.hall.size;                 // [w, d, h] of the controlled hall
-  const z0 = ctrl ? ctrl.z0 : 0;
-  const detailY = z0 - H / 2;                       // floor of the controlled hall
+  const selected = building.halls.find((h) => h.code === selectedCode);
+  // Render the controlled hall's equipment always (it's the live hall) plus the
+  // selected hall's equipment when a different hall is being inspected.
+  const showSelectedEquip = !!selected && !selected.controlled && showContext;
 
   const visibleHalls = showContext
     ? building.halls
@@ -79,7 +108,7 @@ export default function HallScene({
         side={2}
       />
 
-      {/* All halls / levels as stacked glass boxes */}
+      {/* All halls / levels as stacked glass boxes (clickable) */}
       {visibleHalls.map((h) => (
         <HallBox
           key={h.code}
@@ -91,22 +120,36 @@ export default function HallScene({
         />
       ))}
 
-      {/* Controlled-hall detail, lifted into the stack at its real level */}
-      <group position={[0, detailY, 0]}>
-        {topo.crahs.map((c) => (
-          <CRAH key={c.id} crah={c} size={ctrlSize} showLabel={showLabels} />
-        ))}
-        <RackRows rows={topo.rack_rows} size={ctrlSize} sat={sat} inletMax={inletMax} />
-        <Plant plant={topo.plant} crahs={topo.crahs} links={topo.links} size={ctrlSize} />
-        <Airflow
-          crahs={topo.crahs}
-          rackRows={topo.rack_rows}
-          size={ctrlSize}
-          flow={flow}
+      {/* Controlled hall: full detail + animated airflow + plant */}
+      {ctrl && (
+        <>
+          <HallEquipment
+            hall={ctrl}
+            buildingHeight={H}
+            sat={sat}
+            flow={flow}
+            inletMax={inletMax}
+            showLabels={showLabels}
+            withAirflow
+          />
+          <group position={[0, ctrl.z0 - H / 2, 0]}>
+            <Plant plant={topo.plant} crahs={ctrl.crahs} links={topo.links} size={ctrl.size} />
+          </group>
+        </>
+      )}
+
+      {/* Selected context hall: its own ACUs + racks (no airflow — scheduled) */}
+      {showSelectedEquip && selected && (
+        <HallEquipment
+          hall={selected}
+          buildingHeight={H}
           sat={sat}
+          flow={flow}
           inletMax={inletMax}
+          showLabels={showLabels}
+          withAirflow={false}
         />
-      </group>
+      )}
 
       <OrbitControls
         enablePan
