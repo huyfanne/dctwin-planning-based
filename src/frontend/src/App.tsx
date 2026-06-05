@@ -27,7 +27,9 @@ export default function App() {
   function handleSetToken() {
     setToken(tokenDraft.trim());
     setTokenSaved(true);
-    setTimeout(() => setTokenSaved(false), 1800);
+    // Pages fetch on mount; reload so every view re-fetches with the new token
+    // (the token is already persisted to localStorage by setToken).
+    setTimeout(() => window.location.reload(), 350);
   }
 
   function openReview(id: string) {
