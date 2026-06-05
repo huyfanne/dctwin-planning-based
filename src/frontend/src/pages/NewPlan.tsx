@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { createPlan, getProgress, type Progress } from '../api';
+import { createPlan, getProgress, getPlan, type Progress } from '../api';
 
 interface Props {
   onDone: (planId: string) => void;
@@ -19,19 +19,26 @@ export default function NewPlan({ onDone }: Props) {
   const [planId, setPlanId]         = useState<string | null>(null);
   const [progress, setProgress]     = useState<Progress | null>(null);
   const [done, setDone]             = useState(false);
+  const [status, setStatus]         = useState<string>('queued');
   const [error, setError]           = useState<string | null>(null);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Poll progress once a plan is created
+  // Poll BOTH progress and plan status once a plan is created. Status is the
+  // source of truth for completion/failure (progress.json may be empty if a
+  // job fails early), so the UI never gets stuck on a fake "running".
   useEffect(() => {
-    if (!planId || done) return;
+    if (!planId || done || error) return;
     pollRef.current = setInterval(async () => {
       try {
-        const p = await getProgress(planId);
+        const [p, detail] = await Promise.all([getProgress(planId), getPlan(planId)]);
         setProgress(p);
-        // Consider done when level reaches max (levels param) or best_score is stable
-        if (p.level != null && Number(levels) > 0 && p.level >= Number(levels)) {
+        setStatus(detail.status);
+        if (detail.status === 'failed') {
+          setError('Plan run failed on the server. Most likely the backend was not started with Docker access (sg docker) so EnergyPlus could not run — see the backend log.');
+          if (pollRef.current) clearInterval(pollRef.current);
+        } else if (detail.status && detail.status !== 'queued' && detail.status !== 'running') {
+          // terminal success: pending_approval / approved / deployed / infeasible_fallback
           setDone(true);
           if (pollRef.current) clearInterval(pollRef.current);
         }
@@ -40,7 +47,7 @@ export default function NewPlan({ onDone }: Props) {
       }
     }, POLL_MS);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, [planId, done, levels]);
+  }, [planId, done, error]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -191,7 +198,9 @@ export default function NewPlan({ onDone }: Props) {
           <div className="card bracket-card animate-in">
             <div className="card-header">
               <span className="card-title">Live Progress</span>
-              {done
+              {error
+                ? <span className="badge" style={{ color: 'var(--amber, #f5a623)', borderColor: 'var(--amber, #f5a623)' }}>Failed</span>
+                : done
                 ? <span className="badge badge-approved">Complete</span>
                 : <span className="live-dot">Running</span>
               }
@@ -243,9 +252,26 @@ export default function NewPlan({ onDone }: Props) {
                 </button>
               )}
 
-              {!done && (
+              {error && (
+                <>
+                  <div className="error-msg">{error}</div>
+                  <button
+                    className="btn btn-ghost"
+                    style={{ width: '100%', justifyContent: 'center' }}
+                    onClick={() => {
+                      if (pollRef.current) clearInterval(pollRef.current);
+                      setPlanId(null); setProgress(null); setDone(false);
+                      setError(null); setStatus('queued'); setSubmitting(false);
+                    }}
+                  >
+                    ← Start New Plan
+                  </button>
+                </>
+              )}
+
+              {!done && !error && (
                 <p className="text-dim text-sm" style={{ fontFamily: 'var(--font-data)', textAlign: 'center', marginTop: 4 }}>
-                  Polling every 2s…
+                  Status: {status} · polling every 2s…
                 </p>
               )}
             </div>

@@ -72,7 +72,7 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
     from planner.pipeline import PlanRequest, run_weekly_plan
 
     plan_dir = store.plan_dir(plan_id)
-    dt_config.config.set_log_dir(str(plan_dir))
+    dt_config.set_log_dir(str(plan_dir))
 
     dt_cfg = params.get("dt", "configs/dt/dt.prototxt")
     fc_cfg = pickle_load(params.get("forecaster", "models/forecaster.pkl"))
