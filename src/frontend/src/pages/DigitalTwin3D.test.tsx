@@ -45,6 +45,15 @@ const TOPO = {
     { from: 'plant', to: 'crah-1' },
     { from: 'plant', to: 'crah-2' },
   ],
+  building: {
+    footprint: [42.46, 22.55],
+    height: 24.5,
+    halls: [
+      { code: 'Data Hall GF 1A', level: 'GF', origin: [0, 0, 0], size: [42.46, 22.55, 3.5], z0: 0, controlled: false, ite: 1 },
+      { code: 'Data Hall 1F 2A', level: '1F', origin: [0, 0, 7], size: [42.46, 22.55, 3.5], z0: 7, controlled: true, ite: 22 },
+      { code: 'Data Hall 2F 3A', level: '2F', origin: [0, 0, 14], size: [42.46, 22.55, 3.5], z0: 14, controlled: false, ite: 1 },
+    ],
+  },
 };
 
 const PLAN_SUMMARY = {
@@ -100,6 +109,19 @@ describe('DigitalTwin3D', () => {
     expect(screen.getByText(/air flow/i)).toBeInTheDocument();
     expect(screen.getByText(/chw supply/i)).toBeInTheDocument();
     expect(screen.getByText(/pue mean/i)).toBeInTheDocument();
+  });
+
+  it('renders every building hall/level as a labeled box + HUD summary', async () => {
+    render(<DigitalTwin3D />);
+    await waitFor(() => expect(screen.getByTestId('canvas')).toBeInTheDocument());
+    // each context hall in building.halls renders a label (Html -> div stub);
+    // GF 1A / 2F 3A are unique to the box labels, 1F 2A also appears in the HUD.
+    expect(screen.getByText('Data Hall GF 1A')).toBeInTheDocument();
+    expect(screen.getByText('Data Hall 2F 3A')).toBeInTheDocument();
+    expect(screen.getAllByText('Data Hall 1F 2A').length).toBeGreaterThanOrEqual(1);
+    // controlled hall is badged, and the HUD summarizes the building
+    expect(screen.getByText(/CONTROLLED/)).toBeInTheDocument();
+    expect(screen.getByText(/3 HALLS \/ 3 LEVELS/)).toBeInTheDocument();
   });
 
   it('shows the plan selector populated from listPlans', async () => {

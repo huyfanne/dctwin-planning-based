@@ -20,12 +20,27 @@ export interface TopoCRAH { id: string; pos: Vec3; wall?: string; }
 export interface TopoRackRow { id?: string; pos: Vec3; aisle: 'cold' | 'hot'; nracks: number; }
 export interface TopoPlant { chiller: number; coolingTower: number; pumps: number; pos?: Vec3; }
 export interface TopoLink { from: string; to: string; }
+export interface BuildingHall {
+  code: string;            // e.g. "Data Hall 1F 2A"
+  level: string;           // "GF" | "1F" | "2F" | "—"
+  origin: Vec3;            // world min corner [x,y,z] (m)
+  size: Vec3;              // [width_x, depth_y, height_z] (m)
+  z0: number;              // floor height in the stack (m)
+  controlled: boolean;     // true for the operator-controlled hall
+  ite: number;             // ITE rack count
+}
+export interface Building {
+  footprint: [number, number];  // [width_x, depth_y] (m)
+  height: number;               // top of the stack (m)
+  halls: BuildingHall[];        // stacked ground -> top
+}
 export interface Topology {
   hall: { name: string; size: Vec3 };
   crahs: TopoCRAH[];
   rack_rows: TopoRackRow[];
   plant: TopoPlant;
   links: TopoLink[];
+  building: Building;
 }
 
 let TOKEN = localStorage.getItem("token") || "";

@@ -56,6 +56,7 @@ export default function DigitalTwin3D() {
   const [selectedId, setSelectedId] = useState<string>('');
   const [detail, setDetail] = useState<PlanDetail | null>(null);
   const [showLabels, setShowLabels] = useState(false);
+  const [showContext, setShowContext] = useState(true);
   const [topoErr, setTopoErr] = useState<string | null>(null);
   const [loadingTopo, setLoadingTopo] = useState(true);
   const [loadingPlan, setLoadingPlan] = useState(false);
@@ -147,6 +148,13 @@ export default function DigitalTwin3D() {
           <button
             className="btn btn-ghost"
             style={{ padding: '7px 14px', fontSize: 11 }}
+            onClick={() => setShowContext((s) => !s)}
+          >
+            {showContext ? '◉ All Levels' : '○ Controlled Only'}
+          </button>
+          <button
+            className="btn btn-ghost"
+            style={{ padding: '7px 14px', fontSize: 11 }}
             onClick={() => setShowLabels((s) => !s)}
           >
             {showLabels ? '◉ Labels On' : '○ Labels Off'}
@@ -182,6 +190,7 @@ export default function DigitalTwin3D() {
               flow={flow}
               inletMax={inletAnchor}
               showLabels={showLabels}
+              showContext={showContext}
             />
           </SceneBoundary>
         </div>
@@ -191,7 +200,7 @@ export default function DigitalTwin3D() {
           <div className="flex items-center gap-3">
             <span className="live-dot">Twin Live</span>
             <span className="mono" style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-              {topo.crahs.length} CRAH · {topo.rack_rows.length} ROWS
+              {topo.crahs.length} CRAH · {topo.rack_rows.length} ROWS · {topo.building.halls.length} HALLS / {new Set(topo.building.halls.map((h) => h.level)).size} LEVELS
             </span>
           </div>
           <div className="flex gap-2" style={{ flexWrap: 'wrap', maxWidth: 360 }}>

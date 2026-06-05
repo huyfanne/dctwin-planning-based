@@ -1,11 +1,12 @@
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Grid, Edges } from '@react-three/drei';
+import { OrbitControls, Grid } from '@react-three/drei';
 import type { Topology } from '../api';
 import { THEME } from './scene';
 import CRAH from './CRAH';
 import RackRows from './RackRows';
 import Plant from './Plant';
 import Airflow from './Airflow';
+import HallBox from './HallBox';
 
 interface Props {
   topo: Topology;
@@ -16,88 +17,93 @@ interface Props {
   /** Plan peak inlet temperature (°C). */
   inletMax: number;
   showLabels?: boolean;
+  /** show every hall/level (true) or just the controlled hall (false). */
+  showContext?: boolean;
 }
 
-export default function HallScene({ topo, sat, flow, inletMax, showLabels = false }: Props) {
-  const size = topo.hall.size as [number, number, number];
-  const [w, h, d] = [size[0], size[2], size[1]];
-  const radius = Math.max(w, d);
+export default function HallScene({
+  topo, sat, flow, inletMax, showLabels = false, showContext = true,
+}: Props) {
+  const building = topo.building;
+  const [W, D] = building.footprint;
+  const H = building.height;
+  const radius = Math.max(W, H, D);
+
+  // Controlled hall: where the detailed equipment lives, lifted to its z-level.
+  const ctrl = building.halls.find((h) => h.controlled);
+  const ctrlSize = topo.hall.size;                 // [w, d, h] of the controlled hall
+  const z0 = ctrl ? ctrl.z0 : 0;
+  const detailY = z0 - H / 2;                       // floor of the controlled hall
+
+  const visibleHalls = showContext
+    ? building.halls
+    : building.halls.filter((h) => h.controlled);
 
   return (
     <Canvas
       shadows
       dpr={[1, 2]}
-      camera={{ position: [radius * 0.9, radius * 0.7, radius * 1.1], fov: 42 }}
+      camera={{ position: [radius * 0.95, radius * 0.75, radius * 1.15], fov: 42 }}
       style={{ width: '100%', height: '100%', background: 'transparent' }}
     >
       {/* Lighting */}
-      <ambientLight intensity={0.35} color="#88b8d8" />
+      <ambientLight intensity={0.4} color="#88b8d8" />
       <directionalLight
-        position={[w, h * 4, d]}
+        position={[W, H * 2, D]}
         intensity={1.1}
         color="#cfe8ff"
         castShadow
         shadow-mapSize={[1024, 1024]}
       />
-      <pointLight position={[-w, h * 2, -d]} intensity={0.4} color={THEME.cyan} />
-      {/* extra fill so low-metalness materials read well without an HDRI env map
-          (a drei <Environment preset> fetches a remote HDRI + does GPU PMREM,
-           which crashed the scene after first paint in some browsers) */}
+      <pointLight position={[-W, H, -D]} intensity={0.4} color={THEME.cyan} />
       <hemisphereLight intensity={0.5} color="#bfe0ff" groundColor="#0a1622" />
 
-      {/* Floor grid */}
+      {/* Floor grid at the base of the stack */}
       <Grid
-        position={[0, 0, 0]}
-        args={[w, d]}
-        cellSize={1}
+        position={[0, -H / 2, 0]}
+        args={[W * 1.2, D * 1.2]}
+        cellSize={2}
         cellThickness={0.5}
         cellColor={THEME.border}
-        sectionSize={5}
+        sectionSize={10}
         sectionThickness={1}
         sectionColor={THEME.cyan}
-        fadeDistance={radius * 2.6}
-        fadeStrength={1.2}
+        fadeDistance={radius * 3}
+        fadeStrength={1.1}
         infiniteGrid={false}
         side={2}
       />
 
-      {/* Hall glass shell with blueprint wireframe edges */}
-      <mesh position={[0, h / 2, 0]}>
-        <boxGeometry args={[w, h, d]} />
-        <meshStandardMaterial
-          color={THEME.cyan}
-          transparent
-          opacity={0.035}
-          metalness={0.1}
-          roughness={0.9}
-          side={2}
-        />
-        <Edges threshold={15} color={THEME.border} />
-      </mesh>
-
-      {/* Equipment */}
-      {topo.crahs.map((c) => (
-        <CRAH key={c.id} crah={c} size={size} showLabel={showLabels} />
+      {/* All halls / levels as stacked glass boxes */}
+      {visibleHalls.map((h) => (
+        <HallBox key={h.code} hall={h} buildingHeight={H} showLabel={showContext || h.controlled} />
       ))}
-      <RackRows rows={topo.rack_rows} size={size} sat={sat} inletMax={inletMax} />
-      <Plant plant={topo.plant} crahs={topo.crahs} links={topo.links} size={size} />
-      <Airflow
-        crahs={topo.crahs}
-        rackRows={topo.rack_rows}
-        size={size}
-        flow={flow}
-        sat={sat}
-        inletMax={inletMax}
-      />
+
+      {/* Controlled-hall detail, lifted into the stack at its real level */}
+      <group position={[0, detailY, 0]}>
+        {topo.crahs.map((c) => (
+          <CRAH key={c.id} crah={c} size={ctrlSize} showLabel={showLabels} />
+        ))}
+        <RackRows rows={topo.rack_rows} size={ctrlSize} sat={sat} inletMax={inletMax} />
+        <Plant plant={topo.plant} crahs={topo.crahs} links={topo.links} size={ctrlSize} />
+        <Airflow
+          crahs={topo.crahs}
+          rackRows={topo.rack_rows}
+          size={ctrlSize}
+          flow={flow}
+          sat={sat}
+          inletMax={inletMax}
+        />
+      </group>
 
       <OrbitControls
         enablePan
         enableDamping
         dampingFactor={0.08}
-        minDistance={radius * 0.4}
-        maxDistance={radius * 3}
-        maxPolarAngle={Math.PI / 2.05}
-        target={[0, h / 2, 0]}
+        minDistance={radius * 0.35}
+        maxDistance={radius * 3.5}
+        maxPolarAngle={Math.PI / 1.95}
+        target={[0, 0, 0]}
       />
     </Canvas>
   );
