@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any
 
@@ -8,6 +9,8 @@ import numpy as np
 from planner.kpi import OracleSettings, StepSample, aggregate_kpi
 from planner.monitor import MonitorSpec
 from planner.types import Setpoints, WeeklyKPI
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -18,7 +21,7 @@ class EvalTask:
     week_config_path: str
     log_dir: str
     hours_per_step: float
-    settings_kwargs: dict
+    settings_kwargs: dict[str, Any]
 
 
 def read_step_sample(unwrapped, monitor: MonitorSpec) -> StepSample:
@@ -76,6 +79,7 @@ def evaluate_one(task: EvalTask) -> WeeklyKPI:
         return run_episode(env, action, monitor, task.hours_per_step,
                            OracleSettings(**task.settings_kwargs))
     except Exception as exc:  # noqa: BLE001 - intentional: isolate candidate failures
+        logger.warning("candidate %s failed: %s", task.candidate, exc)
         return _infeasible(str(exc))
     finally:
         if env is not None:
