@@ -66,30 +66,24 @@ class WeeklyPlanTemplate(RecommendTemplate):
         self.data_file = kwargs.get("recommendation_out", "log/recommendation.json")
 
     def run(self, *args, **kwargs):
-        n_steps = self.days * 24 * self.timesteps_per_hour
-        forecast = self.forecaster.forecast(self.week_start, n_steps)
+        from planner.pipeline import PlanRequest, run_weekly_plan
+        from pathlib import Path
+        from planner.recommendation import write_recommendation
+        from dctwin.utils import config as dt_config
 
-        result = self.planner.plan(forecast)
-        if result.feasible:
-            best, kpi, status = result.best, result.best_kpi, "pending_approval"
-        else:
-            self.logger.warning("No feasible plan found; using safest fallback setpoints")
-            fb = Setpoints(self.space.sat.lb, self.space.flow.ub, self.space.chwst.lb)
-            kpi = self.oracle.evaluate([fb], forecast)[0]
-            best, status = fb, "infeasible_fallback"
-
-        rec = build_recommendation(
-            setpoints=best, kpi=kpi, week_start=self.week_start, days=self.days,
-            forecast_method=forecast.method,
-            search_meta={"evals": result.evals, "beam_width": self.beam.beam_width,
-                         "levels": self.beam.levels},
-            baseline_energy_kwh=self.baseline_energy_kwh, status=status,
+        rec = run_weekly_plan(
+            PlanRequest(week_start=self.week_start, days=self.days,
+                        grid=self.beam.grid, beam_width=self.beam.beam_width,
+                        levels=self.beam.levels,
+                        timesteps_per_hour=self.timesteps_per_hour),
+            evaluator=self.oracle,
+            forecaster=self.forecaster,
+            baseline_energy_kwh=self.baseline_energy_kwh,
         )
         out = Path(dt_config.LOG_DIR) / "recommendation.json"
         write_recommendation(str(out), rec)
-        # also write to the conventional location for downstream tools
         write_recommendation("log/recommendation.json", rec)
-        self.logger.info(f"Weekly recommendation written to {out} (status={status})")
+        self.logger.info(f"Weekly recommendation written to {out} (status={rec['status']})")
         return rec
 
 
