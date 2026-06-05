@@ -33,7 +33,14 @@ Auth: `Authorization: Bearer <token>`.
 cd /mnt/lv/home/hoanghuy/newcode/dctwin/src/frontend
 npm install
 npm run dev        # http://localhost:5173, proxies /api -> :8000
+# if the backend is on another port (e.g. 8000 is occupied), point the proxy at it:
+VITE_API_TARGET=http://localhost:8011 npm run dev
 ```
+
+Note: the backend python is at `dctwin/.venv-dtwin/bin/python` (the parent of
+`src/`), so use that absolute path — `.venv-dtwin/...` is not under `src/`. No
+Docker is needed just to view/serve; wrap uvicorn in `sg docker -c "..."` only to
+*trigger* a plan run (which launches EnergyPlus).
 
 Paste an operator or expert token into the header field. Five views: **Dashboard**,
 **New Plan** (live search progress), **Review & Approve**, **History**, and
