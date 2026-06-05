@@ -14,6 +14,20 @@ export interface Recommendation {
 export interface PlanDetail { plan_id: string; status: string; recommendation: Recommendation | null; }
 export interface Progress { level?: number; evals?: number; best_score?: number; }
 
+// ── Digital-twin hall topology (GET /api/topology) ──
+export type Vec3 = [number, number, number];
+export interface TopoCRAH { id: string; pos: Vec3; wall?: string; }
+export interface TopoRackRow { id?: string; pos: Vec3; aisle: 'cold' | 'hot'; nracks: number; }
+export interface TopoPlant { chiller: number; coolingTower: number; pumps: number; pos?: Vec3; }
+export interface TopoLink { from: string; to: string; }
+export interface Topology {
+  hall: { name: string; size: Vec3 };
+  crahs: TopoCRAH[];
+  rack_rows: TopoRackRow[];
+  plant: TopoPlant;
+  links: TopoLink[];
+}
+
 let TOKEN = localStorage.getItem("token") || "";
 export function setToken(t: string) { TOKEN = t; localStorage.setItem("token", t); }
 
@@ -38,3 +52,5 @@ export const approvePlan = (id: string) => req(`/api/plans/${id}/approve`, { met
 export const rejectPlan = (id: string) => req(`/api/plans/${id}/reject`, { method: "POST" });
 export const editSetpoints = (id: string, sp: Record<string, number>) =>
   req(`/api/plans/${id}/setpoints`, { method: "PATCH", body: JSON.stringify(sp) });
+export const getTopology = (hall = "1f 2a") =>
+  req<Topology>(`/api/topology?hall=${encodeURIComponent(hall)}`);

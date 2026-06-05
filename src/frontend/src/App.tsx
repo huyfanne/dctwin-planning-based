@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { setToken } from './api';
 import Dashboard from './pages/Dashboard';
 import NewPlan from './pages/NewPlan';
 import Review from './pages/Review';
 import History from './pages/History';
-import DigitalTwin3D from './pages/DigitalTwin3D';
+// Lazy-load the 3D twin so the heavy three.js bundle is only fetched on demand.
+const DigitalTwin3D = lazy(() => import('./pages/DigitalTwin3D'));
 
 type Page = 'dashboard' | 'newplan' | 'review' | 'history' | 'twin3d';
 
@@ -81,7 +82,18 @@ export default function App() {
         {page === 'newplan'   && <NewPlan onDone={id => { setReviewPlanId(id); setPage('review'); }} />}
         {page === 'review'    && <Review planId={reviewPlanId} />}
         {page === 'history'   && <History onReview={openReview} />}
-        {page === 'twin3d'    && <DigitalTwin3D />}
+        {page === 'twin3d'    && (
+          <Suspense fallback={
+            <div className="flex items-center gap-3" style={{ padding: '48px 0' }}>
+              <div className="spinner" />
+              <span className="text-dim" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.1em', fontSize: 13 }}>
+                LOADING 3D ENGINE…
+              </span>
+            </div>
+          }>
+            <DigitalTwin3D />
+          </Suspense>
+        )}
       </main>
     </div>
   );
