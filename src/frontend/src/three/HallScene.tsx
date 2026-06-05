@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Grid, Environment, Edges } from '@react-three/drei';
+import { OrbitControls, Grid, Edges } from '@react-three/drei';
 import type { Topology } from '../api';
 import { THEME } from './scene';
 import CRAH from './CRAH';
@@ -40,7 +40,10 @@ export default function HallScene({ topo, sat, flow, inletMax, showLabels = fals
         shadow-mapSize={[1024, 1024]}
       />
       <pointLight position={[-w, h * 2, -d]} intensity={0.4} color={THEME.cyan} />
-      <Environment preset="night" />
+      {/* extra fill so low-metalness materials read well without an HDRI env map
+          (a drei <Environment preset> fetches a remote HDRI + does GPU PMREM,
+           which crashed the scene after first paint in some browsers) */}
+      <hemisphereLight intensity={0.5} color="#bfe0ff" groundColor="#0a1622" />
 
       {/* Floor grid */}
       <Grid

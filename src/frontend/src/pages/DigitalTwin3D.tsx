@@ -4,6 +4,7 @@ import {
   type Topology, type PlanSummary, type PlanDetail,
 } from '../api';
 import HallScene from '../three/HallScene';
+import SceneBoundary from '../three/SceneBoundary';
 import { particleSpeed, tempColor } from '../three/airflow';
 
 const SAT_KEY = 'crah_supply_air_temperature_c';
@@ -174,13 +175,15 @@ export default function DigitalTwin3D() {
       >
         {/* The GL scene */}
         <div style={{ position: 'absolute', inset: 0 }}>
-          <HallScene
-            topo={topo}
-            sat={sat}
-            flow={flow}
-            inletMax={inletAnchor}
-            showLabels={showLabels}
-          />
+          <SceneBoundary>
+            <HallScene
+              topo={topo}
+              sat={sat}
+              flow={flow}
+              inletMax={inletAnchor}
+              showLabels={showLabels}
+            />
+          </SceneBoundary>
         </div>
 
         {/* Top-left: live + setpoints */}
