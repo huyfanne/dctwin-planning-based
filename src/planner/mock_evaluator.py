@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Optional, Sequence
 
 from planner.types import Setpoints, WeeklyKPI
 
 
-@dataclass
+@dataclass(frozen=True)
 class MockSurface:
     """Analytic test surface: convex energy bowl + monotone inlet model."""
 
@@ -44,6 +44,7 @@ class MockEvaluator:
             - srf.k_flow * (s.flow_kg_s - 4.8)
         )
         violations = 0 if inlet <= srf.inlet_cap else 100
+        # accumulate inlet excess starting 1 deg C BELOW the hard cap (soft-margin signal)
         excess = max(inlet - (srf.inlet_cap - 1.0), 0.0)
         return WeeklyKPI(
             total_hvac_energy_kwh=energy,
