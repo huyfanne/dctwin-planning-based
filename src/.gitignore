@@ -8,5 +8,13 @@ log/
 *.audit
 __pycache__/
 .venv/
+.venv-dtwin/
 .pytest_cache/
 models/forecaster.pkl
+
+# Copied GDS model assets (reproduced at setup from
+# mycode/Tropical_DC_Files/GDS_Nov_Supply_Return32_CHWT_Backup; data/ is ~58 MB).
+# Not committed to keep the repo to framework source only.
+/configs/
+/models/
+/data/

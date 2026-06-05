@@ -22,6 +22,7 @@ class EvalTask:
     log_dir: str
     hours_per_step: float
     settings_kwargs: dict[str, Any]
+    bcvtb_host: str = "172.17.0.1"          # host the EnergyPlus container connects back to
 
 
 def read_step_sample(unwrapped, monitor: MonitorSpec) -> StepSample:
@@ -71,8 +72,13 @@ def evaluate_one(task: EvalTask) -> WeeklyKPI:
 
     env = None
     try:
-        dt_config.config.set_log_dir(task.log_dir)
+        dt_config.set_log_dir(task.log_dir)
         env = dctwin.make_env(env_proto_config=task.week_config_path, reward_fn=lambda x: 0)
+        # Override the BCVTB host so socket.cfg points the EnergyPlus container at an
+        # address it can actually reach (set before reset(), which writes socket.cfg).
+        backend = getattr(getattr(env, "unwrapped", env), "eplus_backend", None)
+        if backend is not None and task.bcvtb_host:
+            backend._host = task.bcvtb_host
         broadcaster = mapper_from_env(env)
         monitor = discover_monitor(env)
         action = broadcaster.expand(Setpoints(*task.candidate))

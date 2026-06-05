@@ -19,6 +19,11 @@ class OracleConfig:
     log_root: str = "log/oracle"
     use_process_pool: bool = True       # False = serial (for tests/debug)
     settings: OracleSettings = field(default_factory=OracleSettings)
+    # BCVTB host the EnergyPlus container connects back to. dctwin's default
+    # ("host.docker.internal") does not resolve inside a Linux bridge container,
+    # so we use the docker0 bridge gateway, which the container can reach and where
+    # the host's 0.0.0.0-bound socket is already listening.
+    bcvtb_host: str = "172.17.0.1"
 
 
 def _infeasible() -> WeeklyKPI:
@@ -47,22 +52,27 @@ class ParallelEnvOracle(Evaluator):
         # 1) materialize the forecast (workload schedules) + write the weekly config
         if forecast is not None and hasattr(forecast, "materialize"):
             forecast.materialize(self.project_root)
-        Path(cfg.log_root).mkdir(parents=True, exist_ok=True)
-        week_cfg_path = str(Path(cfg.log_root) / "week.prototxt")
+        # Docker volume mounts require ABSOLUTE host paths (a relative dir is
+        # misread as a named volume -> 400 "invalid characters" error), so resolve
+        # log_root and the config path up front.
+        log_root = Path(cfg.log_root).resolve()
+        log_root.mkdir(parents=True, exist_ok=True)
         if forecast is not None and getattr(forecast, "week_start", None) is not None:
+            week_cfg_path = str(log_root / "week.prototxt")
             write_week_config(self.base_prototxt, forecast.week_start, week_cfg_path,
                               timesteps_per_hour=cfg.timesteps_per_hour)
         else:
-            week_cfg_path = self.base_prototxt
+            week_cfg_path = str(Path(self.base_prototxt).resolve())
 
-        # 2) build one task per candidate with a unique per-candidate log dir
+        # 2) build one task per candidate with a unique ABSOLUTE per-candidate log dir
         tasks = [
             EvalTask(
                 candidate=c.as_tuple(),
                 week_config_path=week_cfg_path,
-                log_dir=str(Path(cfg.log_root) / f"cand-{i:04d}"),
+                log_dir=str(log_root / f"cand-{i:04d}"),
                 hours_per_step=hours_per_step,
                 settings_kwargs=cfg.settings.__dict__,
+                bcvtb_host=cfg.bcvtb_host,
             )
             for i, c in enumerate(candidates)
         ]

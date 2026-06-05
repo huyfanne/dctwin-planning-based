@@ -85,7 +85,7 @@ class WeeklyPlanTemplate(RecommendTemplate):
                          "levels": self.beam.levels},
             baseline_energy_kwh=self.baseline_energy_kwh, status=status,
         )
-        out = Path(dt_config.config.LOG_DIR) / "recommendation.json"
+        out = Path(dt_config.LOG_DIR) / "recommendation.json"
         write_recommendation(str(out), rec)
         # also write to the conventional location for downstream tools
         write_recommendation("log/recommendation.json", rec)

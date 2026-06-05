@@ -42,6 +42,30 @@ def _stub_week_config(monkeypatch):
                         lambda base, ws, out, **k: out)
 
 
+def test_tasks_use_absolute_log_dir_and_bcvtb_host(monkeypatch, tmp_path):
+    # Docker volume mounts need absolute paths; the EnergyPlus container needs a
+    # reachable BCVTB host. Both must reach the worker via the EvalTask.
+    import os
+    captured = {}
+
+    def _capture(task):
+        captured["log_dir"] = task.log_dir
+        captured["bcvtb_host"] = task.bcvtb_host
+        captured["week_cfg"] = task.week_config_path
+        return _good_kpi(task)
+
+    monkeypatch.setattr(oracle_mod, "evaluate_one", _capture)
+    _stub_week_config(monkeypatch)
+    orc = ParallelEnvOracle(
+        "base.prototxt",
+        config=OracleConfig(use_process_pool=False, log_root="relative/logs",
+                            bcvtb_host="172.17.0.1"),
+    )
+    orc.evaluate([Setpoints(22.0, 8.0, 17.0)], forecast=_FakeForecast(tmp_path))
+    assert os.path.isabs(captured["log_dir"])
+    assert captured["bcvtb_host"] == "172.17.0.1"
+
+
 def test_returns_one_kpi_per_candidate_in_order(monkeypatch, tmp_path):
     monkeypatch.setattr(oracle_mod, "evaluate_one", _good_kpi)
     _stub_week_config(monkeypatch)
