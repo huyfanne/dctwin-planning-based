@@ -1,8 +1,5 @@
-import json
 import pickle
 from pathlib import Path
-
-import pandas as pd
 
 from fit_forecaster import build_his_col_for_room, save_forecaster_config
 
