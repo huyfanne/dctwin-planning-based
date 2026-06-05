@@ -33,6 +33,7 @@ This framework is the successor to **OptimizationMPC** (`/mnt/lv/home/hoanghuy/m
 - Optimize **3 global weekly setpoints** (CRAH supply-air temp, CRAH airflow, CHWST) with a heuristic search bounded to ~hundreds of parallel full-week runs.
 - Provide the dctwin↔dcbrain communication protocol (requirement #2) via a clean `Evaluator` seam and a versioned `recommendation.json` contract.
 - Produce a pre-validation report + expert-approval gate before "deployment."
+- Provide a **web app (FastAPI + React)** as the primary operator/expert interface: trigger weekly plans with live progress, review recommendations/KPIs/plots, edit setpoints, and run the approve/reject/deploy gate.
 
 **Non-goals (v1)**
 - No MPC, no grey-box surrogate, no real-time sub-hourly control.
@@ -55,6 +56,10 @@ This framework is the successor to **OptimizationMPC** (`/mnt/lv/home/hoanghuy/m
 | Project location | `/mnt/lv/home/hoanghuy/newcode/dctwin/src/` |
 | Planner placement | In-project `planner/` package, designed to be upstreamable to dcbrain |
 | Integration topology | **A — in-process parallel env-pool oracle** wrapped in the dcwiz template |
+| User interface | **Full web app: FastAPI backend + React (Vite/TS) frontend** |
+| Job model | **Background worker + job store** (planning runs async with live progress) |
+| Persistence | **Per-plan files in `runs/<id>/` + a SQLite index** for history |
+| Auth | **Token-based, two roles** (operator: create/plan; expert: approve/deploy) |
 
 ## 4. The control problem
 
@@ -261,7 +266,7 @@ class Forecast:
 ## 9. Outer loop — pre-validation, expert supervision, deployment
 
 - **`prevalidation.py`** consumes `recommendation.json`, triggers the trajectory replay, computes a KPI report (energy, PUE, peak inlet, % time-in-band, violations, **% energy reduction vs baseline**) + predicted-vs-baseline plots (in the `visualizer_his_vs_sim` style). The diagram's **Pre-validation** box.
-- **Expert supervision** = human gate: review the report; approve / reject / edit. Realized via a CLI action (`--approve`) or editing `status`. No silent auto-deploy.
+- **Expert supervision** = human gate: review the report; approve / reject / edit. The **web app (§14) is the primary interface** for this; a CLI action (`--approve`) and direct `status` editing remain as the underlying mechanism. No silent auto-deploy.
 - **Deployment (sim-only)**: on approval, `deploy.py` runs the **plant** (EnergyPlus) for the week with approved setpoints, logs realized KPIs; realized System Data feeds the next week's forecaster — closing the loop. Because twin = plant in v1, predicted ≈ realized; the roles stay separate so a future **perturbed-plant** mode or **real BMS adapter** slots into the same `deploy()` contract. BMS adapter is a documented stub in v1.
 
 ## 10. EnergyPlus & framework data formats (requirement #8)
@@ -312,10 +317,61 @@ The **MockEvaluator** (drop-in `Evaluator`) lets the entire planner be TDD'd wit
 | **M5** | `plan_weekly.py` (`WeeklyPlanTemplate`) → full-week plan → `recommendation.json` | the Monday entrypoint |
 | **M6** | `ai_trajectory_test.py` replay + `prevalidation.py` report/plots + approval gate + `deploy.py` (sim-only) | the outer loop |
 | **M7** | Full weekly run on a representative week | acceptance: 0 violations + energy reduction |
+| **M8** | Web app (Plan 4): FastAPI backend (jobs/store/auth) + React frontend | operator/expert use the framework via the browser |
 
-M0–M2 attack the costly EnergyPlus seam first; M3 is pure logic. Each milestone is a review checkpoint.
+M0–M2 attack the costly EnergyPlus seam first; M3 is pure logic. M8 (the web app) layers on top of the working core (M0–M7). Each milestone is a review checkpoint.
 
-## 14. Open questions / future work
+## 14. Web application (FastAPI + React)
+
+The primary operator/expert interface. It wraps the framework (Plans 1–3) as a service — no control logic is reimplemented. Built in Plan 4.
+
+### 14.1 Architecture
+
+```
+React (Vite + TypeScript)  ──JSON/WebSocket──►  FastAPI  ──►  WeeklyPlanTemplate → BeamPlanner → ParallelEnvOracle
+  Dashboard / New Plan /                          │              (the existing Python framework)
+  Review & Approve / History                      ▼
+                                        background worker + job store
+                                        runs/<plan_id>/{recommendation.json,
+                                          progress.json, trajectory_*.csv, report.md}
+                                        + SQLite index (history/list)
+```
+
+- **Backend:** FastAPI. Planning is long-running (hundreds of full-week E+ runs), so `POST /api/plans` enqueues a **background-worker job**; the worker runs `WeeklyPlanTemplate` and streams progress (a `BeamPlanner` progress callback → `progress.json` → `WS /api/plans/{id}/progress`). The oracle's process pool runs underneath the worker.
+- **Persistence:** per-plan artifacts in `runs/<plan_id>/`; a **SQLite index** (`runs/index.db`) backs history/list views. No DB server.
+- **Auth:** **token-based, two roles** — `operator` (create/trigger plans) and `expert` (approve/reject/deploy). Approval/deploy endpoints require the `expert` role.
+
+### 14.2 API surface (FastAPI)
+
+| Endpoint | Role | Purpose |
+|---|---|---|
+| `POST /api/plans` | operator | start a weekly plan (week_start, search params) → `plan_id`, async job |
+| `GET /api/plans` | any | history list (from SQLite index) |
+| `GET /api/plans/{id}` | any | `recommendation.json` + status + KPIs |
+| `WS /api/plans/{id}/progress` | any | live evals/total + current-best stream |
+| `GET /api/plans/{id}/trajectory` | any | per-step series (ai + baseline) for plots |
+| `PATCH /api/plans/{id}/setpoints` | expert | edit setpoints before approval |
+| `POST /api/plans/{id}/approve` \| `/reject` | expert | the supervision gate |
+| `POST /api/plans/{id}/deploy` | expert | sim-only deploy → realized KPIs |
+
+### 14.3 Frontend (React + Vite + TS)
+
+Four views, built with the frontend-design skill: **Dashboard** (latest plan: setpoints, KPIs, status badge), **New Plan** (params + live progress: progress bar, evals, best-score-per-level chart), **Review & Approve** (plan-vs-baseline KPI table + per-step inlet/power/PUE plots, setpoint editor, approve/reject), **History** (past plans, predicted-vs-realized energy trend). Charting via Recharts.
+
+### 14.4 Layout additions
+
+```
+src/
+├── webapp/                # FastAPI backend (Plan 4)
+│   ├── main.py            #   app + routes
+│   ├── jobs.py            #   background worker + job store
+│   ├── store.py           #   runs/<id>/ + SQLite index access
+│   ├── auth.py            #   token auth + operator/expert roles
+│   └── schemas.py         #   pydantic request/response models
+└── frontend/              # React app (Plan 4): src/pages/{Dashboard,NewPlan,Review,History}
+```
+
+## 15. Open questions / future work
 
 - **Perturbed-plant mode** for twin≠plant realism (model mismatch), reusing the `deploy()` contract.
 - **ML forecaster** behind the same `Forecaster` interface.
@@ -323,7 +379,7 @@ M0–M2 attack the costly EnergyPlus seam first; M3 is pure logic. Each mileston
 - **Upstream `planner/` into dcbrain** as a first-class planner once stable.
 - **Real BMS deployment adapter** behind the documented `deploy()` stub.
 
-## 15. Reference file index
+## 16. Reference file index
 
 - **Templates (framework):** `/mnt/lv/home/hoanghuy/newcode/dcwiz-ai-engine-deploy-master/dcwiz_policy_template/dcwiz_policy_template/{recommend_template.py, trajectory_policy_template.py}`
 - **Sample template (layout to mirror):** `…/dcwiz_policy_template/examples/sample_template/{hooks.py, ai_policy_test.py, ai_trajectory_test.py, baseline_policy_test.py, ai_policy_train.py, configs/, data/, models/, policy/}`
