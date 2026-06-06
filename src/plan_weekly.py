@@ -12,7 +12,7 @@ from dcwiz_policy_template import RecommendTemplate
 from dctwin.utils import config as dt_config
 
 from planner.beam_search import BeamConfig, BeamPlanner
-from planner.forecaster import StatisticalForecaster
+from planner.forecaster import build_forecaster
 from planner.objective import ObjectiveWeights
 from planner.oracle import OracleConfig, ParallelEnvOracle
 from planner.recommendation import build_recommendation, write_recommendation
@@ -40,9 +40,8 @@ class WeeklyPlanTemplate(RecommendTemplate):
         fc_cfg = pickle.loads(Path(kwargs.get("forecaster_config", "models/forecaster.pkl")).read_bytes())
         his = pd.read_csv(fc_cfg["his_csv"])
         room2ite = json.loads(Path(fc_cfg["room2ite_path"]).read_text())
-        self.forecaster = StatisticalForecaster(
-            his, room2ite, fc_cfg["his_col_for_room"], method=fc_cfg["method"]
-        )
+        self.forecaster = build_forecaster(fc_cfg["method"], his, room2ite, fc_cfg["his_col_for_room"],
+                                          weather_file=fc_cfg.get("weather_file"))
 
         self.space = DEFAULT_SEARCH_SPACE
         self.oracle = ParallelEnvOracle(
