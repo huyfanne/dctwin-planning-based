@@ -87,7 +87,7 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
 
     from dctwin.utils import config as dt_config
     from planner.calibrator import load_calibration
-    from planner.forecaster import StatisticalForecaster
+    from planner.forecaster import build_forecaster
     from planner.objective import ObjectiveWeights
     from planner.oracle import OracleConfig, ParallelEnvOracle
     from planner.pipeline import PlanRequest, run_weekly_plan
@@ -100,8 +100,7 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
     fc_cfg = pickle_load(params.get("forecaster", "models/forecaster.pkl"))
     his = pd.read_csv(fc_cfg["his_csv"])
     room2ite = _json.loads(Path(fc_cfg["room2ite_path"]).read_text())
-    forecaster = StatisticalForecaster(his, room2ite, fc_cfg["his_col_for_room"],
-                                       method=fc_cfg["method"])
+    forecaster = build_forecaster(fc_cfg["method"], his, room2ite, fc_cfg["his_col_for_room"])
 
     oracle = ParallelEnvOracle(
         base_prototxt=dt_cfg, project_root=".",
@@ -167,7 +166,7 @@ def run_deploy_job(plan_id: str, store: PlanStore,
     from deploy import deploy
     from planner.plant import DEFAULT_PLANT, build_plant_prototxt
     from planner.oracle import OracleConfig, ParallelEnvOracle
-    from planner.forecaster import StatisticalForecaster
+    from planner.forecaster import build_forecaster
     from planner.history import advance_history, advance_calibration
     from planner.calibrator import recompute_calibration
 
@@ -180,8 +179,7 @@ def run_deploy_job(plan_id: str, store: PlanStore,
     fc_cfg = pickle_load("models/forecaster.pkl")
     his = pd.read_csv(fc_cfg["his_csv"])
     room2ite = _json.loads(Path(fc_cfg["room2ite_path"]).read_text())
-    forecaster = StatisticalForecaster(his, room2ite, fc_cfg["his_col_for_room"],
-                                       method=fc_cfg["method"])
+    forecaster = build_forecaster(fc_cfg["method"], his, room2ite, fc_cfg["his_col_for_room"])
     days = (date.fromisoformat(rec["week_end"]) - week_start).days + 1
     n_steps = days * 24 * 4
     forecast = forecaster.forecast(week_start, n_steps)

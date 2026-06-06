@@ -84,7 +84,7 @@ def test_seasonal_climatology_thin_bucket_falls_back():
     np.testing.assert_allclose(point, 0.5, atol=1e-9)
 
 
-from planner.forecaster import SeasonalForecaster
+from planner.forecaster import SeasonalForecaster, build_forecaster
 
 
 def _diurnal_his(col, n_days=3):
@@ -107,3 +107,13 @@ def test_seasonal_forecaster_produces_point_and_bands():
     assert len(p50) == 96 and p50[40] > p50[4]                              # daytime > night
     assert forecast.bands["Data Hall 1F 2A ite-1"]["p50"] == p50            # workload IS p50
     assert "p10" in forecast.bands["Data Hall 1F 2A ite-1"]
+
+
+def test_build_forecaster_selects_class_by_method():
+    col = "1F_Datahall 2A 1F Data Hall 2A IT loads"
+    his = _diurnal_his(col)
+    room2ite = {"Data Hall 1F 2A": {"Data Hall 1F 2A ite-1": {"totalWatts": 1_800_000.0}}}
+    hcr = {"Data Hall 1F 2A": col}
+    assert isinstance(build_forecaster("seasonal", his, room2ite, hcr), SeasonalForecaster)
+    assert isinstance(build_forecaster("persistence", his, room2ite, hcr), StatisticalForecaster)
+    assert isinstance(build_forecaster("seasonal-naive", his, room2ite, hcr), StatisticalForecaster)

@@ -151,3 +151,12 @@ class SeasonalForecaster:
                 bands[ite_name] = room_band
         return Forecast(week_start=week_start, workload_schedules=schedules,
                         method="seasonal", bands=bands)
+
+
+def build_forecaster(method: str, his_data, room2ite: dict, his_col_for_room: dict,
+                     time_col: str = "_time"):
+    """Construct the forecaster for `method`: 'seasonal' -> SeasonalForecaster,
+    anything else ('persistence'/'seasonal-naive') -> StatisticalForecaster."""
+    if method == "seasonal":
+        return SeasonalForecaster(his_data, room2ite, his_col_for_room, time_col=time_col)
+    return StatisticalForecaster(his_data, room2ite, his_col_for_room, method=method)
