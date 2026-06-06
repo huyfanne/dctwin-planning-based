@@ -103,3 +103,25 @@ def test_coarse_grid_subsample_is_unbiased():
 def test_default_neighbors_includes_diagonals():
     from planner.beam_search import BeamConfig
     assert BeamConfig().neighbors == 8
+
+
+from planner.calibrator import Calibration
+
+
+def test_energy_bias_corrects_predicted_kpi_same_winner():
+    cfg = BeamConfig(grid=3, beam_width=3, levels=1)
+    base = BeamPlanner(DEFAULT_SEARCH_SPACE, MockEvaluator(MockSurface()),
+                       ObjectiveWeights(), cfg).plan()
+    cal = Calibration(bias={"total_hvac_energy_kwh": 50.0}, sigma={}, n_weeks=1, version="weeks-1")
+    calibrated = BeamPlanner(DEFAULT_SEARCH_SPACE, MockEvaluator(MockSurface()),
+                             ObjectiveWeights(), cfg, calibration=cal).plan()
+    # constant energy offset -> same optimal setpoints, predicted energy shifted by +50
+    assert calibrated.best == base.best
+    assert calibrated.best_kpi.total_hvac_energy_kwh == base.best_kpi.total_hvac_energy_kwh + 50.0
+    assert calibrated.feasible == base.feasible
+
+
+def test_planner_without_calibration_unchanged():
+    res = BeamPlanner(DEFAULT_SEARCH_SPACE, MockEvaluator(MockSurface()), ObjectiveWeights(),
+                      BeamConfig(grid=3, beam_width=2, levels=1)).plan()   # no calibration arg
+    assert res.feasible

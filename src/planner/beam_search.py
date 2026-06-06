@@ -52,11 +52,13 @@ class BeamPlanner:
         evaluator: Evaluator,
         weights: Optional[ObjectiveWeights] = None,
         config: Optional[BeamConfig] = None,
+        calibration=None,
     ):
         self.space = space
         self.evaluator = evaluator
         self.weights = weights or ObjectiveWeights()
         self.config = config or BeamConfig()
+        self.calibration = calibration
 
     def plan(self, forecast: Optional[Any] = None,
              on_level: Optional[Callable[[int, int, float], None]] = None,
@@ -132,6 +134,8 @@ class BeamPlanner:
     def _score_batch(self, candidates: Sequence[Setpoints], forecast,
                      on_result: Optional[Callable[[], None]] = None) -> list[_Scored]:
         kpis = self.evaluator.evaluate(candidates, forecast, on_result=on_result)
+        if self.calibration is not None:
+            kpis = [self.calibration.apply(k) for k in kpis]
         return [(c, k, score(k, self.weights)) for c, k in zip(candidates, kpis)]
 
     @staticmethod

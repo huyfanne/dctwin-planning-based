@@ -28,6 +28,7 @@ def run_weekly_plan(
     weights: Optional[ObjectiveWeights] = None,
     on_level: Optional[Callable[[int, int, float], None]] = None,
     on_eval: Optional[Callable[[int], None]] = None,
+    calibration=None,
 ) -> dict:
     """Forecast -> best-first search -> recommendation dict. The DRY planning core.
 
@@ -41,7 +42,7 @@ def run_weekly_plan(
     n_steps = request.days * 24 * request.timesteps_per_hour
     forecast = forecaster.forecast(request.week_start, n_steps)
 
-    planner = BeamPlanner(space, evaluator, weights, beam)
+    planner = BeamPlanner(space, evaluator, weights, beam, calibration=calibration)
     result = planner.plan(forecast, on_level=on_level, on_eval=on_eval)
 
     if result.feasible:
