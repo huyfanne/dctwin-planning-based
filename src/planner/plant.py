@@ -44,3 +44,23 @@ def apply_perturbation(idf_in: str | Path, plant: PlantConfig, idf_out: str | Pa
     Path(idf_out).parent.mkdir(parents=True, exist_ok=True)
     epm.save(idf_out)
     return idf_out
+
+
+def build_plant_prototxt(base_prototxt: str, plant: PlantConfig, out_dir: str) -> str:
+    """Write a perturbed IDF + a DT prototxt copy that points at it. Mirrors
+    week_config.write_week_config. Lazy dctwin import keeps the pure logic testable."""
+    from dctwin.utils import read_engine_config
+    from google.protobuf import text_format
+
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    cfg = read_engine_config(str(base_prototxt))
+    env_cfg = getattr(cfg, cfg.WhichOneof("EnvConfig"))
+
+    idf_out = str(out / "plant.idf")
+    apply_perturbation(env_cfg.model_file, plant, idf_out)
+    env_cfg.model_file = idf_out
+
+    proto_out = str(out / "plant.prototxt")
+    Path(proto_out).write_text(text_format.MessageToString(cfg))
+    return proto_out
