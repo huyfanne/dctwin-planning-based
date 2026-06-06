@@ -1,0 +1,46 @@
+"""Perturbed-plant model: the deploy-only 'real' DC = nominal IDF with scaled
+physical parameters (fan efficiency, coil UA). Same opyplus path dctwin uses."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Tuple
+
+
+@dataclass(frozen=True)
+class Perturbation:
+    table: str   # opyplus table attr, e.g. "Fan_VariableVolume"
+    field: str   # lowercased field, e.g. "fan_total_efficiency"
+    factor: float
+
+
+@dataclass(frozen=True)
+class PlantConfig:
+    perturbations: Tuple[Perturbation, ...]
+
+
+# Degraded fan efficiency + fouled cooling coil -> the plant runs hotter and uses
+# more energy than the (nominal) twin predicts. Both objects exist in the GDS IDF.
+DEFAULT_PLANT = PlantConfig((
+    Perturbation("Fan_VariableVolume", "fan_total_efficiency", 0.93),
+    Perturbation("Coil_Cooling_Water", "u_factor_times_area_value", 0.85),
+))
+
+
+def apply_perturbation(idf_in: str, plant: PlantConfig, idf_out: str) -> str:
+    """Scale the configured numeric fields and save a perturbed IDF copy.
+
+    Non-numeric values (e.g. "autosize") are left untouched.
+    """
+    import opyplus as op
+
+    epm = op.Epm.load(idf_in)
+    for p in plant.perturbations:
+        table = getattr(epm, p.table)
+        for rec in table:
+            val = rec[p.field]
+            if isinstance(val, (int, float)):
+                rec[p.field] = val * p.factor
+    Path(idf_out).parent.mkdir(parents=True, exist_ok=True)
+    epm.save(idf_out)
+    return idf_out
