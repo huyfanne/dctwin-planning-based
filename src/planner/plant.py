@@ -46,7 +46,7 @@ def apply_perturbation(idf_in: str | Path, plant: PlantConfig, idf_out: str | Pa
     return idf_out
 
 
-def build_plant_prototxt(base_prototxt: str, plant: PlantConfig, out_dir: str) -> str:
+def build_plant_prototxt(base_prototxt: str | Path, plant: PlantConfig, out_dir: str | Path) -> str:
     """Write a perturbed IDF + a DT prototxt copy that points at it. Mirrors
     week_config.write_week_config. Lazy dctwin import keeps the pure logic testable."""
     from dctwin.utils import read_engine_config
@@ -57,7 +57,7 @@ def build_plant_prototxt(base_prototxt: str, plant: PlantConfig, out_dir: str) -
     cfg = read_engine_config(str(base_prototxt))
     env_cfg = getattr(cfg, cfg.WhichOneof("EnvConfig"))
 
-    idf_out = str(out / "plant.idf")
+    idf_out = str((out / "plant.idf").resolve())
     apply_perturbation(env_cfg.model_file, plant, idf_out)
     env_cfg.model_file = idf_out
 

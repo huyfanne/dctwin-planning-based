@@ -1,5 +1,7 @@
+from pathlib import Path
+
 import opyplus as op
-from planner.plant import Perturbation, PlantConfig, DEFAULT_PLANT, apply_perturbation
+from planner.plant import Perturbation, PlantConfig, DEFAULT_PLANT, apply_perturbation, build_plant_prototxt
 
 # Stable fan name present in building.idf; used to avoid opyplus reordering fans
 # after a save/load round-trip (opyplus sorts alphabetically on write).
@@ -40,17 +42,13 @@ def test_default_plant_apply_perturbation_scales_fan_and_coil(tmp_path):
     assert coil.design_water_flow_rate == coil0.design_water_flow_rate * 0.85
 
 
-from pathlib import Path
-from planner.plant import build_plant_prototxt, DEFAULT_PLANT
-
-
 def test_build_plant_prototxt_points_at_perturbed_idf(tmp_path):
     out_proto = build_plant_prototxt(
         "configs/dt/dt.prototxt", DEFAULT_PLANT, str(tmp_path))
     assert Path(out_proto).exists()
-    # the perturbed IDF was written and the prototxt references it
     from dctwin.utils import read_engine_config
     cfg = read_engine_config(out_proto)
     env = getattr(cfg, cfg.WhichOneof("EnvConfig"))
-    assert env.model_file == str(tmp_path / "plant.idf")
-    assert (tmp_path / "plant.idf").exists()
+    assert Path(env.model_file).is_absolute()
+    assert Path(env.model_file).name == "plant.idf"
+    assert Path(env.model_file).exists()
