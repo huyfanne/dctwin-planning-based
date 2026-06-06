@@ -45,6 +45,8 @@ class JobRunner:
         self._q.put(("deploy", plan_id, None))
 
     def run_deploy_sync(self, plan_id: str) -> None:
+        """Run a deploy job now. Sets 'deploying'; the deploy_runner must set
+        'deployed' itself on success (run_deploy_job does); failures -> 'deploy_failed'."""
         self.store.set_status(plan_id, "deploying")
         try:
             self.deploy_runner(plan_id, self.store,
@@ -164,7 +166,8 @@ def run_deploy_job(plan_id: str, store: PlanStore,
     room2ite = _json.loads(Path(fc_cfg["room2ite_path"]).read_text())
     forecaster = StatisticalForecaster(his, room2ite, fc_cfg["his_col_for_room"],
                                        method=fc_cfg["method"])
-    n_steps = int(rec.get("days", 7)) * 24 * 4
+    days = (date.fromisoformat(rec["week_end"]) - week_start).days + 1
+    n_steps = days * 24 * 4
     forecast = forecaster.forecast(week_start, n_steps)
 
     plant_prototxt = build_plant_prototxt("configs/dt/dt.prototxt", DEFAULT_PLANT,
