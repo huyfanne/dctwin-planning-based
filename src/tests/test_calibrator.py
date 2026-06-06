@@ -42,3 +42,34 @@ def test_apply_corrects_weeklykpi():
     assert corrected.pue_mean == 1.25
     assert cal.sigma_for("inlet_temp_max_c") == 0.5
     assert CALIB_KEYS == ("total_hvac_energy_kwh", "pue_mean", "inlet_temp_max_c")
+
+
+import json as _json
+from pathlib import Path
+from planner.calibrator import load_calibration, save_calibration, recompute_calibration
+
+
+def test_save_load_roundtrip(tmp_path):
+    cal = Calibration(bias={"inlet_temp_max_c": 1.0}, sigma={"inlet_temp_max_c": 0.5},
+                      n_weeks=2, version="weeks-2")
+    p = str(tmp_path / "calibration.json")
+    save_calibration(cal, p)
+    got = load_calibration(p)
+    assert got.bias["inlet_temp_max_c"] == 1.0 and got.n_weeks == 2
+
+
+def test_load_missing_returns_identity(tmp_path):
+    got = load_calibration(str(tmp_path / "nope.json"))
+    assert got.n_weeks == 0 and got.bias == {}
+
+
+def test_recompute_calibration_from_history(tmp_path):
+    hist = [{"week_start": "2013-11-11",
+             "predicted": {"total_hvac_energy_kwh": 100.0, "pue_mean": 1.2, "inlet_temp_max_c": 24.0},
+             "realized":  {"total_hvac_energy_kwh": 105.0, "pue_mean": 1.2, "inlet_temp_max_c": 24.0}}]
+    hpath = tmp_path / "calibration_history.json"
+    hpath.write_text(_json.dumps(hist))
+    out = tmp_path / "calibration.json"
+    cal = recompute_calibration(str(hpath), str(out))
+    assert cal.bias["total_hvac_energy_kwh"] == 5.0
+    assert load_calibration(str(out)).bias["total_hvac_energy_kwh"] == 5.0
