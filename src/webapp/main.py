@@ -114,6 +114,12 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
     def get_topology(hall: str = "1f 2a", role: str = Depends(operator)):
         return build_hall_topology("models/building.json", "configs/dt/dt.prototxt", hall)
 
+    from planner.calibrator import load_calibration
+
+    @app.get("/api/calibration")
+    def get_calibration(role: str = Depends(operator)):
+        return load_calibration("data/calibration.json").to_dict()
+
     return app
 
 

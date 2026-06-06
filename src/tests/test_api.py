@@ -120,3 +120,23 @@ def test_deploy_requires_expert_and_approval(tmp_path):
     got = client.get("/api/plans/p1", headers={"Authorization": "Bearer op"}).json()
     assert got["status"] == "deployed"
     assert got["realized"]["inlet_temp_max_c"] == 26.2
+
+
+def test_get_calibration(tmp_path, monkeypatch):
+    from webapp.main import create_app
+    from webapp.auth import TokenAuth
+    from webapp.store import PlanStore
+    from fastapi.testclient import TestClient
+    from planner.calibrator import Calibration, save_calibration
+
+    monkeypatch.chdir(tmp_path)                       # isolate data/ writes
+    save_calibration(Calibration(bias={"inlet_temp_max_c": 1.0}, sigma={"inlet_temp_max_c": 0.5},
+                                 n_weeks=2, version="weeks-2"), "data/calibration.json")
+    store = PlanStore(runs_dir="runs", db_path="index.db")
+    app = create_app(store=store, auth=TokenAuth({"op": "operator"}), run_sync=True)
+    client = TestClient(app)
+    r = client.get("/api/calibration", headers={"Authorization": "Bearer op"})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["n_weeks"] == 2
+    assert body["bias"]["inlet_temp_max_c"] == 1.0
