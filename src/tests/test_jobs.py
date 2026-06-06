@@ -86,3 +86,35 @@ def test_deploy_helpers_produce_calibration(tmp_path):
     cal = recompute_calibration(hist, cal_out)
     assert cal.bias["total_hvac_energy_kwh"] == 6.0
     assert load_calibration(cal_out).n_weeks == 1
+
+
+def test_robust_rerank_fn_composes(tmp_path, monkeypatch):
+    import planner.robust as R
+    from planner.robust import make_oracle_robust_rerank, RobustResult
+    from planner.types import Setpoints, WeeklyKPI
+    from planner.objective import ObjectiveWeights
+
+    monkeypatch.setattr(R, "build_plant_prototxt",
+                        lambda base, plant, out_dir: f"{out_dir}/plant.prototxt")
+
+    class _Cfg:
+        n_workers = 1
+        timesteps_per_hour = 4
+
+    class _Oracle:
+        def __init__(self, base_prototxt, config=None, project_root="."):
+            pass
+        def evaluate(self, candidates, forecast=None, on_result=None):
+            return [WeeklyKPI(total_hvac_energy_kwh=100.0, pue_mean=1.2, inlet_temp_max=24.0,
+                              inlet_violation_steps=0, rh_violation_steps=0, feasible=True,
+                              inlet_excess_degc_steps=0.0, rh_excursion_steps=0.0,
+                              zone_temp_band_steps=0.0) for _ in candidates]
+
+    sp = Setpoints(24, 8, 17)
+    nominal = WeeklyKPI(total_hvac_energy_kwh=100.0, pue_mean=1.2, inlet_temp_max=24.0,
+                        inlet_violation_steps=0, rh_violation_steps=0, feasible=True,
+                        inlet_excess_degc_steps=0.0, rh_excursion_steps=0.0, zone_temp_band_steps=0.0)
+    fn = make_oracle_robust_rerank("configs/dt/dt.prototxt", _Cfg(), None,
+                                   ObjectiveWeights(), 2, str(tmp_path), oracle_cls=_Oracle)
+    rr = fn([(sp, nominal, 100.0)], forecast=None)
+    assert isinstance(rr, RobustResult) and rr.n_scenarios == 2

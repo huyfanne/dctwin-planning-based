@@ -88,8 +88,10 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
     from dctwin.utils import config as dt_config
     from planner.calibrator import load_calibration
     from planner.forecaster import StatisticalForecaster
+    from planner.objective import ObjectiveWeights
     from planner.oracle import OracleConfig, ParallelEnvOracle
     from planner.pipeline import PlanRequest, run_weekly_plan
+    from planner.robust import make_oracle_robust_rerank
 
     plan_dir = store.plan_dir(plan_id)
     dt_config.set_log_dir(str(plan_dir))
@@ -106,6 +108,16 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
         config=OracleConfig(n_workers=int(params.get("n_workers", 8)),
                             timesteps_per_hour=int(params.get("timesteps_per_hour", 4)),
                             log_root=str(plan_dir / "oracle")),
+    )
+
+    calibration = load_calibration("data/calibration.json")
+    robust_rerank_fn = make_oracle_robust_rerank(
+        base_prototxt=dt_cfg,
+        oracle_config=oracle.config,
+        calibration=calibration,
+        weights=ObjectiveWeights(),
+        n_scenarios=int(params.get("n_scenarios", 4)),
+        log_root=str(plan_dir / "robust"),
     )
 
     # shared progress state: on_eval ticks the evaluation count within a level,
@@ -130,7 +142,8 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
         evaluator=oracle, forecaster=forecaster,
         baseline_energy_kwh=params.get("baseline_energy_kwh"),
         on_level=on_level, on_eval=on_eval,
-        calibration=load_calibration("data/calibration.json"),
+        calibration=calibration,
+        robust_rerank_fn=robust_rerank_fn,
     )
     store.save_recommendation(plan_id, rec)
 
