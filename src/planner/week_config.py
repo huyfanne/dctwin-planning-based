@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 
 @dataclass(frozen=True)
@@ -35,6 +35,7 @@ def write_week_config(
     out_path: Union[str, Path],
     days: int = 7,
     timesteps_per_hour: int | None = None,
+    weather_file: Optional[str] = None,
 ) -> str:
     """Read the base DT prototxt, set the weekly run period, write to out_path.
 
@@ -46,6 +47,12 @@ def write_week_config(
     period = compute_week_period(week_start, days)
     cfg = read_engine_config(str(base_prototxt))
     env_cfg = getattr(cfg, cfg.WhichOneof("EnvConfig"))
+    if weather_file is not None:
+        from planner.epw import week_within_epw
+        if not week_within_epw(weather_file, week_start, days):
+            raise ValueError(
+                f"week {week_start} (+{days}d) is outside the weather file coverage of {weather_file}")
+        env_cfg.weather_file = weather_file
     stc = env_cfg.simulation_time_config
     stc.begin_month = period.begin_month
     stc.begin_day_of_month = period.begin_day

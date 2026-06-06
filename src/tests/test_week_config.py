@@ -1,6 +1,8 @@
+import pytest
 from datetime import date
 
-from planner.week_config import compute_week_period, WeekPeriod
+from planner.week_config import compute_week_period, WeekPeriod, write_week_config
+from dctwin.utils import read_engine_config
 
 
 def test_week_period_inclusive_seven_days():
@@ -14,6 +16,31 @@ def test_week_period_crosses_month():
 
 
 def test_week_period_rejects_year_wrap():
-    import pytest
     with pytest.raises(ValueError):
         compute_week_period(date(2013, 12, 30), days=7)
+
+
+def test_write_week_config_sets_weather_file(tmp_path):
+    out = tmp_path / "week.prototxt"
+    write_week_config("configs/dt/dt.prototxt", date(2024, 11, 11), str(out), days=7,
+                      weather_file="data/weather/Singapore_Changi_Nov2024-Jan2025.epw")
+    cfg = read_engine_config(str(out))
+    env = getattr(cfg, cfg.WhichOneof("EnvConfig"))
+    assert env.weather_file == "data/weather/Singapore_Changi_Nov2024-Jan2025.epw"
+    assert env.simulation_time_config.begin_month == 11
+    assert env.simulation_time_config.begin_day_of_month == 11
+
+
+def test_write_week_config_rejects_week_outside_epw_coverage(tmp_path):
+    out = tmp_path / "week.prototxt"
+    with pytest.raises(ValueError, match="outside the weather file coverage"):
+        write_week_config("configs/dt/dt.prototxt", date(2024, 6, 1), str(out), days=7,
+                          weather_file="data/weather/Singapore_Changi_Nov2024-Jan2025.epw")
+
+
+def test_write_week_config_without_weather_file_unchanged(tmp_path):
+    out = tmp_path / "week.prototxt"
+    write_week_config("configs/dt/dt.prototxt", date(2024, 11, 11), str(out), days=7)
+    cfg = read_engine_config(str(out))
+    env = getattr(cfg, cfg.WhichOneof("EnvConfig"))
+    assert env.weather_file.endswith("IWEC.epw")
