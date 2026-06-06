@@ -37,3 +37,27 @@ def test_advance_history_is_idempotent_per_week(tmp_path):
     df = pd.read_csv(csv)
     assert len(df) == 1                      # replaced, not duplicated
     assert df.iloc[-1]["total_hvac_energy_kwh"] == 30000.0
+
+
+import json as _json
+from planner.history import advance_calibration
+
+
+def test_advance_calibration_pairs_predicted_and_realized(tmp_path):
+    path = str(tmp_path / "calibration_history.json")
+    predicted = {"total_hvac_energy_kwh": 100.0, "pue_mean": 1.2, "inlet_temp_max_c": 24.0}
+    realized = {"total_hvac_energy_kwh": 105.0, "pue_mean": 1.2, "inlet_temp_max_c": 24.5}
+    advance_calibration(predicted, realized, date(2013, 11, 11), path)
+    hist = _json.loads(open(path).read())
+    assert len(hist) == 1
+    assert hist[0]["week_start"] == "2013-11-11"
+    assert hist[0]["predicted"]["total_hvac_energy_kwh"] == 100.0
+    assert hist[0]["realized"]["total_hvac_energy_kwh"] == 105.0
+
+
+def test_advance_calibration_idempotent_per_week(tmp_path):
+    path = str(tmp_path / "calibration_history.json")
+    advance_calibration({"a": 1}, {"a": 2}, date(2013, 11, 11), path)
+    advance_calibration({"a": 10}, {"a": 20}, date(2013, 11, 11), path)
+    hist = _json.loads(open(path).read())
+    assert len(hist) == 1 and hist[0]["realized"]["a"] == 20

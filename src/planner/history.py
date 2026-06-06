@@ -38,3 +38,20 @@ def refit_from_history(forecaster_pkl: str = "models/forecaster.pkl") -> None:
     support re-fitting.  Do not delete."""
     import runpy
     runpy.run_path("fit_forecaster.py", run_name="__main__")
+
+
+def advance_calibration(predicted: dict, realized: dict, week_start: date,
+                        path: str = "data/calibration_history.json") -> None:
+    """Append/replace one paired (predicted, realized) KPI record per deployed week.
+
+    This is the SEPARATE paired history the P2 Calibrator fits residuals from — NOT
+    the forecaster's per-step CSV. Idempotent per week_start."""
+    import json
+    p = Path(path)
+    hist = json.loads(p.read_text()) if p.exists() else []
+    hist = [e for e in hist if e.get("week_start") != week_start.isoformat()]
+    hist.append({"week_start": week_start.isoformat(),
+                 "predicted": predicted, "realized": realized})
+    hist.sort(key=lambda e: e["week_start"])
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(hist, indent=2))
