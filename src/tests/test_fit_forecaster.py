@@ -26,3 +26,16 @@ def test_save_forecaster_config_roundtrip(tmp_path):
     out = tmp_path / "forecaster.pkl"
     save_forecaster_config(cfg, str(out))
     assert pickle.loads(out.read_bytes()) == cfg
+
+
+def test_fit_forecaster_records_weather_file(tmp_path, monkeypatch):
+    import pickle
+    from pathlib import Path
+    import fit_forecaster
+    monkeypatch.chdir("/mnt/lv/home/hoanghuy/newcode/dctwin/src")   # real CSV + room2ite present
+    out = tmp_path / "fc.pkl"
+    fit_forecaster.main(method="seasonal", out_path=str(out),
+                        weather_file="data/weather/Singapore_Changi_Nov2024-Jan2025.epw")
+    cfg = pickle.loads(Path(out).read_bytes())
+    assert cfg["method"] == "seasonal"
+    assert cfg["weather_file"] == "data/weather/Singapore_Changi_Nov2024-Jan2025.epw"

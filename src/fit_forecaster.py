@@ -42,7 +42,8 @@ def save_forecaster_config(config: dict, out_path: str) -> None:
 def main(his_csv: str = "data/his_data_processed.csv",
          room2ite_path: str = "configs/dt/room2ite_map.json",
          method: str = "persistence",
-         out_path: str = "models/forecaster.pkl") -> None:
+         out_path: str = "models/forecaster.pkl",
+         weather_file: str | None = None) -> None:
     columns = pd.read_csv(his_csv, nrows=0).columns.tolist()
     room2ite = json.loads(Path(room2ite_path).read_text())
     his_col_for_room = build_his_col_for_room(room2ite, columns)
@@ -51,6 +52,7 @@ def main(his_csv: str = "data/his_data_processed.csv",
         "his_csv": his_csv,
         "room2ite_path": room2ite_path,
         "his_col_for_room": his_col_for_room,
+        "weather_file": weather_file,
     }
     save_forecaster_config(config, out_path)
     print(f"Fitted forecaster config -> {out_path}: {len(his_col_for_room)} rooms mapped")
