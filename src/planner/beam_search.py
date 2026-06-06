@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Callable, Optional, Sequence
 
 import numpy as np
@@ -29,6 +29,7 @@ class PlanResult:
     evals: int
     feasible: bool
     history: list[float]     # best score after each level
+    beam_finalists: list = field(default_factory=list)   # final beam: list[_Scored]
 
 
 # a scored candidate: (setpoints, kpi, score)
@@ -129,7 +130,8 @@ class BeamPlanner:
 
         best_s, best_kpi, best_sc = beam[0]
         feasible = best_sc != INFEASIBLE
-        return PlanResult(best_s, best_kpi, best_sc, evals, feasible, history)
+        return PlanResult(best_s, best_kpi, best_sc, evals, feasible, history,
+                          beam_finalists=list(beam))
 
     def _score_batch(self, candidates: Sequence[Setpoints], forecast,
                      on_result: Optional[Callable[[], None]] = None) -> list[_Scored]:

@@ -139,3 +139,13 @@ def test_inlet_bias_steers_search_under_cap():
     assert res.feasible                                  # a cooler feasible point exists
     assert res.best_kpi.inlet_violation_steps == 0
     assert res.best_kpi.inlet_temp_max <= 26.0 + 1e-9   # corrected inlet respects the cap
+
+
+def test_plan_exposes_beam_finalists():
+    ev = MockEvaluator(MockSurface())
+    cfg = BeamConfig(grid=3, beam_width=4, levels=1)
+    res = BeamPlanner(DEFAULT_SEARCH_SPACE, ev, ObjectiveWeights(), cfg).plan()
+    assert hasattr(res, "beam_finalists")
+    assert 1 <= len(res.beam_finalists) <= 4
+    s0, k0, sc0 = res.beam_finalists[0]
+    assert (s0, k0, sc0) == (res.best, res.best_kpi, res.best_score)
