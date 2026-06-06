@@ -180,5 +180,5 @@ def run_deploy_job(plan_id: str, store: PlanStore,
 
     rec = deploy(rec_path, plant_oracle, forecast=forecast)
     store.save_realized(plan_id, rec["realized_kpis"])
-    advance_history(rec["realized_kpis"], week_start, fc_cfg["his_csv"])
+    advance_history(rec["realized_kpis"], week_start, "data/realized_history.csv")
     store.set_status(plan_id, "deployed")

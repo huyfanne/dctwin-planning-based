@@ -168,7 +168,7 @@ export default function Review({ planId: initialPlanId }: Props) {
   const status = detail?.status ?? '';
   const canEdit    = status !== 'rejected' && status !== 'deployed';
   const canAct     = status === 'pending_approval';
-  const canDeploy  = status === 'approved';
+  const canDeploy  = status === 'approved' || status === 'deploy_failed';
   const isDeploying = status === 'deploying';
 
   // Build chart data
@@ -268,7 +268,7 @@ export default function Review({ planId: initialPlanId }: Props) {
                     onClick={handleDeploy}
                     disabled={acting || isDeploying}
                   >
-                    {(acting || isDeploying) ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Deploying…</> : '▶ Deploy'}
+                    {(acting || isDeploying) ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Deploying…</> : status === 'deploy_failed' ? '▶ Retry Deploy' : '▶ Deploy'}
                   </button>
                 </div>
               )}

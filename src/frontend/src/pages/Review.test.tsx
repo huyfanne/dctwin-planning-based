@@ -144,6 +144,17 @@ describe('Review', () => {
     });
   });
 
+  it('renders Retry Deploy button when status is deploy_failed', async () => {
+    const FAILED_DETAIL = { ...PLAN_DETAIL, status: 'deploy_failed' };
+    (getPlan as ReturnType<typeof vi.fn>).mockResolvedValue(FAILED_DETAIL);
+    (listPlans as ReturnType<typeof vi.fn>).mockResolvedValue([{ ...PLAN_SUMMARY, status: 'deploy_failed' }]);
+
+    render(<Review planId="plan-rev-1" />);
+    await waitFor(() => {
+      expect(screen.getByText(/retry deploy/i)).toBeInTheDocument();
+    });
+  });
+
   it('renders Realized vs Predicted section when realized data is present', async () => {
     const DEPLOYED_DETAIL = {
       ...PLAN_DETAIL,

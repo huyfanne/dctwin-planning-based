@@ -65,10 +65,11 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
     @app.post("/api/plans/{plan_id}/approve")
     def approve(plan_id: str, role: str = Depends(expert)):
         rec = store.get_recommendation(plan_id)
-        if rec is None:
+        row = store.get_plan_row(plan_id)
+        if rec is None or row is None:
             raise HTTPException(404, "no recommendation yet")
-        if not can_transition(rec.get("status", ""), PlanStatus.APPROVED):
-            raise HTTPException(409, f"cannot approve from {rec.get('status')!r}")
+        if not can_transition(row["status"], PlanStatus.APPROVED):
+            raise HTTPException(409, f"cannot approve from {row['status']!r}")
         rec["status"] = PlanStatus.APPROVED
         store.save_recommendation(plan_id, rec)
         return {"status": PlanStatus.APPROVED}
@@ -76,19 +77,22 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
     @app.post("/api/plans/{plan_id}/reject")
     def reject(plan_id: str, role: str = Depends(expert)):
         rec = store.get_recommendation(plan_id)
-        if rec is None:
+        row = store.get_plan_row(plan_id)
+        if rec is None or row is None:
             raise HTTPException(404, "no recommendation yet")
-        rec["status"] = "rejected"
+        if not can_transition(row["status"], PlanStatus.REJECTED):
+            raise HTTPException(409, f"cannot reject from {row['status']!r}")
+        rec["status"] = PlanStatus.REJECTED
         store.save_recommendation(plan_id, rec)
-        return {"status": "rejected"}
+        return {"status": PlanStatus.REJECTED}
 
     @app.post("/api/plans/{plan_id}/deploy", status_code=202)
     def deploy_plan(plan_id: str, role: str = Depends(expert)):
-        rec = store.get_recommendation(plan_id)
-        if rec is None:
+        row = store.get_plan_row(plan_id)
+        if row is None or store.get_recommendation(plan_id) is None:
             raise HTTPException(404, "no recommendation yet")
-        if not can_transition(rec.get("status", ""), PlanStatus.DEPLOYING):
-            raise HTTPException(409, f"cannot deploy from {rec.get('status')!r}")
+        if not can_transition(row["status"], PlanStatus.DEPLOYING):
+            raise HTTPException(409, f"cannot deploy from {row['status']!r}")
         if run_sync:
             job_runner.run_deploy_sync(plan_id)
         else:

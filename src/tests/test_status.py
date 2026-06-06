@@ -3,7 +3,7 @@ from webapp.status import PlanStatus, can_transition
 
 def test_allowed_transitions():
     assert can_transition(PlanStatus.PENDING_APPROVAL, PlanStatus.APPROVED)
-    assert can_transition(PlanStatus.APPROVED, PlanStatus.DEPLOYED)
+    assert can_transition(PlanStatus.APPROVED, PlanStatus.DEPLOYING)
     assert can_transition(PlanStatus.PENDING_APPROVAL, PlanStatus.REJECTED)
     assert can_transition(PlanStatus.INFEASIBLE_FALLBACK, PlanStatus.APPROVED)
     assert can_transition(PlanStatus.DEPLOYING, PlanStatus.DEPLOYED)

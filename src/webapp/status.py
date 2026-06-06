@@ -19,7 +19,7 @@ class PlanStatus:
 _ALLOWED = {
     PlanStatus.PENDING_APPROVAL: {PlanStatus.APPROVED, PlanStatus.REJECTED},
     PlanStatus.INFEASIBLE_FALLBACK: {PlanStatus.APPROVED, PlanStatus.REJECTED},
-    PlanStatus.APPROVED: {PlanStatus.DEPLOYING, PlanStatus.DEPLOYED, PlanStatus.REJECTED},
+    PlanStatus.APPROVED: {PlanStatus.DEPLOYING, PlanStatus.REJECTED},
     PlanStatus.DEPLOYING: {PlanStatus.DEPLOYED, PlanStatus.DEPLOY_FAILED},
     PlanStatus.DEPLOY_FAILED: {PlanStatus.DEPLOYING, PlanStatus.REJECTED},
 }

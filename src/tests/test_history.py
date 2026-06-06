@@ -3,6 +3,20 @@ from datetime import date
 from planner.history import advance_history
 
 
+def test_advance_history_fresh_file_schema(tmp_path):
+    """Writing to a fresh file produces exactly realized keys + week_start as columns."""
+    csv = tmp_path / "realized_history.csv"
+    realized = {"total_hvac_energy_kwh": 30000.0, "pue_mean": 1.2,
+                "inlet_temp_max_c": 26.1, "inlet_violation_steps": 0}
+    advance_history(realized, date(2013, 11, 11), str(csv))
+    df = pd.read_csv(csv)
+    assert len(df) == 1
+    expected_cols = {"week_start"} | set(realized.keys())
+    assert set(df.columns) == expected_cols
+    assert df.iloc[0]["week_start"] == "2013-11-11"
+    assert df.iloc[0]["total_hvac_energy_kwh"] == 30000.0
+
+
 def test_advance_history_appends_realized_week(tmp_path):
     csv = tmp_path / "his.csv"
     pd.DataFrame({"week_start": ["2013-11-04"], "total_hvac_energy_kwh": [31000.0],
