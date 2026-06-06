@@ -69,6 +69,13 @@ class PlanStore:
         p = self.plan_dir(plan_id) / "recommendation.json"
         return json.loads(p.read_text()) if p.exists() else None
 
+    def save_realized(self, plan_id: str, realized: dict) -> None:
+        (self.plan_dir(plan_id) / "realized.json").write_text(json.dumps(realized, indent=2))
+
+    def get_realized(self, plan_id: str) -> Optional[dict]:
+        p = self.plan_dir(plan_id) / "realized.json"
+        return json.loads(p.read_text()) if p.exists() else None
+
     def write_progress(self, plan_id: str, progress: dict) -> None:
         # Non-finite floats (e.g. best_score = +inf when all candidates are
         # infeasible) are invalid JSON and break the API response; store as null.

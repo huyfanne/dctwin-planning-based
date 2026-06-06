@@ -57,3 +57,14 @@ def test_set_status(tmp_path):
     store.create_plan("p1", week_start="2013-11-11", params={})
     store.set_status("p1", "running")
     assert store.list_plans()[0]["status"] == "running"
+
+
+def test_realized_roundtrip(tmp_path):
+    store = PlanStore(runs_dir=str(tmp_path / "runs"), db_path=str(tmp_path / "index.db"))
+    store.create_plan("p1", week_start="2013-11-11", params={})
+    assert store.get_realized("p1") is None
+    realized = {"total_hvac_energy_kwh": 30000.0, "inlet_temp_max_c": 26.4,
+                "pue_mean": 1.2, "inlet_violation_steps": 3}
+    store.save_realized("p1", realized)
+    got = store.get_realized("p1")
+    assert got["inlet_temp_max_c"] == 26.4
