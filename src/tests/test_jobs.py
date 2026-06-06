@@ -55,3 +55,19 @@ def _wait_status(store, plan_id, target, timeout=5.0):
             return
         time.sleep(0.05)
     raise AssertionError(f"{plan_id} did not reach {target}")
+
+
+def test_jobrunner_dispatches_deploy(tmp_path):
+    store = PlanStore(runs_dir=str(tmp_path / "runs"), db_path=str(tmp_path / "index.db"))
+    store.create_plan("p1", week_start="2013-11-11", params={})
+    store.set_status("p1", "approved")
+    calls = []
+
+    def fake_deploy(plan_id, store_, progress_cb):
+        calls.append(plan_id)
+        store_.set_status(plan_id, "deployed")
+
+    runner = JobRunner(store, deploy_runner=fake_deploy)
+    runner.run_deploy_sync("p1")
+    assert calls == ["p1"]
+    assert store.get_plan_row("p1")["status"] == "deployed"
