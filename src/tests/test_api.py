@@ -91,3 +91,32 @@ def test_topology_returns_22_crahs(client):
     assert r.status_code == 200
     topo = r.json()
     assert len(topo["crahs"]) == 22
+
+
+def _deploy_client(tmp_path):
+    store = PlanStore(runs_dir=str(tmp_path / "runs"), db_path=str(tmp_path / "index.db"))
+    auth = TokenAuth({"op": "operator", "ex": "expert"})
+
+    def fake_deploy(plan_id, store_, progress_cb):
+        store_.save_realized(plan_id, {"total_hvac_energy_kwh": 30000.0,
+                                       "inlet_temp_max_c": 26.2, "pue_mean": 1.2,
+                                       "inlet_violation_steps": 1})
+        store_.set_status(plan_id, "deployed")
+
+    app = create_app(store=store, auth=auth, run_sync=True, deploy_runner=fake_deploy)
+    return TestClient(app), store
+
+
+def test_deploy_requires_expert_and_approval(tmp_path):
+    client, store = _deploy_client(tmp_path)
+    store.create_plan("p1", "2013-11-11", {})
+    store.save_recommendation("p1", {"plan_id": "p1", "week_start": "2013-11-11",
+                                     "status": "pending_approval", "setpoints": {}})
+    assert client.post("/api/plans/p1/deploy", headers={"Authorization": "Bearer op"}).status_code == 403
+    assert client.post("/api/plans/p1/deploy", headers={"Authorization": "Bearer ex"}).status_code == 409
+    client.post("/api/plans/p1/approve", headers={"Authorization": "Bearer ex"})
+    r = client.post("/api/plans/p1/deploy", headers={"Authorization": "Bearer ex"})
+    assert r.status_code == 202
+    got = client.get("/api/plans/p1", headers={"Authorization": "Bearer op"}).json()
+    assert got["status"] == "deployed"
+    assert got["realized"]["inlet_temp_max_c"] == 26.2

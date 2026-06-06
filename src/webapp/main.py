@@ -8,14 +8,15 @@ from fastapi import Depends, FastAPI, HTTPException
 from webapp.auth import TokenAuth
 from webapp.jobs import JobRunner
 from webapp.schemas import PlanCreated, PlanParams, SetpointEdit
+from webapp.status import PlanStatus, can_transition
 from webapp.store import PlanStore
 
 
 def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = None,
-               runner=None, run_sync: bool = False) -> FastAPI:
+               runner=None, run_sync: bool = False, deploy_runner=None) -> FastAPI:
     store = store or PlanStore()
     auth = auth or TokenAuth.from_env()
-    job_runner = JobRunner(store, runner=runner)
+    job_runner = JobRunner(store, runner=runner, deploy_runner=deploy_runner)
 
     app = FastAPI(title="Digital Twin Dual-Loop Control")
 
@@ -54,7 +55,8 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
         if row is None:
             raise HTTPException(404, "plan not found")
         return {"plan_id": plan_id, "status": row["status"],
-                "recommendation": store.get_recommendation(plan_id)}
+                "recommendation": store.get_recommendation(plan_id),
+                "realized": store.get_realized(plan_id)}
 
     @app.get("/api/plans/{plan_id}/progress")
     def get_progress(plan_id: str, role: str = Depends(operator)):
@@ -65,9 +67,11 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
         rec = store.get_recommendation(plan_id)
         if rec is None:
             raise HTTPException(404, "no recommendation yet")
-        rec["status"] = "approved"
+        if not can_transition(rec.get("status", ""), PlanStatus.APPROVED):
+            raise HTTPException(409, f"cannot approve from {rec.get('status')!r}")
+        rec["status"] = PlanStatus.APPROVED
         store.save_recommendation(plan_id, rec)
-        return {"status": "approved"}
+        return {"status": PlanStatus.APPROVED}
 
     @app.post("/api/plans/{plan_id}/reject")
     def reject(plan_id: str, role: str = Depends(expert)):
@@ -77,6 +81,19 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
         rec["status"] = "rejected"
         store.save_recommendation(plan_id, rec)
         return {"status": "rejected"}
+
+    @app.post("/api/plans/{plan_id}/deploy", status_code=202)
+    def deploy_plan(plan_id: str, role: str = Depends(expert)):
+        rec = store.get_recommendation(plan_id)
+        if rec is None:
+            raise HTTPException(404, "no recommendation yet")
+        if not can_transition(rec.get("status", ""), PlanStatus.DEPLOYING):
+            raise HTTPException(409, f"cannot deploy from {rec.get('status')!r}")
+        if run_sync:
+            job_runner.run_deploy_sync(plan_id)
+        else:
+            job_runner.submit_deploy(plan_id)
+        return {"status": PlanStatus.DEPLOYING}
 
     @app.patch("/api/plans/{plan_id}/setpoints")
     def edit_setpoints(plan_id: str, edit: SetpointEdit, role: str = Depends(expert)):
