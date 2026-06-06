@@ -47,3 +47,16 @@ def test_forecaster_writes_workload_arrays(tmp_path):
         (tmp_path / "data/schedule/workloads/data hall 1f 2a ite-1.json").read_text()
     )
     assert written == [0.5, 0.5, 0.5, 0.5]
+
+
+def test_forecast_carries_optional_bands():
+    fc = Forecast(week_start=date(2024, 11, 11),
+                  workload_schedules={"ite-1": [0.5, 0.5]},
+                  method="seasonal",
+                  bands={"ite-1": {"p10": [0.4, 0.4], "p50": [0.5, 0.5], "p90": [0.6, 0.6]}})
+    assert fc.bands["ite-1"]["p90"] == [0.6, 0.6]
+
+
+def test_forecast_bands_default_none():
+    fc = Forecast(week_start=date(2024, 11, 11), workload_schedules={"ite-1": [0.5]})
+    assert fc.bands is None

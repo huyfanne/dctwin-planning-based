@@ -30,6 +30,7 @@ class Forecast:
     week_start: date
     workload_schedules: dict[str, list[float]]   # ite name -> per-step loading
     method: str = "persistence"
+    bands: Optional[dict] = None    # ITE -> {"p10","p50","p90"} per-step (seasonal only)
 
     def materialize(self, project_root: str) -> None:
         """Write each ITE's workload array to data/schedule/workloads/<name>.json.
