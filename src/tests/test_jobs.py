@@ -71,3 +71,18 @@ def test_jobrunner_dispatches_deploy(tmp_path):
     runner.run_deploy_sync("p1")
     assert calls == ["p1"]
     assert store.get_plan_row("p1")["status"] == "deployed"
+
+
+def test_deploy_helpers_produce_calibration(tmp_path):
+    from datetime import date
+    from planner.history import advance_calibration
+    from planner.calibrator import recompute_calibration, load_calibration
+
+    hist = str(tmp_path / "calibration_history.json")
+    cal_out = str(tmp_path / "calibration.json")
+    predicted = {"total_hvac_energy_kwh": 100.0, "pue_mean": 1.2, "inlet_temp_max_c": 24.0}
+    realized = {"total_hvac_energy_kwh": 106.0, "pue_mean": 1.2, "inlet_temp_max_c": 24.0}
+    advance_calibration(predicted, realized, date(2013, 11, 11), hist)
+    cal = recompute_calibration(hist, cal_out)
+    assert cal.bias["total_hvac_energy_kwh"] == 6.0
+    assert load_calibration(cal_out).n_weeks == 1

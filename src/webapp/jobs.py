@@ -86,6 +86,7 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
     from pathlib import Path
 
     from dctwin.utils import config as dt_config
+    from planner.calibrator import load_calibration
     from planner.forecaster import StatisticalForecaster
     from planner.oracle import OracleConfig, ParallelEnvOracle
     from planner.pipeline import PlanRequest, run_weekly_plan
@@ -129,6 +130,7 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
         evaluator=oracle, forecaster=forecaster,
         baseline_energy_kwh=params.get("baseline_energy_kwh"),
         on_level=on_level, on_eval=on_eval,
+        calibration=load_calibration("data/calibration.json"),
     )
     store.save_recommendation(plan_id, rec)
 
@@ -153,7 +155,8 @@ def run_deploy_job(plan_id: str, store: PlanStore,
     from planner.plant import DEFAULT_PLANT, build_plant_prototxt
     from planner.oracle import OracleConfig, ParallelEnvOracle
     from planner.forecaster import StatisticalForecaster
-    from planner.history import advance_history
+    from planner.history import advance_history, advance_calibration
+    from planner.calibrator import recompute_calibration
 
     plan_dir = store.plan_dir(plan_id)
     dt_config.set_log_dir(str(plan_dir / "deploy"))
@@ -181,4 +184,7 @@ def run_deploy_job(plan_id: str, store: PlanStore,
     rec = deploy(rec_path, plant_oracle, forecast=forecast)
     store.save_realized(plan_id, rec["realized_kpis"])
     advance_history(rec["realized_kpis"], week_start, "data/realized_history.csv")
+    advance_calibration(rec.get("predicted_kpis", {}), rec["realized_kpis"], week_start,
+                        "data/calibration_history.json")
+    recompute_calibration("data/calibration_history.json", "data/calibration.json")
     store.set_status(plan_id, "deployed")
