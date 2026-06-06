@@ -4,7 +4,7 @@ worst-case inlet feasibility + CVaR energy — with confidence bands."""
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Optional
 
 from planner.calibrator import Calibration
@@ -106,7 +106,6 @@ def make_oracle_robust_rerank(base_prototxt, oracle_config, calibration,
     scenarios = make_scenarios(DEFAULT_PLANT, n_scenarios, spread)
 
     def rerank(finalists, forecast):
-        from planner.oracle import OracleConfig
         setpoints = [f[0] for f in finalists]
         per_finalist = [[] for _ in finalists]
         for j, sc in enumerate(scenarios):
@@ -114,9 +113,7 @@ def make_oracle_robust_rerank(base_prototxt, oracle_config, calibration,
             sproto = build_plant_prototxt(base_prototxt, sc, sdir)
             oracle = oracle_cls(
                 base_prototxt=sproto, project_root=".",
-                config=OracleConfig(n_workers=oracle_config.n_workers,
-                                    timesteps_per_hour=oracle_config.timesteps_per_hour,
-                                    log_root=str(Path(sdir) / "oracle")))
+                config=replace(oracle_config, log_root=str(Path(sdir) / "oracle")))
             for i, k in enumerate(oracle.evaluate(setpoints, forecast=forecast)):
                 per_finalist[i].append(k)
         return robust_select(finalists, per_finalist, weights)

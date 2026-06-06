@@ -94,12 +94,9 @@ def test_robust_rerank_fn_composes(tmp_path, monkeypatch):
     from planner.types import Setpoints, WeeklyKPI
     from planner.objective import ObjectiveWeights
 
+    from planner.oracle import OracleConfig
     monkeypatch.setattr(R, "build_plant_prototxt",
                         lambda base, plant, out_dir: f"{out_dir}/plant.prototxt")
-
-    class _Cfg:
-        n_workers = 1
-        timesteps_per_hour = 4
 
     class _Oracle:
         def __init__(self, base_prototxt, config=None, project_root="."):
@@ -114,7 +111,8 @@ def test_robust_rerank_fn_composes(tmp_path, monkeypatch):
     nominal = WeeklyKPI(total_hvac_energy_kwh=100.0, pue_mean=1.2, inlet_temp_max=24.0,
                         inlet_violation_steps=0, rh_violation_steps=0, feasible=True,
                         inlet_excess_degc_steps=0.0, rh_excursion_steps=0.0, zone_temp_band_steps=0.0)
-    fn = make_oracle_robust_rerank("configs/dt/dt.prototxt", _Cfg(), None,
-                                   ObjectiveWeights(), 2, str(tmp_path), oracle_cls=_Oracle)
+    fn = make_oracle_robust_rerank("configs/dt/dt.prototxt",
+                                   OracleConfig(n_workers=1, timesteps_per_hour=4, log_root=str(tmp_path)),
+                                   None, ObjectiveWeights(), 2, str(tmp_path), oracle_cls=_Oracle)
     rr = fn([(sp, nominal, 100.0)], forecast=None)
     assert isinstance(rr, RobustResult) and rr.n_scenarios == 2
