@@ -29,6 +29,7 @@ def run_weekly_plan(
     on_level: Optional[Callable[[int, int, float], None]] = None,
     on_eval: Optional[Callable[[int], None]] = None,
     calibration=None,
+    robust_rerank_fn=None,
 ) -> dict:
     """Forecast -> best-first search -> recommendation dict. The DRY planning core.
 
@@ -45,6 +46,11 @@ def run_weekly_plan(
     planner = BeamPlanner(space, evaluator, weights, beam, calibration=calibration)
     result = planner.plan(forecast, on_level=on_level, on_eval=on_eval)
 
+    robust = None
+    if robust_rerank_fn is not None and result.beam_finalists:
+        robust = robust_rerank_fn(result.beam_finalists, forecast)
+        result.best, result.best_kpi = robust.winner, robust.winner_kpi
+
     if result.feasible:
         best, kpi, status = result.best, result.best_kpi, "pending_approval"
     else:
@@ -58,4 +64,9 @@ def run_weekly_plan(
         forecast_method=getattr(forecast, "method", "persistence"),
         search_meta={"evals": result.evals, "beam_width": beam.beam_width, "levels": beam.levels},
         baseline_energy_kwh=baseline_energy_kwh, status=status,
+        robust_feasible=(robust.robust_feasible if robust else None),
+        cvar_energy_kwh=(robust.cvar_energy_kwh if robust else None),
+        confidence_bands=(robust.confidence_bands if robust else None),
+        n_scenarios=(robust.n_scenarios if robust else None),
+        calibration_version=(calibration.version if calibration is not None else None),
     )

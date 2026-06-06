@@ -2,6 +2,8 @@ from datetime import date
 
 from planner.pipeline import run_weekly_plan, PlanRequest
 from planner.mock_evaluator import MockEvaluator, MockSurface
+from planner.robust import RobustResult
+from planner.types import Setpoints, WeeklyKPI
 
 
 class _FakeForecaster:
@@ -43,3 +45,38 @@ def test_run_weekly_plan_infeasible_fallback():
         forecaster=_FakeForecaster(),
     )
     assert rec["status"] == "infeasible_fallback"
+
+
+def test_run_weekly_plan_applies_robust_rerank():
+    chosen = Setpoints(21.0, 12.0, 14.0)
+    chosen_kpi = WeeklyKPI(total_hvac_energy_kwh=999.0, pue_mean=1.1, inlet_temp_max=25.0,
+                           inlet_violation_steps=0, rh_violation_steps=0, feasible=True,
+                           inlet_excess_degc_steps=0.0, rh_excursion_steps=0.0, zone_temp_band_steps=0.0)
+
+    def fake_rerank(finalists, forecast):
+        return RobustResult(winner=chosen, winner_kpi=chosen_kpi, robust_feasible=True,
+                            cvar_energy_kwh=1010.0,
+                            confidence_bands={"inlet_temp_max_c": {"p50": 25.0, "p90": 25.5, "max": 26.0}},
+                            n_scenarios=3)
+
+    rec = run_weekly_plan(
+        PlanRequest(week_start=date(2013, 11, 11), days=7,
+                    grid=4, beam_width=3, levels=2),
+        evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
+        forecaster=_FakeForecaster(),
+        robust_rerank_fn=fake_rerank,
+    )
+    assert rec["setpoints"]["crah_supply_air_temperature_c"] == 21.0
+    assert rec["robust"]["robust_feasible"] is True
+    assert rec["robust"]["cvar_energy_kwh"] == 1010.0
+    assert rec["schema_version"] == "1.1"
+
+
+def test_run_weekly_plan_without_robust_unchanged():
+    rec = run_weekly_plan(
+        PlanRequest(week_start=date(2013, 11, 11), days=7,
+                    grid=4, beam_width=3, levels=2),
+        evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
+        forecaster=_FakeForecaster(),
+    )
+    assert "robust" not in rec and rec["schema_version"] == "1.0"
