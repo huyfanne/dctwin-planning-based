@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell,
 } from 'recharts';
 import {
-  listPlans, getPlan, approvePlan, rejectPlan, editSetpoints,
+  listPlans, getPlan, approvePlan, rejectPlan, editSetpoints, deployPlan,
   type PlanSummary, type PlanDetail,
 } from '../api';
 
@@ -39,6 +39,7 @@ function statusClass(s: string) {
   if (s === 'approved')      return 'badge-approved';
   if (s === 'rejected')      return 'badge-rejected';
   if (s === 'deployed')      return 'badge-deployed';
+  if (s === 'deploy_failed') return 'badge-rejected';
   return 'badge-running';
 }
 
@@ -129,6 +130,19 @@ export default function Review({ planId: initialPlanId }: Props) {
     } finally { setActing(false); }
   }
 
+  async function handleDeploy() {
+    if (!selectedId) return;
+    setActing(true); setActionMsg(null); setError(null);
+    try {
+      await deployPlan(selectedId);
+      setActionMsg('Deployment triggered.');
+      const d = await getPlan(selectedId);
+      setDetail(d);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Deploy failed');
+    } finally { setActing(false); }
+  }
+
   async function handleSaveSetpoints() {
     if (!selectedId) return;
     setSaving(true); setError(null);
@@ -152,8 +166,10 @@ export default function Review({ planId: initialPlanId }: Props) {
   const kpi = rec?.predicted_kpis ?? {};
   const sp  = rec?.setpoints ?? {};
   const status = detail?.status ?? '';
-  const canEdit = status !== 'rejected' && status !== 'deployed';
-  const canAct  = status === 'pending_approval';
+  const canEdit    = status !== 'rejected' && status !== 'deployed';
+  const canAct     = status === 'pending_approval';
+  const canDeploy  = status === 'approved';
+  const isDeploying = status === 'deploying';
 
   // Build chart data
   const chartData = KPI_META.filter(m => m.key !== 'energy_reduction_vs_baseline_pct').map(m => ({
@@ -242,6 +258,17 @@ export default function Review({ planId: initialPlanId }: Props) {
                   </button>
                   <button className="btn btn-danger" onClick={handleReject} disabled={acting}>
                     {acting ? <span className="spinner" style={{ width: 14, height: 14 }} /> : '✕'} Reject
+                  </button>
+                </div>
+              )}
+              {(canDeploy || isDeploying) && (
+                <div className="flex gap-2" style={{ marginLeft: 'auto' }}>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleDeploy}
+                    disabled={acting || isDeploying}
+                  >
+                    {(acting || isDeploying) ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Deploying…</> : '▶ Deploy'}
                   </button>
                 </div>
               )}
@@ -342,6 +369,52 @@ export default function Review({ planId: initialPlanId }: Props) {
               </div>
             </div>
           </div>
+
+          {/* Realized vs Predicted */}
+          {detail.realized && (
+            <div className="card bracket-card animate-in animate-in-4">
+              <div className="card-header">
+                <span className="card-title">Realized vs Predicted</span>
+                <span className="text-xs text-dim">Post-deployment actuals</span>
+              </div>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Realized</th>
+                    <th>Predicted</th>
+                    <th>Delta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {KPI_META.filter(m => m.key !== 'energy_reduction_vs_baseline_pct').map(m => {
+                    const realized = detail.realized ? (detail.realized as Record<string, number | undefined>)[m.key] : undefined;
+                    const predicted = kpi[m.key];
+                    const delta = realized != null && predicted != null ? Number(realized) - Number(predicted) : null;
+                    const lower_is_better = true;
+                    const deltaColor = delta == null
+                      ? 'var(--text-muted)'
+                      : (lower_is_better ? delta <= 0 : delta >= 0)
+                      ? 'var(--green)' : 'var(--red)';
+                    return (
+                      <tr key={m.key}>
+                        <td className="label-cell">{m.label}</td>
+                        <td style={{ color: 'var(--cyan)' }}>
+                          {realized != null ? `${Number(realized).toFixed(3)}${m.unit}` : '—'}
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)' }}>
+                          {predicted != null ? `${Number(predicted).toFixed(3)}${m.unit}` : '—'}
+                        </td>
+                        <td style={{ color: deltaColor, fontWeight: 600 }}>
+                          {delta != null ? `${delta > 0 ? '+' : ''}${delta.toFixed(3)}` : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Bar chart */}
           <div className="card animate-in animate-in-4">

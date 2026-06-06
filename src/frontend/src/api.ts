@@ -11,7 +11,13 @@ export interface Recommendation {
   setpoints: Record<string, number>;
   predicted_kpis: Record<string, number | null>;
 }
-export interface PlanDetail { plan_id: string; status: string; recommendation: Recommendation | null; }
+export interface RealizedKpis {
+  total_hvac_energy_kwh?: number;
+  inlet_temp_max_c?: number;
+  pue_mean?: number;
+  inlet_violation_steps?: number;
+}
+export interface PlanDetail { plan_id: string; status: string; recommendation: Recommendation | null; realized?: RealizedKpis | null; }
 export interface Progress { level?: number; evals?: number; best_score?: number; }
 
 // ── Digital-twin hall topology (GET /api/topology) ──
@@ -79,5 +85,7 @@ export const approvePlan = (id: string) => req(`/api/plans/${id}/approve`, { met
 export const rejectPlan = (id: string) => req(`/api/plans/${id}/reject`, { method: "POST" });
 export const editSetpoints = (id: string, sp: Record<string, number>) =>
   req(`/api/plans/${id}/setpoints`, { method: "PATCH", body: JSON.stringify(sp) });
+export const deployPlan = (id: string) =>
+  req<{ status: string }>(`/api/plans/${id}/deploy`, { method: "POST" });
 export const getTopology = (hall = "1f 2a") =>
   req<Topology>(`/api/topology?hall=${encodeURIComponent(hall)}`);

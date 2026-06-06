@@ -8,9 +8,10 @@ vi.mock('../api', () => ({
   approvePlan: vi.fn(),
   rejectPlan: vi.fn(),
   editSetpoints: vi.fn(),
+  deployPlan: vi.fn(),
 }));
 
-import { listPlans, getPlan, approvePlan, rejectPlan } from '../api';
+import { listPlans, getPlan, approvePlan, rejectPlan, deployPlan } from '../api';
 
 const PLAN_SUMMARY = {
   plan_id: 'plan-rev-1',
@@ -113,6 +114,54 @@ describe('Review', () => {
     render(<Review planId="plan-rev-1" />);
     await waitFor(() => {
       expect(screen.getByText('CRAH Supply Air Temp (°C)')).toBeInTheDocument();
+    });
+  });
+
+  it('renders Deploy button when status is approved', async () => {
+    const APPROVED_DETAIL = { ...PLAN_DETAIL, status: 'approved' };
+    (getPlan as ReturnType<typeof vi.fn>).mockResolvedValue(APPROVED_DETAIL);
+    (listPlans as ReturnType<typeof vi.fn>).mockResolvedValue([{ ...PLAN_SUMMARY, status: 'approved' }]);
+
+    render(<Review planId="plan-rev-1" />);
+    await waitFor(() => {
+      expect(screen.getByText(/deploy/i)).toBeInTheDocument();
+    });
+  });
+
+  it('calls deployPlan when Deploy button is clicked', async () => {
+    const APPROVED_DETAIL = { ...PLAN_DETAIL, status: 'approved' };
+    (deployPlan as ReturnType<typeof vi.fn>).mockResolvedValue({ status: 'deploying' });
+    (getPlan as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(APPROVED_DETAIL)
+      .mockResolvedValueOnce({ ...PLAN_DETAIL, status: 'deployed' });
+    (listPlans as ReturnType<typeof vi.fn>).mockResolvedValue([{ ...PLAN_SUMMARY, status: 'approved' }]);
+
+    render(<Review planId="plan-rev-1" />);
+    await waitFor(() => screen.getByText(/deploy/i));
+    fireEvent.click(screen.getByText(/deploy/i));
+    await waitFor(() => {
+      expect(deployPlan).toHaveBeenCalledWith('plan-rev-1');
+    });
+  });
+
+  it('renders Realized vs Predicted section when realized data is present', async () => {
+    const DEPLOYED_DETAIL = {
+      ...PLAN_DETAIL,
+      status: 'deployed',
+      realized: {
+        total_hvac_energy_kwh: 392.1,
+        inlet_temp_max_c: 25.8,
+        pue_mean: 1.44,
+        inlet_violation_steps: 1,
+      },
+    };
+    (getPlan as ReturnType<typeof vi.fn>).mockResolvedValue(DEPLOYED_DETAIL);
+    (listPlans as ReturnType<typeof vi.fn>).mockResolvedValue([{ ...PLAN_SUMMARY, status: 'deployed' }]);
+
+    render(<Review planId="plan-rev-1" />);
+    await waitFor(() => {
+      expect(screen.getByText(/realized vs predicted/i)).toBeInTheDocument();
+      expect(screen.getByText(/post-deployment actuals/i)).toBeInTheDocument();
     });
   });
 });
