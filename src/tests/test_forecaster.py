@@ -117,3 +117,29 @@ def test_build_forecaster_selects_class_by_method():
     assert isinstance(build_forecaster("seasonal", his, room2ite, hcr), SeasonalForecaster)
     assert isinstance(build_forecaster("persistence", his, room2ite, hcr), StatisticalForecaster)
     assert isinstance(build_forecaster("seasonal-naive", his, room2ite, hcr), StatisticalForecaster)
+
+
+def test_forecast_carries_weather_file():
+    fc = Forecast(week_start=date(2024, 11, 11), workload_schedules={"ite-1": [0.5]},
+                  method="seasonal", weather_file="data/weather/real.epw")
+    assert fc.weather_file == "data/weather/real.epw"
+
+
+def test_forecasters_thread_weather_file_into_forecast():
+    col = "1F_Datahall 2A 1F Data Hall 2A IT loads"
+    df = pd.DataFrame({col: [900.0] * 8})
+    room2ite = {"Data Hall 1F 2A": {"Data Hall 1F 2A ite-1": {"totalWatts": 1_800_000.0}}}
+    hcr = {"Data Hall 1F 2A": col}
+    fc = StatisticalForecaster(df, room2ite, hcr, method="persistence",
+                               weather_file="data/weather/real.epw")
+    out = fc.forecast(week_start=date(2024, 11, 11), n_steps=4)
+    assert out.weather_file == "data/weather/real.epw"
+
+
+def test_build_forecaster_threads_weather_file():
+    col = "1F_Datahall 2A 1F Data Hall 2A IT loads"
+    his = _diurnal_his(col)
+    room2ite = {"Data Hall 1F 2A": {"Data Hall 1F 2A ite-1": {"totalWatts": 1_800_000.0}}}
+    hcr = {"Data Hall 1F 2A": col}
+    s = build_forecaster("seasonal", his, room2ite, hcr, weather_file="w.epw")
+    assert s.forecast(date(2024, 12, 2), 96).weather_file == "w.epw"

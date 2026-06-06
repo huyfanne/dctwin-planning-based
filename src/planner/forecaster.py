@@ -78,6 +78,7 @@ class Forecast:
     workload_schedules: dict[str, list[float]]   # ite name -> per-step loading
     method: str = "persistence"
     bands: Optional[dict] = None    # ITE -> {"p10","p50","p90"} per-step (seasonal only)
+    weather_file: Optional[str] = None   # per-forecast EPW path (FB)
 
     def materialize(self, project_root: str) -> None:
         """Write each ITE's workload array to data/schedule/workloads/<name>.json.
@@ -95,11 +96,13 @@ class StatisticalForecaster:
     """Persistence / seasonal-naive forecaster over per-hall IT loads."""
 
     def __init__(self, his_data: pd.DataFrame, room2ite: dict,
-                 his_col_for_room: dict, method: str = "persistence"):
+                 his_col_for_room: dict, method: str = "persistence",
+                 weather_file: Optional[str] = None):
         self.his = his_data
         self.room2ite = room2ite
         self.his_col_for_room = his_col_for_room
         self.method = method
+        self.weather_file = weather_file
 
     def _hall_loading(self, room: str, n_steps: int) -> np.ndarray:
         col = self.his_col_for_room[room]
@@ -118,20 +121,23 @@ class StatisticalForecaster:
             hall = self._hall_loading(room, n_steps)
             for ite_name in ites:
                 schedules[ite_name] = [float(x) for x in hall]
-        return Forecast(week_start=week_start, workload_schedules=schedules, method=self.method)
+        return Forecast(week_start=week_start, workload_schedules=schedules, method=self.method,
+                        weather_file=self.weather_file)
 
 
 class SeasonalForecaster:
     """Day-of-week x time-of-day climatology forecaster with p10/p50/p90 bands."""
 
     def __init__(self, his_data: pd.DataFrame, room2ite: dict, his_col_for_room: dict,
-                 time_col: str = "_time", freq_min: int = 15, min_samples: int = 4):
+                 time_col: str = "_time", freq_min: int = 15, min_samples: int = 4,
+                 weather_file: Optional[str] = None):
         self.his = his_data
         self.room2ite = room2ite
         self.his_col_for_room = his_col_for_room
         self.time_col = time_col
         self.freq_min = freq_min
         self.min_samples = min_samples
+        self.weather_file = weather_file
 
     def forecast(self, week_start: date, n_steps: int) -> Forecast:
         times = self.his[self.time_col]
@@ -150,13 +156,15 @@ class SeasonalForecaster:
                 schedules[ite_name] = p50
                 bands[ite_name] = room_band
         return Forecast(week_start=week_start, workload_schedules=schedules,
-                        method="seasonal", bands=bands)
+                        method="seasonal", bands=bands, weather_file=self.weather_file)
 
 
 def build_forecaster(method: str, his_data, room2ite: dict, his_col_for_room: dict,
-                     time_col: str = "_time"):
+                     time_col: str = "_time", weather_file=None):
     """Construct the forecaster for `method`: 'seasonal' -> SeasonalForecaster,
     anything else ('persistence'/'seasonal-naive') -> StatisticalForecaster."""
     if method == "seasonal":
-        return SeasonalForecaster(his_data, room2ite, his_col_for_room, time_col=time_col)
-    return StatisticalForecaster(his_data, room2ite, his_col_for_room, method=method)
+        return SeasonalForecaster(his_data, room2ite, his_col_for_room,
+                                  time_col=time_col, weather_file=weather_file)
+    return StatisticalForecaster(his_data, room2ite, his_col_for_room,
+                                 method=method, weather_file=weather_file)
