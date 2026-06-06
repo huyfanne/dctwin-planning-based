@@ -39,3 +39,22 @@ spread — are far too narrow to cover the train→holdout level drift.
   Revisit alongside a re-backtest once load variance materializes.
 - **Forecast realism FB (per-forecast real weather) proceeds**: it is a genuine, data-independent
   fidelity improvement (real ambient conditions drive cooling load), unaffected by this finding.
+
+## Known caveats (FA/FB — deferred, not bugs)
+
+Surfaced by the FA+FB final integrated review; recorded here rather than fixed now:
+
+- **Day-of-week alignment (FB, spec "hard part") is not implemented.** `write_week_config` sets
+  RunPeriod month/day + weather_file but not the start day-of-week; the base IDF hardcodes
+  `Day of Week for Start Day = Tuesday`. So a forecast for a real Monday is simulated as starting
+  Tuesday. **Practical impact on this model is ~nil** (the IDF has no weekday-keyed schedules and
+  IT-load is applied positionally, so weather-by-date and load stay aligned), but E+ weekend/holiday
+  rules + day-of-week labeling are affected. Fixing it means overriding the IDF RunPeriod day-of-week
+  (or UseWeatherFile) — bundle with the Tier-2 cross-year work.
+- **Cross-year weeks remain rejected** (`compute_week_period`), upstream of the EPW-coverage check, so
+  late-December 7-day windows within the real EPW's Nov→Jan span are unusable. Documented Tier-2
+  follow-up (needs proto `begin_year`/`end_year` + `core.py` change). FB delivers within-year real weather.
+- **Recommendation weather label lags (M3).** `build_recommendation` still emits
+  `"forecast": {"weather": "TMY-window"}` even when a real EPW drove the sim — the *simulation* uses
+  the real weather correctly; only the surfaced label is stale. Fixed by FC (schema 1.2 surfacing),
+  which is deferred.
