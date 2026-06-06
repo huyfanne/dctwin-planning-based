@@ -63,8 +63,7 @@ class ParallelEnvOracle(Evaluator):
         log_root.mkdir(parents=True, exist_ok=True)
         if forecast is not None and getattr(forecast, "week_start", None) is not None:
             week_cfg_path = str(log_root / "week.prototxt")
-            write_week_config(self.base_prototxt, forecast.week_start, week_cfg_path,
-                              timesteps_per_hour=cfg.timesteps_per_hour)
+            self._write_week_cfg(forecast, week_cfg_path)
         else:
             week_cfg_path = str(Path(self.base_prototxt).resolve())
 
@@ -112,6 +111,12 @@ class ParallelEnvOracle(Evaluator):
         finally:
             ex.shutdown(wait=False, cancel_futures=True)
         return results
+
+    def _write_week_cfg(self, forecast, week_cfg_path):
+        return write_week_config(
+            self.base_prototxt, forecast.week_start, week_cfg_path,
+            timesteps_per_hour=self.config.timesteps_per_hour,
+            weather_file=getattr(forecast, "weather_file", None))
 
     def _safe_run(self, task: EvalTask) -> WeeklyKPI:
         try:

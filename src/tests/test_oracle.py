@@ -121,3 +121,21 @@ def test_process_pool_timeout_marks_infeasible(monkeypatch, tmp_path):
                                                 timeout_s=0.1, log_root=str(tmp_path)))
     out = orc.evaluate([Setpoints(22.0, 8.0, 17.0)], forecast=_FakeForecast(tmp_path))
     assert out[0].feasible is False
+
+
+def test_oracle_passes_weather_file_to_week_config(tmp_path, monkeypatch):
+    import planner.oracle as O
+    from planner.forecaster import Forecast
+    from datetime import date
+
+    captured = {}
+    def fake_wwc(base, week_start, out_path, days=7, timesteps_per_hour=None, weather_file=None):
+        captured["weather_file"] = weather_file
+        return str(out_path)
+    monkeypatch.setattr(O, "write_week_config", fake_wwc)
+
+    fc = Forecast(week_start=date(2024, 11, 11), workload_schedules={}, method="seasonal",
+                  weather_file="data/weather/Singapore_Changi_Nov2024-Jan2025.epw")
+    oracle = O.ParallelEnvOracle("configs/dt/dt.prototxt")
+    oracle._write_week_cfg(fc, str(tmp_path / "w.prototxt"))
+    assert captured["weather_file"] == "data/weather/Singapore_Changi_Nov2024-Jan2025.epw"
