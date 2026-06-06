@@ -9,7 +9,7 @@ from typing import Optional
 
 from planner.calibrator import Calibration
 from planner.objective import ObjectiveWeights, is_feasible
-from planner.plant import DEFAULT_PLANT, Perturbation, PlantConfig
+from planner.plant import DEFAULT_PLANT, Perturbation, PlantConfig, build_plant_prototxt
 from planner.types import Setpoints, WeeklyKPI
 
 ROBUST_KEYS = ("total_hvac_energy_kwh", "inlet_temp_max_c", "pue_mean")
@@ -89,3 +89,36 @@ def robust_select(finalists: list, scenario_kpis: list,
         winner=finalists[win][0], winner_kpi=finalists[win][1],
         robust_feasible=robust_feasible[win], cvar_energy_kwh=cvar_e(win),
         confidence_bands=bands, n_scenarios=n_scen)
+
+
+def make_oracle_robust_rerank(base_prototxt, oracle_config, calibration,
+                              weights, n_scenarios, log_root, oracle_cls=None):
+    """Build a robust_rerank_fn(finalists, forecast) -> RobustResult that evaluates
+    the finalists under N perturbed-plant scenarios (each a real EnergyPlus run).
+    `oracle_cls` is injectable for testing (default ParallelEnvOracle)."""
+    from pathlib import Path
+
+    if oracle_cls is None:
+        from planner.oracle import ParallelEnvOracle
+        oracle_cls = ParallelEnvOracle
+
+    spread = scenario_spread(calibration)
+    scenarios = make_scenarios(DEFAULT_PLANT, n_scenarios, spread)
+
+    def rerank(finalists, forecast):
+        from planner.oracle import OracleConfig
+        setpoints = [f[0] for f in finalists]
+        per_finalist = [[] for _ in finalists]
+        for j, sc in enumerate(scenarios):
+            sdir = str(Path(log_root) / f"scenario-{j:02d}")
+            sproto = build_plant_prototxt(base_prototxt, sc, sdir)
+            oracle = oracle_cls(
+                base_prototxt=sproto, project_root=".",
+                config=OracleConfig(n_workers=oracle_config.n_workers,
+                                    timesteps_per_hour=oracle_config.timesteps_per_hour,
+                                    log_root=str(Path(sdir) / "oracle")))
+            for i, k in enumerate(oracle.evaluate(setpoints, forecast=forecast)):
+                per_finalist[i].append(k)
+        return robust_select(finalists, per_finalist, weights)
+
+    return rerank

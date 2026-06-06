@@ -58,3 +58,39 @@ def test_robust_select_all_infeasible_returns_least_bad():
     scenario_kpis = [[_kpi(100, 28, viol=5)]]
     rr = robust_select(finalists, scenario_kpis, ObjectiveWeights())
     assert rr.winner == sp and rr.robust_feasible is False
+
+
+from planner.robust import make_oracle_robust_rerank
+
+
+class _FakeOracle:
+    instances = []
+
+    def __init__(self, base_prototxt, config=None, project_root="."):
+        self.base_prototxt = base_prototxt
+        _FakeOracle.instances.append(base_prototxt)
+
+    def evaluate(self, candidates, forecast=None, on_result=None):
+        return [_kpi(100.0, 24.0) for _ in candidates]
+
+
+class _FakeOracleCfg:
+    n_workers = 1
+    timesteps_per_hour = 4
+
+
+def test_make_oracle_robust_rerank_runs_scenarios(tmp_path, monkeypatch):
+    import planner.robust as R
+    monkeypatch.setattr(R, "build_plant_prototxt",
+                        lambda base, plant, out_dir: f"{out_dir}/plant.prototxt")
+    _FakeOracle.instances = []
+    sp = Setpoints(24, 8, 17)
+    finalists = [(sp, _kpi(100, 24), 100.0)]
+    fn = make_oracle_robust_rerank(
+        base_prototxt="configs/dt/dt.prototxt", oracle_config=_FakeOracleCfg(),
+        calibration=None, weights=ObjectiveWeights(), n_scenarios=3,
+        log_root=str(tmp_path), oracle_cls=_FakeOracle)
+    rr = fn(finalists, forecast=None)
+    assert rr.n_scenarios == 3
+    assert len(_FakeOracle.instances) == 3
+    assert rr.winner == sp
