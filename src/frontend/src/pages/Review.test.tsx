@@ -44,6 +44,16 @@ const PLAN_DETAIL = {
       inlet_violation_steps: 0,
       energy_reduction_vs_baseline_pct: 8.2,
     },
+    robust: {
+      robust_feasible: true,
+      cvar_energy_kwh: 30500,
+      confidence_bands: {
+        inlet_temp_max_c: { p50: 25, p90: 25.8, max: 26.2 },
+        total_hvac_energy_kwh: { p50: 30000, p90: 31000, max: 31500 },
+      },
+      n_scenarios: 4,
+      calibration_version: 'weeks-3',
+    },
   },
 };
 
@@ -187,6 +197,14 @@ describe('Review', () => {
     expect(await screen.findByText(/twin calibration/i)).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText(/2 weeks/i)).toBeInTheDocument();
+    });
+  });
+
+  it('renders Confidence Bands panel with scenario count', async () => {
+    render(<Review planId="plan-rev-1" />);
+    expect(await screen.findByText(/confidence bands/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/4 scenarios/i)).toBeInTheDocument();
     });
   });
 });

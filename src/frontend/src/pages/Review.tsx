@@ -170,9 +170,10 @@ export default function Review({ planId: initialPlanId }: Props) {
     } finally { setSaving(false); }
   }
 
-  const rec = detail?.recommendation;
-  const kpi = rec?.predicted_kpis ?? {};
-  const sp  = rec?.setpoints ?? {};
+  const rec    = detail?.recommendation;
+  const kpi    = rec?.predicted_kpis ?? {};
+  const sp     = rec?.setpoints ?? {};
+  const robust = rec?.robust;
   const status = detail?.status ?? '';
   const canEdit    = status !== 'rejected' && status !== 'deployed';
   const canAct     = status === 'pending_approval';
@@ -377,6 +378,44 @@ export default function Review({ planId: initialPlanId }: Props) {
               </div>
             </div>
           </div>
+
+          {/* Confidence Bands */}
+          {robust?.confidence_bands && (
+            <div className="card bracket-card animate-in animate-in-4">
+              <div className="card-header">
+                <span className="card-title">Confidence Bands</span>
+                <span className="text-xs text-dim">
+                  {robust.n_scenarios} scenarios · {robust.robust_feasible ? '✓ robust-feasible' : '⚠ not robust-feasible'}
+                </span>
+              </div>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>KPI</th>
+                    <th>p50</th>
+                    <th>p90</th>
+                    <th>max</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(robust.confidence_bands).map(([key, band]) => (
+                    <tr key={key}>
+                      <td className="label-cell">{key}</td>
+                      <td style={{ color: 'var(--cyan)' }}>
+                        {band?.p50 != null ? band.p50.toFixed(1) : '—'}
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)' }}>
+                        {band?.p90 != null ? band.p90.toFixed(1) : '—'}
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)' }}>
+                        {band?.max != null ? band.max.toFixed(1) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Realized vs Predicted */}
           {detail.realized && (

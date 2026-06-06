@@ -10,6 +10,13 @@ export interface Recommendation {
   status: string;
   setpoints: Record<string, number>;
   predicted_kpis: Record<string, number | null>;
+  robust?: {
+    robust_feasible: boolean;
+    cvar_energy_kwh: number;
+    confidence_bands: Record<string, { p50: number; p90: number; max: number }>;
+    n_scenarios: number;
+    calibration_version: string | null;
+  } | null;
 }
 export interface RealizedKpis {
   total_hvac_energy_kwh?: number;
