@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple
 
 
 @dataclass(frozen=True)
@@ -16,18 +15,19 @@ class Perturbation:
 
 @dataclass(frozen=True)
 class PlantConfig:
-    perturbations: Tuple[Perturbation, ...]
+    perturbations: tuple[Perturbation, ...]
 
 
-# Degraded fan efficiency + fouled cooling coil -> the plant runs hotter and uses
-# more energy than the (nominal) twin predicts. Both objects exist in the GDS IDF.
+# Degraded fan efficiency + fouled cooling coil (reduced chilled-water flow) ->
+# the plant runs hotter and uses more energy than the (nominal) twin predicts.
+# Both objects exist in the GDS IDF.
 DEFAULT_PLANT = PlantConfig((
     Perturbation("Fan_VariableVolume", "fan_total_efficiency", 0.93),
-    Perturbation("Coil_Cooling_Water", "u_factor_times_area_value", 0.85),
+    Perturbation("Coil_Cooling_Water", "design_water_flow_rate", 0.85),
 ))
 
 
-def apply_perturbation(idf_in: str, plant: PlantConfig, idf_out: str) -> str:
+def apply_perturbation(idf_in: str | Path, plant: PlantConfig, idf_out: str | Path) -> str:
     """Scale the configured numeric fields and save a perturbed IDF copy.
 
     Non-numeric values (e.g. "autosize") are left untouched.

@@ -24,3 +24,17 @@ def test_apply_perturbation_scales_fan_efficiency(tmp_path):
 def test_default_plant_has_fan_and_coil_perturbations():
     tables = {p.table for p in DEFAULT_PLANT.perturbations}
     assert tables == {"Fan_VariableVolume", "Coil_Cooling_Water"}
+
+
+def test_default_plant_apply_perturbation_scales_fan_and_coil(tmp_path):
+    out = str(tmp_path / "plant.idf")
+    apply_perturbation("models/idf/building.idf", DEFAULT_PLANT, out)
+    epm = op.Epm.load(out)
+    base = op.Epm.load("models/idf/building.idf")
+    fan = epm.Fan_VariableVolume.select(lambda r: r.name == _STABLE_FAN).one()
+    fan0 = base.Fan_VariableVolume.select(lambda r: r.name == _STABLE_FAN).one()
+    assert fan.fan_total_efficiency == fan0.fan_total_efficiency * 0.93
+    coil_name = "data hall gf 1a acu-1 cooling coil"
+    coil = epm.Coil_Cooling_Water.select(lambda r: r.name == coil_name).one()
+    coil0 = base.Coil_Cooling_Water.select(lambda r: r.name == coil_name).one()
+    assert coil.design_water_flow_rate == coil0.design_water_flow_rate * 0.85
