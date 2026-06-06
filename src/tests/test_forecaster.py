@@ -82,3 +82,28 @@ def test_seasonal_climatology_thin_bucket_falls_back():
                                         freq_min=15, min_samples=4)
     assert len(point) == 96
     np.testing.assert_allclose(point, 0.5, atol=1e-9)
+
+
+from planner.forecaster import SeasonalForecaster
+
+
+def _diurnal_his(col, n_days=3):
+    times = pd.date_range("2024-11-04 00:00", periods=n_days * 96, freq="15min", tz="Asia/Singapore")
+    day = (times.hour >= 8) & (times.hour < 20)
+    return pd.DataFrame({"_time": times.astype(str), col: np.where(day, 1800.0, 450.0)})
+
+
+def test_seasonal_forecaster_produces_point_and_bands():
+    col = "1F_Datahall 2A 1F Data Hall 2A IT loads"
+    his = _diurnal_his(col)
+    room2ite = {"Data Hall 1F 2A": {"Data Hall 1F 2A ite-1": {"totalWatts": 1_800_000.0},
+                                    "Data Hall 1F 2A ite-2": {"totalWatts": 1_800_000.0}}}
+    his_col_for_room = {"Data Hall 1F 2A": col}
+    fc = SeasonalForecaster(his, room2ite, his_col_for_room)
+    forecast = fc.forecast(week_start=date(2024, 12, 2), n_steps=96)
+    assert forecast.method == "seasonal"
+    p50 = forecast.workload_schedules["Data Hall 1F 2A ite-1"]
+    assert forecast.workload_schedules["Data Hall 1F 2A ite-2"] == p50      # room broadcast
+    assert len(p50) == 96 and p50[40] > p50[4]                              # daytime > night
+    assert forecast.bands["Data Hall 1F 2A ite-1"]["p50"] == p50            # workload IS p50
+    assert "p10" in forecast.bands["Data Hall 1F 2A ite-1"]

@@ -119,3 +119,35 @@ class StatisticalForecaster:
             for ite_name in ites:
                 schedules[ite_name] = [float(x) for x in hall]
         return Forecast(week_start=week_start, workload_schedules=schedules, method=self.method)
+
+
+class SeasonalForecaster:
+    """Day-of-week x time-of-day climatology forecaster with p10/p50/p90 bands."""
+
+    def __init__(self, his_data: pd.DataFrame, room2ite: dict, his_col_for_room: dict,
+                 time_col: str = "_time", freq_min: int = 15, min_samples: int = 4):
+        self.his = his_data
+        self.room2ite = room2ite
+        self.his_col_for_room = his_col_for_room
+        self.time_col = time_col
+        self.freq_min = freq_min
+        self.min_samples = min_samples
+
+    def forecast(self, week_start: date, n_steps: int) -> Forecast:
+        times = self.his[self.time_col]
+        schedules: dict[str, list[float]] = {}
+        bands: dict[str, dict] = {}
+        for room, ites in self.room2ite.items():
+            if room not in self.his_col_for_room:
+                continue
+            total_watts = sum(v["totalWatts"] for v in ites.values())
+            loading = loading_from_it_loads(self.his[self.his_col_for_room[room]], total_watts)
+            point, band = seasonal_climatology(loading, times, week_start, n_steps,
+                                               freq_min=self.freq_min, min_samples=self.min_samples)
+            p50 = [float(x) for x in point]
+            room_band = {k: [float(x) for x in band[k]] for k in band}
+            for ite_name in ites:
+                schedules[ite_name] = p50
+                bands[ite_name] = room_band
+        return Forecast(week_start=week_start, workload_schedules=schedules,
+                        method="seasonal", bands=bands)
