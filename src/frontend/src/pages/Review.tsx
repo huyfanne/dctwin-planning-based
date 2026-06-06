@@ -3,8 +3,8 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell,
 } from 'recharts';
 import {
-  listPlans, getPlan, approvePlan, rejectPlan, editSetpoints, deployPlan,
-  type PlanSummary, type PlanDetail,
+  listPlans, getPlan, approvePlan, rejectPlan, editSetpoints, deployPlan, getCalibration,
+  type PlanSummary, type PlanDetail, type CalibrationState,
 } from '../api';
 
 interface Props {
@@ -75,6 +75,14 @@ export default function Review({ planId: initialPlanId }: Props) {
   const [spDraft, setSpDraft]     = useState<Record<string, string>>({});
   const [saving, setSaving]       = useState(false);
   const [acting, setActing]       = useState(false);
+  const [cal, setCal]             = useState<CalibrationState | null>(null);
+
+  // Load calibration state on mount
+  useEffect(() => {
+    getCalibration()
+      .then(c => setCal(c))
+      .catch(() => {});
+  }, []);
 
   // Load plan list on mount
   useEffect(() => {
@@ -413,6 +421,54 @@ export default function Review({ planId: initialPlanId }: Props) {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Twin Calibration */}
+          {cal && (
+            <div className="card bracket-card animate-in animate-in-4">
+              <div className="card-header">
+                <span className="card-title">Twin Calibration</span>
+                <span className="text-xs text-dim">{cal.version}</span>
+              </div>
+              <div className="card-body">
+                <div className="metric-label" style={{ marginBottom: 8 }}>
+                  {cal.n_weeks} weeks of realized history
+                </div>
+                {cal.n_weeks === 0 ? (
+                  <p className="text-dim text-sm">No calibration yet — run more deployed weeks to accumulate data.</p>
+                ) : (
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Metric</th>
+                        <th>Bias</th>
+                        <th>σ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="label-cell">Peak Inlet Temp</td>
+                        <td style={{ color: 'var(--cyan)' }}>
+                          {cal.bias.inlet_temp_max_c?.toFixed(2) ?? '—'} °C
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)' }}>
+                          {cal.sigma.inlet_temp_max_c?.toFixed(2) ?? '—'} °C
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="label-cell">Total HVAC Energy</td>
+                        <td style={{ color: 'var(--cyan)' }}>
+                          {cal.bias.total_hvac_energy_kwh?.toFixed(1) ?? '—'} kWh
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)' }}>
+                          {cal.sigma.total_hvac_energy_kwh?.toFixed(1) ?? '—'} kWh
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
           )}
 

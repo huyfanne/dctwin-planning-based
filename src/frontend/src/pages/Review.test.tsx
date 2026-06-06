@@ -9,6 +9,12 @@ vi.mock('../api', () => ({
   rejectPlan: vi.fn(),
   editSetpoints: vi.fn(),
   deployPlan: vi.fn(),
+  getCalibration: vi.fn().mockResolvedValue({
+    bias: { inlet_temp_max_c: 0.8, total_hvac_energy_kwh: 1200 },
+    sigma: { inlet_temp_max_c: 0.4 },
+    n_weeks: 2,
+    version: 'weeks-2',
+  }),
 }));
 
 import { listPlans, getPlan, approvePlan, rejectPlan, deployPlan } from '../api';
@@ -61,9 +67,9 @@ describe('Review', () => {
   it('renders KPI table with metric rows', async () => {
     render(<Review planId="plan-rev-1" />);
     await waitFor(() => {
-      expect(screen.getByText('Total HVAC Energy')).toBeInTheDocument();
+      expect(screen.getAllByText('Total HVAC Energy').length).toBeGreaterThan(0);
       expect(screen.getByText('PUE Mean')).toBeInTheDocument();
-      expect(screen.getByText('Peak Inlet Temp')).toBeInTheDocument();
+      expect(screen.getAllByText('Peak Inlet Temp').length).toBeGreaterThan(0);
     });
   });
 
@@ -173,6 +179,14 @@ describe('Review', () => {
     await waitFor(() => {
       expect(screen.getByText(/realized vs predicted/i)).toBeInTheDocument();
       expect(screen.getByText(/post-deployment actuals/i)).toBeInTheDocument();
+    });
+  });
+
+  it('renders the Twin Calibration panel with weeks count', async () => {
+    render(<Review planId="plan-rev-1" />);
+    expect(await screen.findByText(/twin calibration/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/2 weeks/i)).toBeInTheDocument();
     });
   });
 });

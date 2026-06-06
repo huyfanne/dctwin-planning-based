@@ -89,3 +89,11 @@ export const deployPlan = (id: string) =>
   req<{ status: string }>(`/api/plans/${id}/deploy`, { method: "POST" });
 export const getTopology = (hall = "1f 2a") =>
   req<Topology>(`/api/topology?hall=${encodeURIComponent(hall)}`);
+
+export interface CalibrationState {
+  bias: Record<string, number>;
+  sigma: Record<string, number>;
+  n_weeks: number;
+  version: string;
+}
+export const getCalibration = () => req<CalibrationState>(`/api/calibration`);
