@@ -49,7 +49,8 @@ def run_weekly_plan(
         best, kpi, status = result.best, result.best_kpi, "pending_approval"
     else:
         fb = Setpoints(space.sat.lb, space.flow.ub, space.chwst.lb)
-        kpi = evaluator.evaluate([fb], forecast)[0]
+        fb_kpi = evaluator.evaluate([fb], forecast)[0]
+        kpi = calibration.apply(fb_kpi) if calibration is not None else fb_kpi
         best, status = fb, "infeasible_fallback"
 
     return build_recommendation(

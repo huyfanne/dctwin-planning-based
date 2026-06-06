@@ -125,3 +125,17 @@ def test_planner_without_calibration_unchanged():
     res = BeamPlanner(DEFAULT_SEARCH_SPACE, MockEvaluator(MockSurface()), ObjectiveWeights(),
                       BeamConfig(grid=3, beam_width=2, levels=1)).plan()   # no calibration arg
     assert res.feasible
+
+
+def test_inlet_bias_steers_search_under_cap():
+    # A large learned inlet bias must reach the feasibility gate: the corrected
+    # winner's peak inlet respects the 26 C cap (safety, not just display). This
+    # FAILS if apply() corrects the displayed inlet but not the violation flag.
+    from planner.calibrator import Calibration
+    cfg = BeamConfig(grid=4, beam_width=3, levels=1)
+    cal = Calibration(bias={"inlet_temp_max_c": 4.0}, sigma={}, n_weeks=1, version="weeks-1")
+    res = BeamPlanner(DEFAULT_SEARCH_SPACE, MockEvaluator(MockSurface()),
+                      ObjectiveWeights(), cfg, calibration=cal).plan()
+    assert res.feasible                                  # a cooler feasible point exists
+    assert res.best_kpi.inlet_violation_steps == 0
+    assert res.best_kpi.inlet_temp_max <= 26.0 + 1e-9   # corrected inlet respects the cap

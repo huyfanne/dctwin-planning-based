@@ -7,7 +7,6 @@ import dataclasses
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from planner.types import WeeklyKPI
 
@@ -30,13 +29,21 @@ class Calibration:
     def identity() -> "Calibration":
         return Calibration(bias={}, sigma={}, n_weeks=0, version="weeks-0")
 
-    def apply(self, kpi: WeeklyKPI) -> WeeklyKPI:
+    def apply(self, kpi: WeeklyKPI, inlet_cap: float = 26.0) -> WeeklyKPI:
         updates = {}
         for key, field in _KEY_TO_FIELD.items():
             b = self.bias.get(key)
             if b:
                 updates[field] = getattr(kpi, field) + b
-        return dataclasses.replace(kpi, **updates) if updates else kpi
+        if not updates:
+            return kpi
+        # Safety: a bias-on-max can't reconstruct a per-step count, so if the
+        # CORRECTED peak inlet breaches the cap, flag the candidate infeasible
+        # (>=1 violation step) so the objective's feasibility gate rejects it.
+        corrected_inlet = updates.get("inlet_temp_max")
+        if corrected_inlet is not None and corrected_inlet > inlet_cap:
+            updates["inlet_violation_steps"] = max(kpi.inlet_violation_steps, 1)
+        return dataclasses.replace(kpi, **updates)
 
     def sigma_for(self, key: str) -> float:
         return self.sigma.get(key, 0.0)
