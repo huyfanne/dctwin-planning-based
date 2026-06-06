@@ -6,6 +6,7 @@ import pandas as pd
 
 from planner.forecaster import (
     loading_from_it_loads, persistence_window, StatisticalForecaster, Forecast,
+    seasonal_climatology,
 )
 
 
@@ -60,3 +61,24 @@ def test_forecast_carries_optional_bands():
 def test_forecast_bands_default_none():
     fc = Forecast(week_start=date(2024, 11, 11), workload_schedules={"ite-1": [0.5]})
     assert fc.bands is None
+
+
+def test_seasonal_climatology_captures_diurnal_shape():
+    times = pd.date_range("2024-11-04 00:00", periods=3 * 7 * 96, freq="15min", tz="Asia/Singapore")
+    day = (times.hour >= 8) & (times.hour < 20)
+    loading = pd.Series(np.where(day, 0.8, 0.2), index=range(len(times)))
+    point, bands = seasonal_climatology(loading, pd.Series(times.astype(str)),
+                                        week_start=date(2024, 12, 2), n_steps=96, freq_min=15)
+    assert len(point) == 96 and set(bands) == {"p10", "p50", "p90"}
+    assert point[40] > 0.7 and point[4] < 0.3        # 10:00 daytime high, 01:00 night low
+    assert np.all(bands["p10"] <= bands["p50"]) and np.all(bands["p50"] <= bands["p90"])
+
+
+def test_seasonal_climatology_thin_bucket_falls_back():
+    times = pd.date_range("2024-11-04 00:00", periods=2 * 96, freq="15min", tz="Asia/Singapore")
+    loading = pd.Series(np.full(len(times), 0.5), index=range(len(times)))
+    point, bands = seasonal_climatology(loading, pd.Series(times.astype(str)),
+                                        week_start=date(2024, 12, 2), n_steps=96,
+                                        freq_min=15, min_samples=4)
+    assert len(point) == 96
+    np.testing.assert_allclose(point, 0.5, atol=1e-9)

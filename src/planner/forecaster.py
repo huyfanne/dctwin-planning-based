@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -23,6 +23,53 @@ def persistence_window(series: pd.Series, n_steps: int) -> np.ndarray:
         return arr[-n_steps:]
     reps = int(np.ceil(n_steps / max(len(arr), 1)))
     return np.tile(arr, reps)[:n_steps]
+
+
+def seasonal_climatology(loading, times, week_start, n_steps: int,
+                         freq_min: int = 15, min_samples: int = 4):
+    """(weekday, time-of-day) climatology of `loading` indexed by `times`.
+
+    Returns (point, bands): point = per-step p50 (median) array of length n_steps for
+    the forecast week starting at `week_start` 00:00; bands = {"p10","p50","p90"} arrays.
+    Buckets with < min_samples observations fall back to the hour-of-day pooled
+    climatology, then to the global percentiles. Local (SGT) calendar components are used.
+    """
+    v = np.asarray(loading, dtype=float)
+    t = pd.to_datetime(pd.Series(times).to_numpy(), utc=True).tz_convert("Asia/Singapore")
+    df = pd.DataFrame({
+        "v": v,
+        "wd": t.weekday.to_numpy(),
+        "tb": ((t.hour * 60 + t.minute) // freq_min).to_numpy(),
+        "hr": t.hour.to_numpy(),
+    })
+    pcts = {"p10": 10.0, "p50": 50.0, "p90": 90.0}
+
+    def _agg(group_cols):
+        g = df.groupby(group_cols)["v"]
+        out = {k: g.apply(lambda s, q=q: float(np.percentile(s, q))) for k, q in pcts.items()}
+        out["n"] = g.size()
+        return pd.DataFrame(out)
+
+    by_wd_tb = _agg(["wd", "tb"])
+    by_hr = _agg(["hr"])
+    g_all = {k: float(np.percentile(v, q)) for k, q in pcts.items()}
+
+    out = {"p10": [], "p50": [], "p90": []}
+    base = datetime(week_start.year, week_start.month, week_start.day)
+    for i in range(n_steps):
+        ts = base + timedelta(minutes=freq_min * i)
+        key = (ts.weekday(), (ts.hour * 60 + ts.minute) // freq_min)
+        if key in by_wd_tb.index and by_wd_tb.loc[key, "n"] >= min_samples:
+            row = by_wd_tb.loc[key]
+        elif ts.hour in by_hr.index:
+            row = by_hr.loc[ts.hour]
+        else:
+            row = g_all
+        for k in out:
+            out[k].append(float(row[k]))
+    point = np.array(out["p50"])
+    bands = {k: np.array(out[k]) for k in out}
+    return point, bands
 
 
 @dataclass
