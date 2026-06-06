@@ -62,3 +62,31 @@ def test_write_and_read_roundtrip(tmp_path):
     p = tmp_path / "recommendation.json"
     write_recommendation(str(p), rec)
     assert json.loads(p.read_text())["setpoints"]["crah_supply_air_temperature_c"] == 24.0
+
+
+def _rk():
+    return WeeklyKPI(total_hvac_energy_kwh=80.0, pue_mean=1.2, inlet_temp_max=24.0,
+                     inlet_violation_steps=0, rh_violation_steps=0, feasible=True,
+                     inlet_excess_degc_steps=0.0, rh_excursion_steps=0.0, zone_temp_band_steps=0.0)
+
+
+def test_recommendation_robust_block_and_schema_11():
+    rec = build_recommendation(
+        setpoints=Setpoints(24, 8, 17), kpi=_rk(), week_start=date(2013, 11, 11),
+        days=7, forecast_method="persistence", search_meta={"evals": 10},
+        robust_feasible=True, cvar_energy_kwh=85.0,
+        confidence_bands={"inlet_temp_max_c": {"p50": 24.0, "p90": 25.0, "max": 25.5}},
+        n_scenarios=4, calibration_version="weeks-3")
+    assert rec["schema_version"] == "1.1"
+    assert rec["robust"]["robust_feasible"] is True
+    assert rec["robust"]["cvar_energy_kwh"] == 85.0
+    assert rec["robust"]["confidence_bands"]["inlet_temp_max_c"]["max"] == 25.5
+    assert rec["robust"]["n_scenarios"] == 4
+    assert rec["robust"]["calibration_version"] == "weeks-3"
+
+
+def test_recommendation_no_robust_stays_schema_10():
+    rec = build_recommendation(setpoints=Setpoints(24, 8, 17), kpi=_rk(),
+                               week_start=date(2013, 11, 11), days=7,
+                               forecast_method="persistence", search_meta={"evals": 10})
+    assert rec["schema_version"] == "1.0" and "robust" not in rec

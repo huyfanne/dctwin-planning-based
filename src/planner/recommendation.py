@@ -31,6 +31,11 @@ def build_recommendation(
     search_meta: dict,
     baseline_energy_kwh: Optional[float] = None,
     status: str = "pending_approval",
+    robust_feasible: Optional[bool] = None,
+    cvar_energy_kwh: Optional[float] = None,
+    confidence_bands: Optional[dict] = None,
+    n_scenarios: Optional[int] = None,
+    calibration_version: Optional[str] = None,
 ) -> dict:
     week_end = week_start + timedelta(days=days - 1)
     reduction = (
@@ -38,7 +43,7 @@ def build_recommendation(
         if baseline_energy_kwh is not None
         else None
     )
-    return {
+    rec = {
         "schema_version": "1.0",
         "plan_id": f"gds-{week_start.isoformat()}",
         "week_start": week_start.isoformat(),
@@ -60,6 +65,16 @@ def build_recommendation(
         "search": dict(search_meta),
         "status": status,
     }
+    if robust_feasible is not None:
+        rec["schema_version"] = "1.1"
+        rec["robust"] = {
+            "robust_feasible": robust_feasible,
+            "cvar_energy_kwh": cvar_energy_kwh,
+            "confidence_bands": confidence_bands or {},
+            "n_scenarios": n_scenarios,
+            "calibration_version": calibration_version,
+        }
+    return rec
 
 
 def write_recommendation(path: str, recommendation: dict) -> None:
