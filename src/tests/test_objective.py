@@ -62,3 +62,21 @@ def test_rh_tolerance_boundary_when_hard():
 def test_non_finite_energy_is_infeasible():
     assert score(_kpi(energy=float("nan")), ObjectiveWeights()) == INFEASIBLE
     assert score(_kpi(energy=float("inf")), ObjectiveWeights()) == INFEASIBLE
+
+
+def test_inlet_forecast_margin_default_is_noop():
+    from planner.objective import ObjectiveWeights, is_feasible
+    from planner.types import WeeklyKPI
+    k = WeeklyKPI(total_hvac_energy_kwh=10.0, pue_mean=1.2, inlet_temp_max=25.5,
+                  inlet_violation_steps=0, rh_violation_steps=0, feasible=True)
+    assert is_feasible(k, ObjectiveWeights())                      # margin 0 -> feasible
+
+
+def test_inlet_forecast_margin_tightens_gate():
+    from planner.objective import ObjectiveWeights, is_feasible
+    from planner.types import WeeklyKPI
+    # inlet 25.5 + margin 1.0 = 26.5 > 26 cap -> rejected even with 0 violation steps
+    k = WeeklyKPI(total_hvac_energy_kwh=10.0, pue_mean=1.2, inlet_temp_max=25.5,
+                  inlet_violation_steps=0, rh_violation_steps=0, feasible=True)
+    assert not is_feasible(k, ObjectiveWeights(inlet_forecast_margin=1.0))
+    assert is_feasible(k, ObjectiveWeights(inlet_forecast_margin=0.4))   # 25.9 <= 26 -> ok

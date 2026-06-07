@@ -28,12 +28,16 @@ class ObjectiveWeights:
     inlet_tol_steps: int = 0      # hard: allowed inlet-violation steps
     rh_hard: bool = False         # if True, rh violations are also a hard constraint
     rh_tol_steps: int = 0
+    inlet_forecast_margin: float = 0.0   # deg C: pre-tighten the inlet cap (default off)
+    inlet_cap: float = 26.0              # hard ITE inlet limit used by the margin gate
 
 
 def is_feasible(kpi: WeeklyKPI, w: ObjectiveWeights) -> bool:
     if not kpi.feasible:
         return False
     if kpi.inlet_violation_steps > w.inlet_tol_steps:
+        return False
+    if w.inlet_forecast_margin > 0.0 and (kpi.inlet_temp_max + w.inlet_forecast_margin) > w.inlet_cap:
         return False
     if w.rh_hard and kpi.rh_violation_steps > w.rh_tol_steps:
         return False
