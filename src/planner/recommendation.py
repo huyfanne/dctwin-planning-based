@@ -36,6 +36,9 @@ def build_recommendation(
     confidence_bands: Optional[dict] = None,
     n_scenarios: Optional[int] = None,
     calibration_version: Optional[str] = None,
+    raw_kpi: Optional[WeeklyKPI] = None,
+    robust_substituted: bool = False,
+    scenario_diagnostics: Optional[list] = None,
 ) -> dict:
     week_end = week_start + timedelta(days=days - 1)
     reduction = (
@@ -69,11 +72,21 @@ def build_recommendation(
         rec["schema_version"] = "1.1"
         rec["robust"] = {
             "robust_feasible": robust_feasible,
+            "robust_substituted": robust_substituted,
             "cvar_energy_kwh": cvar_energy_kwh,
             "confidence_bands": confidence_bands or {},
+            "scenario_diagnostics": scenario_diagnostics or [],
             "n_scenarios": n_scenarios,
             "calibration_version": calibration_version,
         }
+    if raw_kpi is not None:
+        rec["predicted_kpis_raw"] = {
+            "total_hvac_energy_kwh": raw_kpi.total_hvac_energy_kwh,
+            "pue_mean": raw_kpi.pue_mean,
+            "inlet_temp_max_c": raw_kpi.inlet_temp_max,
+            "inlet_violation_steps": raw_kpi.inlet_violation_steps,
+        }
+        rec["schema_version"] = "1.2"
     return rec
 
 

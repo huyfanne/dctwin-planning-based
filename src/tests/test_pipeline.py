@@ -26,7 +26,7 @@ def test_run_weekly_plan_returns_recommendation_dict():
         baseline_energy_kwh=200.0,
         on_level=lambda l, e, b: levels.append(l),
     )
-    assert rec["schema_version"] == "1.0"
+    assert rec["schema_version"] == "1.2"
     assert rec["week_start"] == "2013-11-11"
     assert set(rec["setpoints"]) == {
         "crah_supply_air_temperature_c",
@@ -69,7 +69,8 @@ def test_run_weekly_plan_applies_robust_rerank():
     assert rec["setpoints"]["crah_supply_air_temperature_c"] == 21.0
     assert rec["robust"]["robust_feasible"] is True
     assert rec["robust"]["cvar_energy_kwh"] == 1010.0
-    assert rec["schema_version"] == "1.1"
+    assert rec["schema_version"] == "1.2"
+    assert rec["predicted_kpis_raw"]["total_hvac_energy_kwh"] == 999.0
 
 
 def test_run_weekly_plan_without_robust_unchanged():
@@ -79,7 +80,7 @@ def test_run_weekly_plan_without_robust_unchanged():
         evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
         forecaster=_FakeForecaster(),
     )
-    assert "robust" not in rec and rec["schema_version"] == "1.0"
+    assert "robust" not in rec and rec["schema_version"] == "1.2"
 
 
 def test_run_weekly_plan_blocks_when_not_robust_feasible():
