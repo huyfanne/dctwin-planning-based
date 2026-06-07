@@ -36,6 +36,11 @@ class PlanStore:
                     reduction_pct REAL
                 )"""
             )
+            # additive migration: realized energy for the History trend
+            try:
+                c.execute("ALTER TABLE plans ADD COLUMN realized_energy_kwh REAL")
+            except sqlite3.OperationalError:
+                pass  # column already exists
 
     def plan_dir(self, plan_id: str) -> Path:
         d = self.runs_dir / plan_id
@@ -72,6 +77,9 @@ class PlanStore:
 
     def save_realized(self, plan_id: str, realized: dict) -> None:
         (self.plan_dir(plan_id) / "realized.json").write_text(json.dumps(realized, indent=2))
+        with self._conn() as c:
+            c.execute("UPDATE plans SET realized_energy_kwh=? WHERE plan_id=?",
+                      (realized.get("total_hvac_energy_kwh"), plan_id))
 
     def get_realized(self, plan_id: str) -> Optional[dict]:
         p = self.plan_dir(plan_id) / "realized.json"

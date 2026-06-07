@@ -87,3 +87,14 @@ def test_get_trajectory_missing_is_empty(tmp_path):
     store = PlanStore(runs_dir=str(tmp_path / "runs"), db_path=str(tmp_path / "i.db"))
     store.plan_dir("p2")
     assert store.get_trajectory("p2") == {"nominal": [], "worst": []}
+
+
+def test_save_realized_records_energy_in_index(tmp_path):
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "runs"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("p1", "2013-11-11", {})
+    store.save_realized("p1", {"total_hvac_energy_kwh": 31000.0, "inlet_violation_steps": 0})
+    row = store.get_plan_row("p1")
+    assert row["realized_energy_kwh"] == 31000.0
+    assert any(p["plan_id"] == "p1" and p["realized_energy_kwh"] == 31000.0
+               for p in store.list_plans())
