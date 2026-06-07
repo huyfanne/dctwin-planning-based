@@ -30,14 +30,17 @@ def advance_history(realized: dict, week_start: date, his_csv: str) -> None:
 
 
 def refit_from_history(forecaster_pkl: str = "models/forecaster.pkl") -> None:
-    """Re-run the forecaster fit so the next plan sees the advanced history.
+    """Documented NO-OP seam (sim-only v1).
 
-    P2 seam — not yet wired.  This function is a placeholder for the P2
-    calibration/uncertainty/robust loop; it will be connected once the
-    realized-history file (data/realized_history.csv) is large enough to
-    support re-fitting.  Do not delete."""
-    import runpy
-    runpy.run_path("fit_forecaster.py", run_name="__main__")
+    In sim-only mode the realized IT-load EQUALS the forecast we injected (the
+    perturbed plant degrades cooling, not load), and the realized record is
+    aggregate weekly KPIs — schema-incompatible with the forecaster's per-step
+    IT-load CSV. So there is no forecaster feedback to apply: the realized-feedback
+    path is the CALIBRATION loop (advance_calibration -> recompute_calibration ->
+    corrected objective). This seam activates only with real per-step telemetry
+    (parked with the BMS/telemetry work). Mirrors planner.recalibrator.recalibrate.
+    Do not delete."""
+    return None
 
 
 def advance_calibration(predicted: dict, realized: dict, week_start: date,
