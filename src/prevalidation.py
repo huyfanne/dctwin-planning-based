@@ -33,7 +33,8 @@ def _setpoints_from_rec(rec: dict) -> Setpoints:
 
 
 def run_prevalidation(recommendation_path: str, evaluator, baseline: Setpoints,
-                      out_dir: str = "log/prevalidation", project_root: str = ".") -> dict:
+                      out_dir: str = "log/prevalidation", project_root: str = ".",
+                      worst_evaluator=None) -> dict:
     """Independently replay the RECOMMENDED setpoints (not the stored predicted_kpis)
     and compare against a baseline run. Emits report.md + trajectory_ai.csv into out_dir."""
     rec = json.loads(Path(recommendation_path).read_text())
@@ -56,18 +57,36 @@ def run_prevalidation(recommendation_path: str, evaluator, baseline: Setpoints,
     Path(out_dir, "report.md").write_text(report)
     if rows:
         write_trajectory_csv(rows, str(Path(out_dir) / "trajectory_ai.csv"))
+    if worst_evaluator is not None and hasattr(worst_evaluator, "replay_with_trajectory"):
+        _wk, wsamples = worst_evaluator.replay_with_trajectory(recommended, forecast)
+        wrows = step_trajectory(wsamples, hours_per_step=0.25, settings=OracleSettings(warmup_steps=0))
+        if wrows:
+            write_trajectory_csv(wrows, str(Path(out_dir) / "trajectory_worst.csv"))
     return metrics
 
 
 def run_prevalidation_with_oracle(recommendation_path: str, dt_engine_config: str,
                                   baseline: Setpoints, out_dir: str = "log/prevalidation",
                                   project_root: str = ".") -> dict:
-    """Production wrapper: build the real ParallelEnvOracle and run an independent replay."""
-    orc = ParallelEnvOracle(base_prototxt=dt_engine_config, project_root=project_root,
-                            config=OracleConfig(n_workers=1, use_process_pool=False,
-                                                log_root=str(Path(out_dir) / "oracle")))
-    return run_prevalidation(recommendation_path, evaluator=orc, baseline=baseline,
-                             out_dir=out_dir, project_root=project_root)
+    """Production wrapper: nominal replay + the deterministic max-perturbation scenario replay."""
+    from pathlib import Path
+    from planner.calibrator import load_calibration
+    from planner.plant import DEFAULT_PLANT, build_plant_prototxt
+    from planner.robust import make_scenarios, scenario_spread
+
+    nominal = ParallelEnvOracle(base_prototxt=dt_engine_config, project_root=project_root,
+                                config=OracleConfig(n_workers=1, use_process_pool=False,
+                                                    log_root=str(Path(out_dir) / "oracle")))
+    spread = scenario_spread(load_calibration("data/calibration.json"))
+    # make_scenarios scales the (degrading, <1) DEFAULT_PLANT factors by m in [1-spread, 1+spread];
+    # index [0] is the SMALLEST m -> most-degraded -> HOTTEST plant. ([-1] would be the coolest.)
+    worst_plant = make_scenarios(DEFAULT_PLANT, 4, spread)[0]   # hottest (most-degraded) scenario
+    worst_proto = build_plant_prototxt(dt_engine_config, worst_plant, str(Path(out_dir) / "worst"))
+    worst = ParallelEnvOracle(base_prototxt=worst_proto, project_root=project_root,
+                              config=OracleConfig(n_workers=1, use_process_pool=False,
+                                                  log_root=str(Path(out_dir) / "worst" / "oracle")))
+    return run_prevalidation(recommendation_path, evaluator=nominal, baseline=baseline,
+                             out_dir=out_dir, project_root=project_root, worst_evaluator=worst)
 
 
 if __name__ == "__main__":
