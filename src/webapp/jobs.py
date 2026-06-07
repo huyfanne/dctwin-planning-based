@@ -13,6 +13,14 @@ logger = logging.getLogger(__name__)
 RunnerFn = Callable[[str, dict, PlanStore, Callable[[dict], None]], None]
 
 
+def robust_weights_for(calibration):
+    """The margin-adjusted ObjectiveWeights for the robust rerank — same k*sigma
+    pre-tighten the inner search uses, so the robust gate is consistent."""
+    from planner.objective import ObjectiveWeights
+    from planner.pipeline import apply_forecast_margin
+    return apply_forecast_margin(ObjectiveWeights(), calibration)
+
+
 class JobRunner:
     """Single-worker background runner for plan + deploy jobs (one at a time)."""
 
@@ -88,7 +96,6 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
     from dctwin.utils import config as dt_config
     from planner.calibrator import load_calibration
     from planner.forecaster import build_forecaster
-    from planner.objective import ObjectiveWeights
     from planner.oracle import OracleConfig, ParallelEnvOracle
     from planner.pipeline import PlanRequest, run_weekly_plan
     from planner.robust import make_oracle_robust_rerank
@@ -116,7 +123,7 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
         base_prototxt=dt_cfg,
         oracle_config=oracle.config,
         calibration=calibration,
-        weights=ObjectiveWeights(),
+        weights=robust_weights_for(calibration),
         n_scenarios=int(params.get("n_scenarios", 4)),
         log_root=str(plan_dir / "robust"),
     )

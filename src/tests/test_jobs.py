@@ -133,3 +133,15 @@ def test_residual_source_prefers_raw_predicted():
     assert residual_predicted_for(rec) == {"inlet_temp_max_c": 25.0}
     # backward-compat: old recs without raw fall back to predicted_kpis
     assert residual_predicted_for({"predicted_kpis": {"inlet_temp_max_c": 25.0}}) == {"inlet_temp_max_c": 25.0}
+
+
+def test_robust_rerank_weights_carry_the_margin():
+    from webapp.jobs import robust_weights_for
+    from planner.calibrator import Calibration, SIGMA_PRIOR
+    from planner.pipeline import K_SIGMA
+    cal = Calibration(bias={}, sigma={"inlet_temp_max_c": 0.5}, n_weeks=2, version="weeks-2")
+    w = robust_weights_for(cal)
+    assert abs(w.inlet_forecast_margin - K_SIGMA * 0.5) < 1e-9
+    # cold start uses the prior
+    w0 = robust_weights_for(Calibration.identity())
+    assert w0.inlet_forecast_margin == K_SIGMA * SIGMA_PRIOR["inlet_temp_max_c"]
