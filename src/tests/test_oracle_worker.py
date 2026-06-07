@@ -67,3 +67,18 @@ def test_run_episode_aggregates_over_steps():
     kpi = run_episode(env, action, m, hours_per_step=0.25, settings=OracleSettings())
     assert kpi.feasible
     assert kpi.total_hvac_energy_kwh == 0.5
+
+
+def test_run_episode_with_samples_returns_kpi_and_per_step():
+    from planner.oracle_worker import run_episode_with_samples
+    # reset sample (step 0) + 8 stepped samples -> indices 0..8 read, so 10 values is safe
+    traces = {"total power": [1200.0] * 10, "total it power": [1000.0] * 10,
+              "inlet_a": [24.0] * 10}
+    env = _FakeEnv(traces, n_steps=9)
+    mon = MonitorSpec(total_power_name="total power", it_power_name="total it power",
+                      inlet_temp_names=["inlet_a"], inlet_rh_names=[], zone_temp_names=[])
+    kpi, samples = run_episode_with_samples(env, np.zeros(3), mon,
+                                            hours_per_step=0.25, settings=OracleSettings(warmup_steps=0))
+    assert kpi.feasible
+    assert len(samples) == 9              # reset sample + 8 in-loop samples
+    assert samples[0].inlet_temps == [24.0]

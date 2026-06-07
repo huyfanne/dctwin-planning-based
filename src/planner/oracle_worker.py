@@ -38,9 +38,9 @@ def read_step_sample(unwrapped, monitor: MonitorSpec) -> StepSample:
     )
 
 
-def run_episode(env, action: np.ndarray, monitor: MonitorSpec,
-                hours_per_step: float, settings: OracleSettings) -> WeeklyKPI:
-    """Step a (already-built) env to completion with a fixed action; aggregate KPI."""
+def run_episode_with_samples(env, action: np.ndarray, monitor: MonitorSpec,
+                             hours_per_step: float, settings: OracleSettings):
+    """Like run_episode but also returns the per-step StepSample list."""
     samples: list[StepSample] = []
     env.reset()
     samples.append(read_step_sample(env.unwrapped, monitor))
@@ -49,7 +49,14 @@ def run_episode(env, action: np.ndarray, monitor: MonitorSpec,
         _obs, _rew, done, _trunc, _info = env.step(action)
         if not done:
             samples.append(read_step_sample(env.unwrapped, monitor))
-    return aggregate_kpi(samples, hours_per_step, settings)
+    return aggregate_kpi(samples, hours_per_step, settings), samples
+
+
+def run_episode(env, action: np.ndarray, monitor: MonitorSpec,
+                hours_per_step: float, settings: OracleSettings) -> WeeklyKPI:
+    """Step a (already-built) env to completion with a fixed action; aggregate KPI."""
+    kpi, _samples = run_episode_with_samples(env, action, monitor, hours_per_step, settings)
+    return kpi
 
 
 def _infeasible(error: str) -> WeeklyKPI:
@@ -94,6 +101,39 @@ def evaluate_one(task: EvalTask) -> WeeklyKPI:
     except Exception as exc:  # noqa: BLE001 - intentional: isolate candidate failures
         logger.warning("candidate %s failed: %s", task.candidate, exc)
         return _infeasible(str(exc))
+    finally:
+        if env is not None:
+            try:
+                env.close()
+            except Exception:
+                pass
+
+
+def evaluate_one_with_samples(task: EvalTask):
+    """Like evaluate_one but returns (WeeklyKPI, list[StepSample]). For the inline
+    trajectory replay only (never the process pool). Returns (_infeasible(), []) on failure."""
+    import dctwin
+    from dctwin.utils import config as dt_config
+    from planner.env_actions import mapper_from_env
+    from planner.monitor import discover_monitor
+    import dctwin.third_parties.eplus.core as _eplus_core
+    _eplus_core.EplusBackendMixin._post_process = staticmethod(lambda: None)
+
+    env = None
+    try:
+        dt_config.set_log_dir(task.log_dir)
+        env = dctwin.make_env(env_proto_config=task.week_config_path, reward_fn=lambda x: 0)
+        backend = getattr(getattr(env, "unwrapped", env), "eplus_backend", None)
+        if backend is not None and task.bcvtb_host:
+            backend._host = task.bcvtb_host
+        broadcaster = mapper_from_env(env)
+        monitor = discover_monitor(env, hall=task.monitored_hall)
+        action = broadcaster.expand(Setpoints(*task.candidate))
+        return run_episode_with_samples(env, action, monitor, task.hours_per_step,
+                                        OracleSettings(**task.settings_kwargs))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("trajectory candidate %s failed: %s", task.candidate, exc)
+        return _infeasible(str(exc)), []
     finally:
         if env is not None:
             try:

@@ -139,3 +139,24 @@ def test_oracle_passes_weather_file_to_week_config(tmp_path, monkeypatch):
     oracle = O.ParallelEnvOracle("configs/dt/dt.prototxt")
     oracle._write_week_cfg(fc, str(tmp_path / "w.prototxt"))
     assert captured["weather_file"] == "data/weather/Singapore_Changi_Nov2024-Jan2025.epw"
+
+
+def test_replay_with_trajectory_uses_sample_worker():
+    from planner.oracle import ParallelEnvOracle, OracleConfig
+    from planner.types import Setpoints, WeeklyKPI
+    from planner.kpi import StepSample
+    calls = {}
+    fake_kpi = WeeklyKPI(total_hvac_energy_kwh=10.0, pue_mean=1.2, inlet_temp_max=24.0,
+                         inlet_violation_steps=0, rh_violation_steps=0, feasible=True)
+    fake_samples = [StepSample(total_power_w=1200.0, it_power_w=1000.0, inlet_temps=[24.0])]
+
+    def fake_sample_worker(task):
+        calls["candidate"] = task.candidate
+        return fake_kpi, fake_samples
+
+    orc = ParallelEnvOracle(base_prototxt="configs/dt/dt.prototxt",
+                            config=OracleConfig(use_process_pool=False, log_root="log/test_replay"),
+                            sample_worker_fn=fake_sample_worker)
+    kpi, samples = orc.replay_with_trajectory(Setpoints(22.0, 7.0, 15.0), forecast=None)
+    assert kpi is fake_kpi and samples is fake_samples
+    assert calls["candidate"] == (22.0, 7.0, 15.0)
