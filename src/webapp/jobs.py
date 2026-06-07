@@ -160,6 +160,12 @@ def deploy_status_for(realized: dict) -> str:
     return "deploy_blocked" if realized.get("inlet_violation_steps", 0) > 0 else "deployed"
 
 
+def residual_predicted_for(rec: dict) -> dict:
+    """Calibration residuals must be fit against the RAW (uncalibrated) prediction,
+    not the already-corrected predicted_kpis (which would double-correct). Spec §4.3b."""
+    return rec.get("predicted_kpis_raw") or rec.get("predicted_kpis", {})
+
+
 def run_deploy_job(plan_id: str, store: PlanStore,
                    progress_cb: Callable[[dict], None]) -> None:
     """Run the PERTURBED PLANT for the approved week, persist realized KPIs, advance
@@ -205,7 +211,7 @@ def run_deploy_job(plan_id: str, store: PlanStore,
     store.save_realized(plan_id, realized)
     # ALWAYS learn from the realized week (esp. the bad ones) ...
     advance_history(realized, week_start, "data/realized_history.csv")
-    advance_calibration(rec.get("predicted_kpis", {}), realized, week_start,
+    advance_calibration(residual_predicted_for(rec), realized, week_start,
                         "data/calibration_history.json")
     recompute_calibration("data/calibration_history.json", "data/calibration.json")
     # ... but only call the week 'deployed' if it did NOT breach on the real plant.

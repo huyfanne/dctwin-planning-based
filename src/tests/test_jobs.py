@@ -124,3 +124,12 @@ def test_deploy_status_blocked_on_realized_breach(tmp_path):
     assert deploy_status_for({"inlet_violation_steps": 666}) == "deploy_blocked"
     assert deploy_status_for({"inlet_violation_steps": 0}) == "deployed"
     assert deploy_status_for({}) == "deployed"  # missing key -> treat as no recorded breach
+
+
+def test_residual_source_prefers_raw_predicted():
+    from webapp.jobs import residual_predicted_for
+    rec = {"predicted_kpis": {"inlet_temp_max_c": 27.0},        # calibrated (already +2)
+           "predicted_kpis_raw": {"inlet_temp_max_c": 25.0}}    # raw
+    assert residual_predicted_for(rec) == {"inlet_temp_max_c": 25.0}
+    # backward-compat: old recs without raw fall back to predicted_kpis
+    assert residual_predicted_for({"predicted_kpis": {"inlet_temp_max_c": 25.0}}) == {"inlet_temp_max_c": 25.0}
