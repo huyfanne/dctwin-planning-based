@@ -125,4 +125,6 @@ def run_weekly_plan(
         scenario_diagnostics=(robust.scenario_diagnostics if robust else None),
         scenarios_ok=(robust.scenarios_ok if robust else None),
         forecast_meta=forecast_meta,
+        inlet_forecast_margin=weights.inlet_forecast_margin,
+        k_sigma=K_SIGMA,
     )
