@@ -11,8 +11,9 @@ ROLE_LEVELS = {"operator": 1, "expert": 2}
 class TokenAuth:
     """Bearer-token auth with two roles (operator < expert)."""
 
-    def __init__(self, tokens: dict[str, str]):
+    def __init__(self, tokens: dict[str, str], insecure: bool = False):
         self.tokens = tokens  # token -> role
+        self.insecure = insecure
 
     @classmethod
     def from_env(cls) -> "TokenAuth":
@@ -21,16 +22,17 @@ class TokenAuth:
             tokens[os.environ["OPERATOR_TOKEN"]] = "operator"
         if os.environ.get("EXPERT_TOKEN"):
             tokens[os.environ["EXPERT_TOKEN"]] = "expert"
-        return cls(tokens)
+        return cls(tokens, insecure=os.environ.get("DTWIN_INSECURE") == "1")
 
     def role_for(self, token: str) -> Optional[str]:
         return self.tokens.get(token)
 
     def check(self, authorization: Optional[str], min_role: str) -> str:
-        # No tokens configured -> auth disabled: allow everything as the highest
-        # role. Set OPERATOR_TOKEN / EXPERT_TOKEN env vars to enforce auth.
         if not self.tokens:
-            return "expert"
+            # fail-closed: no tokens configured -> deny, unless DTWIN_INSECURE=1 dev opt-in
+            if self.insecure:
+                return "expert"
+            raise HTTPException(status_code=401, detail="auth not configured")
         if not authorization or not authorization.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="missing bearer token")
         token = authorization.split(" ", 1)[1]
