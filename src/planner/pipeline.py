@@ -64,6 +64,14 @@ def run_weekly_plan(
     n_steps = request.days * 24 * request.timesteps_per_hour
     forecast = forecaster.forecast(request.week_start, n_steps)
 
+    import os
+    _wf = getattr(forecast, "weather_file", None)
+    forecast_meta = {
+        "method": getattr(forecast, "method", "persistence"),
+        "weather": os.path.basename(_wf) if _wf else "TMY-window",
+        "bands": getattr(forecast, "bands", None) is not None,
+    }
+
     planner = BeamPlanner(space, evaluator, weights, beam, calibration=calibration)
     result = planner.plan(forecast, on_level=on_level, on_eval=on_eval)
 
@@ -97,4 +105,5 @@ def run_weekly_plan(
         raw_kpi=raw,
         robust_substituted=(robust.robust_substituted if robust else False),
         scenario_diagnostics=(robust.scenario_diagnostics if robust else None),
+        forecast_meta=forecast_meta,
     )
