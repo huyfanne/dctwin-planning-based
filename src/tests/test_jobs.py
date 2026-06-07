@@ -116,3 +116,11 @@ def test_robust_rerank_fn_composes(tmp_path, monkeypatch):
                                    None, ObjectiveWeights(), 2, str(tmp_path), oracle_cls=_Oracle)
     rr = fn([(sp, nominal, 100.0)], forecast=None)
     assert isinstance(rr, RobustResult) and rr.n_scenarios == 2
+
+
+def test_deploy_status_blocked_on_realized_breach(tmp_path):
+    from webapp.jobs import deploy_status_for
+    # a realized week with inlet violations must NOT be marked 'deployed'
+    assert deploy_status_for({"inlet_violation_steps": 666}) == "deploy_blocked"
+    assert deploy_status_for({"inlet_violation_steps": 0}) == "deployed"
+    assert deploy_status_for({}) == "deployed"  # missing key -> treat as no recorded breach

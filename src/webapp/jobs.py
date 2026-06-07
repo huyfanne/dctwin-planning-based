@@ -154,6 +154,12 @@ def pickle_load(path: str) -> dict:
     return pickle.loads(Path(path).read_bytes())
 
 
+def deploy_status_for(realized: dict) -> str:
+    """0-tolerance hard cap (spec §4.3): any realized inlet violation on the real
+    deploy plant blocks the deploy, even though we still record + learn from it."""
+    return "deploy_blocked" if realized.get("inlet_violation_steps", 0) > 0 else "deployed"
+
+
 def run_deploy_job(plan_id: str, store: PlanStore,
                    progress_cb: Callable[[dict], None]) -> None:
     """Run the PERTURBED PLANT for the approved week, persist realized KPIs, advance
@@ -195,9 +201,12 @@ def run_deploy_job(plan_id: str, store: PlanStore,
     )
 
     rec = deploy(rec_path, plant_oracle, forecast=forecast)
-    store.save_realized(plan_id, rec["realized_kpis"])
-    advance_history(rec["realized_kpis"], week_start, "data/realized_history.csv")
-    advance_calibration(rec.get("predicted_kpis", {}), rec["realized_kpis"], week_start,
+    realized = rec["realized_kpis"]
+    store.save_realized(plan_id, realized)
+    # ALWAYS learn from the realized week (esp. the bad ones) ...
+    advance_history(realized, week_start, "data/realized_history.csv")
+    advance_calibration(rec.get("predicted_kpis", {}), realized, week_start,
                         "data/calibration_history.json")
     recompute_calibration("data/calibration_history.json", "data/calibration.json")
-    store.set_status(plan_id, "deployed")
+    # ... but only call the week 'deployed' if it did NOT breach on the real plant.
+    store.set_status(plan_id, deploy_status_for(realized))
