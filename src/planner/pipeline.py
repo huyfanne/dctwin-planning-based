@@ -49,9 +49,12 @@ def run_weekly_plan(
     robust = None
     if robust_rerank_fn is not None and result.beam_finalists:
         robust = robust_rerank_fn(result.beam_finalists, forecast)
-        result.best, result.best_kpi = robust.winner, robust.winner_kpi
 
-    if result.feasible:
+    if robust is not None:
+        # when the robust ensemble ran, robust feasibility is decisive
+        best, kpi = robust.winner, robust.winner_kpi
+        status = "pending_approval" if robust.robust_feasible else "blocked_unsafe"
+    elif result.feasible:
         best, kpi, status = result.best, result.best_kpi, "pending_approval"
     else:
         fb = Setpoints(space.sat.lb, space.flow.ub, space.chwst.lb)
