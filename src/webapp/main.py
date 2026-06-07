@@ -70,6 +70,8 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
             raise HTTPException(404, "no recommendation yet")
         if not can_transition(row["status"], PlanStatus.APPROVED):
             raise HTTPException(409, f"cannot approve from {row['status']!r}")
+        if rec.get("needs_revalidation"):
+            raise HTTPException(409, "setpoints edited — re-validate before approving")
         rec["status"] = PlanStatus.APPROVED
         store.save_recommendation(plan_id, rec)
         return {"status": PlanStatus.APPROVED}
@@ -102,9 +104,17 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
     @app.patch("/api/plans/{plan_id}/setpoints")
     def edit_setpoints(plan_id: str, edit: SetpointEdit, role: str = Depends(expert)):
         rec = store.get_recommendation(plan_id)
-        if rec is None:
+        row = store.get_plan_row(plan_id)
+        if rec is None or row is None:
             raise HTTPException(404, "no recommendation yet")
+        if row["status"] not in (PlanStatus.PENDING_APPROVAL, PlanStatus.BLOCKED_UNSAFE):
+            raise HTTPException(409, f"cannot edit setpoints from {row['status']!r}")
         rec["setpoints"] = edit.model_dump()
+        # edited setpoints invalidate the stale prediction — force re-validation before approve
+        rec["predicted_kpis"] = None
+        rec["predicted_kpis_raw"] = None
+        rec.pop("robust", None)
+        rec["needs_revalidation"] = True
         store.save_recommendation(plan_id, rec)
         return rec["setpoints"]
 

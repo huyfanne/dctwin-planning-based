@@ -140,3 +140,26 @@ def test_get_calibration(tmp_path, monkeypatch):
     body = r.json()
     assert body["n_weeks"] == 2
     assert body["bias"]["inlet_temp_max_c"] == 1.0
+
+
+_SP = {"crah_supply_air_temperature_c": 22.0,
+       "crah_supply_air_mass_flow_rate_kg_s": 7.0,
+       "chilled_water_supply_temperature_c": 15.0}
+
+
+def test_patch_setpoints_rejected_after_approval(client):
+    pid = client.post("/api/plans", json={"week_start": "2013-11-11"},
+                      headers=_op()).json()["plan_id"]
+    client.post(f"/api/plans/{pid}/approve", headers=_ex())          # -> approved
+    r = client.patch(f"/api/plans/{pid}/setpoints", json=_SP, headers=_ex())
+    assert r.status_code == 409
+
+
+def test_patch_setpoints_invalidates_kpis_and_blocks_approval(client):
+    pid = client.post("/api/plans", json={"week_start": "2013-11-11"},
+                      headers=_op()).json()["plan_id"]
+    client.patch(f"/api/plans/{pid}/setpoints", json=_SP, headers=_ex())
+    rec = client.get(f"/api/plans/{pid}", headers=_ex()).json()["recommendation"]
+    assert rec["predicted_kpis"] is None and rec.get("needs_revalidation") is True
+    # approval is blocked until re-validation
+    assert client.post(f"/api/plans/{pid}/approve", headers=_ex()).status_code == 409
