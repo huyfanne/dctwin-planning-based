@@ -147,5 +147,20 @@ def test_plan_exposes_beam_finalists():
     res = BeamPlanner(DEFAULT_SEARCH_SPACE, ev, ObjectiveWeights(), cfg).plan()
     assert hasattr(res, "beam_finalists")
     assert 1 <= len(res.beam_finalists) <= 4
-    s0, k0, sc0 = res.beam_finalists[0]
+    s0, k0, sc0 = res.beam_finalists[0][:3]
     assert (s0, k0, sc0) == (res.best, res.best_kpi, res.best_score)
+
+
+def test_plan_result_exposes_raw_uncalibrated_kpi():
+    from planner.beam_search import BeamPlanner, BeamConfig
+    from planner.mock_evaluator import MockEvaluator, MockSurface
+    from planner.types import DEFAULT_SEARCH_SPACE
+    cal = Calibration(bias={"inlet_temp_max_c": 2.0}, sigma={"inlet_temp_max_c": 1.0},
+                      n_weeks=1, version="weeks-1")
+    planner = BeamPlanner(DEFAULT_SEARCH_SPACE, MockEvaluator(MockSurface(inlet_cap=999.0)),
+                          config=BeamConfig(grid=3, beam_width=2, levels=1), calibration=cal)
+    result = planner.plan()
+    # calibrated best_kpi has the +2.0 inlet bias; raw does not
+    assert result.best_kpi.inlet_temp_max == result.best_kpi_raw.inlet_temp_max + 2.0
+    # finalists carry the raw kpi as a 4th tuple element
+    assert len(result.beam_finalists[0]) == 4
