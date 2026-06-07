@@ -160,3 +160,26 @@ def test_apply_forecast_margin_is_idempotent():
     w1 = apply_forecast_margin(ObjectiveWeights(), cal)
     w2 = apply_forecast_margin(w1, cal)          # applying twice == once (sets, not adds)
     assert w2.inlet_forecast_margin == w1.inlet_forecast_margin
+
+
+def test_run_weekly_plan_applies_margin_from_calibration():
+    cal = Calibration(bias={}, sigma={"inlet_temp_max_c": 0.6}, n_weeks=2, version="weeks-2")
+    captured = {}
+    real_planner = None
+    import planner.pipeline as pp
+
+    class _SpyPlanner(pp.BeamPlanner):
+        def __init__(self, space, evaluator, weights, *args, **kwargs):
+            captured["margin"] = weights.inlet_forecast_margin
+            super().__init__(space, evaluator, weights, *args, **kwargs)
+
+    orig = pp.BeamPlanner
+    pp.BeamPlanner = _SpyPlanner
+    try:
+        run_weekly_plan(
+            PlanRequest(week_start=date(2013, 11, 11), days=7, grid=4, beam_width=3, levels=2),
+            evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
+            forecaster=_FakeForecaster(), calibration=cal)
+    finally:
+        pp.BeamPlanner = orig
+    assert abs(captured["margin"] - K_SIGMA * 0.6) < 1e-9

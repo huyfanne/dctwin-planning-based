@@ -75,6 +75,7 @@ def run_weekly_plan(
     """
     space = DEFAULT_SEARCH_SPACE
     weights = weights or ObjectiveWeights()
+    weights = apply_forecast_margin(weights, calibration)
     beam = BeamConfig(grid=request.grid, beam_width=request.beam_width, levels=request.levels)
     validate_plan_request(request, weights, beam)
 
