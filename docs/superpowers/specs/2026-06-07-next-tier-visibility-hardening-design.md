@@ -48,7 +48,7 @@ real oracle capture per-step samples is part of this tier.
 |---|---|
 | Scope | All 4 NEXT items in one spec (visibility + 3 hardening items). |
 | Review trajectory | **Nominal + worst-case scenario** overlay — see the breach risk *before* approving. |
-| "Worst-case" plant | The deterministic **max-perturbation** scenario (`make_scenarios(...)[-1]`), not threaded from the rerank — simpler + reproducible. |
+| "Worst-case" plant | The deterministic **max-perturbation** (hottest) scenario — `make_scenarios(...)[0]` (smallest multiplier → most-degraded → hottest; DEFAULT_PLANT factors are <1), not threaded from the rerank — simpler + reproducible. |
 | Item 3 forecast | Re-enable real-weather pkl + honest labels/bands (schema 1.3) + a **forecast-margin hook that defaults OFF** (no-op on flat data). |
 
 ## 4. Component design
@@ -66,7 +66,7 @@ inline single-candidate run (no process pool) using a sample-returning variant o
 `worst_evaluator`. When provided, it also replays the recommended setpoints on it and writes
 `trajectory_worst.csv` alongside `trajectory_ai.csv` (both via `step_trajectory` + `write_trajectory_csv`).
 `run_prevalidation_with_oracle` builds the worst-case oracle deterministically: the max-perturbation plant
-`make_scenarios(DEFAULT_PLANT, n_scenarios, scenario_spread(load_calibration()))[-1]` →
+`make_scenarios(DEFAULT_PLANT, n_scenarios, scenario_spread(load_calibration()))[0]` (hottest/most-degraded) →
 `build_plant_prototxt` → a 1-worker `ParallelEnvOracle`. So `runs/<id>/prevalidation/` holds both CSVs.
 
 **A3 — backend** (`webapp/main.py`, `webapp/store.py`).
