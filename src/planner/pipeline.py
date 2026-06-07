@@ -1,13 +1,30 @@
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
 from datetime import date
 from typing import Any, Callable, Optional
 
 from planner.beam_search import BeamConfig, BeamPlanner
+from planner.calibrator import SIGMA_PRIOR
 from planner.objective import ObjectiveWeights
 from planner.recommendation import build_recommendation
 from planner.types import DEFAULT_SEARCH_SPACE, Evaluator, Setpoints
+
+
+K_SIGMA = 1.0   # inlet pre-tighten = K_SIGMA * sigma_inlet (on by default)
+
+
+def apply_forecast_margin(weights: "ObjectiveWeights", calibration,
+                          k_sigma: float = K_SIGMA) -> "ObjectiveWeights":
+    """Set inlet_forecast_margin = k * sigma_inlet so the search treats the inlet cap
+    as (cap - margin). sigma comes from calibration once realized weeks exist, else the
+    cold-start SIGMA_PRIOR. Idempotent (sets, never accumulates). calibration None -> unchanged."""
+    if calibration is None:
+        return weights
+    sigma = (calibration.sigma_for("inlet_temp_max_c") if calibration.n_weeks > 0
+             else SIGMA_PRIOR["inlet_temp_max_c"])
+    return dataclasses.replace(weights, inlet_forecast_margin=k_sigma * sigma)
 
 
 @dataclass

@@ -130,3 +130,33 @@ def test_validate_plan_request_accepts_defaults():
 def test_validate_plan_request_rejects(beam, weights, days, msg):
     with pytest.raises(ValueError, match=msg):
         validate_plan_request(PlanRequest(week_start=date(2013, 11, 11), days=days), weights, beam)
+
+
+from planner.pipeline import apply_forecast_margin, K_SIGMA
+from planner.objective import ObjectiveWeights
+from planner.calibrator import Calibration, SIGMA_PRIOR
+
+
+def test_apply_forecast_margin_none_calibration_is_noop():
+    w = ObjectiveWeights()
+    assert apply_forecast_margin(w, None) is w   # unchanged object
+
+
+def test_apply_forecast_margin_cold_start_uses_prior():
+    cal = Calibration.identity()                 # n_weeks == 0
+    w = apply_forecast_margin(ObjectiveWeights(), cal)
+    assert w.inlet_forecast_margin == K_SIGMA * SIGMA_PRIOR["inlet_temp_max_c"]
+
+
+def test_apply_forecast_margin_uses_sigma_when_weeks_exist():
+    cal = Calibration(bias={"inlet_temp_max_c": 2.0}, sigma={"inlet_temp_max_c": 0.4},
+                      n_weeks=3, version="weeks-3")
+    w = apply_forecast_margin(ObjectiveWeights(), cal)
+    assert abs(w.inlet_forecast_margin - K_SIGMA * 0.4) < 1e-9
+
+
+def test_apply_forecast_margin_is_idempotent():
+    cal = Calibration(bias={}, sigma={"inlet_temp_max_c": 0.4}, n_weeks=3, version="weeks-3")
+    w1 = apply_forecast_margin(ObjectiveWeights(), cal)
+    w2 = apply_forecast_margin(w1, cal)          # applying twice == once (sets, not adds)
+    assert w2.inlet_forecast_margin == w1.inlet_forecast_margin
