@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell,
+  LineChart, Line, ReferenceLine, Legend,
 } from 'recharts';
 import {
   listPlans, getPlan, approvePlan, rejectPlan, editSetpoints, deployPlan, getCalibration,
-  type PlanSummary, type PlanDetail, type CalibrationState,
+  getTrajectory,
+  type PlanSummary, type PlanDetail, type CalibrationState, type Trajectory,
 } from '../api';
 
 interface Props {
@@ -76,6 +78,7 @@ export default function Review({ planId: initialPlanId }: Props) {
   const [saving, setSaving]       = useState(false);
   const [acting, setActing]       = useState(false);
   const [cal, setCal]             = useState<CalibrationState | null>(null);
+  const [traj, setTraj]           = useState<Trajectory | null>(null);
 
   // Load calibration state on mount
   useEffect(() => {
@@ -110,6 +113,7 @@ export default function Review({ planId: initialPlanId }: Props) {
       })
       .catch(e => setError(e instanceof Error ? e.message : 'Failed to load plan'))
       .finally(() => setLoading(false));
+    getTrajectory(selectedId).then(setTraj).catch(() => setTraj(null));
   }, [selectedId]);
 
   async function handleApprove() {
@@ -557,6 +561,33 @@ export default function Review({ planId: initialPlanId }: Props) {
               </div>
             </div>
           </div>
+
+          {traj && (traj.nominal.length > 0 || traj.worst.length > 0) && (
+            <div className="card animate-in animate-in-4">
+              <div className="card-header">
+                <span className="card-title">Inlet Trajectory</span>
+                <span className="text-xs text-dim">nominal vs worst-case scenario · 26 °C cap</span>
+              </div>
+              <div className="card-body">
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={(traj.nominal.length ? traj.nominal : traj.worst).map((r, i) => ({
+                    step: r.step,
+                    nominal: traj.nominal[i]?.inlet_temp_max_c ?? null,
+                    worst: traj.worst[i]?.inlet_temp_max_c ?? null,
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" vertical={false} />
+                    <XAxis dataKey="step" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+                    <YAxis domain={[20, 32]} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} width={40} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <ReferenceLine y={26} stroke="var(--red)" strokeDasharray="4 4" label="26°C cap" />
+                    <Line type="monotone" dataKey="nominal" name="Nominal" stroke="rgba(0,200,255,0.9)" dot={false} />
+                    <Line type="monotone" dataKey="worst" name="Worst scenario" stroke="rgba(239,68,68,0.9)" dot={false} />
+                    <Legend />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
 
         </div>
       )}

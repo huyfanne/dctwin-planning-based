@@ -53,6 +53,7 @@ class RobustResult:
     winner_kpi_raw: WeeklyKPI = None        # the winner's pre-calibration nominal kpi
     robust_substituted: bool = False        # winner != the energy-optimal beam finalist
     scenario_diagnostics: Optional[list] = None   # per-scenario inlet/feasibility for the winner
+    scenarios_ok: int = 0                   # scenarios that evaluated successfully
 
 
 def _cvar(values: list, alpha: float) -> float:
@@ -69,14 +70,21 @@ def _quantile(values: list, q: float) -> float:
 
 
 def robust_select(finalists: list, scenario_kpis: list,
-                  weights: ObjectiveWeights, alpha: float = 0.8) -> RobustResult:
+                  weights: ObjectiveWeights, alpha: float = 0.8,
+                  n_requested: Optional[int] = None) -> RobustResult:
     """finalists: list of (Setpoints, WeeklyKPI, score). scenario_kpis[i]: the list
-    of per-scenario WeeklyKPI for finalist i. Worst-case inlet feasibility (feasible
-    in EVERY scenario) + CVaR_alpha energy; ties broken by lowest CVaR energy. If no
-    finalist is robust-feasible, fall back to the least-bad by CVaR energy."""
+    of per-scenario WeeklyKPI for finalist i. Worst-case inlet feasibility + CVaR_alpha
+    energy; ties broken by lowest CVaR energy. If no finalist is robust-feasible, fall
+    back to the least-bad by CVaR energy. A finalist counts as robust-feasible only if
+    it has >= ceil(n_requested/2) successful scenarios AND every successful scenario is
+    feasible."""
+    import math as _math
     n_scen = len(scenario_kpis[0]) if scenario_kpis else 0
+    req = n_requested if n_requested is not None else n_scen
+    min_ok = _math.ceil(req / 2) if req else 0
     robust_feasible = [
-        bool(ks) and all(is_feasible(k, weights) for k in ks) for ks in scenario_kpis
+        bool(ks) and len(ks) >= min_ok and all(is_feasible(k, weights) for k in ks)
+        for ks in scenario_kpis
     ]
     pool = [i for i, ok in enumerate(robust_feasible) if ok] or list(range(len(finalists)))
 
@@ -87,19 +95,19 @@ def robust_select(finalists: list, scenario_kpis: list,
     bands = {}
     for key in ROBUST_KEYS:
         vals = [getattr(k, _RKEY_FIELD[key]) for k in scenario_kpis[win]]
-        bands[key] = {"p50": _quantile(vals, 0.5), "p90": _quantile(vals, 0.9), "max": max(vals)}
+        bands[key] = {"p50": _quantile(vals, 0.5), "p90": _quantile(vals, 0.9), "max": max(vals)} if vals else {}
     raw = finalists[win][3] if len(finalists[win]) > 3 else finalists[win][1]
     diagnostics = [
-        {"scenario": j,
-         "inlet_temp_max_c": scenario_kpis[win][j].inlet_temp_max,
+        {"scenario": j, "inlet_temp_max_c": scenario_kpis[win][j].inlet_temp_max,
          "feasible": is_feasible(scenario_kpis[win][j], weights)}
-        for j in range(n_scen)
+        for j in range(len(scenario_kpis[win]))
     ]
     return RobustResult(
         winner=finalists[win][0], winner_kpi=finalists[win][1],
         robust_feasible=robust_feasible[win], cvar_energy_kwh=cvar_e(win),
-        confidence_bands=bands, n_scenarios=n_scen, winner_kpi_raw=raw,
-        robust_substituted=(win != 0), scenario_diagnostics=diagnostics)
+        confidence_bands=bands, n_scenarios=req, winner_kpi_raw=raw,
+        robust_substituted=(win != 0), scenario_diagnostics=diagnostics,
+        scenarios_ok=len(scenario_kpis[win]))
 
 
 def make_oracle_robust_rerank(base_prototxt, oracle_config, calibration,
@@ -121,12 +129,16 @@ def make_oracle_robust_rerank(base_prototxt, oracle_config, calibration,
         per_finalist = [[] for _ in finalists]
         for j, sc in enumerate(scenarios):
             sdir = str(Path(log_root) / f"scenario-{j:02d}")
-            sproto = build_plant_prototxt(base_prototxt, sc, sdir)
-            oracle = oracle_cls(
-                base_prototxt=sproto, project_root=".",
-                config=replace(oracle_config, log_root=str(Path(sdir) / "oracle")))
-            for i, k in enumerate(oracle.evaluate(setpoints, forecast=forecast)):
-                per_finalist[i].append(k)
-        return robust_select(finalists, per_finalist, weights)
+            try:
+                sproto = build_plant_prototxt(base_prototxt, sc, sdir)
+                oracle = oracle_cls(
+                    base_prototxt=sproto, project_root=".",
+                    config=replace(oracle_config, log_root=str(Path(sdir) / "oracle")))
+                for i, k in enumerate(oracle.evaluate(setpoints, forecast=forecast)):
+                    per_finalist[i].append(k)
+            except Exception:  # noqa: BLE001 - a failed scenario is dropped, never fatal
+                import logging
+                logging.getLogger(__name__).warning("robust scenario %d failed; dropping", j)
+        return robust_select(finalists, per_finalist, weights, n_requested=len(scenarios))
 
     return rerank

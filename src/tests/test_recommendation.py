@@ -107,3 +107,31 @@ def test_build_recommendation_emits_raw_kpis_schema_1_2():
     assert rec["schema_version"] == "1.2"
     assert rec["predicted_kpis"]["inlet_temp_max_c"] == 27.0      # calibrated (shown)
     assert rec["predicted_kpis_raw"]["inlet_temp_max_c"] == 25.0  # raw (for fitting)
+
+
+def test_build_recommendation_forecast_meta_schema_1_3():
+    from planner.recommendation import build_recommendation
+    from planner.types import Setpoints, WeeklyKPI
+    from datetime import date
+    kpi = WeeklyKPI(total_hvac_energy_kwh=100.0, pue_mean=1.2, inlet_temp_max=24.0,
+                    inlet_violation_steps=0, rh_violation_steps=0, feasible=True)
+    rec = build_recommendation(
+        setpoints=Setpoints(22.0, 7.0, 15.0), kpi=kpi, week_start=date(2013, 11, 11),
+        days=7, forecast_method="persistence", search_meta={"evals": 1},
+        forecast_meta={"method": "persistence", "weather": "Singapore_Changi_Nov2024-Jan2025.epw",
+                       "bands": False})
+    assert rec["schema_version"] == "1.3"
+    assert rec["forecast"]["weather"] == "Singapore_Changi_Nov2024-Jan2025.epw"
+    assert rec["forecast"]["bands"] is False
+
+
+def test_build_recommendation_defaults_tmy_without_forecast_meta():
+    from planner.recommendation import build_recommendation
+    from planner.types import Setpoints, WeeklyKPI
+    from datetime import date
+    kpi = WeeklyKPI(total_hvac_energy_kwh=100.0, pue_mean=1.2, inlet_temp_max=24.0,
+                    inlet_violation_steps=0, rh_violation_steps=0, feasible=True)
+    rec = build_recommendation(setpoints=Setpoints(22.0, 7.0, 15.0), kpi=kpi,
+                               week_start=date(2013, 11, 11), days=7,
+                               forecast_method="persistence", search_meta={"evals": 1})
+    assert rec["forecast"] == {"method": "persistence", "weather": "TMY-window"}

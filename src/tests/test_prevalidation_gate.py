@@ -47,3 +47,28 @@ def test_run_prevalidation_independent_replay_emits_artifacts(tmp_path, monkeypa
     assert metrics["ai_energy_kwh"] != 1.0
     assert (tmp_path / "report.md").exists()
     assert (tmp_path / "trajectory_ai.csv").exists()
+
+
+def test_run_prevalidation_emits_worst_trajectory(tmp_path):
+    import json
+    from datetime import date
+    from planner.recommendation import build_recommendation
+    from planner.types import Setpoints, WeeklyKPI
+    from planner.mock_evaluator import MockEvaluator, MockSurface
+    import prevalidation
+
+    kpi = WeeklyKPI(total_hvac_energy_kwh=100.0, pue_mean=1.2, inlet_temp_max=24.0,
+                    inlet_violation_steps=0, rh_violation_steps=0, feasible=True)
+    rec = build_recommendation(setpoints=Setpoints(22.0, 7.0, 15.0), kpi=kpi,
+                               week_start=date(2013, 11, 11), days=1, forecast_method="persistence",
+                               search_meta={"evals": 1})
+    rec_path = tmp_path / "recommendation.json"
+    rec_path.write_text(json.dumps(rec))
+
+    nominal = MockEvaluator(MockSurface(inlet_cap=999.0))
+    worst = MockEvaluator(MockSurface(inlet_cap=999.0))
+    prevalidation.run_prevalidation(str(rec_path), evaluator=nominal,
+                                    baseline=Setpoints(24.0, 13.8, 13.0),
+                                    out_dir=str(tmp_path), worst_evaluator=worst)
+    assert (tmp_path / "trajectory_ai.csv").exists()
+    assert (tmp_path / "trajectory_worst.csv").exists()

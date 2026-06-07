@@ -44,6 +44,17 @@ def main(his_csv: str = "data/his_data_processed.csv",
          method: str = "persistence",
          out_path: str = "models/forecaster.pkl",
          weather_file: str | None = None) -> None:
+    """Fit the forecaster config and write the pkl.
+
+    To regenerate the production pkl carrying the real EPW (data/ is gitignored;
+    this is a runtime step, not a committed artifact):
+
+        env -C /mnt/lv/home/hoanghuy/newcode/dctwin/src \
+            /mnt/lv/home/hoanghuy/newcode/dctwin/.venv-dtwin/bin/python -c \
+            "import fit_forecaster; fit_forecaster.main(weather_file='data/weather/Singapore_Changi_Nov2024-Jan2025.epw')"
+
+    `weather_file` is recorded in the pkl config and threaded pkl -> forecaster -> oracle.
+    """
     columns = pd.read_csv(his_csv, nrows=0).columns.tolist()
     room2ite = json.loads(Path(room2ite_path).read_text())
     his_col_for_room = build_his_col_for_room(room2ite, columns)

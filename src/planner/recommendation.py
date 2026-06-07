@@ -39,6 +39,8 @@ def build_recommendation(
     raw_kpi: Optional[WeeklyKPI] = None,
     robust_substituted: bool = False,
     scenario_diagnostics: Optional[list] = None,
+    scenarios_ok: Optional[int] = None,
+    forecast_meta: Optional[dict] = None,
 ) -> dict:
     week_end = week_start + timedelta(days=days - 1)
     reduction = (
@@ -64,7 +66,8 @@ def build_recommendation(
             "inlet_violation_steps": kpi.inlet_violation_steps,
             "energy_reduction_vs_baseline_pct": reduction,
         },
-        "forecast": {"method": forecast_method, "weather": "TMY-window"},
+        "forecast": forecast_meta if forecast_meta is not None
+                    else {"method": forecast_method, "weather": "TMY-window"},
         "search": dict(search_meta),
         "status": status,
     }
@@ -77,6 +80,7 @@ def build_recommendation(
             "confidence_bands": confidence_bands or {},
             "scenario_diagnostics": scenario_diagnostics or [],
             "n_scenarios": n_scenarios,
+            "scenarios_ok": scenarios_ok,
             "calibration_version": calibration_version,
         }
     if raw_kpi is not None:
@@ -87,6 +91,8 @@ def build_recommendation(
             "inlet_violation_steps": raw_kpi.inlet_violation_steps,
         }
         rec["schema_version"] = "1.2"
+    if forecast_meta is not None:
+        rec["schema_version"] = "1.3"
     return rec
 
 

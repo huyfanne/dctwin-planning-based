@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 import math
 import sqlite3
@@ -35,6 +36,11 @@ class PlanStore:
                     reduction_pct REAL
                 )"""
             )
+            # additive migration: realized energy for the History trend
+            try:
+                c.execute("ALTER TABLE plans ADD COLUMN realized_energy_kwh REAL")
+            except sqlite3.OperationalError:
+                pass  # column already exists
 
     def plan_dir(self, plan_id: str) -> Path:
         d = self.runs_dir / plan_id
@@ -71,6 +77,9 @@ class PlanStore:
 
     def save_realized(self, plan_id: str, realized: dict) -> None:
         (self.plan_dir(plan_id) / "realized.json").write_text(json.dumps(realized, indent=2))
+        with self._conn() as c:
+            c.execute("UPDATE plans SET realized_energy_kwh=? WHERE plan_id=?",
+                      (realized.get("total_hvac_energy_kwh"), plan_id))
 
     def get_realized(self, plan_id: str) -> Optional[dict]:
         p = self.plan_dir(plan_id) / "realized.json"
@@ -103,3 +112,22 @@ class PlanStore:
         with self._conn() as c:
             r = c.execute("SELECT * FROM plans WHERE plan_id=?", (plan_id,)).fetchone()
         return dict(r) if r else None
+
+    def _read_traj_csv(self, path: Path) -> list[dict]:
+        if not path.exists():
+            return []
+        rows = []
+        with path.open() as f:
+            for r in csv.DictReader(f):
+                rows.append({
+                    "step": int(r["step"]),
+                    "inlet_temp_max_c": None if r["inlet_temp_max_c"] == "" else float(r["inlet_temp_max_c"]),
+                    "hvac_power_kw": None if r["hvac_power_kw"] == "" else float(r["hvac_power_kw"]),
+                    "pue": None if r["pue"] == "" else float(r["pue"]),
+                })
+        return rows
+
+    def get_trajectory(self, plan_id: str) -> dict:
+        pdir = self.plan_dir(plan_id) / "prevalidation"
+        return {"nominal": self._read_traj_csv(pdir / "trajectory_ai.csv"),
+                "worst": self._read_traj_csv(pdir / "trajectory_worst.csv")}

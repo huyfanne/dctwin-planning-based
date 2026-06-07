@@ -163,3 +163,23 @@ def test_patch_setpoints_invalidates_kpis_and_blocks_approval(client):
     assert rec["predicted_kpis"] is None and rec.get("needs_revalidation") is True
     # approval is blocked until re-validation
     assert client.post(f"/api/plans/{pid}/approve", headers=_ex()).status_code == 409
+
+
+def test_create_plan_rejects_bad_grid(client):
+    r = client.post("/api/plans", json={"week_start": "2013-11-11", "grid": 1}, headers=_op())
+    assert r.status_code == 422
+    assert "grid" in r.json()["detail"]
+
+
+def test_create_plan_accepts_valid(client):
+    r = client.post("/api/plans", json={"week_start": "2013-11-11", "grid": 5}, headers=_op())
+    assert r.status_code == 202
+
+
+def test_get_trajectory_endpoint(client):
+    from webapp.store import PlanStore  # noqa: F401
+    pid = client.post("/api/plans", json={"week_start": "2013-11-11"}, headers=_op()).json()["plan_id"]
+    r = client.get(f"/api/plans/{pid}/trajectory", headers=_op())
+    assert r.status_code == 200
+    body = r.json()
+    assert "nominal" in body and "worst" in body  # empty until a real run emits CSVs

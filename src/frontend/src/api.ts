@@ -5,6 +5,7 @@ export interface PlanParams {
 export interface PlanSummary {
   plan_id: string; week_start: string; status: string;
   energy_kwh: number | null; reduction_pct: number | null;
+  realized_energy_kwh: number | null;
 }
 export interface Recommendation {
   status: string;
@@ -104,3 +105,7 @@ export interface CalibrationState {
   version: string;
 }
 export const getCalibration = () => req<CalibrationState>(`/api/calibration`);
+
+export interface TrajRow { step: number; inlet_temp_max_c: number | null; hvac_power_kw: number | null; pue: number | null; }
+export interface Trajectory { nominal: TrajRow[]; worst: TrajRow[]; }
+export const getTrajectory = (id: string) => req<Trajectory>(`/api/plans/${id}/trajectory`);

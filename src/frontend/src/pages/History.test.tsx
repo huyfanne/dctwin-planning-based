@@ -89,4 +89,12 @@ describe('History', () => {
       expect(screen.getByText(/4 records/i)).toBeInTheDocument();
     });
   });
+
+  it('renders the predicted-vs-realized trend', async () => {
+    (listPlans as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { plan_id: 'p1', week_start: '2026-06-02', status: 'deployed', energy_kwh: 100, reduction_pct: 10, realized_energy_kwh: 120 },
+    ]);
+    render(<History onReview={() => {}} />);
+    await waitFor(() => expect(screen.getByText(/Predicted vs Realized/i)).toBeInTheDocument());
+  });
 });

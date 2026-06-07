@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional, Sequence
 
 from planner.kpi import OracleSettings
-from planner.oracle_worker import EvalTask, evaluate_one
+from planner.oracle_worker import EvalTask, evaluate_one, evaluate_one_with_samples
 from planner.types import Evaluator, Setpoints, WeeklyKPI
 from planner.week_config import write_week_config
 
@@ -41,11 +41,12 @@ class ParallelEnvOracle(Evaluator):
     """Score candidate weekly setpoints with real full-week EnergyPlus runs."""
 
     def __init__(self, base_prototxt: str, config: Optional[OracleConfig] = None,
-                 project_root: str = ".", worker_fn=None):
+                 project_root: str = ".", worker_fn=None, sample_worker_fn=None):
         self.base_prototxt = base_prototxt
         self.config = config or OracleConfig()
         self.project_root = project_root
         self._worker = worker_fn if worker_fn is not None else evaluate_one
+        self._sample_worker = sample_worker_fn
 
     def evaluate(self, candidates: Sequence[Setpoints],
                  forecast: Optional[Any] = None,
@@ -111,6 +112,28 @@ class ParallelEnvOracle(Evaluator):
         finally:
             ex.shutdown(wait=False, cancel_futures=True)
         return results
+
+    def replay_with_trajectory(self, setpoints: Setpoints, forecast: Optional[Any] = None):
+        """Inline single-candidate run that ALSO returns the per-step StepSample list.
+        Used by pre-validation to emit a trajectory CSV (never the process pool)."""
+        cfg = self.config
+        hours_per_step = 1.0 / cfg.timesteps_per_hour
+        if forecast is not None and hasattr(forecast, "materialize"):
+            forecast.materialize(self.project_root)
+        log_root = Path(cfg.log_root).resolve()
+        log_root.mkdir(parents=True, exist_ok=True)
+        if forecast is not None and getattr(forecast, "week_start", None) is not None:
+            week_cfg_path = str(log_root / "week.prototxt")
+            self._write_week_cfg(forecast, week_cfg_path)
+        else:
+            week_cfg_path = str(Path(self.base_prototxt).resolve())
+        task = EvalTask(
+            candidate=setpoints.as_tuple(), week_config_path=week_cfg_path,
+            log_dir=str(log_root / "replay"), hours_per_step=hours_per_step,
+            settings_kwargs=cfg.settings.__dict__, bcvtb_host=cfg.bcvtb_host,
+            monitored_hall=cfg.monitored_hall)
+        worker = self._sample_worker or evaluate_one_with_samples
+        return worker(task)
 
     def _write_week_cfg(self, forecast, week_cfg_path):
         return write_week_config(

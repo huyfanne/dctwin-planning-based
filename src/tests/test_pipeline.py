@@ -26,7 +26,8 @@ def test_run_weekly_plan_returns_recommendation_dict():
         baseline_energy_kwh=200.0,
         on_level=lambda l, e, b: levels.append(l),
     )
-    assert rec["schema_version"] == "1.2"
+    assert rec["schema_version"] == "1.3"
+    assert rec["forecast"] == {"method": "persistence", "weather": "TMY-window", "bands": False}
     assert rec["week_start"] == "2013-11-11"
     assert set(rec["setpoints"]) == {
         "crah_supply_air_temperature_c",
@@ -69,7 +70,7 @@ def test_run_weekly_plan_applies_robust_rerank():
     assert rec["setpoints"]["crah_supply_air_temperature_c"] == 21.0
     assert rec["robust"]["robust_feasible"] is True
     assert rec["robust"]["cvar_energy_kwh"] == 1010.0
-    assert rec["schema_version"] == "1.2"
+    assert rec["schema_version"] == "1.3"
     assert rec["predicted_kpis_raw"]["total_hvac_energy_kwh"] == 999.0
 
 
@@ -80,7 +81,7 @@ def test_run_weekly_plan_without_robust_unchanged():
         evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
         forecaster=_FakeForecaster(),
     )
-    assert "robust" not in rec and rec["schema_version"] == "1.2"
+    assert "robust" not in rec and rec["schema_version"] == "1.3"
 
 
 def test_run_weekly_plan_blocks_when_not_robust_feasible():
@@ -105,3 +106,27 @@ def test_run_weekly_plan_blocks_when_not_robust_feasible():
     assert rec["robust"]["robust_feasible"] is False
     # the robust winner (least-bad finalist) is still surfaced, not the coolest-corner fallback
     assert rec["setpoints"]["crah_supply_air_temperature_c"] == 21.0
+
+
+import pytest
+from planner.pipeline import validate_plan_request, PlanRequest
+from planner.beam_search import BeamConfig
+from planner.objective import ObjectiveWeights
+
+
+def test_validate_plan_request_accepts_defaults():
+    validate_plan_request(PlanRequest(week_start=date(2013, 11, 11)),
+                          ObjectiveWeights(), BeamConfig())  # no raise
+
+
+@pytest.mark.parametrize("beam,weights,days,msg", [
+    (BeamConfig(grid=1), ObjectiveWeights(), 7, "grid"),
+    (BeamConfig(beam_width=0), ObjectiveWeights(), 7, "beam_width"),
+    (BeamConfig(levels=-1), ObjectiveWeights(), 7, "levels"),
+    (BeamConfig(max_evals=0), ObjectiveWeights(), 7, "max_evals"),
+    (BeamConfig(), ObjectiveWeights(lambda_temp=-1.0), 7, "weight"),
+    (BeamConfig(), ObjectiveWeights(), 0, "days"),
+])
+def test_validate_plan_request_rejects(beam, weights, days, msg):
+    with pytest.raises(ValueError, match=msg):
+        validate_plan_request(PlanRequest(week_start=date(2013, 11, 11), days=days), weights, beam)
