@@ -17,6 +17,11 @@ _KEY_TO_FIELD = {
     "inlet_temp_max_c": "inlet_temp_max",
 }
 
+# Conservative per-KPI prior sigma (a floor at cold-start) and per-residual clip
+# (winsorize so one wild week can't dominate the bias). Spec §6.1.
+SIGMA_PRIOR = {"total_hvac_energy_kwh": 5000.0, "pue_mean": 0.05, "inlet_temp_max_c": 1.0}
+RESIDUAL_CLIP = {"total_hvac_energy_kwh": 50000.0, "pue_mean": 0.5, "inlet_temp_max_c": 3.0}
+
 
 @dataclass(frozen=True)
 class Calibration:
@@ -62,16 +67,24 @@ class Calibration:
 def fit_calibration(history: list) -> Calibration:
     bias, sigma = {}, {}
     for key in CALIB_KEYS:
+        clip = RESIDUAL_CLIP.get(key, float("inf"))
         res = []
         for e in history:
             p = e.get("predicted", {}).get(key)
             r = e.get("realized", {}).get(key)
             if p is not None and r is not None:
-                res.append(r - p)
+                res.append(max(-clip, min(clip, r - p)))   # winsorized residual
         if res:
             m = sum(res) / len(res)
             bias[key] = m
-            sigma[key] = (sum((x - m) ** 2 for x in res) / len(res)) ** 0.5 if len(res) > 1 else 0.0
+            n = len(res)
+            sample = (sum((x - m) ** 2 for x in res) / n) ** 0.5
+            prior = SIGMA_PRIOR.get(key, 0.0)
+            # Fading floor: a conservative prior that decays as 1/n toward the
+            # empirical sample std. At n=1 sample=0 so sigma=prior (never the
+            # sigma=0 cold-start poison); as weeks accumulate prior/n -> 0 and the
+            # sample std takes over. max() keeps it monotonically shrinking.
+            sigma[key] = max(sample, prior / n)
     n = len(history)
     return Calibration(bias=bias, sigma=sigma, n_weeks=n, version=f"weeks-{n}")
 
