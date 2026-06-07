@@ -105,3 +105,27 @@ def test_run_weekly_plan_blocks_when_not_robust_feasible():
     assert rec["robust"]["robust_feasible"] is False
     # the robust winner (least-bad finalist) is still surfaced, not the coolest-corner fallback
     assert rec["setpoints"]["crah_supply_air_temperature_c"] == 21.0
+
+
+import pytest
+from planner.pipeline import validate_plan_request, PlanRequest
+from planner.beam_search import BeamConfig
+from planner.objective import ObjectiveWeights
+
+
+def test_validate_plan_request_accepts_defaults():
+    validate_plan_request(PlanRequest(week_start=date(2013, 11, 11)),
+                          ObjectiveWeights(), BeamConfig())  # no raise
+
+
+@pytest.mark.parametrize("beam,weights,days,msg", [
+    (BeamConfig(grid=1), ObjectiveWeights(), 7, "grid"),
+    (BeamConfig(beam_width=0), ObjectiveWeights(), 7, "beam_width"),
+    (BeamConfig(levels=-1), ObjectiveWeights(), 7, "levels"),
+    (BeamConfig(max_evals=0), ObjectiveWeights(), 7, "max_evals"),
+    (BeamConfig(), ObjectiveWeights(lambda_temp=-1.0), 7, "weight"),
+    (BeamConfig(), ObjectiveWeights(), 0, "days"),
+])
+def test_validate_plan_request_rejects(beam, weights, days, msg):
+    with pytest.raises(ValueError, match=msg):
+        validate_plan_request(PlanRequest(week_start=date(2013, 11, 11), days=days), weights, beam)

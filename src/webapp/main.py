@@ -35,14 +35,30 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
 
     @app.post("/api/plans", response_model=PlanCreated, status_code=202)
     def create_plan(params: PlanParams, role: str = Depends(operator)):
+        from datetime import date as _date
+        from planner.pipeline import PlanRequest, validate_plan_request
+        from planner.beam_search import BeamConfig
+        from planner.objective import ObjectiveWeights
+        p = params.model_dump()
+
+        def _v(key, default):  # keep an explicit 0 (invalid), default only on None/missing
+            x = p.get(key)
+            return default if x is None else int(x)
+
+        try:
+            validate_plan_request(
+                PlanRequest(week_start=_date.fromisoformat(p["week_start"]), days=_v("days", 7)),
+                ObjectiveWeights(),
+                BeamConfig(grid=_v("grid", 5), beam_width=_v("beam_width", 5), levels=_v("levels", 3)))
+        except ValueError as e:
+            raise HTTPException(422, str(e))
+
         plan_id = f"gds-{params.week_start}-{uuid.uuid4().hex[:6]}"
-        store.create_plan(plan_id, params.week_start, params.model_dump())
+        store.create_plan(plan_id, params.week_start, p)
         if run_sync:
-            # tests / debug: run inline so the result is immediately available
-            job_runner.runner(plan_id, params.model_dump(), store,
-                              lambda p: store.write_progress(plan_id, p))
+            job_runner.runner(plan_id, p, store, lambda pr: store.write_progress(plan_id, pr))
         else:
-            job_runner.submit(plan_id, params.model_dump())
+            job_runner.submit(plan_id, p)
         return PlanCreated(plan_id=plan_id, status="queued")
 
     @app.get("/api/plans")

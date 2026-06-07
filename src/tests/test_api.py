@@ -163,3 +163,14 @@ def test_patch_setpoints_invalidates_kpis_and_blocks_approval(client):
     assert rec["predicted_kpis"] is None and rec.get("needs_revalidation") is True
     # approval is blocked until re-validation
     assert client.post(f"/api/plans/{pid}/approve", headers=_ex()).status_code == 409
+
+
+def test_create_plan_rejects_bad_grid(client):
+    r = client.post("/api/plans", json={"week_start": "2013-11-11", "grid": 1}, headers=_op())
+    assert r.status_code == 422
+    assert "grid" in r.json()["detail"]
+
+
+def test_create_plan_accepts_valid(client):
+    r = client.post("/api/plans", json={"week_start": "2013-11-11", "grid": 5}, headers=_op())
+    assert r.status_code == 202

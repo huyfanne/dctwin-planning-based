@@ -20,6 +20,26 @@ class PlanRequest:
     timesteps_per_hour: int = 4
 
 
+def validate_plan_request(request: "PlanRequest", weights: ObjectiveWeights,
+                          beam: BeamConfig) -> None:
+    """Fail-fast BEFORE any EnergyPlus run (spec §11). Raises ValueError on a
+    misconfigured request so a bad plan never launches hundreds of Docker runs."""
+    if beam.grid < 2:
+        raise ValueError(f"grid must be >= 2, got {beam.grid}")
+    if beam.beam_width < 1:
+        raise ValueError(f"beam_width must be >= 1, got {beam.beam_width}")
+    if beam.levels < 0:
+        raise ValueError(f"levels must be >= 0, got {beam.levels}")
+    if beam.max_evals <= 0:
+        raise ValueError(f"max_evals must be > 0, got {beam.max_evals}")
+    if request.days < 1:
+        raise ValueError(f"days must be >= 1, got {request.days}")
+    for name in ("lambda_temp", "lambda_rh", "lambda_zone"):
+        v = getattr(weights, name)
+        if v < 0:
+            raise ValueError(f"objective weight {name} must be >= 0, got {v}")
+
+
 def run_weekly_plan(
     request: PlanRequest,
     evaluator: Evaluator,
@@ -39,6 +59,7 @@ def run_weekly_plan(
     space = DEFAULT_SEARCH_SPACE
     weights = weights or ObjectiveWeights()
     beam = BeamConfig(grid=request.grid, beam_width=request.beam_width, levels=request.levels)
+    validate_plan_request(request, weights, beam)
 
     n_steps = request.days * 24 * request.timesteps_per_hour
     forecast = forecaster.forecast(request.week_start, n_steps)
