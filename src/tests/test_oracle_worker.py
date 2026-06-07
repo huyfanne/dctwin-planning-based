@@ -82,3 +82,24 @@ def test_run_episode_with_samples_returns_kpi_and_per_step():
     assert kpi.feasible
     assert len(samples) == 9              # reset sample + 8 in-loop samples
     assert samples[0].inlet_temps == [24.0]
+
+
+def test_teardown_container_is_best_effort():
+    from planner.oracle_worker import _teardown_container
+    calls = {"stopped": False}
+
+    class _Container:
+        def stop(self, timeout=5):
+            calls["stopped"] = True
+        def remove(self, force=True):
+            raise RuntimeError("already gone")   # must be swallowed
+
+    class _Backend:
+        container = _Container()
+
+    class _Env:
+        class unwrapped:
+            eplus_backend = _Backend()
+
+    _teardown_container(_Env())          # must not raise
+    assert calls["stopped"] is True

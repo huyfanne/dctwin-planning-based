@@ -67,6 +67,23 @@ def _infeasible(error: str) -> WeeklyKPI:
     )
 
 
+def _teardown_container(env) -> None:
+    """Best-effort stop+remove of the EnergyPlus Docker container so a hung/timed-out
+    run doesn't leak the container + BCVTB socket. Fully exception-guarded."""
+    backend = getattr(getattr(env, "unwrapped", env), "eplus_backend", None)
+    container = getattr(backend, "container", None)
+    if container is None:
+        return
+    try:
+        container.stop(timeout=5)
+    except Exception:
+        pass
+    try:
+        container.remove(force=True)
+    except Exception:
+        pass
+
+
 def evaluate_one(task: EvalTask) -> WeeklyKPI:
     """Top-level process-pool target: build env, run one full week, aggregate.
 
@@ -107,6 +124,7 @@ def evaluate_one(task: EvalTask) -> WeeklyKPI:
                 env.close()
             except Exception:
                 pass
+            _teardown_container(env)
 
 
 def evaluate_one_with_samples(task: EvalTask):
@@ -140,3 +158,4 @@ def evaluate_one_with_samples(task: EvalTask):
                 env.close()
             except Exception:
                 pass
+            _teardown_container(env)
