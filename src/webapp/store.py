@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 import math
 import sqlite3
@@ -103,3 +104,22 @@ class PlanStore:
         with self._conn() as c:
             r = c.execute("SELECT * FROM plans WHERE plan_id=?", (plan_id,)).fetchone()
         return dict(r) if r else None
+
+    def _read_traj_csv(self, path: Path) -> list[dict]:
+        if not path.exists():
+            return []
+        rows = []
+        with path.open() as f:
+            for r in csv.DictReader(f):
+                rows.append({
+                    "step": int(r["step"]),
+                    "inlet_temp_max_c": None if r["inlet_temp_max_c"] == "" else float(r["inlet_temp_max_c"]),
+                    "hvac_power_kw": None if r["hvac_power_kw"] == "" else float(r["hvac_power_kw"]),
+                    "pue": None if r["pue"] == "" else float(r["pue"]),
+                })
+        return rows
+
+    def get_trajectory(self, plan_id: str) -> dict:
+        pdir = self.plan_dir(plan_id) / "prevalidation"
+        return {"nominal": self._read_traj_csv(pdir / "trajectory_ai.csv"),
+                "worst": self._read_traj_csv(pdir / "trajectory_worst.csv")}

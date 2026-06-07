@@ -174,3 +174,12 @@ def test_create_plan_rejects_bad_grid(client):
 def test_create_plan_accepts_valid(client):
     r = client.post("/api/plans", json={"week_start": "2013-11-11", "grid": 5}, headers=_op())
     assert r.status_code == 202
+
+
+def test_get_trajectory_endpoint(client):
+    from webapp.store import PlanStore  # noqa: F401
+    pid = client.post("/api/plans", json={"week_start": "2013-11-11"}, headers=_op()).json()["plan_id"]
+    r = client.get(f"/api/plans/{pid}/trajectory", headers=_op())
+    assert r.status_code == 200
+    body = r.json()
+    assert "nominal" in body and "worst" in body  # empty until a real run emits CSVs

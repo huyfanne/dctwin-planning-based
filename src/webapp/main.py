@@ -78,6 +78,12 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
     def get_progress(plan_id: str, role: str = Depends(operator)):
         return store.read_progress(plan_id)
 
+    @app.get("/api/plans/{plan_id}/trajectory")
+    def get_trajectory(plan_id: str, role: str = Depends(operator)):
+        if store.get_plan_row(plan_id) is None:
+            raise HTTPException(404, "plan not found")
+        return store.get_trajectory(plan_id)
+
     @app.post("/api/plans/{plan_id}/approve")
     def approve(plan_id: str, role: str = Depends(expert)):
         rec = store.get_recommendation(plan_id)
