@@ -269,6 +269,11 @@ class Forecast:
 - **Expert supervision** = human gate: review the report; approve / reject / edit. The **web app (§14) is the primary interface** for this; a CLI action (`--approve`) and direct `status` editing remain as the underlying mechanism. No silent auto-deploy.
 - **Deployment (sim-only)**: on approval, `deploy.py` runs the **plant** (EnergyPlus) for the week with approved setpoints, logs realized KPIs; realized System Data feeds the next week's forecaster — closing the loop. Because twin = plant in v1, predicted ≈ realized; the roles stay separate so a future **perturbed-plant** mode or **real BMS adapter** slots into the same `deploy()` contract. BMS adapter is a documented stub in v1.
 
+> **Erratum (2026-06-07, LATER sub-project A):** in sim-only v1 the realized load equals the injected
+> forecast, so the realized-feedback path is the **calibration** loop (output-residual bias/σ → corrected
+> objective), not the forecaster. `refit_from_history` is a documented no-op seam that activates only with
+> real per-step telemetry. See `2026-06-07-close-prove-learning-loop-design.md` §4.2.
+
 ## 10. EnergyPlus & framework data formats (requirement #8)
 
 | Format | Role |

@@ -135,3 +135,18 @@ def test_build_recommendation_defaults_tmy_without_forecast_meta():
                                week_start=date(2013, 11, 11), days=7,
                                forecast_method="persistence", search_meta={"evals": 1})
     assert rec["forecast"] == {"method": "persistence", "weather": "TMY-window"}
+
+
+def test_build_recommendation_records_margin_schema_1_4():
+    from planner.recommendation import build_recommendation
+    from planner.types import Setpoints, WeeklyKPI
+    from datetime import date
+    kpi = WeeklyKPI(total_hvac_energy_kwh=100.0, pue_mean=1.2, inlet_temp_max=24.0,
+                    inlet_violation_steps=0, rh_violation_steps=0, feasible=True)
+    rec = build_recommendation(
+        setpoints=Setpoints(22.0, 7.0, 15.0), kpi=kpi, week_start=date(2013, 11, 11),
+        days=7, forecast_method="persistence", search_meta={"evals": 1},
+        inlet_forecast_margin=0.6, k_sigma=1.0)
+    assert rec["schema_version"] == "1.4"
+    assert rec["inlet_forecast_margin"] == 0.6
+    assert rec["k_sigma"] == 1.0

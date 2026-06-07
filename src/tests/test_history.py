@@ -61,3 +61,12 @@ def test_advance_calibration_idempotent_per_week(tmp_path):
     advance_calibration({"a": 10}, {"a": 20}, date(2013, 11, 11), path)
     hist = _json.loads(open(path).read())
     assert len(hist) == 1 and hist[0]["realized"]["a"] == 20
+
+
+def test_refit_from_history_is_documented_noop(tmp_path, monkeypatch):
+    import runpy
+    from planner.history import refit_from_history
+    called = {"ran": False}
+    monkeypatch.setattr(runpy, "run_path", lambda *a, **k: called.__setitem__("ran", True))
+    assert refit_from_history() is None          # returns None
+    assert called["ran"] is False                # does NOT re-run fit_forecaster

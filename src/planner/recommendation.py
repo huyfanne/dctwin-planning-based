@@ -41,6 +41,8 @@ def build_recommendation(
     scenario_diagnostics: Optional[list] = None,
     scenarios_ok: Optional[int] = None,
     forecast_meta: Optional[dict] = None,
+    inlet_forecast_margin: Optional[float] = None,
+    k_sigma: Optional[float] = None,
 ) -> dict:
     week_end = week_start + timedelta(days=days - 1)
     reduction = (
@@ -93,6 +95,10 @@ def build_recommendation(
         rec["schema_version"] = "1.2"
     if forecast_meta is not None:
         rec["schema_version"] = "1.3"
+    if inlet_forecast_margin is not None:
+        rec["inlet_forecast_margin"] = inlet_forecast_margin
+        rec["k_sigma"] = k_sigma
+        rec["schema_version"] = "1.4"
     return rec
 
 

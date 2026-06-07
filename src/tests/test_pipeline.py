@@ -26,7 +26,7 @@ def test_run_weekly_plan_returns_recommendation_dict():
         baseline_energy_kwh=200.0,
         on_level=lambda l, e, b: levels.append(l),
     )
-    assert rec["schema_version"] == "1.3"
+    assert rec["schema_version"] == "1.4"
     assert rec["forecast"] == {"method": "persistence", "weather": "TMY-window", "bands": False}
     assert rec["week_start"] == "2013-11-11"
     assert set(rec["setpoints"]) == {
@@ -70,7 +70,7 @@ def test_run_weekly_plan_applies_robust_rerank():
     assert rec["setpoints"]["crah_supply_air_temperature_c"] == 21.0
     assert rec["robust"]["robust_feasible"] is True
     assert rec["robust"]["cvar_energy_kwh"] == 1010.0
-    assert rec["schema_version"] == "1.3"
+    assert rec["schema_version"] == "1.4"
     assert rec["predicted_kpis_raw"]["total_hvac_energy_kwh"] == 999.0
 
 
@@ -81,7 +81,7 @@ def test_run_weekly_plan_without_robust_unchanged():
         evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
         forecaster=_FakeForecaster(),
     )
-    assert "robust" not in rec and rec["schema_version"] == "1.3"
+    assert "robust" not in rec and rec["schema_version"] == "1.4"
 
 
 def test_run_weekly_plan_blocks_when_not_robust_feasible():
@@ -130,3 +130,56 @@ def test_validate_plan_request_accepts_defaults():
 def test_validate_plan_request_rejects(beam, weights, days, msg):
     with pytest.raises(ValueError, match=msg):
         validate_plan_request(PlanRequest(week_start=date(2013, 11, 11), days=days), weights, beam)
+
+
+from planner.pipeline import apply_forecast_margin, K_SIGMA
+from planner.objective import ObjectiveWeights
+from planner.calibrator import Calibration, SIGMA_PRIOR
+
+
+def test_apply_forecast_margin_none_calibration_is_noop():
+    w = ObjectiveWeights()
+    assert apply_forecast_margin(w, None) is w   # unchanged object
+
+
+def test_apply_forecast_margin_cold_start_uses_prior():
+    cal = Calibration.identity()                 # n_weeks == 0
+    w = apply_forecast_margin(ObjectiveWeights(), cal)
+    assert w.inlet_forecast_margin == K_SIGMA * SIGMA_PRIOR["inlet_temp_max_c"]
+
+
+def test_apply_forecast_margin_uses_sigma_when_weeks_exist():
+    cal = Calibration(bias={"inlet_temp_max_c": 2.0}, sigma={"inlet_temp_max_c": 0.4},
+                      n_weeks=3, version="weeks-3")
+    w = apply_forecast_margin(ObjectiveWeights(), cal)
+    assert abs(w.inlet_forecast_margin - K_SIGMA * 0.4) < 1e-9
+
+
+def test_apply_forecast_margin_is_idempotent():
+    cal = Calibration(bias={}, sigma={"inlet_temp_max_c": 0.4}, n_weeks=3, version="weeks-3")
+    w1 = apply_forecast_margin(ObjectiveWeights(), cal)
+    w2 = apply_forecast_margin(w1, cal)          # applying twice == once (sets, not adds)
+    assert w2.inlet_forecast_margin == w1.inlet_forecast_margin
+
+
+def test_run_weekly_plan_applies_margin_from_calibration():
+    cal = Calibration(bias={}, sigma={"inlet_temp_max_c": 0.6}, n_weeks=2, version="weeks-2")
+    captured = {}
+    real_planner = None
+    import planner.pipeline as pp
+
+    class _SpyPlanner(pp.BeamPlanner):
+        def __init__(self, space, evaluator, weights, *args, **kwargs):
+            captured["margin"] = weights.inlet_forecast_margin
+            super().__init__(space, evaluator, weights, *args, **kwargs)
+
+    orig = pp.BeamPlanner
+    pp.BeamPlanner = _SpyPlanner
+    try:
+        run_weekly_plan(
+            PlanRequest(week_start=date(2013, 11, 11), days=7, grid=4, beam_width=3, levels=2),
+            evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
+            forecaster=_FakeForecaster(), calibration=cal)
+    finally:
+        pp.BeamPlanner = orig
+    assert abs(captured["margin"] - K_SIGMA * 0.6) < 1e-9
