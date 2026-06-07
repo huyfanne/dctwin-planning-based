@@ -40,7 +40,7 @@ def test_multi_week_loop_converges(tmp_path):
     calp = str(tmp_path / "calibration.json")
     cal = Calibration.identity()
 
-    sigmas, biases, realized_violations = [], [], []
+    sigmas, biases, realized_violations, statuses = [], [], [], []
     for wk in range(4):
         rec = run_weekly_plan(
             PlanRequest(week_start=date(2013, 11, 4 + wk), days=1, grid=4, beam_width=3, levels=2),
@@ -54,9 +54,12 @@ def test_multi_week_loop_converges(tmp_path):
         sigmas.append(cal.sigma["inlet_temp_max_c"])
         biases.append(cal.bias["inlet_temp_max_c"])
         realized_violations.append(rk.inlet_violation_steps)
+        statuses.append(rec["status"])
 
     assert realized_violations[0] > 0                         # week 1 breaches (nothing learned yet)
     assert all(v == 0 for v in realized_violations[1:])       # feasible once the bias is learned
+    # spec §4.3: the plan does not regress to a blocked/fallback status after convergence
+    assert all(s not in ("blocked_unsafe", "infeasible_fallback") for s in statuses[1:])
     assert sigmas == sorted(sigmas, reverse=True)             # sigma non-increasing (converges)
     assert abs(biases[-1] - biases[-2]) < 1e-6                # bias stabilized (fixed +2 C)
     assert abs(biases[-1] - 2.0) < 0.5                        # learned ~the true +2 C plant bias
