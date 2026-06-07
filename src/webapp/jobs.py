@@ -92,6 +92,7 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
     from planner.oracle import OracleConfig, ParallelEnvOracle
     from planner.pipeline import PlanRequest, run_weekly_plan
     from planner.robust import make_oracle_robust_rerank
+    from planner.types import Setpoints
 
     plan_dir = store.plan_dir(plan_id)
     dt_config.set_log_dir(str(plan_dir))
@@ -147,11 +148,34 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
     )
     store.save_recommendation(plan_id, rec)
 
+    # independent pre-validation replay -> runs/<id>/{report.md, trajectory_ai.csv}
+    try:
+        from prevalidation import run_prevalidation_with_oracle
+        from planner.types import DEFAULT_SEARCH_SPACE
+        space = DEFAULT_SEARCH_SPACE
+        baseline = Setpoints(space.sat.lb, space.flow.ub, space.chwst.lb)  # coolest/max-flow
+        run_prevalidation_with_oracle(str(plan_dir / "recommendation.json"), dt_cfg,
+                                      baseline=baseline, out_dir=str(plan_dir / "prevalidation"))
+    except Exception:  # noqa: BLE001 - pre-validation is advisory; never fail the plan on it
+        logger.exception("prevalidation for %s failed", plan_id)
+
 
 def pickle_load(path: str) -> dict:
     import pickle
     from pathlib import Path
     return pickle.loads(Path(path).read_bytes())
+
+
+def deploy_status_for(realized: dict) -> str:
+    """0-tolerance hard cap (spec §4.3): any realized inlet violation on the real
+    deploy plant blocks the deploy, even though we still record + learn from it."""
+    return "deploy_blocked" if realized.get("inlet_violation_steps", 0) > 0 else "deployed"
+
+
+def residual_predicted_for(rec: dict) -> dict:
+    """Calibration residuals must be fit against the RAW (uncalibrated) prediction,
+    not the already-corrected predicted_kpis (which would double-correct). Spec §4.3b."""
+    return rec.get("predicted_kpis_raw") or rec.get("predicted_kpis", {})
 
 
 def run_deploy_job(plan_id: str, store: PlanStore,
@@ -195,9 +219,12 @@ def run_deploy_job(plan_id: str, store: PlanStore,
     )
 
     rec = deploy(rec_path, plant_oracle, forecast=forecast)
-    store.save_realized(plan_id, rec["realized_kpis"])
-    advance_history(rec["realized_kpis"], week_start, "data/realized_history.csv")
-    advance_calibration(rec.get("predicted_kpis", {}), rec["realized_kpis"], week_start,
+    realized = rec["realized_kpis"]
+    store.save_realized(plan_id, realized)
+    # ALWAYS learn from the realized week (esp. the bad ones) ...
+    advance_history(realized, week_start, "data/realized_history.csv")
+    advance_calibration(residual_predicted_for(rec), realized, week_start,
                         "data/calibration_history.json")
     recompute_calibration("data/calibration_history.json", "data/calibration.json")
-    store.set_status(plan_id, "deployed")
+    # ... but only call the week 'deployed' if it did NOT breach on the real plant.
+    store.set_status(plan_id, deploy_status_for(realized))

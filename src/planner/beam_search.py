@@ -29,11 +29,12 @@ class PlanResult:
     evals: int
     feasible: bool
     history: list[float]     # best score after each level
+    best_kpi_raw: WeeklyKPI = None   # the winner's pre-calibration KPI (for residual fitting)
     beam_finalists: list = field(default_factory=list)   # final beam: list[_Scored]
 
 
-# a scored candidate: (setpoints, kpi, score)
-_Scored = tuple[Setpoints, WeeklyKPI, float]
+# a scored candidate: (setpoints, calibrated_kpi, score, raw_kpi)
+_Scored = tuple[Setpoints, WeeklyKPI, float, WeeklyKPI]
 
 
 def _coarse_grid(space: SearchSpace, g: int) -> list[Setpoints]:
@@ -109,7 +110,7 @@ class BeamPlanner:
             if evals >= cfg.max_evals:
                 break
             neigh: list[Setpoints] = []
-            for s, _kpi, _sc in beam:
+            for s, _kpi, _sc, _raw in beam:
                 neigh.extend(self._neighborhood(s, step, cfg.neighbors))
             neigh = neigh[: cfg.max_evals - evals]
             if not neigh:
@@ -128,17 +129,20 @@ class BeamPlanner:
             if prev_best != INFEASIBLE and abs(prev_best - new_best) < cfg.epsilon * max(abs(prev_best), 1.0):
                 break
 
-        best_s, best_kpi, best_sc = beam[0]
+        best_s, best_kpi, best_sc, best_raw = beam[0]
         feasible = best_sc != INFEASIBLE
         return PlanResult(best_s, best_kpi, best_sc, evals, feasible, history,
-                          beam_finalists=list(beam))
+                          best_kpi_raw=best_raw, beam_finalists=list(beam))
 
     def _score_batch(self, candidates: Sequence[Setpoints], forecast,
                      on_result: Optional[Callable[[], None]] = None) -> list[_Scored]:
-        kpis = self.evaluator.evaluate(candidates, forecast, on_result=on_result)
+        raw_kpis = self.evaluator.evaluate(candidates, forecast, on_result=on_result)
         if self.calibration is not None:
-            kpis = [self.calibration.apply(k) for k in kpis]
-        return [(c, k, score(k, self.weights)) for c, k in zip(candidates, kpis)]
+            cal_kpis = [self.calibration.apply(k) for k in raw_kpis]
+        else:
+            cal_kpis = raw_kpis
+        return [(c, kc, score(kc, self.weights), kr)
+                for c, kc, kr in zip(candidates, cal_kpis, raw_kpis)]
 
     @staticmethod
     def _top_b(scored: list[_Scored], b: int) -> list[_Scored]:

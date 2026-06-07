@@ -23,8 +23,8 @@ def test_fit_calibration_bias_and_sigma():
     assert cal.n_weeks == 2
     assert cal.bias["total_hvac_energy_kwh"] == 3.0
     assert cal.bias["inlet_temp_max_c"] == 1.0
-    assert math.isclose(cal.sigma["total_hvac_energy_kwh"], 1.0)
-    assert cal.sigma["inlet_temp_max_c"] == 0.0
+    assert math.isclose(cal.sigma["total_hvac_energy_kwh"], 2500.0)
+    assert cal.sigma["inlet_temp_max_c"] == 0.5
 
 
 def test_fit_calibration_identity_when_empty():
@@ -73,3 +73,38 @@ def test_recompute_calibration_from_history(tmp_path):
     cal = recompute_calibration(str(hpath), str(out))
     assert cal.bias["total_hvac_energy_kwh"] == 5.0
     assert load_calibration(str(out)).bias["total_hvac_energy_kwh"] == 5.0
+
+
+from planner.calibrator import SIGMA_PRIOR, RESIDUAL_CLIP
+
+
+def test_sigma_floor_at_cold_start():
+    # a single deploy must NOT yield sigma=0 (which would brick the next plan)
+    hist = [{"week_start": "2013-11-11",
+             "predicted": {"total_hvac_energy_kwh": 100.0, "pue_mean": 1.2, "inlet_temp_max_c": 24.0},
+             "realized":  {"total_hvac_energy_kwh": 130.0, "pue_mean": 1.2, "inlet_temp_max_c": 28.0}}]
+    cal = fit_calibration(hist)
+    assert cal.sigma["inlet_temp_max_c"] == SIGMA_PRIOR["inlet_temp_max_c"]
+    assert cal.sigma["inlet_temp_max_c"] > 0.0
+
+
+def test_residual_clip_bounds_one_wild_week():
+    # an absurd single residual is winsorized to the clip bound before it becomes the bias
+    hist = [{"week_start": "2013-11-11",
+             "predicted": {"inlet_temp_max_c": 24.0},
+             "realized":  {"inlet_temp_max_c": 24.0 + 10 * RESIDUAL_CLIP["inlet_temp_max_c"]}}]
+    cal = fit_calibration(hist)
+    assert cal.bias["inlet_temp_max_c"] == RESIDUAL_CLIP["inlet_temp_max_c"]
+
+
+def test_sigma_shrinks_toward_sample_as_n_grows():
+    # the conservative prior fades as 1/n toward the empirical sample std (~1.0 here)
+    # as weeks accumulate (residuals alternate +-1 around mean 0 -> sample std 1.0)
+    def sigma_for_n(n):
+        hist = [{"predicted": {"total_hvac_energy_kwh": 101.0},
+                 "realized":  {"total_hvac_energy_kwh": 101.0 + (1.0 if i % 2 else -1.0)}}
+                for i in range(n)]
+        return fit_calibration(hist).sigma["total_hvac_energy_kwh"]
+    s2, s10, s1000 = sigma_for_n(2), sigma_for_n(10), sigma_for_n(1000)
+    assert s2 > s10 > s1000          # monotonic shrinkage as n grows
+    assert s1000 < 10.0              # well below the 5000 prior, heading toward sample (~1.0)

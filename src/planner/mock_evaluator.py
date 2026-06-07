@@ -68,3 +68,13 @@ class MockEvaluator:
             if on_result is not None:
                 on_result()
         return out
+
+    def replay_with_trajectory(self, setpoints, forecast=None, n_steps: int = 8):
+        from planner.kpi import StepSample
+        kpi = self.evaluate([setpoints], forecast)[0]
+        samples = [
+            StepSample(total_power_w=1200.0, it_power_w=1000.0,
+                       inlet_temps=[kpi.inlet_temp_max])
+            for _ in range(n_steps)
+        ]
+        return kpi, samples

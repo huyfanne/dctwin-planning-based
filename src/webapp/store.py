@@ -57,7 +57,7 @@ class PlanStore:
 
     def save_recommendation(self, plan_id: str, rec: dict) -> None:
         (self.plan_dir(plan_id) / "recommendation.json").write_text(json.dumps(rec, indent=2))
-        kpis = rec.get("predicted_kpis", {})
+        kpis = rec.get("predicted_kpis") or {}
         with self._conn() as c:
             c.execute(
                 "UPDATE plans SET status=?, energy_kwh=?, reduction_pct=? WHERE plan_id=?",

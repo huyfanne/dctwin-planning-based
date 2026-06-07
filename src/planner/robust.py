@@ -50,6 +50,9 @@ class RobustResult:
     cvar_energy_kwh: float           # CVaR_alpha of energy across scenarios
     confidence_bands: dict           # {kpi_key: {"p50","p90","max"}}
     n_scenarios: int
+    winner_kpi_raw: WeeklyKPI = None        # the winner's pre-calibration nominal kpi
+    robust_substituted: bool = False        # winner != the energy-optimal beam finalist
+    scenario_diagnostics: Optional[list] = None   # per-scenario inlet/feasibility for the winner
 
 
 def _cvar(values: list, alpha: float) -> float:
@@ -85,10 +88,18 @@ def robust_select(finalists: list, scenario_kpis: list,
     for key in ROBUST_KEYS:
         vals = [getattr(k, _RKEY_FIELD[key]) for k in scenario_kpis[win]]
         bands[key] = {"p50": _quantile(vals, 0.5), "p90": _quantile(vals, 0.9), "max": max(vals)}
+    raw = finalists[win][3] if len(finalists[win]) > 3 else finalists[win][1]
+    diagnostics = [
+        {"scenario": j,
+         "inlet_temp_max_c": scenario_kpis[win][j].inlet_temp_max,
+         "feasible": is_feasible(scenario_kpis[win][j], weights)}
+        for j in range(n_scen)
+    ]
     return RobustResult(
         winner=finalists[win][0], winner_kpi=finalists[win][1],
         robust_feasible=robust_feasible[win], cvar_energy_kwh=cvar_e(win),
-        confidence_bands=bands, n_scenarios=n_scen)
+        confidence_bands=bands, n_scenarios=n_scen, winner_kpi_raw=raw,
+        robust_substituted=(win != 0), scenario_diagnostics=diagnostics)
 
 
 def make_oracle_robust_rerank(base_prototxt, oracle_config, calibration,

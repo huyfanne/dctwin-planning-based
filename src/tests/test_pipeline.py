@@ -26,7 +26,7 @@ def test_run_weekly_plan_returns_recommendation_dict():
         baseline_energy_kwh=200.0,
         on_level=lambda l, e, b: levels.append(l),
     )
-    assert rec["schema_version"] == "1.0"
+    assert rec["schema_version"] == "1.2"
     assert rec["week_start"] == "2013-11-11"
     assert set(rec["setpoints"]) == {
         "crah_supply_air_temperature_c",
@@ -69,7 +69,8 @@ def test_run_weekly_plan_applies_robust_rerank():
     assert rec["setpoints"]["crah_supply_air_temperature_c"] == 21.0
     assert rec["robust"]["robust_feasible"] is True
     assert rec["robust"]["cvar_energy_kwh"] == 1010.0
-    assert rec["schema_version"] == "1.1"
+    assert rec["schema_version"] == "1.2"
+    assert rec["predicted_kpis_raw"]["total_hvac_energy_kwh"] == 999.0
 
 
 def test_run_weekly_plan_without_robust_unchanged():
@@ -79,4 +80,28 @@ def test_run_weekly_plan_without_robust_unchanged():
         evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
         forecaster=_FakeForecaster(),
     )
-    assert "robust" not in rec and rec["schema_version"] == "1.0"
+    assert "robust" not in rec and rec["schema_version"] == "1.2"
+
+
+def test_run_weekly_plan_blocks_when_not_robust_feasible():
+    chosen = Setpoints(21.0, 12.0, 14.0)
+    chosen_kpi = WeeklyKPI(total_hvac_energy_kwh=999.0, pue_mean=1.1, inlet_temp_max=27.0,
+                           inlet_violation_steps=5, rh_violation_steps=0, feasible=False,
+                           inlet_excess_degc_steps=0.0, rh_excursion_steps=0.0, zone_temp_band_steps=0.0)
+
+    def fake_rerank(finalists, forecast):
+        return RobustResult(winner=chosen, winner_kpi=chosen_kpi, robust_feasible=False,
+                            cvar_energy_kwh=2000.0,
+                            confidence_bands={"inlet_temp_max_c": {"p50": 26.5, "p90": 27.5, "max": 28.0}},
+                            n_scenarios=3)
+
+    rec = run_weekly_plan(
+        PlanRequest(week_start=date(2013, 11, 11), days=7, grid=4, beam_width=3, levels=2),
+        evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
+        forecaster=_FakeForecaster(),
+        robust_rerank_fn=fake_rerank,
+    )
+    assert rec["status"] == "blocked_unsafe"
+    assert rec["robust"]["robust_feasible"] is False
+    # the robust winner (least-bad finalist) is still surfaced, not the coolest-corner fallback
+    assert rec["setpoints"]["crah_supply_air_temperature_c"] == 21.0

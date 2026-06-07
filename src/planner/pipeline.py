@@ -49,15 +49,19 @@ def run_weekly_plan(
     robust = None
     if robust_rerank_fn is not None and result.beam_finalists:
         robust = robust_rerank_fn(result.beam_finalists, forecast)
-        result.best, result.best_kpi = robust.winner, robust.winner_kpi
 
-    if result.feasible:
-        best, kpi, status = result.best, result.best_kpi, "pending_approval"
+    if robust is not None:
+        # when the robust ensemble ran, robust feasibility is decisive
+        best, kpi = robust.winner, robust.winner_kpi
+        raw = robust.winner_kpi_raw or robust.winner_kpi
+        status = "pending_approval" if robust.robust_feasible else "blocked_unsafe"
+    elif result.feasible:
+        best, kpi, raw, status = result.best, result.best_kpi, result.best_kpi_raw, "pending_approval"
     else:
         fb = Setpoints(space.sat.lb, space.flow.ub, space.chwst.lb)
         fb_kpi = evaluator.evaluate([fb], forecast)[0]
         kpi = calibration.apply(fb_kpi) if calibration is not None else fb_kpi
-        best, status = fb, "infeasible_fallback"
+        best, raw, status = fb, fb_kpi, "infeasible_fallback"
 
     return build_recommendation(
         setpoints=best, kpi=kpi, week_start=request.week_start, days=request.days,
@@ -69,4 +73,7 @@ def run_weekly_plan(
         confidence_bands=(robust.confidence_bands if robust else None),
         n_scenarios=(robust.n_scenarios if robust else None),
         calibration_version=(calibration.version if calibration is not None else None),
+        raw_kpi=raw,
+        robust_substituted=(robust.robust_substituted if robust else False),
+        scenario_diagnostics=(robust.scenario_diagnostics if robust else None),
     )

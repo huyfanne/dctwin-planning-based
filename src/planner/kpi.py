@@ -92,3 +92,22 @@ def aggregate_kpi(samples: list[StepSample], hours_per_step: float,
         rh_excursion_steps=rh_excursion,
         zone_temp_band_steps=zone_band_steps,
     )
+
+
+def step_trajectory(samples: list[StepSample], hours_per_step: float,
+                    settings: OracleSettings) -> list[dict]:
+    """Per-step series for the pre-validation trajectory CSV. Applies the same
+    warmup discard as aggregate_kpi so the plot matches the scored window."""
+    s = settings
+    if len(samples) > s.warmup_steps:
+        samples = samples[s.warmup_steps:]
+    rows = []
+    for i, smp in enumerate(samples):
+        hvac_w = smp.total_power_w - smp.it_power_w
+        rows.append({
+            "step": i,
+            "inlet_temp_max_c": max(smp.inlet_temps) if smp.inlet_temps else None,
+            "hvac_power_kw": hvac_w / 1000.0,
+            "pue": (smp.total_power_w / smp.it_power_w) if smp.it_power_w > 0 else None,
+        })
+    return rows

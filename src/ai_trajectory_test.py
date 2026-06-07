@@ -33,6 +33,6 @@ if __name__ == "__main__":
     parser.add_argument("--dt", default="configs/dt/dt.prototxt")
     parser.add_argument("--recommendation", default="log/recommendation.json")
     args = parser.parse_args()
-    AITrajectoryReplay()(policy="baseline", dt_engine_config=args.dt,
+    AITrajectoryReplay()(policy="ai", dt_engine_config=args.dt,
                          recommendation=args.recommendation)
     print("AI trajectory replay complete")
