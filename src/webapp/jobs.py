@@ -92,6 +92,7 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
     from planner.oracle import OracleConfig, ParallelEnvOracle
     from planner.pipeline import PlanRequest, run_weekly_plan
     from planner.robust import make_oracle_robust_rerank
+    from planner.types import Setpoints
 
     plan_dir = store.plan_dir(plan_id)
     dt_config.set_log_dir(str(plan_dir))
@@ -146,6 +147,17 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
         robust_rerank_fn=robust_rerank_fn,
     )
     store.save_recommendation(plan_id, rec)
+
+    # independent pre-validation replay -> runs/<id>/{report.md, trajectory_ai.csv}
+    try:
+        from prevalidation import run_prevalidation_with_oracle
+        from planner.types import DEFAULT_SEARCH_SPACE
+        space = DEFAULT_SEARCH_SPACE
+        baseline = Setpoints(space.sat.lb, space.flow.ub, space.chwst.lb)  # coolest/max-flow
+        run_prevalidation_with_oracle(str(plan_dir / "recommendation.json"), dt_cfg,
+                                      baseline=baseline, out_dir=str(plan_dir / "prevalidation"))
+    except Exception:  # noqa: BLE001 - pre-validation is advisory; never fail the plan on it
+        logger.exception("prevalidation for %s failed", plan_id)
 
 
 def pickle_load(path: str) -> dict:
