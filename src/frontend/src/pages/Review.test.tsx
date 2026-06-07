@@ -15,6 +15,10 @@ vi.mock('../api', () => ({
     n_weeks: 2,
     version: 'weeks-2',
   }),
+  getTrajectory: vi.fn().mockResolvedValue({
+    nominal: [{ step: 0, inlet_temp_max_c: 24, hvac_power_kw: 0.2, pue: 1.2 }],
+    worst:  [{ step: 0, inlet_temp_max_c: 28, hvac_power_kw: 0.5, pue: 1.3 }],
+  }),
 }));
 
 import { listPlans, getPlan, approvePlan, rejectPlan, deployPlan } from '../api';
@@ -206,5 +210,12 @@ describe('Review', () => {
     await waitFor(() => {
       expect(screen.getByText(/4 scenarios/i)).toBeInTheDocument();
     });
+  });
+
+  it('renders the inlet trajectory card', async () => {
+    (listPlans as ReturnType<typeof vi.fn>).mockResolvedValue([PLAN_SUMMARY]);
+    (getPlan as ReturnType<typeof vi.fn>).mockResolvedValue(PLAN_DETAIL);
+    render(<Review planId={PLAN_SUMMARY.plan_id} />);
+    await waitFor(() => expect(screen.getByText(/Inlet Trajectory/i)).toBeInTheDocument());
   });
 });

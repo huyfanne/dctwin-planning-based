@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
 import { listPlans, type PlanSummary } from '../api';
 
 interface Props {
@@ -98,7 +99,30 @@ export default function History({ onReview }: Props) {
 
       {error && <div className="error-msg mt-3">{error}</div>}
 
-      {!loading && !error && (
+      {!loading && !error && (<>
+          {sorted.some(p => p.realized_energy_kwh != null) && (
+            <div className="card animate-in animate-in-1" style={{ marginBottom: 16 }}>
+              <div className="card-header">
+                <span className="card-title">Predicted vs Realized — HVAC Energy</span>
+                <span className="text-xs text-dim">deployed weeks</span>
+              </div>
+              <div className="card-body">
+                <ResponsiveContainer width="100%" height={240}>
+                  <LineChart data={[...sorted].reverse().map(p => ({
+                    week: p.week_start, predicted: p.energy_kwh, realized: p.realized_energy_kwh,
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" vertical={false} />
+                    <XAxis dataKey="week" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+                    <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} width={55} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="predicted" name="Predicted" stroke="rgba(0,200,255,0.9)" dot={false} />
+                    <Line type="monotone" dataKey="realized" name="Realized" stroke="rgba(245,158,11,0.9)" dot={false} />
+                    <Legend />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
         <div className="card bracket-card animate-in animate-in-1">
           {sorted.length === 0 ? (
             <div className="empty-state">
@@ -183,7 +207,7 @@ export default function History({ onReview }: Props) {
             </div>
           )}
         </div>
-      )}
+      </>)}
     </div>
   );
 }
