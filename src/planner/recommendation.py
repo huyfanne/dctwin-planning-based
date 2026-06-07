@@ -39,6 +39,7 @@ def build_recommendation(
     raw_kpi: Optional[WeeklyKPI] = None,
     robust_substituted: bool = False,
     scenario_diagnostics: Optional[list] = None,
+    scenarios_ok: Optional[int] = None,
     forecast_meta: Optional[dict] = None,
 ) -> dict:
     week_end = week_start + timedelta(days=days - 1)
@@ -79,6 +80,7 @@ def build_recommendation(
             "confidence_bands": confidence_bands or {},
             "scenario_diagnostics": scenario_diagnostics or [],
             "n_scenarios": n_scenarios,
+            "scenarios_ok": scenarios_ok,
             "calibration_version": calibration_version,
         }
     if raw_kpi is not None:

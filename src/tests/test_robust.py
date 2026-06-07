@@ -91,3 +91,36 @@ def test_make_oracle_robust_rerank_runs_scenarios(tmp_path, monkeypatch):
     assert rr.n_scenarios == 3
     assert len(_FakeOracle.instances) == 3
     assert rr.winner == sp
+
+
+def test_robust_select_requires_majority_successful_scenarios():
+    from planner.robust import robust_select
+    from planner.objective import ObjectiveWeights
+    from planner.types import Setpoints, WeeklyKPI
+
+    def k(inlet, energy=100.0, feasible=True):
+        return WeeklyKPI(total_hvac_energy_kwh=energy, pue_mean=1.2, inlet_temp_max=inlet,
+                         inlet_violation_steps=0 if feasible else 5, rh_violation_steps=0, feasible=True)
+
+    finalists = [(Setpoints(22, 7, 15), k(24), 100.0, k(24))]
+    # 4 scenarios requested, but only 1 succeeded (3 dropped) -> below ceil(4/2)=2 -> not robust-feasible
+    scenario_kpis = [[k(24)]]
+    res = robust_select(finalists, scenario_kpis, ObjectiveWeights(), n_requested=4)
+    assert res.robust_feasible is False
+    assert res.scenarios_ok == 1
+
+
+def test_robust_select_majority_present_is_feasible():
+    from planner.robust import robust_select
+    from planner.objective import ObjectiveWeights
+    from planner.types import Setpoints, WeeklyKPI
+
+    def k(inlet):
+        return WeeklyKPI(total_hvac_energy_kwh=100.0, pue_mean=1.2, inlet_temp_max=inlet,
+                         inlet_violation_steps=0, rh_violation_steps=0, feasible=True)
+
+    finalists = [(Setpoints(22, 7, 15), k(24), 100.0, k(24))]
+    scenario_kpis = [[k(24), k(25), k(24)]]   # 3 of 4 succeeded, all feasible
+    res = robust_select(finalists, scenario_kpis, ObjectiveWeights(), n_requested=4)
+    assert res.robust_feasible is True
+    assert res.scenarios_ok == 3
