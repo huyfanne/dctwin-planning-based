@@ -337,14 +337,16 @@ def test_residual_clip_bounds_one_wild_week():
 
 
 def test_sigma_shrinks_toward_sample_as_n_grows():
-    # with many consistent weeks, sample std (here ~1.0) dominates the prior
-    hist = []
-    for i, r in enumerate([102.0, 100.0, 102.0, 100.0, 102.0, 100.0]):
-        hist.append({"week_start": f"2013-11-{i:02d}",
-                     "predicted": {"total_hvac_energy_kwh": 101.0},
-                     "realized":  {"total_hvac_energy_kwh": r}})
-    cal = fit_calibration(hist)
-    assert 0.9 <= cal.sigma["total_hvac_energy_kwh"] <= 1.1
+    # the conservative prior fades as 1/n toward the empirical sample std (~1.0 here)
+    # as weeks accumulate (residuals alternate +-1 around mean 0 -> sample std 1.0)
+    def sigma_for_n(n):
+        hist = [{"predicted": {"total_hvac_energy_kwh": 101.0},
+                 "realized":  {"total_hvac_energy_kwh": 101.0 + (1.0 if i % 2 else -1.0)}}
+                for i in range(n)]
+        return fit_calibration(hist).sigma["total_hvac_energy_kwh"]
+    s2, s10, s1000 = sigma_for_n(2), sigma_for_n(10), sigma_for_n(1000)
+    assert s2 > s10 > s1000          # monotonic shrinkage as n grows
+    assert s1000 < 10.0              # well below the 5000 prior, heading toward sample (~1.0)
 ```
 
 - [ ] **Step 2: Run them, verify they fail**
@@ -379,14 +381,14 @@ def fit_calibration(history: list) -> Calibration:
         if res:
             m = sum(res) / len(res)
             bias[key] = m
+            n = len(res)
+            sample = (sum((x - m) ** 2 for x in res) / n) ** 0.5
             prior = SIGMA_PRIOR.get(key, 0.0)
-            if len(res) > 1:
-                sample = (sum((x - m) ** 2 for x in res) / len(res)) ** 0.5
-                # inverse-variance blend: prior dominates at n=1, sample as n grows
-                n = len(res)
-                sigma[key] = (prior + (n - 1) * sample) / n
-            else:
-                sigma[key] = prior                          # cold-start floor, never 0
+            # Fading floor: a conservative prior that decays as 1/n toward the
+            # empirical sample std. At n=1 sample=0 so sigma=prior (never the
+            # sigma=0 cold-start poison); as weeks accumulate prior/n -> 0 and the
+            # sample std takes over. max() keeps it monotonically shrinking.
+            sigma[key] = max(sample, prior / n)
     n = len(history)
     return Calibration(bias=bias, sigma=sigma, n_weeks=n, version=f"weeks-{n}")
 ```
@@ -394,7 +396,7 @@ def fit_calibration(history: list) -> Calibration:
 - [ ] **Step 4: Run the calibrator tests, verify pass**
 
 Run: `$PY -m pytest tests/test_calibrator.py -v`
-Expected: PASS for the new tests. NOTE: the existing `test_fit_calibration_bias_and_sigma` asserts `sigma["total_hvac_energy_kwh"] == 1.0` and `sigma["inlet_temp_max_c"] == 0.0`. Update those two assertions to the blended values: with n=2, energy residuals (2.0, 4.0) → sample=1.0, prior=5000 → `(5000 + 1*1.0)/2 = 2500.5`; inlet residuals (1.0, 1.0) → sample=0.0, prior=1.0 → `(1.0 + 1*0.0)/2 = 0.5`. So change them to `math.isclose(cal.sigma["total_hvac_energy_kwh"], 2500.5)` and `cal.sigma["inlet_temp_max_c"] == 0.5`.
+Expected: PASS for the new tests. NOTE: the existing `test_fit_calibration_bias_and_sigma` asserts `sigma["total_hvac_energy_kwh"] == 1.0` and `sigma["inlet_temp_max_c"] == 0.0`. Update those two assertions to the fading-floor values: with n=2, energy residuals (2.0, 4.0) → sample=1.0, prior/n=5000/2=2500 → `max(1.0, 2500)=2500.0`; inlet residuals (1.0, 1.0) → sample=0.0, prior/n=1.0/2=0.5 → `max(0.0, 0.5)=0.5`. So change them to `math.isclose(cal.sigma["total_hvac_energy_kwh"], 2500.0)` and `cal.sigma["inlet_temp_max_c"] == 0.5`.
 
 - [ ] **Step 5: Commit**
 
