@@ -253,3 +253,27 @@ def test_root_hint_when_frontend_not_built(tmp_path):
     r = c.get("/")
     assert r.status_code == 200
     assert "npm" in r.text and "build" in r.text                   # tells the user how to build
+
+
+def _make_epw(p):
+    lines = ["LOCATION,X", "DESIGN CONDITIONS,0", "TYPICAL/EXTREME PERIODS,0",
+             "GROUND TEMPERATURES,0", "HOLIDAYS/DAYLIGHT SAVINGS,No,0,0,0",
+             "COMMENTS 1,", "COMMENTS 2,",
+             "DATA PERIODS,1,1,Data,Friday, 11/ 1, 1/31", "2024,11,1,1,0"]
+    p.write_text("\n".join(lines) + "\n")
+    return str(p)
+
+
+def test_create_rejects_week_outside_weather_coverage(client, tmp_path, monkeypatch):
+    epw = _make_epw(tmp_path / "w.epw")
+    monkeypatch.setattr("webapp.jobs.pickle_load", lambda path: {"weather_file": epw})
+    r = client.post("/api/plans", json={"week_start": "2026-06-08"}, headers=_op())
+    assert r.status_code == 422
+    assert "coverage" in r.json()["detail"].lower()
+
+
+def test_create_accepts_week_inside_weather_coverage(client, tmp_path, monkeypatch):
+    epw = _make_epw(tmp_path / "w.epw")
+    monkeypatch.setattr("webapp.jobs.pickle_load", lambda path: {"weather_file": epw})
+    r = client.post("/api/plans", json={"week_start": "2024-11-11"}, headers=_op())
+    assert r.status_code == 202

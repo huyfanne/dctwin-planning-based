@@ -73,6 +73,21 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
         except ValueError as e:
             raise HTTPException(422, str(e))
 
+        # week-vs-weather guardrail (strict only when the configured EPW is readable)
+        try:
+            from webapp.jobs import pickle_load
+            from planner.epw import week_within_epw, weather_coverage
+            _wf = pickle_load(p.get("forecaster", "models/forecaster.pkl")).get("weather_file")
+        except Exception:
+            _wf = None
+        if _wf:
+            _week = _date.fromisoformat(p["week_start"])
+            _days = _v("days", 7)
+            if not week_within_epw(_wf, _week, _days):
+                _cov = weather_coverage(_wf)
+                raise HTTPException(422, f"week {_week} (+{_days}d) is outside the weather data "
+                                         f"coverage ({_cov['label']}); pick a week within that window.")
+
         plan_id = f"gds-{params.week_start}-{uuid.uuid4().hex[:6]}"
         store.create_plan(plan_id, params.week_start, p)
         if run_sync:
