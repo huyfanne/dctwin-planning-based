@@ -86,6 +86,9 @@ def test_request_cancel_skips_a_queued_plan(tmp_path):
     runner = JobRunner(store, runner=runner_fn, container_teardown=Mock())
     runner.request_cancel("p1")             # cancel BEFORE it is dequeued
     runner.submit("p1", {})
+    # NB: start() runs reconcile_orphans first, which transiently flips the still-'queued'
+    # p1 to 'failed'; the loop then dequeues it, sees the cancel flag, and sets 'cancelled'.
+    # _wait_status only waits FOR 'cancelled', so the intermediate 'failed' is harmless.
     runner.start()
     try:
         _wait_status(store, "p1", "cancelled")
@@ -409,7 +412,7 @@ env -C /mnt/lv/home/hoanghuy/newcode/dctwin git commit -m "feat(dtwin): New-Plan
 
 - [ ] **Step 1: Update the History tests (failing)**
 
-In `frontend/src/pages/History.test.tsx`: ensure the `vi.mock('../api', …)` factory includes `cancelPlan: vi.fn(),` and `listPlans` is imported; import `cancelPlan`. Add a test:
+`frontend/src/pages/History.test.tsx` **already exists** — its factory is `vi.mock('../api', () => ({ listPlans: vi.fn() }))` and it imports only `listPlans`. **Edit the existing file** (do NOT recreate it): change the factory to `vi.mock('../api', () => ({ listPlans: vi.fn(), cancelPlan: vi.fn() }))` and the import line to `import { listPlans, cancelPlan } from '../api';`. Then add a test:
 
 ```tsx
   it('shows Cancel on a running plan and calls cancelPlan', async () => {
