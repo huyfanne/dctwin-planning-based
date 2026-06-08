@@ -277,3 +277,18 @@ def test_create_accepts_week_inside_weather_coverage(client, tmp_path, monkeypat
     monkeypatch.setattr("webapp.jobs.pickle_load", lambda path: {"weather_file": epw})
     r = client.post("/api/plans", json={"week_start": "2024-11-11"}, headers=_op())
     assert r.status_code == 202
+
+
+def test_weather_endpoint_returns_coverage(client, tmp_path, monkeypatch):
+    epw = _make_epw(tmp_path / "w.epw")
+    monkeypatch.setattr("webapp.jobs.pickle_load", lambda path: {"weather_file": epw})
+    body = client.get("/api/weather", headers=_op()).json()
+    assert body["label"] == "Nov 1 – Jan 31"
+    assert body["suggested_week_start"] == "2024-11-01"
+
+
+def test_weather_endpoint_null_when_no_forecaster(client, monkeypatch):
+    def _raise(path): raise FileNotFoundError()
+    monkeypatch.setattr("webapp.jobs.pickle_load", _raise)
+    body = client.get("/api/weather", headers=_op()).json()
+    assert body["suggested_week_start"] is None and body["label"] is None

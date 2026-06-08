@@ -210,6 +210,18 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
     def get_calibration(role: str = Depends(operator)):
         return load_calibration("data/calibration.json").to_dict()
 
+    @app.get("/api/weather")
+    def get_weather(role: str = Depends(operator)):
+        try:
+            from webapp.jobs import pickle_load
+            from planner.epw import weather_coverage, epw_first_date
+            wf = pickle_load("models/forecaster.pkl").get("weather_file")
+            cov = weather_coverage(wf)
+            return {**cov, "file": wf, "suggested_week_start": epw_first_date(wf).isoformat()}
+        except Exception:
+            return {"label": None, "start_md": None, "end_md": None,
+                    "file": None, "suggested_week_start": None}
+
     # Serve the built frontend at "/" (single origin — no separate dev server needed).
     # Mounted LAST so every /api/* route and /docs take precedence. If the UI isn't
     # built, "/" returns a friendly hint instead of FastAPI's bare 404.
