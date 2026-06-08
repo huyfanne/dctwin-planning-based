@@ -44,6 +44,7 @@ def build_recommendation(
     inlet_forecast_margin: Optional[float] = None,
     k_sigma: Optional[float] = None,
     schedule=None,   # planner.schedule.WeeklySchedule
+    degenerate_no_signal: bool = False,
 ) -> dict:
     week_end = week_start + timedelta(days=days - 1)
     reduction = (
@@ -73,6 +74,9 @@ def build_recommendation(
                     else {"method": forecast_method, "weather": "TMY-window"},
         "search": dict(search_meta),
         "status": status,
+        # True when the coarse sweep showed ~no response to the setpoints (control-invariant
+        # model): the recommendation is a least-bad fallback, not a real optimum.
+        "degenerate_no_signal": degenerate_no_signal,
     }
     if robust_feasible is not None:
         rec["schema_version"] = "1.1"
@@ -112,6 +116,8 @@ def build_recommendation(
             ],
         }
         rec["schema_version"] = "1.5"
+    if degenerate_no_signal:
+        rec["schema_version"] = "1.6"
     return rec
 
 

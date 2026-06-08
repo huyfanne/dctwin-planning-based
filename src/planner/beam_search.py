@@ -10,6 +10,24 @@ import numpy as np
 from planner.objective import INFEASIBLE, ObjectiveWeights, score
 from planner.types import Evaluator, SearchSpace, Setpoints, WeeklyKPI
 
+# A coarse sweep is "no signal" when neither the binding inlet nor energy responds to the
+# setpoints — i.e. the evaluator returns ~identical KPIs regardless of the candidate. This
+# is the fingerprint of a control-invariant model (e.g. ITE recirculation hardcoded so the
+# inlet ignores supply air): the search has no gradient and any "winner" is meaningless.
+_DEGEN_INLET_EPS = 0.1     # deg C: coarse-grid inlet_temp_max spread below this = no thermal signal
+_DEGEN_ENERGY_REL = 0.01   # fraction: coarse-grid energy spread / mean below this = no energy signal
+
+
+def _no_signal(scored: list) -> bool:
+    inlets = [k.inlet_temp_max for _, k, _, _ in scored if math.isfinite(k.inlet_temp_max)]
+    energies = [k.total_hvac_energy_kwh for _, k, _, _ in scored
+                if math.isfinite(k.total_hvac_energy_kwh)]
+    if len(inlets) < 2 or len(energies) < 2:
+        return False
+    e_mean = sum(energies) / len(energies)
+    energy_rel = (max(energies) - min(energies)) / e_mean if e_mean else 0.0
+    return (max(inlets) - min(inlets)) < _DEGEN_INLET_EPS and energy_rel < _DEGEN_ENERGY_REL
+
 
 @dataclass(frozen=True)
 class BeamConfig:
@@ -31,6 +49,8 @@ class PlanResult:
     history: list[float]     # best score after each level
     best_kpi_raw: WeeklyKPI = None   # the winner's pre-calibration KPI (for residual fitting)
     beam_finalists: list = field(default_factory=list)   # final beam: list[_Scored]
+    coarse: list = field(default_factory=list)           # level-0 scored grid: list[_Scored]
+    degenerate_no_signal: bool = False                   # setpoints had ~no measurable effect on the sim
 
 
 # a scored candidate: (setpoints, calibrated_kpi, score, raw_kpi)
@@ -131,8 +151,10 @@ class BeamPlanner:
 
         best_s, best_kpi, best_sc, best_raw = beam[0]
         feasible = best_sc != INFEASIBLE
+        degenerate = (not feasible) and _no_signal(scored)
         return PlanResult(best_s, best_kpi, best_sc, evals, feasible, history,
-                          best_kpi_raw=best_raw, beam_finalists=list(beam))
+                          best_kpi_raw=best_raw, beam_finalists=list(beam),
+                          coarse=list(scored), degenerate_no_signal=degenerate)
 
     def _score_batch(self, candidates: Sequence[Setpoints], forecast,
                      on_result: Optional[Callable[[], None]] = None) -> list[_Scored]:
