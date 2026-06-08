@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { createPlan, planStreamUrl, type Progress } from '../api';
+import { createPlan, planStreamUrl, getWeather, type Progress } from '../api';
 
 interface Props {
   onDone: (planId: string) => void;
@@ -20,8 +20,16 @@ export default function NewPlan({ onDone }: Props) {
   const [done, setDone]             = useState(false);
   const [status, setStatus]         = useState<string>('queued');
   const [error, setError]           = useState<string | null>(null);
+  const [coverage, setCoverage]     = useState<string | null>(null);
 
   const esRef = useRef<EventSource | null>(null);
+
+  useEffect(() => {
+    getWeather().then(w => {
+      setCoverage(w.label);
+      if (w.suggested_week_start) setWeekStart(prev => prev || w.suggested_week_start!);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!planId || done || error) return;
@@ -32,7 +40,7 @@ export default function NewPlan({ onDone }: Props) {
       if (frame.progress) setProgress(frame.progress);
       setStatus(frame.status);
       if (frame.status === 'failed') {
-        setError('Plan run failed on the server. Most likely the backend was not started with Docker access (sg docker) so EnergyPlus could not run — see the backend log.');
+        setError(frame.progress?.error ?? 'Plan run failed on the server — see the backend log (the backend may lack Docker access for EnergyPlus).');
         es.close();
       } else if (frame.status && !['queued', 'running', 'deploying'].includes(frame.status)) {
         setDone(true);
@@ -103,6 +111,7 @@ export default function NewPlan({ onDone }: Props) {
                   disabled={!!planId}
                   required
                 />
+                {coverage && <div className="field-hint" style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>Weather data covers {coverage}.</div>}
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

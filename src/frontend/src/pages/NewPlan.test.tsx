@@ -6,10 +6,11 @@ vi.mock('../api', () => ({
   createPlan: vi.fn(),
   getProgress: vi.fn(),
   getPlan: vi.fn(),
+  getWeather: vi.fn(),
   planStreamUrl: (id: string) => `/api/plans/${id}/stream?token=t`,
 }));
 
-import { createPlan } from '../api';
+import { createPlan, getWeather } from '../api';
 
 class MockEventSource {
   static instances: MockEventSource[] = [];
@@ -25,6 +26,7 @@ class MockEventSource {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  (getWeather as ReturnType<typeof vi.fn>).mockResolvedValue({ label: null, suggested_week_start: null });
   MockEventSource.instances = [];
   (globalThis as unknown as { EventSource: unknown }).EventSource = MockEventSource;
 });
@@ -105,5 +107,25 @@ describe('NewPlan', () => {
     // {error} renders in BOTH the form card AND the live-progress card once planId is set,
     // so use getAllByText (single-match getByText would throw on the duplicate).
     await waitFor(() => expect(screen.getAllByText(/lost connection|backend/i).length).toBeGreaterThan(0));
+  });
+
+  it('shows the real failure reason from the stream', async () => {
+    (createPlan as ReturnType<typeof vi.fn>).mockResolvedValue({ plan_id: 'pf', status: 'queued' });
+    render(<NewPlan onDone={() => {}} />);
+    fireEvent.change(screen.getByLabelText(/week start/i), { target: { value: '2024-11-11' } });
+    fireEvent.click(screen.getByText(/launch optimization/i));
+    await waitFor(() => expect(MockEventSource.instances.length).toBe(1));
+    MockEventSource.instances[0].emit({ progress: { error: 'week 2026-06-08 is outside coverage' }, status: 'failed' });
+    // {error} renders in BOTH the form card and the live-progress card once planId is set,
+    // so use getAllByText (single-match getByText throws on the duplicate — see the sibling
+    // 'shows an error when the stream errors' test).
+    await waitFor(() => expect(screen.getAllByText(/outside coverage/i).length).toBeGreaterThan(0));
+  });
+
+  it('prefills week start and shows the coverage hint', async () => {
+    (getWeather as ReturnType<typeof vi.fn>).mockResolvedValue({ label: 'Nov 1 – Jan 31', suggested_week_start: '2024-11-01' });
+    render(<NewPlan onDone={() => {}} />);
+    await waitFor(() => expect(screen.getByText(/weather data covers/i)).toBeInTheDocument());
+    expect((screen.getByLabelText(/week start/i) as HTMLInputElement).value).toBe('2024-11-01');
   });
 });
