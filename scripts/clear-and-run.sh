@@ -13,7 +13,7 @@
 #     --keep-runs     don't delete existing plans   -y/--yes  skip the delete prompt
 #
 # Env overrides: OPERATOR_TOKEN=op-secret EXPERT_TOKEN=ex-secret
-#                BACKEND_PORT=8000 FRONTEND_PORT=5173
+#                BACKEND_PORT=8000 FRONTEND_PORT=5173  (a busy port auto-bumps to the next free one)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -52,17 +52,17 @@ kill_port() {                          # kill OUR processes on the port; wait, t
   kill -9 $pids 2>/dev/null || true; sleep 0.5
 }
 
-ensure_port_free() {                   # abort with guidance if the port is still held by something we can't kill
-  local port="$1"
-  port_listening "$port" || return 0
-  {
-    echo "ERROR: port $port is in use and this script can't free it — most likely a Docker"
-    echo "       container or another user's process (your kill only reaches your own processes)."
-    echo "  Inspect:  sg docker -c 'docker ps'      # look for a container publishing 0.0.0.0:$port->"
-    echo "            ss -ltnp | grep :$port"
-    echo "  Then stop that service, OR run dctwin on a free port, e.g.:"
-    echo "            BACKEND_PORT=8001 scripts/clear-and-run.sh"
-  } >&2
+resolve_port() {                       # echo a usable port: $1 if free, else the next free one (scan +1..+20)
+  local want="$1" label="$2" p
+  if ! port_listening "$want"; then echo "$want"; return 0; fi
+  for ((p = want + 1; p <= want + 20; p++)); do
+    port_listening "$p" && continue
+    echo "  $label :$want is in use (held by another process — e.g. a Docker container);" \
+         "falling back to :$p" >&2
+    echo "$p"; return 0
+  done
+  echo "ERROR: no free $label port in $want-$((want + 20)). Free one (sg docker -c 'docker ps')" \
+       "or pass an explicit BACKEND_PORT=/FRONTEND_PORT=." >&2
   exit 1
 }
 
@@ -87,12 +87,13 @@ build_frontend() {
   ( cd "$SRC/frontend" && npm run build >/dev/null )
 }
 
-# 1. Stop our own stale servers, then require the ports we actually need to be free
-#    (checked BEFORE clearing/building so a foreign-held port aborts without data loss).
+# 1. Stop our own stale servers, then resolve the ports we need — auto-bumping to the
+#    next free port if the requested one is held by something we can't kill (e.g. a
+#    Docker container). Resolved BEFORE clearing/building, so nothing is wasted.
 echo "• stopping servers on :$BACKEND_PORT and :$FRONTEND_PORT"
 kill_port "$BACKEND_PORT"; kill_port "$FRONTEND_PORT"
-ensure_port_free "$BACKEND_PORT"
-[[ "$MODE" == dev ]] && ensure_port_free "$FRONTEND_PORT"
+BACKEND_PORT="$(resolve_port "$BACKEND_PORT" backend)"
+[[ "$MODE" == dev ]] && FRONTEND_PORT="$(resolve_port "$FRONTEND_PORT" frontend)"
 
 # 2. Clear state (runs/ + index.db are recreated on the next plan).
 if [[ "$CLEAR_RUNS" == 1 && "$ASSUME_YES" != 1 ]]; then
