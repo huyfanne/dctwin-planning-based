@@ -11,6 +11,20 @@ from webapp.schemas import PlanCreated, PlanParams, SetpointEdit
 from webapp.status import PlanStatus, can_transition
 from webapp.store import PlanStore
 
+_RUNNING = {"queued", "running", "deploying"}
+
+
+def is_terminal(status) -> bool:
+    """A plan is terminal once it leaves the queued/running/deploying states."""
+    return status not in _RUNNING
+
+
+def progress_frame(store, plan_id: str) -> dict:
+    """One SSE frame: the latest progress + the plan's current status."""
+    row = store.get_plan_row(plan_id)
+    return {"progress": store.read_progress(plan_id),
+            "status": (row or {}).get("status")}
+
 
 def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = None,
                runner=None, run_sync: bool = False, deploy_runner=None) -> FastAPI:

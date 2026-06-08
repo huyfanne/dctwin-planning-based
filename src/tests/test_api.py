@@ -183,3 +183,21 @@ def test_get_trajectory_endpoint(client):
     assert r.status_code == 200
     body = r.json()
     assert "nominal" in body and "worst" in body  # empty until a real run emits CSVs
+
+
+def test_is_terminal_table():
+    from webapp.main import is_terminal
+    assert is_terminal("pending_approval") and is_terminal("approved") and is_terminal("deployed")
+    assert is_terminal("failed") and is_terminal("blocked_unsafe") and is_terminal("infeasible_fallback")
+    assert not is_terminal("queued") and not is_terminal("running") and not is_terminal("deploying")
+
+
+def test_progress_frame_shape(tmp_path):
+    from webapp.main import progress_frame
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "runs"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("p1", "2013-11-11", {})
+    store.write_progress("p1", {"level": 1, "evals": 5, "best_score": 0.9})
+    frame = progress_frame(store, "p1")
+    assert frame == {"progress": {"level": 1, "evals": 5, "best_score": 0.9}, "status": "queued"}
+    assert progress_frame(store, "nope") == {"progress": {}, "status": None}
