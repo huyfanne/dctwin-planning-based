@@ -110,6 +110,7 @@ export const editSetpoints = (id: string, sp: Record<string, number>) =>
 export const deployPlan = (id: string) =>
   req<{ status: string }>(`/api/plans/${id}/deploy`, { method: "POST" });
 export const cancelPlan = (id: string) => req(`/api/plans/${id}/cancel`, { method: "POST" });
+export const deletePlan = (id: string) => req(`/api/plans/${id}`, { method: "DELETE" });
 export const getTopology = (hall = "1f 2a") =>
   req<Topology>(`/api/topology?hall=${encodeURIComponent(hall)}`);
 
