@@ -4,9 +4,10 @@ import History from './History';
 
 vi.mock('../api', () => ({
   listPlans: vi.fn(),
+  cancelPlan: vi.fn(),
 }));
 
-import { listPlans } from '../api';
+import { listPlans, cancelPlan } from '../api';
 
 const PLANS = [
   { plan_id: 'plan-001', week_start: '2026-06-02', status: 'approved',   energy_kwh: 388.5, reduction_pct: 8.2 },
@@ -96,5 +97,14 @@ describe('History', () => {
     ]);
     render(<History onReview={() => {}} />);
     await waitFor(() => expect(screen.getByText(/Predicted vs Realized/i)).toBeInTheDocument());
+  });
+
+  it('shows Cancel on a running plan and calls cancelPlan', async () => {
+    (listPlans as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { plan_id: 'r1', week_start: '2024-11-11', status: 'running', energy_kwh: null, reduction_pct: null },
+    ]);
+    render(<History onReview={() => {}} />);
+    fireEvent.click(await screen.findByRole('button', { name: /cancel/i }));
+    await waitFor(() => expect(cancelPlan).toHaveBeenCalledWith('r1'));
   });
 });
