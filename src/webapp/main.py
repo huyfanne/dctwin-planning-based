@@ -3,10 +3,12 @@ from __future__ import annotations
 import asyncio
 import json
 import uuid
+from pathlib import Path
 from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
 from webapp.auth import TokenAuth
 from webapp.jobs import JobRunner
@@ -30,7 +32,8 @@ def progress_frame(store, plan_id: str) -> dict:
 
 
 def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = None,
-               runner=None, run_sync: bool = False, deploy_runner=None) -> FastAPI:
+               runner=None, run_sync: bool = False, deploy_runner=None,
+               frontend_dist: Optional[str] = None) -> FastAPI:
     store = store or PlanStore()
     auth = auth or TokenAuth.from_env()
     job_runner = JobRunner(store, runner=runner, deploy_runner=deploy_runner)
@@ -191,6 +194,28 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
     @app.get("/api/calibration")
     def get_calibration(role: str = Depends(operator)):
         return load_calibration("data/calibration.json").to_dict()
+
+    # Serve the built frontend at "/" (single origin — no separate dev server needed).
+    # Mounted LAST so every /api/* route and /docs take precedence. If the UI isn't
+    # built, "/" returns a friendly hint instead of FastAPI's bare 404.
+    dist = (Path(frontend_dist) if frontend_dist is not None
+            else Path(__file__).resolve().parent.parent / "frontend" / "dist")
+    if (dist / "index.html").is_file():
+        app.mount("/", StaticFiles(directory=str(dist), html=True), name="frontend")
+    else:
+        @app.get("/", response_class=HTMLResponse, include_in_schema=False)
+        def _frontend_not_built():
+            return HTMLResponse(
+                "<!doctype html><html><body "
+                "style='font-family:system-ui;max-width:42rem;margin:3rem auto;line-height:1.5'>"
+                "<h1>Digital Twin — API is running</h1>"
+                "<p>The web UI hasn't been built, so there's nothing to serve at <code>/</code>.</p>"
+                "<p><b>Build it once</b> — <code>npm --prefix src/frontend run build</code> — then "
+                "reload (the backend serves it here at <code>/</code>).<br>"
+                "Or for live development run the Vite dev server: "
+                "<code>npm --prefix src/frontend run dev</code> &rarr; "
+                "<a href='http://localhost:5173'>http://localhost:5173</a>.</p>"
+                "<p>API docs: <a href='/docs'>/docs</a></p></body></html>")
 
     return app
 

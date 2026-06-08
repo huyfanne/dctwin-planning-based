@@ -225,3 +225,31 @@ def test_stream_endpoint_rejects_bad_token(client):
 
 def test_stream_endpoint_404_unknown_plan(client):
     assert client.get("/api/plans/does-not-exist/stream?token=op").status_code == 404
+
+
+def test_root_serves_built_frontend(tmp_path):
+    # When frontend/dist/index.html exists, GET / serves the SPA (single origin),
+    # and the mount at "/" must NOT shadow the /api routes.
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("<!doctype html><title>DTwin UI</title><div id=root></div>")
+    app = create_app(store=PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db")),
+                     auth=TokenAuth({"op": "operator"}), run_sync=True, frontend_dist=str(dist))
+    c = TestClient(app)
+    r = c.get("/")
+    assert r.status_code == 200
+    assert "DTwin UI" in r.text
+    assert c.get("/api/plans", headers=_op()).status_code == 200   # API still reachable
+    assert c.get("/docs").status_code == 200                       # swagger still reachable
+
+
+def test_root_hint_when_frontend_not_built(tmp_path):
+    # When there is no built dist, GET / returns a friendly 200 hint (not a bare 404).
+    dist = tmp_path / "dist"          # exists but empty -> no index.html -> "not built"
+    dist.mkdir()
+    app = create_app(store=PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db")),
+                     auth=TokenAuth({"op": "operator"}), run_sync=True, frontend_dist=str(dist))
+    c = TestClient(app)
+    r = c.get("/")
+    assert r.status_code == 200
+    assert "npm" in r.text and "build" in r.text                   # tells the user how to build
