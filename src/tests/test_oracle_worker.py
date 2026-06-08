@@ -103,3 +103,43 @@ def test_teardown_container_is_best_effort():
 
     _teardown_container(_Env())          # must not raise
     assert calls["stopped"] is True
+
+
+def test_run_episode_schedule_switches_action_by_hour():
+    import numpy as np
+    from planner.oracle_worker import run_episode_schedule
+    from planner.schedule import WeeklySchedule, TimeBlock
+    from planner.types import Setpoints
+    from planner.kpi import OracleSettings
+    from planner.monitor import MonitorSpec
+
+    sched = WeeklySchedule((TimeBlock("day", 6, 18), TimeBlock("night", 18, 6)),
+                           (Setpoints(24.0, 8.0, 17.0), Setpoints(26.0, 6.0, 15.0)))
+
+    class _FakeBroadcaster:
+        def expand(self, sp):
+            return np.array([sp.sat_c])   # action[0] == the block's SAT, so we can read it back
+
+    recorded = []
+
+    class _Env:
+        def __init__(self):
+            self.i = 0
+            self.unwrapped = self
+        def inspect_current_observation(self, observation_name, use_unnormed=True):
+            return 24.0
+        def reset(self):
+            self.i = 0
+            return None, {}
+        def step(self, action):
+            recorded.append((self.i, float(action[0])))
+            self.i += 1
+            return None, 0.0, self.i >= 48, False, {}   # 48 hourly steps = 2 days
+
+    mon = MonitorSpec(total_power_name="tp", it_power_name="it", inlet_temp_names=["a"])
+    run_episode_schedule(_Env(), _FakeBroadcaster(), sched, mon,
+                         hours_per_step=1.0, settings=OracleSettings(warmup_steps=0))
+    assert recorded, "env should have been stepped"
+    for i, sat in recorded:
+        hour = i % 24
+        assert sat == (24.0 if 6 <= hour < 18 else 26.0)   # day SAT vs night SAT

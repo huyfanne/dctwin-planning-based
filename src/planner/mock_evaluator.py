@@ -69,6 +69,22 @@ class MockEvaluator:
                 on_result()
         return out
 
+    def evaluate_schedules(self, schedules, forecast=None):
+        """Analytic schedule KPI: per-block bowl KPI, energy hour-weighted (equal blocks),
+        inlet = worst block, violations summed. A CONSTANT schedule == the single-setpoint KPI."""
+        out = []
+        for sch in schedules:
+            ks = [self._kpi(sp) for sp in sch.setpoints]
+            n = len(ks)
+            energy = sum(k.total_hvac_energy_kwh for k in ks) / n
+            inlet = max(k.inlet_temp_max for k in ks)
+            viol = sum(k.inlet_violation_steps for k in ks)
+            out.append(WeeklyKPI(
+                total_hvac_energy_kwh=energy, pue_mean=1.2 + energy / 10000.0,
+                inlet_temp_max=inlet, inlet_violation_steps=viol, rh_violation_steps=0,
+                feasible=True, inlet_excess_degc_steps=max(inlet - (self.surface.inlet_cap - 1.0), 0.0)))
+        return out
+
     def replay_with_trajectory(self, setpoints, forecast=None, n_steps: int = 8):
         from planner.kpi import StepSample
         kpi = self.evaluate([setpoints], forecast)[0]

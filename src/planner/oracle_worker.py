@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 
@@ -24,6 +24,7 @@ class EvalTask:
     settings_kwargs: dict[str, Any]
     bcvtb_host: str = "172.17.0.1"          # host the EnergyPlus container connects back to
     monitored_hall: str = "1f 2a"           # scope thermal KPI to the controlled hall ("" = all)
+    schedule: Optional[Any] = None   # planner.schedule.WeeklySchedule; overrides `candidate` when set
 
 
 def read_step_sample(unwrapped, monitor: MonitorSpec) -> StepSample:
@@ -57,6 +58,26 @@ def run_episode(env, action: np.ndarray, monitor: MonitorSpec,
     """Step a (already-built) env to completion with a fixed action; aggregate KPI."""
     kpi, _samples = run_episode_with_samples(env, action, monitor, hours_per_step, settings)
     return kpi
+
+
+def run_episode_schedule(env, broadcaster, schedule, monitor: MonitorSpec,
+                         hours_per_step: float, settings: OracleSettings):
+    """Step the env to completion, switching the action by local time-of-day from `schedule`.
+    The run starts at week_start 00:00, so step i is at local hour int(i*hours_per_step) % 24."""
+    samples: list[StepSample] = []
+    env.reset()
+    samples.append(read_step_sample(env.unwrapped, monitor))
+    done = False
+    i = 0
+    while not done:
+        hour = int(i * hours_per_step) % 24
+        sp = schedule.setpoints[schedule.block_for_hour(hour)]
+        action = broadcaster.expand(Setpoints(sp.sat_c, sp.flow_kg_s, sp.chwst_c))
+        _obs, _rew, done, _trunc, _info = env.step(action)
+        i += 1
+        if not done:
+            samples.append(read_step_sample(env.unwrapped, monitor))
+    return aggregate_kpi(samples, hours_per_step, settings), samples
 
 
 def _infeasible(error: str) -> WeeklyKPI:
@@ -152,6 +173,40 @@ def evaluate_one_with_samples(task: EvalTask):
     except Exception as exc:  # noqa: BLE001
         logger.warning("trajectory candidate %s failed: %s", task.candidate, exc)
         return _infeasible(str(exc)), []
+    finally:
+        if env is not None:
+            try:
+                env.close()
+            except Exception:
+                pass
+            _teardown_container(env)
+
+
+def evaluate_one_schedule(task: EvalTask) -> WeeklyKPI:
+    """Process-pool target for a time-block schedule. Same env setup as evaluate_one but
+    applies task.schedule's per-block action by hour. Returns infeasible on failure."""
+    import dctwin
+    from dctwin.utils import config as dt_config
+    from planner.env_actions import mapper_from_env
+    from planner.monitor import discover_monitor
+    import dctwin.third_parties.eplus.core as _eplus_core
+    _eplus_core.EplusBackendMixin._post_process = staticmethod(lambda: None)
+
+    env = None
+    try:
+        dt_config.set_log_dir(task.log_dir)
+        env = dctwin.make_env(env_proto_config=task.week_config_path, reward_fn=lambda x: 0)
+        backend = getattr(getattr(env, "unwrapped", env), "eplus_backend", None)
+        if backend is not None and task.bcvtb_host:
+            backend._host = task.bcvtb_host
+        broadcaster = mapper_from_env(env)
+        monitor = discover_monitor(env, hall=task.monitored_hall)
+        kpi, _samples = run_episode_schedule(env, broadcaster, task.schedule, monitor,
+                                             task.hours_per_step, OracleSettings(**task.settings_kwargs))
+        return kpi
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("schedule candidate failed: %s", exc)
+        return _infeasible(str(exc))
     finally:
         if env is not None:
             try:
