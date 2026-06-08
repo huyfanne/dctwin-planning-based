@@ -164,3 +164,33 @@ def test_plan_result_exposes_raw_uncalibrated_kpi():
     assert result.best_kpi.inlet_temp_max == result.best_kpi_raw.inlet_temp_max + 2.0
     # finalists carry the raw kpi as a 4th tuple element
     assert len(result.beam_finalists[0]) == 4
+
+
+def test_degenerate_no_signal_flagged_when_kpis_are_flat():
+    """A control-invariant model (identical KPIs for every candidate) is flagged."""
+    from planner.types import WeeklyKPI
+
+    class FlatEvaluator:
+        def evaluate(self, candidates, forecast=None, on_result=None):
+            out = []
+            for _ in candidates:
+                if on_result:
+                    on_result()
+                out.append(WeeklyKPI(total_hvac_energy_kwh=700000.0, pue_mean=1.2,
+                                     inlet_temp_max=43.64, inlet_violation_steps=600,
+                                     rh_violation_steps=0, feasible=False))
+            return out
+
+    res = BeamPlanner(DEFAULT_SEARCH_SPACE, FlatEvaluator(), ObjectiveWeights(),
+                      BeamConfig(grid=3, beam_width=2, levels=1, neighbors=6)).plan()
+    assert res.feasible is False
+    assert res.degenerate_no_signal is True
+
+
+def test_not_degenerate_when_kpis_vary():
+    """An all-infeasible but setpoint-RESPONSIVE surface is NOT flagged (there is signal)."""
+    ev = MockEvaluator(MockSurface(inlet_cap=0.0))   # everything infeasible, but inlet varies w/ setpoints
+    res = BeamPlanner(DEFAULT_SEARCH_SPACE, ev, ObjectiveWeights(),
+                      BeamConfig(grid=5, beam_width=3, levels=1, neighbors=6)).plan()
+    assert res.feasible is False
+    assert res.degenerate_no_signal is False

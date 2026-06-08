@@ -198,3 +198,37 @@ def test_run_weekly_plan_applies_margin_from_calibration():
     finally:
         pp.BeamPlanner = orig
     assert abs(captured["margin"] - K_SIGMA * 0.6) < 1e-9
+
+
+def test_infeasible_fallback_is_data_driven_not_hardcoded_corner():
+    """When nothing is feasible, the fallback is the safest EVALUATED coarse point (fewest
+    violations, then least energy) — not the old hand-picked (sat.lb, flow.ub, chwst.lb) corner."""
+    rec = run_weekly_plan(
+        PlanRequest(week_start=date(2013, 11, 11), days=1, grid=3, beam_width=2, levels=0),
+        evaluator=MockEvaluator(MockSurface(inlet_cap=0.0, sat_opt=23.0, flow_opt=9.0, chwst_opt=16.0)),
+        forecaster=_FakeForecaster())
+    assert rec["status"] == "infeasible_fallback"
+    sp = rec["setpoints"]
+    # all candidates tie on violations -> safest_fallback picks LEAST energy -> near the bowl
+    # centre (23, 9, 16), NOT the hardcoded corner (sat.lb=20, chwst.lb=13).
+    assert not (sp["crah_supply_air_temperature_c"] == 20.0
+                and sp["chilled_water_supply_temperature_c"] == 13.0)
+    assert "degenerate_no_signal" in rec
+
+
+def test_degenerate_no_signal_surfaced_in_recommendation():
+    """A control-invariant evaluator -> the recommendation flags degenerate_no_signal + schema 1.6."""
+    from planner.types import WeeklyKPI
+
+    class FlatEvaluator:
+        def evaluate(self, candidates, forecast=None, on_result=None):
+            return [WeeklyKPI(total_hvac_energy_kwh=700000.0, pue_mean=1.2, inlet_temp_max=43.64,
+                              inlet_violation_steps=600, rh_violation_steps=0, feasible=False)
+                    for _ in candidates]
+
+    rec = run_weekly_plan(
+        PlanRequest(week_start=date(2013, 11, 11), days=1, grid=3, beam_width=2, levels=0),
+        evaluator=FlatEvaluator(), forecaster=_FakeForecaster())
+    assert rec["degenerate_no_signal"] is True
+    assert rec["schema_version"] == "1.6"
+    assert rec["status"] == "infeasible_fallback"

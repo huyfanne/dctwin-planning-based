@@ -8,7 +8,7 @@ from typing import Any, Callable, Optional
 from planner.beam_search import BeamConfig, BeamPlanner
 from planner.calibrator import SIGMA_PRIOR
 from planner.objective import ObjectiveWeights
-from planner.recommendation import build_recommendation
+from planner.recommendation import build_recommendation, safest_fallback
 from planner.types import DEFAULT_SEARCH_SPACE, Evaluator, Setpoints
 
 
@@ -105,6 +105,12 @@ def run_weekly_plan(
         status = "pending_approval" if robust.robust_feasible else "blocked_unsafe"
     elif result.feasible:
         best, kpi, raw, status = result.best, result.best_kpi, result.best_kpi_raw, "pending_approval"
+    elif result.coarse:
+        # No feasible candidate: pick the safest already-evaluated coarse point (fewest inlet
+        # violations, then least energy) instead of a hand-picked corner — data-driven, no re-eval.
+        idx = safest_fallback([c[1] for c in result.coarse])
+        best, kpi, raw, status = (result.coarse[idx][0], result.coarse[idx][1],
+                                  result.coarse[idx][3], "infeasible_fallback")
     else:
         fb = Setpoints(space.sat.lb, space.flow.ub, space.chwst.lb)
         fb_kpi = evaluator.evaluate([fb], forecast)[0]
@@ -136,4 +142,5 @@ def run_weekly_plan(
         inlet_forecast_margin=weights.inlet_forecast_margin,
         k_sigma=K_SIGMA,
         schedule=schedule,
+        degenerate_no_signal=result.degenerate_no_signal,
     )
