@@ -109,6 +109,29 @@ def test_seasonal_forecaster_produces_point_and_bands():
     assert "p10" in forecast.bands["Data Hall 1F 2A ite-1"]
 
 
+def test_seasonal_load_is_week_start_aligned_unlike_persistence():
+    # The fix for "IT load doesn't shift with week_start": seasonal climatology is keyed
+    # by (weekday x time-of-day), so a week starting on a different weekday gets a
+    # different per-step sequence; persistence (last-n_steps) ignores week_start.
+    col = "1F_Datahall 2A 1F Data Hall 2A IT loads"
+    times = pd.date_range("2024-11-04 00:00", periods=28 * 96, freq="15min", tz="Asia/Singapore")
+    weekend = times.weekday >= 5
+    df = pd.DataFrame({"_time": times.astype(str), col: np.where(weekend, 400.0, 1800.0)})
+    room2ite = {"Data Hall 1F 2A": {"Data Hall 1F 2A ite-1": {"totalWatts": 1_800_000.0}}}
+    hcr = {"Data Hall 1F 2A": col}
+    ite = "Data Hall 1F 2A ite-1"
+    n = 7 * 96
+
+    sea = SeasonalForecaster(df, room2ite, hcr)
+    mon = sea.forecast(date(2024, 12, 2), n).workload_schedules[ite]   # Monday
+    thu = sea.forecast(date(2024, 12, 5), n).workload_schedules[ite]   # Thursday
+    assert mon != thu                                                  # seasonal IS week-aligned
+
+    per = StatisticalForecaster(df, room2ite, hcr, method="persistence")
+    assert (per.forecast(date(2024, 12, 2), n).workload_schedules[ite]
+            == per.forecast(date(2024, 12, 5), n).workload_schedules[ite])  # persistence ignores week_start
+
+
 def test_build_forecaster_selects_class_by_method():
     col = "1F_Datahall 2A 1F Data Hall 2A IT loads"
     his = _diurnal_his(col)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Optional
 
 from planner.types import WeeklyKPI
 
@@ -14,6 +15,16 @@ class StepSample:
     inlet_temps: list[float]      # ITE inlet dry-bulb, deg C
     inlet_rhs: list[float] = field(default_factory=list)   # %
     zone_temps: list[float] = field(default_factory=list)  # deg C
+    # Hall-scoped controllable HVAC power (ACU fans + chiller/CHW plant), summed
+    # from MonitorSpec.hvac_power_names. None = not measured -> fall back to the
+    # facility total_power_w - it_power_w (keeps the mock/legacy paths working).
+    hvac_power_w: Optional[float] = None
+
+
+def _hvac_watts(smp: "StepSample") -> float:
+    """Controllable HVAC power for energy: the scoped hall+plant sum when measured,
+    else facility (total - IT) as a back-compat fallback."""
+    return smp.hvac_power_w if smp.hvac_power_w is not None else (smp.total_power_w - smp.it_power_w)
 
 
 @dataclass(frozen=True)
@@ -55,7 +66,7 @@ def aggregate_kpi(samples: list[StepSample], hours_per_step: float,
     zone_band_steps = 0.0
 
     for smp in samples:
-        hvac_w = smp.total_power_w - smp.it_power_w
+        hvac_w = _hvac_watts(smp)
         energy_kwh += hvac_w * hours_per_step / 1000.0
         if smp.it_power_w > 0:
             pue_sum += smp.total_power_w / smp.it_power_w
@@ -103,7 +114,7 @@ def step_trajectory(samples: list[StepSample], hours_per_step: float,
         samples = samples[s.warmup_steps:]
     rows = []
     for i, smp in enumerate(samples):
-        hvac_w = smp.total_power_w - smp.it_power_w
+        hvac_w = _hvac_watts(smp)
         rows.append({
             "step": i,
             "inlet_temp_max_c": max(smp.inlet_temps) if smp.inlet_temps else None,

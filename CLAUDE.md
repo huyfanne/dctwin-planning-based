@@ -65,7 +65,8 @@ sg docker -c "PYTHONPATH=\$PWD OPERATOR_TOKEN=op EXPERT_TOKEN=ex \
 ## Key conventions & gotchas
 
 - **Process-based parallelism, not threads.** The dctwin/EnergyPlus config is a **process-global singleton**, so the oracle fans out across *processes*. Don't assume thread-safety for config-dependent state.
-- **`recommendation.json` is schema-versioned** (currently `1.0`→`1.5`; e.g. `1.5` adds the time-block `schedule` block). Bump the version when you change the artifact shape, and keep older readers working.
+- **`recommendation.json` is schema-versioned** (currently `1.0`→`1.7`; `1.5` adds the time-block `schedule` block, `1.7` adds the as-operated `baseline` block + `energy_scope`). Bump the version when you change the artifact shape, and keep older readers working.
+- **Energy objective is hall-scoped** (`energy_scope: "hall_controllable_v1"`): `kpi.total_hvac_energy_kwh` sums the 1F-2A ACU fans + chiller/CHW plant (`monitor.hvac_power_names`), NOT facility total−IT; it falls back to facility (total−IT) only when those component powers aren't discovered (mock/legacy). The baseline is the **as-operated** setpoints (`planner/baseline.py`, medians from `his_data`) evaluated once. Live forecaster is **seasonal** (week-aligned); the 1F-2A IT load is ~flat in the data, so weather dominates week-to-week.
 - **Hard safety invariant:** inlet temperature ≤ 26 °C at every step. `objective.is_feasible` rejects violations; the robust gate adds margin; deploy has a backstop. Don't weaken these to make a search "succeed."
 - **TDD + don't weaken tests.** Plans are written test-first; implementers must make the code pass, never relax an assertion. The frontend build (`tsc -b`) type-checks test files with `noUnusedLocals` — drop imports you stop using or the build fails (TS6133).
 

@@ -42,6 +42,36 @@ def test_discover_requires_power_observations():
         discover_monitor(env)
 
 
+def test_discover_classifies_hvac_power_names():
+    # Controllable HVAC power = controlled-hall ACU fans + the shared chiller/CHW plant
+    # (chiller compressors, CHW pumps, condenser-water pump, cooling-tower fans).
+    env = _FakeEnv([
+        "total power", "total it power",
+        "data hall 1f 2a acu-1 fan power consumption",
+        "data hall 1f 2a acu-2 fan power consumption",
+        "data hall gf 1a acu-1 fan power consumption",      # other hall -> excluded when scoped
+        "4572kwc chiller 1 power consumption",              # compressor
+        "4572kwc chiller 1 chwp power consumption",         # chilled-water pump
+        "cooling tower cwp power consumption",              # condenser-water pump
+        "5064kwc cooling tower 1 fan power consumption",    # tower fan
+        "data hall 1f 2a ite-1 inlet dry-bulb temperature",  # not power
+    ])
+    m = discover_monitor(env, hall="1f 2a")
+    assert set(m.hvac_power_names) == {
+        "data hall 1f 2a acu-1 fan power consumption",
+        "data hall 1f 2a acu-2 fan power consumption",
+        "4572kwc chiller 1 power consumption",
+        "4572kwc chiller 1 chwp power consumption",
+        "cooling tower cwp power consumption",
+        "5064kwc cooling tower 1 fan power consumption",
+    }
+    # the other hall's ACU fan is excluded; the inlet-temp obs is not power
+    assert "data hall gf 1a acu-1 fan power consumption" not in m.hvac_power_names
+    # without a hall scope, all ACU fans (both halls) are included
+    m_all = discover_monitor(env)
+    assert "data hall gf 1a acu-1 fan power consumption" in m_all.hvac_power_names
+
+
 def test_hall_filter_scopes_thermal_sensors_only():
     env = _FakeEnv([
         "total power",

@@ -54,6 +54,25 @@ def test_run_weekly_plan_no_schedule_by_default():
     assert "schedule" not in rec
 
 
+def test_run_weekly_plan_evaluates_as_operated_baseline():
+    # Given baseline_setpoints (no precomputed energy), the pipeline evaluates them
+    # once and surfaces a real baseline block + energy_scope (schema 1.7).
+    rec = run_weekly_plan(
+        PlanRequest(week_start=date(2013, 11, 11), days=7, grid=4, beam_width=3, levels=2),
+        evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
+        forecaster=_FakeForecaster(),
+        baseline_setpoints=Setpoints(24.0, 9.6, 16.0),
+        energy_scope="hall_controllable_v1",
+    )
+    assert rec["schema_version"] == "1.7"
+    assert rec["energy_scope"] == "hall_controllable_v1"
+    assert rec["baseline"]["source"] == "as_operated"
+    assert rec["baseline"]["energy_kwh"] is not None        # was evaluated, not a placeholder
+    assert rec["baseline"]["setpoints"]["crah_supply_air_temperature_c"] == 24.0
+    assert rec["baseline"]["kpis"]["total_hvac_energy_kwh"] is not None  # full baseline KPI stored
+    assert rec["predicted_kpis"]["energy_reduction_vs_baseline_pct"] is not None
+
+
 def test_run_weekly_plan_infeasible_fallback():
     rec = run_weekly_plan(
         PlanRequest(week_start=date(2013, 11, 11), days=1, grid=3, beam_width=2, levels=0),

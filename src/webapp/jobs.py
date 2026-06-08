@@ -139,7 +139,8 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
     from planner.oracle import OracleConfig, ParallelEnvOracle
     from planner.pipeline import PlanRequest, run_weekly_plan
     from planner.robust import make_oracle_robust_rerank
-    from planner.types import Setpoints
+    from planner.baseline import as_operated_setpoints, BaselineColumns
+    from planner.types import DEFAULT_SEARCH_SPACE, Setpoints
 
     plan_dir = store.plan_dir(plan_id)
     dt_config.set_log_dir(str(plan_dir))
@@ -150,6 +151,21 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
     room2ite = _json.loads(Path(fc_cfg["room2ite_path"]).read_text())
     forecaster = build_forecaster(fc_cfg["method"], his, room2ite, fc_cfg["his_col_for_room"],
                                   weather_file=fc_cfg.get("weather_file"))
+
+    # As-operated baseline setpoints from the controlled hall's telemetry medians
+    # (column patterns + fan-speed scale are config-overridable). Evaluated once in
+    # run_weekly_plan to compute a real energy_reduction_vs_baseline (no UI placeholder).
+    bc = fc_cfg.get("baseline_columns", {})
+    baseline_cols = BaselineColumns(
+        sat_supply_temp=bc.get("sat_supply_temp", r"CRACW\d+_AirSupplyTemperature$"),
+        chwst_supply_temp=bc.get("chwst_supply_temp", r"CHILLER\d+_ChilledWaterSupplyTemperature$"),
+        fan_speed=bc.get("fan_speed", r"CRACW\d+_FanSpeed$"),
+    )
+    baseline_sp = as_operated_setpoints(
+        his, DEFAULT_SEARCH_SPACE, baseline_cols,
+        design_flow_kg_s_per_acu=fc_cfg.get("design_flow_kg_s_per_acu", DEFAULT_SEARCH_SPACE.flow.ub),
+        fan_speed_max=fc_cfg.get("fan_speed_max", 100.0),
+    )
 
     oracle = ParallelEnvOracle(
         base_prototxt=dt_cfg, project_root=".",
@@ -193,6 +209,8 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
         on_level=on_level, on_eval=on_eval,
         calibration=calibration,
         robust_rerank_fn=robust_rerank_fn,
+        baseline_setpoints=baseline_sp,
+        energy_scope="hall_controllable_v1",
     )
     store.save_recommendation(plan_id, rec)
 

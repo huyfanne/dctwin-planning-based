@@ -14,6 +14,25 @@ def test_energy_is_hvac_power_times_hours():
     assert k.total_hvac_energy_kwh == 0.5
 
 
+def test_energy_uses_scoped_hvac_power_when_present():
+    # When the scoped hall HVAC power is measured, energy uses it directly,
+    # NOT facility total-minus-IT (which is the back-compat fallback).
+    s = [StepSample(total_power_w=9_000_000.0, it_power_w=8_000_000.0,
+                    inlet_temps=[24.0], hvac_power_w=400_000.0),
+         StepSample(total_power_w=9_000_000.0, it_power_w=8_000_000.0,
+                    inlet_temps=[24.0], hvac_power_w=400_000.0)]
+    k = aggregate_kpi(s, hours_per_step=0.25, settings=OracleSettings())
+    # 400_000 W * 0.25 h / 1000 * 2 steps = 200 kWh (NOT (9e6-8e6) based)
+    assert k.total_hvac_energy_kwh == 200.0
+
+
+def test_energy_falls_back_to_total_minus_it_when_unscoped():
+    # hvac_power_w left as default None -> fallback to total-it (legacy/mock path)
+    s = [_sample(2000.0, 1000.0, [24.0]), _sample(2000.0, 1000.0, [24.0])]
+    k = aggregate_kpi(s, hours_per_step=0.25, settings=OracleSettings())
+    assert k.total_hvac_energy_kwh == 0.5
+
+
 def test_pue_mean():
     s = [_sample(2400.0, 2000.0, [24.0])]
     k = aggregate_kpi(s, hours_per_step=0.25, settings=OracleSettings())
