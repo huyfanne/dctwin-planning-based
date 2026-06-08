@@ -76,9 +76,9 @@ class JobRunner:
             try:
                 self.runner(plan_id, params, self.store,
                             lambda p, pid=plan_id: self.store.write_progress(pid, p))
-            except Exception:  # noqa: BLE001
+            except Exception as e:  # noqa: BLE001
                 logger.exception("plan %s failed", plan_id)
-                self.store.set_status(plan_id, "failed")
+                record_failure(self.store, plan_id, e)
 
 
 def run_plan_job(plan_id: str, params: dict, store: PlanStore,
@@ -172,6 +172,13 @@ def pickle_load(path: str) -> dict:
     import pickle
     from pathlib import Path
     return pickle.loads(Path(path).read_bytes())
+
+
+def record_failure(store, plan_id: str, exc: Exception) -> None:
+    """Persist a failure reason via the progress channel, then mark the plan failed,
+    so the SSE frame ({progress, status}) carries progress.error."""
+    store.write_progress(plan_id, {"error": str(exc) or exc.__class__.__name__})
+    store.set_status(plan_id, "failed")
 
 
 def deploy_status_for(realized: dict) -> str:

@@ -18,6 +18,28 @@ def epw_data_period(weather_file: str) -> tuple:
     raise ValueError(f"no DATA PERIODS line in EPW {weather_file}")
 
 
+_MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def weather_coverage(weather_file: str) -> dict:
+    """Human + machine view of the EPW's covered window (month/day, year-agnostic)."""
+    (sm, sd), (em, ed) = epw_data_period(weather_file)
+    return {
+        "label": f"{_MONTHS[sm]} {sd} – {_MONTHS[em]} {ed}",
+        "start_md": f"{sm:02d}-{sd:02d}",
+        "end_md": f"{em:02d}-{ed:02d}",
+    }
+
+
+def epw_first_date(weather_file: str) -> date:
+    """First concrete date in the EPW data block (8 header lines, then CSV rows
+    'year,month,day,hour,…'). Used to suggest an in-range default week_start."""
+    rows = Path(weather_file).read_text().splitlines()
+    f = rows[8].split(",")
+    return date(int(f[0]), int(f[1]), int(f[2]))
+
+
 def _md_in_range(md: tuple, start: tuple, end: tuple) -> bool:
     """Is (month, day) within [start, end], allowing a year wrap (start > end)?"""
     if start <= end:

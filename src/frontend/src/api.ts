@@ -29,7 +29,7 @@ export interface RealizedKpis {
   inlet_violation_steps?: number;
 }
 export interface PlanDetail { plan_id: string; status: string; recommendation: Recommendation | null; realized?: RealizedKpis | null; }
-export interface Progress { level?: number; evals?: number; best_score?: number; }
+export interface Progress { level?: number; evals?: number; best_score?: number; error?: string; }
 
 // ── Digital-twin hall topology (GET /api/topology) ──
 export type Vec3 = [number, number, number];
@@ -119,6 +119,15 @@ export interface CalibrationState {
   version: string;
 }
 export const getCalibration = () => req<CalibrationState>(`/api/calibration`);
+
+export interface WeatherCoverage {
+  label: string | null;
+  start_md?: string | null;
+  end_md?: string | null;
+  file?: string | null;
+  suggested_week_start: string | null;
+}
+export const getWeather = () => req<WeatherCoverage>("/api/weather");
 
 export interface TrajRow { step: number; inlet_temp_max_c: number | null; hvac_power_kw: number | null; pue: number | null; }
 export interface Trajectory { nominal: TrajRow[]; worst: TrajRow[]; }

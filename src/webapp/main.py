@@ -73,6 +73,21 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
         except ValueError as e:
             raise HTTPException(422, str(e))
 
+        # week-vs-weather guardrail (strict only when the configured EPW is readable)
+        try:
+            from webapp.jobs import pickle_load
+            from planner.epw import week_within_epw, weather_coverage
+            _wf = pickle_load(p.get("forecaster", "models/forecaster.pkl")).get("weather_file")
+        except Exception:
+            _wf = None
+        if _wf:
+            _week = _date.fromisoformat(p["week_start"])
+            _days = _v("days", 7)
+            if not week_within_epw(_wf, _week, _days):
+                _cov = weather_coverage(_wf)
+                raise HTTPException(422, f"week {_week} (+{_days}d) is outside the weather data "
+                                         f"coverage ({_cov['label']}); pick a week within that window.")
+
         plan_id = f"gds-{params.week_start}-{uuid.uuid4().hex[:6]}"
         store.create_plan(plan_id, params.week_start, p)
         if run_sync:
@@ -194,6 +209,18 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
     @app.get("/api/calibration")
     def get_calibration(role: str = Depends(operator)):
         return load_calibration("data/calibration.json").to_dict()
+
+    @app.get("/api/weather")
+    def get_weather(role: str = Depends(operator)):
+        try:
+            from webapp.jobs import pickle_load
+            from planner.epw import weather_coverage, epw_first_date
+            wf = pickle_load("models/forecaster.pkl").get("weather_file")
+            cov = weather_coverage(wf)
+            return {**cov, "file": wf, "suggested_week_start": epw_first_date(wf).isoformat()}
+        except Exception:
+            return {"label": None, "start_md": None, "end_md": None,
+                    "file": None, "suggested_week_start": None}
 
     # Serve the built frontend at "/" (single origin — no separate dev server needed).
     # Mounted LAST so every /api/* route and /docs take precedence. If the UI isn't
