@@ -98,3 +98,57 @@ def test_save_realized_records_energy_in_index(tmp_path):
     assert row["realized_energy_kwh"] == 31000.0
     assert any(p["plan_id"] == "p1" and p["realized_energy_kwh"] == 31000.0
                for p in store.list_plans())
+
+
+def test_read_progress_tolerates_empty_or_partial_file(tmp_path):
+    # The exact SSE crash: a reader catches progress.json mid-write (empty/partial JSON).
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("p", "2024-11-11", {})
+    pj = store.plan_dir("p") / "progress.json"
+    pj.write_text("")                 # empty (truncated mid-write)
+    assert store.read_progress("p") == {}
+    pj.write_text('{"level": 1, ')    # partial JSON
+    assert store.read_progress("p") == {}
+
+
+def test_write_then_read_progress_roundtrips(tmp_path):
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("p", "2024-11-11", {})
+    store.write_progress("p", {"level": 2, "evals": 9, "best_score": 1.5})
+    assert store.read_progress("p") == {"level": 2, "evals": 9, "best_score": 1.5}
+
+
+def test_write_progress_atomic_under_concurrent_reads(tmp_path):
+    # Reproduce the race: write progress in a tight loop while reading it. With a
+    # non-atomic write + unguarded read this raises JSONDecodeError; the fix must not.
+    import threading
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("p", "2024-11-11", {})
+    errors, stop = [], threading.Event()
+
+    def writer():
+        i = 0
+        while not stop.is_set():
+            store.write_progress("p", {"level": i % 4, "evals": i, "best_score": 0.5})
+            i += 1
+
+    t = threading.Thread(target=writer); t.start()
+    try:
+        for _ in range(3000):
+            store.read_progress("p")          # must never raise
+    except Exception as e:  # noqa: BLE001
+        errors.append(repr(e))
+    finally:
+        stop.set(); t.join(timeout=2)
+    assert errors == []
+
+
+def test_get_recommendation_tolerates_partial_file(tmp_path):
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("p", "2024-11-11", {})
+    (store.plan_dir("p") / "recommendation.json").write_text("")   # empty/mid-write
+    assert store.get_recommendation("p") is None
