@@ -37,11 +37,12 @@ env -C /mnt/lv/home/hoanghuy/newcode/dctwin/src/frontend npm run build      # ts
 env -C /mnt/lv/home/hoanghuy/newcode/dctwin/src/frontend npm run dev        # dev server
 ```
 
-**Run the web app** — one command clears plan state and starts both halves (backend under `sg docker` + Vite frontend; Ctrl-C stops both). Flags: `--keep-runs`, `-y`, `--backend-only`, `--frontend-only`, `--help`:
+**Run the web app** — one command clears plan state, builds the UI, and serves the **whole app from the backend at a single origin** `http://localhost:8000` (UI at `/`, API at `/api/*`). Ctrl-C stops it. Flags: `--dev` (hot-reload via the Vite dev server at `:5173` + backend proxy), `--backend-only`, `--keep-runs`, `-y`, `--help`:
 ```bash
-scripts/clear-and-run.sh
+scripts/clear-and-run.sh            # → http://localhost:8000  (single origin)
+scripts/clear-and-run.sh --dev      # → http://localhost:5173  (hot reload)
 ```
-Then open `http://localhost:5173` and enter the operator/expert token. To start the backend by hand instead (full command in `src/webapp/README.md`):
+Then open the printed URL and enter the operator/expert token. `webapp/main.py` mounts `frontend/dist` at `/` when it's built (so **build the frontend** — `npm --prefix src/frontend run build` — or `/` shows a "not built" hint, not the UI). To start the backend by hand (full command in `src/webapp/README.md`):
 ```bash
 sg docker -c "PYTHONPATH=\$PWD OPERATOR_TOKEN=op EXPERT_TOKEN=ex \
   /mnt/lv/home/hoanghuy/newcode/dctwin/.venv-dtwin/bin/python -m uvicorn webapp.main:app --port 8000"
