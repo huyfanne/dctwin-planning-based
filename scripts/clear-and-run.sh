@@ -38,13 +38,39 @@ for arg in "$@"; do
   esac
 done
 
-kill_port() { lsof -ti:"$1" 2>/dev/null | xargs -r kill 2>/dev/null || true; }
+port_listening() { ss -ltnH "sport = :$1" 2>/dev/null | grep -q .; }   # anything listening (even foreign-owned)
+
+kill_port() {                          # kill OUR processes on the port; wait, then SIGKILL
+  local port="$1" pids
+  pids="$(lsof -ti:"$port" 2>/dev/null || true)"
+  if [[ -z "$pids" ]] && command -v fuser >/dev/null 2>&1; then
+    pids="$(fuser "$port"/tcp 2>/dev/null | tr -s ' ' '\n' | grep -E '^[0-9]+$' || true)"
+  fi
+  [[ -n "$pids" ]] || return 0
+  kill $pids 2>/dev/null || true
+  for _ in $(seq 1 6); do port_listening "$port" || return 0; sleep 0.5; done
+  kill -9 $pids 2>/dev/null || true; sleep 0.5
+}
+
+ensure_port_free() {                   # abort with guidance if the port is still held by something we can't kill
+  local port="$1"
+  port_listening "$port" || return 0
+  {
+    echo "ERROR: port $port is in use and this script can't free it — most likely a Docker"
+    echo "       container or another user's process (your kill only reaches your own processes)."
+    echo "  Inspect:  sg docker -c 'docker ps'      # look for a container publishing 0.0.0.0:$port->"
+    echo "            ss -ltnp | grep :$port"
+    echo "  Then stop that service, OR run dctwin on a free port, e.g.:"
+    echo "            BACKEND_PORT=8001 scripts/clear-and-run.sh"
+  } >&2
+  exit 1
+}
 
 start_backend_bg() {   # backgrounded + logged (used by --dev)
   mkdir -p "$SRC/log"
   sg docker -c "cd '$SRC' && PYTHONPATH='$SRC' OPERATOR_TOKEN='$OPERATOR_TOKEN' EXPERT_TOKEN='$EXPERT_TOKEN' \
     '$PY' -m uvicorn webapp.main:app --host 0.0.0.0 --port $BACKEND_PORT" > "$SRC/log/backend.out" 2>&1 &
-  for _ in $(seq 1 30); do lsof -ti:"$BACKEND_PORT" >/dev/null 2>&1 && return 0; sleep 1; done
+  for _ in $(seq 1 30); do port_listening "$BACKEND_PORT" && return 0; sleep 1; done
   echo "  (backend not up yet — see src/log/backend.out)"
 }
 
@@ -61,9 +87,12 @@ build_frontend() {
   ( cd "$SRC/frontend" && npm run build >/dev/null )
 }
 
-# 1. Stop anything on the ports.
+# 1. Stop our own stale servers, then require the ports we actually need to be free
+#    (checked BEFORE clearing/building so a foreign-held port aborts without data loss).
 echo "• stopping servers on :$BACKEND_PORT and :$FRONTEND_PORT"
 kill_port "$BACKEND_PORT"; kill_port "$FRONTEND_PORT"
+ensure_port_free "$BACKEND_PORT"
+[[ "$MODE" == dev ]] && ensure_port_free "$FRONTEND_PORT"
 
 # 2. Clear state (runs/ + index.db are recreated on the next plan).
 if [[ "$CLEAR_RUNS" == 1 && "$ASSUME_YES" != 1 ]]; then
