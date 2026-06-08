@@ -25,30 +25,28 @@ WC = write_week_config("configs/dt/dt.prototxt", date(2024, 12, 1),
                        "runs/_recouple_check/week.prototxt", days=2)
 
 
-def _ite1_and_max(log_dir: Path):
+def _ite1_steadystate(log_dir: Path):
+    """ITE-1 inlet, mean over the 2nd half of the run (steady state — excludes the
+    startup-warmup transient, which is SAT-independent and otherwise dominates the max)."""
     csvs = glob.glob(str(log_dir / "**" / "eplusout.csv"), recursive=True)
     if not csvs:
-        return None, None
+        return None
     with open(csvs[0]) as f:
         header = f.readline().split(",")
         i1 = next((k for k, h in enumerate(header)
                    if "DATA HALL 1F 2A ITE-1:" in h.upper() and "AIR INLET DRY-BULB" in h.upper()), None)
-        inlet_cols = [k for k, h in enumerate(header)
-                      if "AIR INLET DRY-BULB" in h.upper() and "1F 2A" in h.upper()]
-        m1, mmax = -1e9, -1e9
+        if i1 is None:
+            return None
+        vals = []
         for line in f:
-            v = line.split(",")
-            if i1 is not None:
-                try:
-                    m1 = max(m1, float(v[i1]))
-                except (ValueError, IndexError):
-                    pass
-            for c in inlet_cols:
-                try:
-                    mmax = max(mmax, float(v[c]))
-                except (ValueError, IndexError):
-                    pass
-    return (m1 if m1 > -1e9 else None), (mmax if mmax > -1e9 else None)
+            try:
+                vals.append(float(line.split(",")[i1]))
+            except (ValueError, IndexError):
+                pass
+    if not vals:
+        return None
+    half = vals[len(vals) // 2:]
+    return sum(half) / len(half)
 
 
 def run(sat: float, tag: str):
@@ -58,9 +56,9 @@ def run(sat: float, tag: str):
                     hours_per_step=0.25, settings_kwargs=OracleSettings().__dict__,
                     monitored_hall="1f 2a", timeout_s=300.0)
     kpi = evaluate_one(task)
-    ite1, hallmax = _ite1_and_max(ld)
+    ite1 = _ite1_steadystate(ld)
     print(f"SAT={sat:>4}: kpi.inlet_temp_max={kpi.inlet_temp_max:.2f}  "
-          f"energy_kwh={kpi.total_hvac_energy_kwh:.0f}  ITE-1_inlet_max={ite1}  hall_inlet_max={hallmax}",
+          f"energy_kwh={kpi.total_hvac_energy_kwh:.0f}  ITE-1_inlet_steadystate={ite1:.2f}",
           flush=True)
     return ite1
 
@@ -69,6 +67,6 @@ if __name__ == "__main__":
     a = run(20.0, "sat20")
     b = run(26.0, "sat26")
     if a is not None and b is not None:
-        print(f"\nITE-1 inlet: SAT20={a:.2f}  SAT26={b:.2f}  delta={b - a:+.2f} C", flush=True)
+        print(f"\nITE-1 steady-state inlet: SAT20={a:.2f}  SAT26={b:.2f}  delta={b - a:+.2f} C", flush=True)
         print("RECOUPLED (inlet tracks SAT)" if (b - a) > 1.0 else
               "STILL DECOUPLED (inlet did not move with SAT)", flush=True)

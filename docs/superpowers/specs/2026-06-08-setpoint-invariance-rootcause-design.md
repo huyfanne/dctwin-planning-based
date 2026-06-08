@@ -44,5 +44,31 @@ Set the 22 `data hall 1f 2a ite-N recirculation …` BIQUADRATIC curves' `Coeffi
 ### 3c. Deferred (filed, not blocking)
 Schedule-offset alignment + neutralizing on/off masking on the controlled hall (or excluding masked-off units from the safety max); re-enable the commented-out actuated-component existence check (`parser.py:587-591`); optional migration to `FlowControlWithApproachTemperatures`.
 
-## 4. Status
-Guardrail (3b) committed with TDD. Model recouple (3a) applied via the tracked script + verified by the spot-check. Calibration of the 0.10 fraction against measured inlets is the open follow-up.
+### 3d. Lift the ACU on/off masking (`week_config.write_week_config`, `lift_acu_masking=True`)
+The on/off masking zeroes the agent's SAT/airflow setpoints whenever an ACU's `fan_on_off`
+schedule reads −1 (and those schedules replay from index 0, so a leading off-block hits every
+week). The planner is *optimising* this hall's cooling, so its ACUs are treated as ON for the
+planning week: clear `masking_variable_name` on the 44 AGENT_CONTROLLED actuators. (The user
+ratified treating the off-windows as an artifact, not real maintenance.) TDD in `test_week_config`.
+
+## 4. Verification (real EnergyPlus, `scripts/spotcheck_recouple.py`)
+
+Two real candidates, SAT 20 vs 26 (flow 9.3, CHWST 16), **recouple + masking lifted**:
+
+| Sensor | SAT 20 | SAT 26 | Pre-fix |
+|---|---|---|---|
+| ITE-1 inlet (steady-state, 2nd-half mean) | **20.9 °C** | **26.0 °C** | 43.64 (bit-invariant) |
+| Oracle binding inlet (warmup-excluded) | **24.1 °C — feasible** | 26.0 °C | 43.64 (bit-invariant) |
+
+The rack inlet now tracks the cooling setpoint by ~5–6 °C (consistent with recirc 0.1 →
+inlet ≈ 0.9·supply + 0.1·zone) and the ≤26 °C cap is **reachable** at SAT 20. The raw per-rack
+*max* (30.18) is a SAT-independent startup-warmup transient; the oracle already excludes warmup
+(24.1 < 30.18). ⇒ the search now has strong signal, differentiates candidates, and reaches
+feasibility — the "always the same recommendation" symptom is resolved.
+
+## 5. Status
+Done & verified on `fix/recouple-inlet-setpoints`: guardrail (3b, TDD), recirc recouple (3a,
+tracked script), ACU masking lift (3d, TDD). Open follow-ups: calibrate the 0.10 recirc fraction
+against measured rack inlets; the oracle monitor reads **zone** temps (not per-rack ITE inlet) —
+review its coverage; align the PRE_SCHEDULED **workload** schedules to the calendar week (the
+load offset, separate from the now-moot on/off offset).
