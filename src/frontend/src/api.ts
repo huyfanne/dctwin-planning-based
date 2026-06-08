@@ -92,6 +92,7 @@ export const createPlan = (p: PlanParams) =>
 export const listPlans = () => req<PlanSummary[]>("/api/plans");
 export const getPlan = (id: string) => req<PlanDetail>(`/api/plans/${id}`);
 export const getProgress = (id: string) => req<Progress>(`/api/plans/${id}/progress`);
+export const planStreamUrl = (id: string) => `/api/plans/${id}/stream?token=${encodeURIComponent(TOKEN)}`;
 export const approvePlan = (id: string) => req(`/api/plans/${id}/approve`, { method: "POST" });
 export const rejectPlan = (id: string) => req(`/api/plans/${id}/reject`, { method: "POST" });
 export const editSetpoints = (id: string, sp: Record<string, number>) =>
