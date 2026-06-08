@@ -1,9 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import App from './App';
 
 vi.mock('./api', () => ({
   setToken: vi.fn(),
+  getToken: vi.fn(),
+  clearToken: vi.fn(),
+  verifyToken: vi.fn(),
   listPlans: vi.fn().mockResolvedValue([]),
   getPlan: vi.fn().mockResolvedValue(null),
   createPlan: vi.fn(),
@@ -13,11 +16,20 @@ vi.mock('./api', () => ({
   editSetpoints: vi.fn(),
 }));
 
+import { getToken, clearToken } from './api';
+
 vi.mock('./pages/Dashboard', () => ({ default: () => <div>DashboardPage</div> }));
 vi.mock('./pages/NewPlan',   () => ({ default: () => <div>NewPlanPage</div> }));
 vi.mock('./pages/Review',    () => ({ default: () => <div>ReviewPage</div> }));
 vi.mock('./pages/History',   () => ({ default: () => <div>HistoryPage</div> }));
 vi.mock('./pages/DigitalTwin3D', () => ({ default: () => <div>DigitalTwin3DPage</div> }));
+
+const mockGetToken = getToken as ReturnType<typeof vi.fn>;
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockGetToken.mockReturnValue('op');          // default: already authed
+});
 
 describe('App', () => {
   it('renders the nav with all 5 items', () => {
@@ -49,5 +61,20 @@ describe('App', () => {
     render(<App />);
     fireEvent.click(screen.getByText('History'));
     expect(screen.getByText('HistoryPage')).toBeInTheDocument();
+  });
+
+  it('shows the login gate when no token is stored', () => {
+    mockGetToken.mockReturnValue('');
+    render(<App />);
+    expect(screen.getByLabelText(/access token/i)).toBeInTheDocument();
+    expect(screen.queryByText('Dashboard')).not.toBeInTheDocument();   // nav hidden behind the gate
+  });
+
+  it('signs out: clears the token and returns to the gate', () => {
+    render(<App />);                                                    // authed (getToken -> 'op')
+    fireEvent.click(screen.getByText('Sign out'));
+    expect(clearToken).toHaveBeenCalled();
+    expect(screen.getByLabelText(/access token/i)).toBeInTheDocument();
+    expect(screen.queryByText('Dashboard')).not.toBeInTheDocument();
   });
 });
