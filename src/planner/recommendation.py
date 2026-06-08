@@ -43,6 +43,7 @@ def build_recommendation(
     forecast_meta: Optional[dict] = None,
     inlet_forecast_margin: Optional[float] = None,
     k_sigma: Optional[float] = None,
+    schedule=None,   # planner.schedule.WeeklySchedule
 ) -> dict:
     week_end = week_start + timedelta(days=days - 1)
     reduction = (
@@ -99,6 +100,18 @@ def build_recommendation(
         rec["inlet_forecast_margin"] = inlet_forecast_margin
         rec["k_sigma"] = k_sigma
         rec["schema_version"] = "1.4"
+    if schedule is not None:
+        rec["schedule"] = {
+            "cadence": "time-block",
+            "blocks": [
+                {"label": b.label, "start_hour": b.start_hour, "end_hour": b.end_hour,
+                 "setpoints": {"crah_supply_air_temperature_c": round(sp.sat_c, 2),
+                               "crah_supply_air_mass_flow_rate_kg_s": round(sp.flow_kg_s, 2),
+                               "chilled_water_supply_temperature_c": round(sp.chwst_c, 2)}}
+                for b, sp in zip(schedule.blocks, schedule.setpoints)
+            ],
+        }
+        rec["schema_version"] = "1.5"
     return rec
 
 
