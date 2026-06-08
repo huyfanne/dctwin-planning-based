@@ -164,3 +164,34 @@ def test_record_failure_falls_back_to_class_name(tmp_path):
     store.create_plan("p2", "2024-11-11", {})
     record_failure(store, "p2", RuntimeError())          # str(exc) == ""
     assert store.read_progress("p2") == {"error": "RuntimeError"}
+
+
+def test_reconcile_orphans_fails_non_terminal_plans(tmp_path):
+    # A restart loses the in-memory queue, so any plan still 'running'/'queued'/'deploying'
+    # in the store is orphaned and must be marked terminal (else it shows running forever).
+    from webapp.store import PlanStore
+    from webapp.jobs import JobRunner
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    for pid, st in [("run", "running"), ("que", "queued"), ("dep", "deploying"),
+                    ("ok", "pending_approval"), ("done", "deployed")]:
+        store.create_plan(pid, "2024-11-11", {})
+        store.set_status(pid, st)
+    JobRunner(store).reconcile_orphans()
+    assert store.get_plan_row("run")["status"] == "failed"
+    assert store.get_plan_row("que")["status"] == "failed"
+    assert store.get_plan_row("dep")["status"] == "deploy_failed"
+    assert store.get_plan_row("ok")["status"] == "pending_approval"   # terminal untouched
+    assert store.get_plan_row("done")["status"] == "deployed"         # terminal untouched
+
+
+def test_start_reconciles_orphans(tmp_path):
+    from webapp.store import PlanStore
+    from webapp.jobs import JobRunner
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("run", "2024-11-11", {}); store.set_status("run", "running")
+    runner = JobRunner(store)
+    runner.start()
+    try:
+        assert store.get_plan_row("run")["status"] == "failed"
+    finally:
+        runner.stop()
