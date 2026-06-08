@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import socket
 from dataclasses import dataclass
 from typing import Any, Optional
 
@@ -89,10 +90,34 @@ def _infeasible(error: str) -> WeeklyKPI:
     )
 
 
-def _teardown_container(env) -> None:
-    """Best-effort stop+remove of the EnergyPlus Docker container so a hung/timed-out
-    run doesn't leak the container + BCVTB socket. Fully exception-guarded."""
+def _configure_backend(env, task) -> None:
+    """Point the EnergyPlus container at the reachable BCVTB host AND bound the listening
+    socket's accept() to task.timeout_s. dctwin defaults the socket to settimeout(3600), so
+    a container that crashes/never connects back leaves the worker blocked in accept() for
+    up to an hour; bounding it makes that accept() raise (-> candidate infeasible) instead."""
     backend = getattr(getattr(env, "unwrapped", env), "eplus_backend", None)
+    if backend is None:
+        return
+    if task.bcvtb_host:
+        backend._host = task.bcvtb_host
+    sock = getattr(backend, "_socket", None)
+    if sock is not None and task.timeout_s and task.timeout_s > 0:
+        try:
+            sock.settimeout(task.timeout_s)
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def _teardown_container(env) -> None:
+    """Best-effort: unblock a stuck BCVTB recv() (shutdown the connection) and stop+remove
+    the EnergyPlus container so a hung/timed-out run doesn't leak it. Fully exception-guarded."""
+    backend = getattr(getattr(env, "unwrapped", env), "eplus_backend", None)
+    conn = getattr(backend, "_conn", None)
+    if conn is not None:
+        try:
+            conn.shutdown(socket.SHUT_RDWR)   # force a blocked recv() to return
+        except Exception:
+            pass
     container = getattr(backend, "container", None)
     if container is None:
         return
@@ -158,9 +183,7 @@ def evaluate_one(task: EvalTask) -> WeeklyKPI:
         env = dctwin.make_env(env_proto_config=task.week_config_path, reward_fn=lambda x: 0)
         # Override the BCVTB host so socket.cfg points the EnergyPlus container at an
         # address it can actually reach (set before reset(), which writes socket.cfg).
-        backend = getattr(getattr(env, "unwrapped", env), "eplus_backend", None)
-        if backend is not None and task.bcvtb_host:
-            backend._host = task.bcvtb_host
+        _configure_backend(env, task)
         broadcaster = mapper_from_env(env)
         monitor = discover_monitor(env, hall=task.monitored_hall)
         action = broadcaster.expand(Setpoints(*task.candidate))
@@ -194,9 +217,7 @@ def evaluate_one_with_samples(task: EvalTask):
     try:
         dt_config.set_log_dir(task.log_dir)
         env = dctwin.make_env(env_proto_config=task.week_config_path, reward_fn=lambda x: 0)
-        backend = getattr(getattr(env, "unwrapped", env), "eplus_backend", None)
-        if backend is not None and task.bcvtb_host:
-            backend._host = task.bcvtb_host
+        _configure_backend(env, task)
         broadcaster = mapper_from_env(env)
         monitor = discover_monitor(env, hall=task.monitored_hall)
         action = broadcaster.expand(Setpoints(*task.candidate))
@@ -230,9 +251,7 @@ def evaluate_one_schedule(task: EvalTask) -> WeeklyKPI:
     try:
         dt_config.set_log_dir(task.log_dir)
         env = dctwin.make_env(env_proto_config=task.week_config_path, reward_fn=lambda x: 0)
-        backend = getattr(getattr(env, "unwrapped", env), "eplus_backend", None)
-        if backend is not None and task.bcvtb_host:
-            backend._host = task.bcvtb_host
+        _configure_backend(env, task)
         broadcaster = mapper_from_env(env)
         monitor = discover_monitor(env, hall=task.monitored_hall)
         kpi, _samples = _run_with_timeout(

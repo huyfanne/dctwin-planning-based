@@ -168,3 +168,38 @@ def test_run_with_timeout_fires_watchdog_on_hang():
 
     out = _run_with_timeout(run_fn, on_timeout, timeout_s=0.1)
     assert fired == [1] and out == "aborted"
+
+
+def test_configure_backend_sets_host_and_bounds_socket_timeout():
+    # Bound accept() to the per-candidate timeout so a container that never connects
+    # can't hang the worker for dctwin's default 3600s.
+    import socket as _socket
+    from planner.oracle_worker import _configure_backend, EvalTask
+    class _Backend:
+        def __init__(self): self._socket = _socket.socket(); self._host = None
+    class _Env:
+        def __init__(self, b): self.unwrapped = type("U", (), {"eplus_backend": b})()
+    b = _Backend()
+    task = EvalTask(candidate=(24.0, 8.0, 17.0), week_config_path="x", log_dir="x",
+                    hours_per_step=0.25, settings_kwargs={}, bcvtb_host="1.2.3.4", timeout_s=42)
+    _configure_backend(_Env(b), task)
+    assert b._host == "1.2.3.4"
+    assert b._socket.gettimeout() == 42
+    b._socket.close()
+
+
+def test_teardown_container_shuts_down_conn_to_unblock_recv():
+    # A blocked recv() on the BCVTB connection must be unblocked when we tear down.
+    import socket as _socket
+    from planner.oracle_worker import _teardown_container
+    a, b = _socket.socketpair()
+    b.settimeout(2)
+    class _Backend: pass
+    bk = _Backend(); bk._conn = a; bk.container = None
+    class _Env: pass
+    e = _Env(); e.unwrapped = type("U", (), {"eplus_backend": bk})()
+    _teardown_container(e)              # shuts down `a` -> b sees EOF (else recv blocks/times out)
+    assert b.recv(16) == b""
+    b.close()
+    try: a.close()
+    except Exception: pass
