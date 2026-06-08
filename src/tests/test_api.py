@@ -320,3 +320,17 @@ def test_plan_sse_stream_keepalive_then_terminal(tmp_path):
     assert any(c.startswith(": keepalive") for c in chunks)     # keepalive during the running gap
     last_data = [c for c in chunks if c.startswith("data:")][-1]
     assert _json.loads(last_data[len("data: "):].strip())["status"] == "pending_approval"
+
+
+def test_cancel_endpoint_running_404_409(tmp_path):
+    from webapp.main import create_app
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("run", "2013-11-11", {});  store.set_status("run", "running")
+    store.create_plan("term", "2013-11-11", {}); store.set_status("term", "pending_approval")
+    app = create_app(store=store, auth=TokenAuth({"op": "operator"}), run_sync=True,
+                     container_teardown=lambda: None)
+    c = TestClient(app)
+    assert c.post("/api/plans/run/cancel", headers=_op()).status_code == 202       # running -> cancellable
+    assert c.post("/api/plans/term/cancel", headers=_op()).status_code == 409      # terminal -> no
+    assert c.post("/api/plans/nope/cancel", headers=_op()).status_code == 404       # unknown
+    assert c.post("/api/plans/run/cancel").status_code == 401                       # no token

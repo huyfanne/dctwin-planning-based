@@ -109,6 +109,7 @@ export const editSetpoints = (id: string, sp: Record<string, number>) =>
   req(`/api/plans/${id}/setpoints`, { method: "PATCH", body: JSON.stringify(sp) });
 export const deployPlan = (id: string) =>
   req<{ status: string }>(`/api/plans/${id}/deploy`, { method: "POST" });
+export const cancelPlan = (id: string) => req(`/api/plans/${id}/cancel`, { method: "POST" });
 export const getTopology = (hall = "1f 2a") =>
   req<Topology>(`/api/topology?hall=${encodeURIComponent(hall)}`);
 

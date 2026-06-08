@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
-import { listPlans, type PlanSummary } from '../api';
+import { listPlans, cancelPlan, type PlanSummary } from '../api';
 
 interface Props {
   onReview: (id: string) => void;
@@ -11,6 +11,7 @@ function statusClass(s: string) {
   if (s === 'approved')      return 'badge-approved';
   if (s === 'rejected')      return 'badge-rejected';
   if (s === 'deployed')      return 'badge-deployed';
+  if (s === 'cancelled')     return 'badge-rejected';
   return 'badge-running';
 }
 
@@ -25,12 +26,14 @@ export default function History({ onReview }: Props) {
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [filter, setFilter]   = useState('');
 
-  useEffect(() => {
+  function load() {
+    setLoading(true);
     listPlans()
-      .then(p => setPlans(p))
-      .catch(e => setError(e instanceof Error ? e.message : 'Failed to load history'))
+      .then(setPlans)
+      .catch(e => setError(e instanceof Error ? e.message : 'failed to load plans'))
       .finally(() => setLoading(false));
-  }, []);
+  }
+  useEffect(() => { load(); }, []);
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -192,6 +195,12 @@ export default function History({ onReview }: Props) {
                           : '—'}
                       </td>
                       <td style={{ textAlign: 'right' }}>
+                        {(p.status === 'running' || p.status === 'queued') && (
+                          <button className="btn btn-ghost" style={{ fontSize: 11, padding: '4px 12px', marginRight: 6 }}
+                            onClick={async () => { try { await cancelPlan(p.plan_id); } finally { load(); } }}>
+                            Cancel
+                          </button>
+                        )}
                         <button
                           className="btn btn-ghost"
                           style={{ fontSize: 11, padding: '4px 12px' }}

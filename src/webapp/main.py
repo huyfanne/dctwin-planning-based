@@ -65,10 +65,11 @@ async def plan_sse_stream(store, plan_id: str, is_disconnected, *, sleep=asyncio
 
 def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = None,
                runner=None, run_sync: bool = False, deploy_runner=None,
-               frontend_dist: Optional[str] = None) -> FastAPI:
+               frontend_dist: Optional[str] = None, container_teardown=None) -> FastAPI:
     store = store or PlanStore()
     auth = auth or TokenAuth.from_env()
-    job_runner = JobRunner(store, runner=runner, deploy_runner=deploy_runner)
+    job_runner = JobRunner(store, runner=runner, deploy_runner=deploy_runner,
+                           container_teardown=container_teardown)
 
     app = FastAPI(title="Digital Twin Dual-Loop Control")
 
@@ -186,6 +187,16 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
         rec["status"] = PlanStatus.REJECTED
         store.save_recommendation(plan_id, rec)
         return {"status": PlanStatus.REJECTED}
+
+    @app.post("/api/plans/{plan_id}/cancel", status_code=202)
+    def cancel_plan(plan_id: str, role: str = Depends(operator)):
+        row = store.get_plan_row(plan_id)
+        if row is None:
+            raise HTTPException(404, "plan not found")
+        if row["status"] not in ("queued", "running"):
+            raise HTTPException(409, f"cannot cancel a {row['status']!r} plan")
+        job_runner.request_cancel(plan_id)
+        return {"status": "cancelling"}
 
     @app.post("/api/plans/{plan_id}/deploy", status_code=202)
     def deploy_plan(plan_id: str, role: str = Depends(expert)):

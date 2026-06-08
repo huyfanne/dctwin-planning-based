@@ -15,6 +15,7 @@ class PlanStatus:
     DEPLOYED = "deployed"
     DEPLOY_FAILED = "deploy_failed"               # the deploy job crashed
     DEPLOY_BLOCKED = "deploy_blocked"             # approved plan breached on the real plant
+    CANCELLED = "cancelled"                        # operator cancelled a running/queued plan
 
 
 # expert/operator-driven transitions (the worker sets queued/running/failed/deploy_* itself)

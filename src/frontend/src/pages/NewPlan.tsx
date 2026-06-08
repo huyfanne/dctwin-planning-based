@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { createPlan, planStreamUrl, getWeather, type Progress } from '../api';
+import { createPlan, planStreamUrl, getWeather, cancelPlan, type Progress } from '../api';
 
 // A long plan can outlive a single SSE connection (the server closes the stream after a
 // while, or a proxy drops an idle one). Reconnect quietly a few times before declaring the
@@ -27,6 +27,8 @@ export default function NewPlan({ onDone }: Props) {
   const [status, setStatus]         = useState<string>('queued');
   const [error, setError]           = useState<string | null>(null);
   const [coverage, setCoverage]     = useState<string | null>(null);
+  const [cancelled, setCancelled]   = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const esRef = useRef<EventSource | null>(null);
 
@@ -38,7 +40,7 @@ export default function NewPlan({ onDone }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!planId || done || error) return;
+    if (!planId || done || error || cancelled) return;
     let retries = 0;
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -55,6 +57,8 @@ export default function NewPlan({ onDone }: Props) {
         if (frame.status === 'failed') {
           setError(frame.progress?.error ?? 'Plan run failed on the server — see the backend log (the backend may lack Docker access for EnergyPlus).');
           stopped = true; es.close();
+        } else if (frame.status === 'cancelled') {
+          setCancelled(true); stopped = true; es.close();
         } else if (frame.status && !['queued', 'running', 'deploying'].includes(frame.status)) {
           setDone(true); stopped = true; es.close();
         }
@@ -74,7 +78,7 @@ export default function NewPlan({ onDone }: Props) {
 
     open();
     return () => { stopped = true; if (timer) clearTimeout(timer); esRef.current?.close(); };
-  }, [planId, done, error]);
+  }, [planId, done, error, cancelled]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -235,12 +239,10 @@ export default function NewPlan({ onDone }: Props) {
           <div className="card bracket-card animate-in">
             <div className="card-header">
               <span className="card-title">Live Progress</span>
-              {error
-                ? <span className="badge" style={{ color: 'var(--amber, #f5a623)', borderColor: 'var(--amber, #f5a623)' }}>Failed</span>
-                : done
-                ? <span className="badge badge-approved">Complete</span>
-                : <span className="live-dot">Running</span>
-              }
+              {error ? <span className="badge" style={{ color: 'var(--amber, #f5a623)', borderColor: 'var(--amber, #f5a623)' }}>Failed</span>
+                : cancelled ? <span className="badge badge-rejected">Cancelled</span>
+                : done ? <span className="badge badge-approved">Complete</span>
+                : <span className="live-dot">Running</span>}
             </div>
             <div className="card-body flex-col gap-4">
               {/* Plan ID */}
@@ -279,6 +281,26 @@ export default function NewPlan({ onDone }: Props) {
               </div>
 
               {/* Action */}
+              {!done && !error && !cancelled && (
+                <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center' }}
+                  disabled={cancelling}
+                  onClick={async () => { setCancelling(true); try { await cancelPlan(planId!); } catch { /* stream reflects it */ } }}>
+                  {cancelling ? 'Cancelling…' : 'Cancel Plan'}
+                </button>
+              )}
+              {cancelled && (
+                <>
+                  <div className="error-msg">Plan cancelled.</div>
+                  <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center' }}
+                    onClick={() => {
+                      esRef.current?.close();
+                      setPlanId(null); setProgress(null); setDone(false); setCancelled(false);
+                      setCancelling(false); setError(null); setStatus('queued'); setSubmitting(false);
+                    }}>
+                    ← Start New Plan
+                  </button>
+                </>
+              )}
               {done && (
                 <button
                   className="btn btn-primary"
@@ -306,7 +328,7 @@ export default function NewPlan({ onDone }: Props) {
                 </>
               )}
 
-              {!done && !error && (
+              {!done && !error && !cancelled && (
                 <p className="text-dim text-sm" style={{ fontFamily: 'var(--font-data)', textAlign: 'center', marginTop: 4 }}>
                   Status: {status} · live stream
                 </p>
