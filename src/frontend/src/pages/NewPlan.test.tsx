@@ -6,12 +6,27 @@ vi.mock('../api', () => ({
   createPlan: vi.fn(),
   getProgress: vi.fn(),
   getPlan: vi.fn(),
+  planStreamUrl: (id: string) => `/api/plans/${id}/stream?token=t`,
 }));
 
-import { createPlan, getProgress } from '../api';
+import { createPlan } from '../api';
+
+class MockEventSource {
+  static instances: MockEventSource[] = [];
+  url: string;
+  onmessage: ((e: { data: string }) => void) | null = null;
+  onerror: (() => void) | null = null;
+  closed = false;
+  constructor(url: string) { this.url = url; MockEventSource.instances.push(this); }
+  close() { this.closed = true; }
+  emit(frame: object) { this.onmessage?.({ data: JSON.stringify(frame) }); }
+  fail() { this.onerror?.(); }
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
+  MockEventSource.instances = [];
+  (globalThis as unknown as { EventSource: unknown }).EventSource = MockEventSource;
 });
 
 describe('NewPlan', () => {
@@ -33,16 +48,13 @@ describe('NewPlan', () => {
 
   it('creates plan and shows progress panel on submit', async () => {
     (createPlan as ReturnType<typeof vi.fn>).mockResolvedValue({ plan_id: 'p-new-1', status: 'queued' });
-    (getProgress as ReturnType<typeof vi.fn>).mockResolvedValue({ level: 1, evals: 5, best_score: 0.9 });
-
     render(<NewPlan onDone={() => {}} />);
     fireEvent.change(screen.getByLabelText(/week start/i), { target: { value: '2026-06-09' } });
     fireEvent.click(screen.getByText(/launch optimization/i));
-
-    await waitFor(() => {
-      expect(createPlan).toHaveBeenCalledWith(expect.objectContaining({ week_start: '2026-06-09' }));
-      expect(screen.getByText('p-new-1')).toBeInTheDocument();
-    });
+    await waitFor(() => expect(screen.getByText('p-new-1')).toBeInTheDocument());
+    await waitFor(() => expect(MockEventSource.instances.length).toBe(1));
+    MockEventSource.instances[0].emit({ progress: { level: 1, evals: 42, best_score: 0.9 }, status: 'running' });
+    await waitFor(() => expect(screen.getByText('42')).toBeInTheDocument());   // evals tile (42 avoids the grid=5 default)
   });
 
   it('renders plan params fields with defaults', () => {
@@ -71,5 +83,27 @@ describe('NewPlan', () => {
     fireEvent.click(screen.getByLabelText(/day\/night setpoints/i));
     fireEvent.click(screen.getByRole('button', { name: /launch/i }));
     await waitFor(() => expect(createPlan).toHaveBeenCalledWith(expect.objectContaining({ time_block: true })));
+  });
+
+  it('marks done on a terminal frame', async () => {
+    (createPlan as ReturnType<typeof vi.fn>).mockResolvedValue({ plan_id: 'p2', status: 'queued' });
+    render(<NewPlan onDone={() => {}} />);
+    fireEvent.change(screen.getByLabelText(/week start/i), { target: { value: '2026-06-09' } });
+    fireEvent.click(screen.getByText(/launch optimization/i));
+    await waitFor(() => expect(MockEventSource.instances.length).toBe(1));
+    MockEventSource.instances[0].emit({ progress: { level: 3, evals: 40 }, status: 'pending_approval' });
+    await waitFor(() => expect(screen.getByText(/review results/i)).toBeInTheDocument());
+  });
+
+  it('shows an error when the stream errors', async () => {
+    (createPlan as ReturnType<typeof vi.fn>).mockResolvedValue({ plan_id: 'p3', status: 'queued' });
+    render(<NewPlan onDone={() => {}} />);
+    fireEvent.change(screen.getByLabelText(/week start/i), { target: { value: '2026-06-09' } });
+    fireEvent.click(screen.getByText(/launch optimization/i));
+    await waitFor(() => expect(MockEventSource.instances.length).toBe(1));
+    MockEventSource.instances[0].fail();
+    // {error} renders in BOTH the form card AND the live-progress card once planId is set,
+    // so use getAllByText (single-match getByText would throw on the duplicate).
+    await waitFor(() => expect(screen.getAllByText(/lost connection|backend/i).length).toBeGreaterThan(0));
   });
 });
