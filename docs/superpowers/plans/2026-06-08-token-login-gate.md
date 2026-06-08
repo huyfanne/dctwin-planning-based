@@ -344,21 +344,31 @@ import Login from './pages/Login';
 import { getToken, clearToken } from './api';
 ```
 
-(b) Inside `export default function App() {`, as the FIRST statements (before `const [page, setPage] = …`), add:
+(b) Add the `authed` state as the **first hook**, but place the guard `return` **after all three `useState` calls** — an early return *between* `useState` calls violates the Rules of Hooks (authed render = 3 hooks, unauthed = 1), and React 19 throws "Rendered fewer hooks than expected" when Sign out toggles `authed`. The top of the function body must read exactly:
 
 ```tsx
+export default function App() {
   const [authed, setAuthed] = useState(() => !!getToken());
+  const [page, setPage] = useState<Page>('dashboard');
+  // reviewPlanId can be set from History to deep-link to a specific plan
+  const [reviewPlanId, setReviewPlanId] = useState<string | undefined>(undefined);
+
   if (!authed) return <Login onAuthed={() => setAuthed(true)} />;
 ```
+
+(i.e. add the `authed` line above the existing two `useState` lines, and put the guard `if (!authed) …` below all of them, before `function openReview(…)`.)
 
 (c) In the header, add a **Sign out** button right after the closing `</nav>` (replace the existing `</nav>\n\n      </header>` region):
 
 ```tsx
         </nav>
 
-        <button className="signout" onClick={() => { clearToken(); setAuthed(false); }}>Sign out</button>
+        <button className="signout" onClick={() => { clearToken(); setAuthed(false); }}
+          style={{ marginLeft: 'auto' }}>Sign out</button>
       </header>
 ```
+
+(The `marginLeft: 'auto'` pushes Sign out to the right edge of the flex header; the `signout` class is harmless if no CSS rule exists yet.)
 
 - [ ] **Step 4: Run tests + build, verify pass**
 
