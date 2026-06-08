@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import asyncio
+import json
 import uuid
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import StreamingResponse
 
 from webapp.auth import TokenAuth
 from webapp.jobs import JobRunner
@@ -91,6 +94,29 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
     @app.get("/api/plans/{plan_id}/progress")
     def get_progress(plan_id: str, role: str = Depends(operator)):
         return store.read_progress(plan_id)
+
+    @app.get("/api/plans/{plan_id}/stream")
+    async def stream_plan(plan_id: str, request: Request, token: str = ""):
+        # EventSource can't send headers, so the bearer rides in ?token=; reuse the existing check.
+        auth.check(f"Bearer {token}", "operator")
+        if store.get_plan_row(plan_id) is None:
+            raise HTTPException(404, "plan not found")
+
+        async def gen():
+            last = None
+            for _ in range(600):                       # defensive cap (~5 min at 0.5 s)
+                if await request.is_disconnected():
+                    break
+                frame = progress_frame(store, plan_id)
+                if frame != last:
+                    yield f"data: {json.dumps(frame)}\n\n"
+                    last = frame
+                if is_terminal(frame["status"]):
+                    break
+                await asyncio.sleep(0.5)
+
+        return StreamingResponse(gen(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache"})
 
     @app.get("/api/plans/{plan_id}/trajectory")
     def get_trajectory(plan_id: str, role: str = Depends(operator)):

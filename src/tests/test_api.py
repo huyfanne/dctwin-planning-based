@@ -201,3 +201,27 @@ def test_progress_frame_shape(tmp_path):
     frame = progress_frame(store, "p1")
     assert frame == {"progress": {"level": 1, "evals": 5, "best_score": 0.9}, "status": "queued"}
     assert progress_frame(store, "nope") == {"progress": {}, "status": None}
+
+
+def test_stream_endpoint_emits_a_frame_for_a_terminal_plan(client):
+    # the fixture's fake_runner saves a recommendation + sets status 'pending_approval' (terminal),
+    # so the SSE generator emits one frame and closes — TestClient can read the full body.
+    pid = client.post("/api/plans", json={"week_start": "2013-11-11"}, headers=_op()).json()["plan_id"]
+    r = client.get(f"/api/plans/{pid}/stream?token=op")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/event-stream")
+    assert "data:" in r.text
+    # the streamed frame carries the terminal status
+    import json as _json
+    payload = _json.loads(r.text.split("data:", 1)[1].split("\n\n", 1)[0].strip())
+    assert payload["status"] == "pending_approval"
+
+
+def test_stream_endpoint_rejects_bad_token(client):
+    pid = client.post("/api/plans", json={"week_start": "2013-11-11"}, headers=_op()).json()["plan_id"]
+    assert client.get(f"/api/plans/{pid}/stream?token=nope").status_code == 401
+    assert client.get(f"/api/plans/{pid}/stream").status_code == 401          # missing token
+
+
+def test_stream_endpoint_404_unknown_plan(client):
+    assert client.get("/api/plans/does-not-exist/stream?token=op").status_code == 404
