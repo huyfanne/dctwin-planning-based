@@ -33,9 +33,19 @@ class JobRunner:
         self._thread: Optional[threading.Thread] = None
         self._stop = threading.Event()
 
+    def reconcile_orphans(self) -> None:
+        """A restart loses the in-memory job queue, so any plan still marked non-terminal
+        in the store is orphaned (its worker is gone). Mark it terminal so it doesn't show
+        as perpetually 'running' after a crash/restart: deploying -> deploy_failed, else failed."""
+        for row in self.store.list_plans():
+            st = row.get("status")
+            if st in ("queued", "running", "deploying"):
+                self.store.set_status(row["plan_id"], "deploy_failed" if st == "deploying" else "failed")
+
     def start(self) -> None:
         if self._thread is not None:
             return
+        self.reconcile_orphans()
         self._thread = threading.Thread(target=self._loop, daemon=True)
         self._thread.start()
 
