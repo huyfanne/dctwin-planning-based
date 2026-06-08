@@ -198,6 +198,16 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
         job_runner.request_cancel(plan_id)
         return {"status": "cancelling"}
 
+    @app.delete("/api/plans/{plan_id}")
+    def delete_plan_route(plan_id: str, role: str = Depends(operator)):
+        row = store.get_plan_row(plan_id)
+        if row is None:
+            raise HTTPException(404, "plan not found")
+        if row["status"] in ("queued", "running", "deploying"):
+            raise HTTPException(409, f"cannot delete a {row['status']!r} plan; cancel it first")
+        store.delete_plan(plan_id)
+        return {"status": "deleted"}
+
     @app.post("/api/plans/{plan_id}/deploy", status_code=202)
     def deploy_plan(plan_id: str, role: str = Depends(expert)):
         row = store.get_plan_row(plan_id)

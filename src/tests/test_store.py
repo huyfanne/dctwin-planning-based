@@ -152,3 +152,14 @@ def test_get_recommendation_tolerates_partial_file(tmp_path):
     store.create_plan("p", "2024-11-11", {})
     (store.plan_dir("p") / "recommendation.json").write_text("")   # empty/mid-write
     assert store.get_recommendation("p") is None
+
+
+def test_delete_plan_removes_row_and_dir(tmp_path):
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "runs"), db_path=str(tmp_path / "index.db"))
+    store.create_plan("p1", week_start="2013-11-11", params={})
+    assert (tmp_path / "runs" / "p1").is_dir()
+    store.delete_plan("p1")
+    assert not (tmp_path / "runs" / "p1").exists()       # run dir removed
+    assert store.get_plan_row("p1") is None              # index row removed
+    assert store.list_plans() == []

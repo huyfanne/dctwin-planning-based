@@ -334,3 +334,17 @@ def test_cancel_endpoint_running_404_409(tmp_path):
     assert c.post("/api/plans/term/cancel", headers=_op()).status_code == 409      # terminal -> no
     assert c.post("/api/plans/nope/cancel", headers=_op()).status_code == 404       # unknown
     assert c.post("/api/plans/run/cancel").status_code == 401                       # no token
+
+
+def test_delete_endpoint_terminal_404_409(tmp_path):
+    from webapp.main import create_app
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("term", "2013-11-11", {}); store.set_status("term", "blocked_unsafe")
+    store.create_plan("run", "2013-11-11", {});  store.set_status("run", "running")
+    app = create_app(store=store, auth=TokenAuth({"op": "operator"}), run_sync=True)
+    c = TestClient(app)
+    assert c.delete("/api/plans/term", headers=_op()).status_code == 200    # terminal -> deletable
+    assert store.get_plan_row("term") is None
+    assert c.delete("/api/plans/run", headers=_op()).status_code == 409     # active -> cancel first
+    assert c.delete("/api/plans/nope", headers=_op()).status_code == 404
+    assert c.delete("/api/plans/run").status_code == 401                    # no token

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
-import { listPlans, cancelPlan, type PlanSummary } from '../api';
+import { listPlans, cancelPlan, deletePlan, type PlanSummary } from '../api';
 
 interface Props {
   onReview: (id: string) => void;
@@ -199,6 +199,15 @@ export default function History({ onReview }: Props) {
                           <button className="btn btn-ghost" style={{ fontSize: 11, padding: '4px 12px', marginRight: 6 }}
                             onClick={async () => { try { await cancelPlan(p.plan_id); } finally { load(); } }}>
                             Cancel
+                          </button>
+                        )}
+                        {!['running', 'queued', 'deploying'].includes(p.status) && (
+                          <button className="btn btn-ghost" style={{ fontSize: 11, padding: '4px 12px', marginRight: 6 }}
+                            onClick={async () => {
+                              if (!window.confirm(`Delete plan ${p.plan_id}? This permanently removes its results.`)) return;
+                              try { await deletePlan(p.plan_id); } finally { load(); }
+                            }}>
+                            Delete
                           </button>
                         )}
                         <button
