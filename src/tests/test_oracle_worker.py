@@ -143,3 +143,28 @@ def test_run_episode_schedule_switches_action_by_hour():
     for i, sat in recorded:
         hour = i % 24
         assert sat == (24.0 if 6 <= hour < 18 else 26.0)   # day SAT vs night SAT
+
+
+def test_run_with_timeout_returns_value_on_fast_run():
+    from planner.oracle_worker import _run_with_timeout
+    called = []
+    out = _run_with_timeout(lambda: 7, lambda: called.append(1), timeout_s=5)
+    assert out == 7
+    assert called == []                     # watchdog did not fire
+
+
+def test_run_with_timeout_fires_watchdog_on_hang():
+    import threading
+    from planner.oracle_worker import _run_with_timeout
+    unblocked, fired = threading.Event(), []
+
+    def run_fn():
+        unblocked.wait(2)                   # blocks until the watchdog "tears down" -> unblocks it
+        return "aborted"
+
+    def on_timeout():
+        fired.append(1)
+        unblocked.set()                     # teardown breaks the socket -> the blocked run unblocks
+
+    out = _run_with_timeout(run_fn, on_timeout, timeout_s=0.1)
+    assert fired == [1] and out == "aborted"

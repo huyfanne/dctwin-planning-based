@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import concurrent.futures as cf
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Optional, Sequence
@@ -14,7 +15,7 @@ from planner.week_config import write_week_config
 @dataclass
 class OracleConfig:
     n_workers: int = 8
-    timeout_s: float = 1800.0           # per-candidate wall-clock cap
+    timeout_s: float = 300.0            # per-candidate wall-clock cap (enforced in the worker)
     timesteps_per_hour: int = 4         # -> hours_per_step = 1/this
     log_root: str = "log/oracle"
     use_process_pool: bool = True       # False = serial (for tests/debug)
@@ -27,6 +28,15 @@ class OracleConfig:
     # Scope the thermal KPI (inlet/zone) to the controlled hall; we only actuate
     # the 1F 2A ACUs, so other halls' sensors are uncontrollable noise ("" = all).
     monitored_hall: str = "1f 2a"
+
+
+def _batch_deadline(timeout_s: float, n_tasks: int, n_workers: int) -> float:
+    """Wall-clock backstop for a whole batch. Each parallel wave is bounded by the
+    per-candidate timeout, so a batch needs ~ceil(n_tasks / n_workers) waves (+1 slack).
+    The old `timeout_s * n_tasks` assumed serial execution, so one hung worker could
+    block the batch for hours."""
+    waves = math.ceil(max(n_tasks, 1) / max(n_workers, 1))
+    return timeout_s * (waves + 1)
 
 
 def _infeasible() -> WeeklyKPI:
@@ -78,6 +88,7 @@ class ParallelEnvOracle(Evaluator):
                 settings_kwargs=cfg.settings.__dict__,
                 bcvtb_host=cfg.bcvtb_host,
                 monitored_hall=cfg.monitored_hall,
+                timeout_s=cfg.timeout_s,
             )
             for i, c in enumerate(candidates)
         ]
@@ -94,10 +105,10 @@ class ParallelEnvOracle(Evaluator):
         results: list[WeeklyKPI] = [_infeasible()] * len(tasks)
         ex = cf.ProcessPoolExecutor(max_workers=cfg.n_workers)
         futs = {ex.submit(self._worker, t): i for i, t in enumerate(tasks)}
-        # batch deadline backstop: per-candidate cap * number of candidates.
-        # (a truly hung worker can't be killed by ProcessPoolExecutor; the dctwin
-        #  worker is responsible for its own per-run container kill — spec section 11.)
-        deadline = cfg.timeout_s * max(len(tasks), 1)
+        # batch deadline backstop, sized to the number of parallel waves. The worker
+        # enforces the per-candidate timeout (tearing down a hung container); this is the
+        # last-resort net so the batch can't stall past ~timeout_s * waves.
+        deadline = _batch_deadline(cfg.timeout_s, len(tasks), cfg.n_workers)
         try:
             for fut in cf.as_completed(futs, timeout=deadline):
                 i = futs[fut]
@@ -131,7 +142,7 @@ class ParallelEnvOracle(Evaluator):
             candidate=setpoints.as_tuple(), week_config_path=week_cfg_path,
             log_dir=str(log_root / "replay"), hours_per_step=hours_per_step,
             settings_kwargs=cfg.settings.__dict__, bcvtb_host=cfg.bcvtb_host,
-            monitored_hall=cfg.monitored_hall)
+            monitored_hall=cfg.monitored_hall, timeout_s=cfg.timeout_s)
         worker = self._sample_worker or evaluate_one_with_samples
         return worker(task)
 
@@ -153,7 +164,7 @@ class ParallelEnvOracle(Evaluator):
             EvalTask(candidate=s.setpoints[0].as_tuple(), week_config_path=week_cfg_path,
                      log_dir=str(log_root / f"sched-{i:04d}"), hours_per_step=hours_per_step,
                      settings_kwargs=cfg.settings.__dict__, bcvtb_host=cfg.bcvtb_host,
-                     monitored_hall=cfg.monitored_hall, schedule=s)
+                     monitored_hall=cfg.monitored_hall, schedule=s, timeout_s=cfg.timeout_s)
             for i, s in enumerate(schedules)
         ]
         if not cfg.use_process_pool:
@@ -169,7 +180,7 @@ class ParallelEnvOracle(Evaluator):
         results: list[WeeklyKPI] = [_infeasible()] * len(tasks)
         ex = cf.ProcessPoolExecutor(max_workers=cfg.n_workers)
         futs = {ex.submit(evaluate_one_schedule, t): i for i, t in enumerate(tasks)}
-        deadline = cfg.timeout_s * max(len(tasks), 1)
+        deadline = _batch_deadline(cfg.timeout_s, len(tasks), cfg.n_workers)
         try:
             for fut in cf.as_completed(futs, timeout=deadline):
                 i = futs[fut]
