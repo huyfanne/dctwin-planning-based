@@ -292,3 +292,31 @@ def test_weather_endpoint_null_when_no_forecaster(client, monkeypatch):
     monkeypatch.setattr("webapp.jobs.pickle_load", _raise)
     body = client.get("/api/weather", headers=_op()).json()
     assert body["suggested_week_start"] is None and body["label"] is None
+
+
+def test_plan_sse_stream_keepalive_then_terminal(tmp_path):
+    # The stream must survive a long no-progress gap (emitting keepalive comments) and
+    # keep polling until the plan turns terminal — not close after a fixed 5-minute cap.
+    import asyncio
+    import json as _json
+    from webapp.main import plan_sse_stream
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("p", "2024-11-11", {})            # starts 'queued' (non-terminal)
+
+    async def collect():
+        out, ticks = [], {"n": 0}
+        async def disc():
+            return False
+        async def sleep(_):
+            ticks["n"] += 1
+            if ticks["n"] == 4:
+                store.set_status("p", "pending_approval")   # become terminal after a few polls
+        async for chunk in plan_sse_stream(store, "p", disc, sleep=sleep, keepalive_every=2):
+            out.append(chunk)
+        return out
+
+    chunks = asyncio.run(collect())
+    assert any(c.startswith("data:") for c in chunks)           # progress frames sent
+    assert any(c.startswith(": keepalive") for c in chunks)     # keepalive during the running gap
+    last_data = [c for c in chunks if c.startswith("data:")][-1]
+    assert _json.loads(last_data[len("data: "):].strip())["status"] == "pending_approval"

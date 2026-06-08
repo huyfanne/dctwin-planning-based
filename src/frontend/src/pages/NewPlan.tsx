@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPlan, planStreamUrl, getWeather, type Progress } from '../api';
 
+// A long plan can outlive a single SSE connection (the server closes the stream after a
+// while, or a proxy drops an idle one). Reconnect quietly a few times before declaring the
+// backend down, so a healthy long run doesn't show a false "backend stopped" error.
+const MAX_STREAM_RETRIES = 5;
+const STREAM_RECONNECT_MS = 2000;
+
 interface Props {
   onDone: (planId: string) => void;
 }
@@ -33,25 +39,41 @@ export default function NewPlan({ onDone }: Props) {
 
   useEffect(() => {
     if (!planId || done || error) return;
-    const es = new EventSource(planStreamUrl(planId));
-    esRef.current = es;
-    es.onmessage = (e) => {
-      const frame = JSON.parse(e.data) as { progress: Progress; status: string };
-      if (frame.progress) setProgress(frame.progress);
-      setStatus(frame.status);
-      if (frame.status === 'failed') {
-        setError(frame.progress?.error ?? 'Plan run failed on the server — see the backend log (the backend may lack Docker access for EnergyPlus).');
+    let retries = 0;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const open = () => {
+      if (stopped) return;
+      const es = new EventSource(planStreamUrl(planId));
+      esRef.current = es;
+      es.onmessage = (e) => {
+        retries = 0;                                  // a frame arrived → the connection is healthy
+        const frame = JSON.parse(e.data) as { progress: Progress; status: string };
+        if (frame.progress) setProgress(frame.progress);
+        setStatus(frame.status);
+        if (frame.status === 'failed') {
+          setError(frame.progress?.error ?? 'Plan run failed on the server — see the backend log (the backend may lack Docker access for EnergyPlus).');
+          stopped = true; es.close();
+        } else if (frame.status && !['queued', 'running', 'deploying'].includes(frame.status)) {
+          setDone(true); stopped = true; es.close();
+        }
+      };
+      es.onerror = () => {
         es.close();
-      } else if (frame.status && !['queued', 'running', 'deploying'].includes(frame.status)) {
-        setDone(true);
-        es.close();
-      }
+        if (stopped) return;
+        retries += 1;
+        if (retries > MAX_STREAM_RETRIES) {
+          stopped = true;
+          setError('Lost connection to the progress stream. The backend may have stopped — see the backend log.');
+        } else {
+          timer = setTimeout(open, STREAM_RECONNECT_MS);   // quietly reconnect; the plan keeps running server-side
+        }
+      };
     };
-    es.onerror = () => {
-      es.close();
-      setError('Lost connection to the progress stream. The backend may have stopped — see the backend log.');
-    };
-    return () => { es.close(); };
+
+    open();
+    return () => { stopped = true; if (timer) clearTimeout(timer); esRef.current?.close(); };
   }, [planId, done, error]);
 
   async function handleSubmit(e: React.FormEvent) {
