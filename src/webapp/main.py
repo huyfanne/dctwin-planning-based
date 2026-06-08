@@ -31,6 +31,38 @@ def progress_frame(store, plan_id: str) -> dict:
             "status": (row or {}).get("status")}
 
 
+_STREAM_POLL_S = 0.5
+_STREAM_MAX_ITERS = 14400          # ~2 h backstop at 0.5 s — generous; a long plan won't be cut off
+_STREAM_KEEPALIVE_EVERY = 30       # ~15 s: emit an SSE comment so the connection never looks idle/dead
+
+
+async def plan_sse_stream(store, plan_id: str, is_disconnected, *, sleep=asyncio.sleep,
+                          max_iters: int = _STREAM_MAX_ITERS,
+                          keepalive_every: int = _STREAM_KEEPALIVE_EVERY):
+    """Yield SSE chunks for a plan's progress until it turns terminal, the client
+    disconnects, or the (generous) backstop is hit. During long no-progress stretches
+    it emits a ``: keepalive`` comment every ``keepalive_every`` polls so proxies/clients
+    don't drop an idle connection (the old 5-minute cap closed real, longer plans early)."""
+    last = None
+    since = 0
+    for _ in range(max_iters):
+        if await is_disconnected():
+            break
+        frame = progress_frame(store, plan_id)
+        if frame != last:
+            yield f"data: {json.dumps(frame)}\n\n"
+            last = frame
+            since = 0
+        else:
+            since += 1
+            if since >= keepalive_every:
+                yield ": keepalive\n\n"
+                since = 0
+        if is_terminal(frame["status"]):
+            break
+        await sleep(_STREAM_POLL_S)
+
+
 def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = None,
                runner=None, run_sync: bool = False, deploy_runner=None,
                frontend_dist: Optional[str] = None) -> FastAPI:
@@ -119,22 +151,9 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
         auth.check(f"Bearer {token}", "operator")
         if store.get_plan_row(plan_id) is None:
             raise HTTPException(404, "plan not found")
-
-        async def gen():
-            last = None
-            for _ in range(600):                       # defensive cap (~5 min at 0.5 s)
-                if await request.is_disconnected():
-                    break
-                frame = progress_frame(store, plan_id)
-                if frame != last:
-                    yield f"data: {json.dumps(frame)}\n\n"
-                    last = frame
-                if is_terminal(frame["status"]):
-                    break
-                await asyncio.sleep(0.5)
-
-        return StreamingResponse(gen(), media_type="text/event-stream",
-                                 headers={"Cache-Control": "no-cache"})
+        return StreamingResponse(
+            plan_sse_stream(store, plan_id, request.is_disconnected),
+            media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
 
     @app.get("/api/plans/{plan_id}/trajectory")
     def get_trajectory(plan_id: str, role: str = Depends(operator)):

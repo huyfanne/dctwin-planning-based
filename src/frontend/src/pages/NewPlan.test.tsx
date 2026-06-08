@@ -97,15 +97,26 @@ describe('NewPlan', () => {
     await waitFor(() => expect(screen.getByText(/review results/i)).toBeInTheDocument());
   });
 
-  it('shows an error when the stream errors', async () => {
+  it('does not error on a single transient stream drop (reconnects quietly)', async () => {
     (createPlan as ReturnType<typeof vi.fn>).mockResolvedValue({ plan_id: 'p3', status: 'queued' });
     render(<NewPlan onDone={() => {}} />);
     fireEvent.change(screen.getByLabelText(/week start/i), { target: { value: '2026-06-09' } });
     fireEvent.click(screen.getByText(/launch optimization/i));
     await waitFor(() => expect(MockEventSource.instances.length).toBe(1));
-    MockEventSource.instances[0].fail();
-    // {error} renders in BOTH the form card AND the live-progress card once planId is set,
-    // so use getAllByText (single-match getByText would throw on the duplicate).
+    MockEventSource.instances[0].fail();                 // one drop → quiet reconnect, no scary error
+    await waitFor(() => expect(screen.getByText('p3')).toBeInTheDocument());
+    expect(screen.queryByText(/lost connection/i)).not.toBeInTheDocument();
+  });
+
+  it('shows an error only after repeated stream failures', async () => {
+    (createPlan as ReturnType<typeof vi.fn>).mockResolvedValue({ plan_id: 'p3', status: 'queued' });
+    render(<NewPlan onDone={() => {}} />);
+    fireEvent.change(screen.getByLabelText(/week start/i), { target: { value: '2026-06-09' } });
+    fireEvent.click(screen.getByText(/launch optimization/i));
+    await waitFor(() => expect(MockEventSource.instances.length).toBe(1));
+    const es = MockEventSource.instances[0];
+    for (let i = 0; i < 7; i++) es.fail();               // exceed the retry budget (shared closure counter)
+    // {error} renders in BOTH the form card and the live-progress card, so use getAllByText.
     await waitFor(() => expect(screen.getAllByText(/lost connection|backend/i).length).toBeGreaterThan(0));
   });
 
