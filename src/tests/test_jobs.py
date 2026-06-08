@@ -145,3 +145,22 @@ def test_robust_rerank_weights_carry_the_margin():
     # cold start uses the prior
     w0 = robust_weights_for(Calibration.identity())
     assert w0.inlet_forecast_margin == K_SIGMA * SIGMA_PRIOR["inlet_temp_max_c"]
+
+
+def test_record_failure_stores_reason_and_status(tmp_path):
+    from webapp.jobs import record_failure
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "runs"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("p1", "2024-11-11", {})
+    record_failure(store, "p1", ValueError("boom"))
+    assert store.read_progress("p1") == {"error": "boom"}
+    assert store.get_plan_row("p1")["status"] == "failed"
+
+
+def test_record_failure_falls_back_to_class_name(tmp_path):
+    from webapp.jobs import record_failure
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "runs"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("p2", "2024-11-11", {})
+    record_failure(store, "p2", RuntimeError())          # str(exc) == ""
+    assert store.read_progress("p2") == {"error": "RuntimeError"}
