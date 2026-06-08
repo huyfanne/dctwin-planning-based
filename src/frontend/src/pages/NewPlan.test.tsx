@@ -7,10 +7,11 @@ vi.mock('../api', () => ({
   getProgress: vi.fn(),
   getPlan: vi.fn(),
   getWeather: vi.fn(),
+  cancelPlan: vi.fn(),
   planStreamUrl: (id: string) => `/api/plans/${id}/stream?token=t`,
 }));
 
-import { createPlan, getWeather } from '../api';
+import { createPlan, getWeather, cancelPlan } from '../api';
 
 class MockEventSource {
   static instances: MockEventSource[] = [];
@@ -138,5 +139,27 @@ describe('NewPlan', () => {
     render(<NewPlan onDone={() => {}} />);
     await waitFor(() => expect(screen.getByText(/weather data covers/i)).toBeInTheDocument());
     expect((screen.getByLabelText(/week start/i) as HTMLInputElement).value).toBe('2024-11-01');
+  });
+
+  it('shows Cancel while running and calls cancelPlan', async () => {
+    (createPlan as ReturnType<typeof vi.fn>).mockResolvedValue({ plan_id: 'pc', status: 'queued' });
+    render(<NewPlan onDone={() => {}} />);
+    fireEvent.change(screen.getByLabelText(/week start/i), { target: { value: '2024-11-11' } });
+    fireEvent.click(screen.getByText(/launch optimization/i));
+    await waitFor(() => expect(MockEventSource.instances.length).toBe(1));
+    MockEventSource.instances[0].emit({ progress: { level: 1, evals: 5 }, status: 'running' });
+    fireEvent.click(await screen.findByRole('button', { name: /cancel/i }));
+    await waitFor(() => expect(cancelPlan).toHaveBeenCalledWith('pc'));
+  });
+
+  it('shows the cancelled state on a cancelled frame', async () => {
+    (createPlan as ReturnType<typeof vi.fn>).mockResolvedValue({ plan_id: 'pc2', status: 'queued' });
+    render(<NewPlan onDone={() => {}} />);
+    fireEvent.change(screen.getByLabelText(/week start/i), { target: { value: '2024-11-11' } });
+    fireEvent.click(screen.getByText(/launch optimization/i));
+    await waitFor(() => expect(MockEventSource.instances.length).toBe(1));
+    MockEventSource.instances[0].emit({ progress: {}, status: 'cancelled' });
+    await waitFor(() => expect(screen.getAllByText(/cancelled/i).length).toBeGreaterThan(0));
+    expect(screen.queryByText(/review results/i)).not.toBeInTheDocument();
   });
 });
