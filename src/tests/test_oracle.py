@@ -160,3 +160,32 @@ def test_replay_with_trajectory_uses_sample_worker():
     kpi, samples = orc.replay_with_trajectory(Setpoints(22.0, 7.0, 15.0), forecast=None)
     assert kpi is fake_kpi and samples is fake_samples
     assert calls["candidate"] == (22.0, 7.0, 15.0)
+
+
+def test_batch_deadline_scales_with_waves_not_task_count():
+    from planner.oracle import _batch_deadline
+    assert _batch_deadline(10, 24, 4) == 10 * (6 + 1)   # ceil(24/4)=6 waves (+1 slack)
+    assert _batch_deadline(10, 3, 4) == 10 * (1 + 1)    # fewer tasks than workers -> 1 wave
+    assert _batch_deadline(10, 0, 4) == 10 * (1 + 1)    # n_tasks=0 guarded
+
+
+def _hang_worker(task):
+    import time
+    from planner.oracle_worker import _infeasible
+    time.sleep(3)                                       # never returns before the deadline
+    return _infeasible("x")
+
+
+def test_evaluate_bounds_a_hung_worker_by_the_deadline(tmp_path):
+    from planner.oracle import ParallelEnvOracle, OracleConfig
+    from planner.types import Setpoints
+    import time
+    cfg = OracleConfig(n_workers=2, timeout_s=0.3, use_process_pool=True,
+                       log_root=str(tmp_path / "oracle"))
+    oracle = ParallelEnvOracle("dummy.prototxt", config=cfg, worker_fn=_hang_worker)
+    cands = [Setpoints(24.0, 8.0, 17.0) for _ in range(4)]
+    t0 = time.time()
+    results = oracle.evaluate(cands)
+    elapsed = time.time() - t0
+    assert len(results) == 4 and all(not r.feasible for r in results)   # hung -> infeasible
+    assert elapsed < 2.5                                # bounded by the wave deadline (~0.9s), not 3s
