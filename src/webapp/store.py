@@ -4,6 +4,7 @@ import csv
 import json
 import math
 import os
+import shutil
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -64,6 +65,13 @@ class PlanStore:
         d = self.runs_dir / plan_id
         d.mkdir(parents=True, exist_ok=True)
         return d
+
+    def delete_plan(self, plan_id: str) -> None:
+        """Remove the plan's index row and its run dir. Use the raw path (NOT plan_dir,
+        which would recreate the dir). Best-effort on the dir."""
+        with self._conn() as c:
+            c.execute("DELETE FROM plans WHERE plan_id=?", (plan_id,))
+        shutil.rmtree(self.runs_dir / plan_id, ignore_errors=True)
 
     def create_plan(self, plan_id: str, week_start: str, params: dict) -> None:
         self.plan_dir(plan_id)
