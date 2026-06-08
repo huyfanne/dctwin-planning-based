@@ -14,6 +14,7 @@ export default function NewPlan({ onDone }: Props) {
   const [beamWidth, setBeamWidth]   = useState('3');
   const [levels, setLevels]         = useState('3');
   const [nWorkers, setNWorkers]     = useState('4');
+  const [timeBlock, setTimeBlock]   = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [planId, setPlanId]         = useState<string | null>(null);
@@ -62,6 +63,7 @@ export default function NewPlan({ onDone }: Props) {
         beam_width: Number(beamWidth),
         levels:     Number(levels),
         n_workers:  Number(nWorkers),
+        time_block: timeBlock,
       });
       setPlanId(res.plan_id);
     } catch (e: unknown) {
@@ -173,6 +175,14 @@ export default function NewPlan({ onDone }: Props) {
                     disabled={!!planId}
                   />
                 </div>
+              </div>
+
+              <div className="field">
+                <label className="field-label" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input type="checkbox" checked={timeBlock} disabled={!!planId}
+                         onChange={e => setTimeBlock(e.target.checked)} />
+                  Day/night setpoints (time-block)
+                </label>
               </div>
 
               {error && <div className="error-msg">{error}</div>}

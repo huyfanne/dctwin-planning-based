@@ -5,6 +5,7 @@ import NewPlan from './NewPlan';
 vi.mock('../api', () => ({
   createPlan: vi.fn(),
   getProgress: vi.fn(),
+  getPlan: vi.fn(),
 }));
 
 import { createPlan, getProgress } from '../api';
@@ -61,5 +62,14 @@ describe('NewPlan', () => {
     await waitFor(() => {
       expect(screen.getByText(/server error/i)).toBeInTheDocument();
     });
+  });
+
+  it('sends time_block when the day/night toggle is on', async () => {
+    (createPlan as ReturnType<typeof vi.fn>).mockResolvedValue({ plan_id: 'p1', status: 'queued' });
+    render(<NewPlan onDone={() => {}} />);
+    fireEvent.change(screen.getByLabelText(/week start/i), { target: { value: '2013-11-11' } });
+    fireEvent.click(screen.getByLabelText(/day\/night setpoints/i));
+    fireEvent.click(screen.getByRole('button', { name: /launch/i }));
+    await waitFor(() => expect(createPlan).toHaveBeenCalledWith(expect.objectContaining({ time_block: true })));
   });
 });
