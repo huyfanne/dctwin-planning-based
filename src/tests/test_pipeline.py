@@ -39,6 +39,21 @@ def test_run_weekly_plan_returns_recommendation_dict():
     assert levels  # progress callback fired
 
 
+def test_run_weekly_plan_time_block_emits_schedule():
+    rec = run_weekly_plan(
+        PlanRequest(week_start=date(2013, 11, 11), days=7, grid=4, beam_width=3, levels=2, time_block=True),
+        evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)), forecaster=_FakeForecaster())
+    assert rec["schema_version"] == "1.5"
+    assert rec["schedule"]["cadence"] == "time-block" and len(rec["schedule"]["blocks"]) == 2
+
+
+def test_run_weekly_plan_no_schedule_by_default():
+    rec = run_weekly_plan(
+        PlanRequest(week_start=date(2013, 11, 11), days=7, grid=4, beam_width=3, levels=2),
+        evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)), forecaster=_FakeForecaster())
+    assert "schedule" not in rec
+
+
 def test_run_weekly_plan_infeasible_fallback():
     rec = run_weekly_plan(
         PlanRequest(week_start=date(2013, 11, 11), days=1, grid=3, beam_width=2, levels=0),

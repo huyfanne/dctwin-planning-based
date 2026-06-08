@@ -12,6 +12,7 @@ class PlanParams(BaseModel):
     beam_width: int = 5
     levels: int = 3
     n_workers: int = 8
+    time_block: bool = False
 
 
 class PlanCreated(BaseModel):

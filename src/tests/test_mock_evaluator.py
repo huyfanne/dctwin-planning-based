@@ -34,3 +34,16 @@ def test_deterministic_and_batched():
     assert a[0].total_hvac_energy_kwh == b[0].total_hvac_energy_kwh
     assert ev.call_count == 2
     assert len(ev.evaluated) == 4
+
+
+def test_mock_evaluate_schedules_constant_matches_single_kpi():
+    from planner.mock_evaluator import MockEvaluator, MockSurface
+    from planner.schedule import WeeklySchedule, DEFAULT_BLOCKS
+    from planner.types import Setpoints
+    ev = MockEvaluator(MockSurface())
+    sp = Setpoints(24.0, 8.0, 17.0)
+    single = ev.evaluate([sp])[0]
+    sched = WeeklySchedule(DEFAULT_BLOCKS, (sp, sp))           # constant schedule
+    sk = ev.evaluate_schedules([sched])[0]
+    assert abs(sk.total_hvac_energy_kwh - single.total_hvac_energy_kwh) < 1e-9
+    assert abs(sk.inlet_temp_max - single.inlet_temp_max) < 1e-9

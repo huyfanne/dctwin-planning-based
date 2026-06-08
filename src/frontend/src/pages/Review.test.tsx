@@ -218,4 +218,17 @@ describe('Review', () => {
     render(<Review planId={PLAN_SUMMARY.plan_id} />);
     await waitFor(() => expect(screen.getByText(/Inlet Trajectory/i)).toBeInTheDocument());
   });
+
+  it('renders the day/night schedule card', async () => {
+    (listPlans as ReturnType<typeof vi.fn>).mockResolvedValue([PLAN_SUMMARY]);
+    (getPlan as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...PLAN_DETAIL,
+      recommendation: { ...PLAN_DETAIL.recommendation, schedule: { cadence: 'time-block', blocks: [
+        { label: 'day', start_hour: 6, end_hour: 18, setpoints: { crah_supply_air_temperature_c: 23, crah_supply_air_mass_flow_rate_kg_s: 9, chilled_water_supply_temperature_c: 16 } },
+        { label: 'night', start_hour: 18, end_hour: 6, setpoints: { crah_supply_air_temperature_c: 25, crah_supply_air_mass_flow_rate_kg_s: 6, chilled_water_supply_temperature_c: 15 } },
+      ] } },
+    });
+    render(<Review planId={PLAN_SUMMARY.plan_id} />);
+    await waitFor(() => expect(screen.getByText(/Day\/Night Schedule/i)).toBeInTheDocument());
+  });
 });

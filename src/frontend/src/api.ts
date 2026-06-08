@@ -1,12 +1,14 @@
 export interface PlanParams {
   week_start: string; days?: number; grid?: number;
   beam_width?: number; levels?: number; n_workers?: number;
+  time_block?: boolean;
 }
 export interface PlanSummary {
   plan_id: string; week_start: string; status: string;
   energy_kwh: number | null; reduction_pct: number | null;
   realized_energy_kwh: number | null;
 }
+export interface ScheduleBlock { label: string; start_hour: number; end_hour: number; setpoints: Record<string, number>; }
 export interface Recommendation {
   status: string;
   setpoints: Record<string, number>;
@@ -18,6 +20,7 @@ export interface Recommendation {
     n_scenarios: number;
     calibration_version: string | null;
   } | null;
+  schedule?: { cadence: string; blocks: ScheduleBlock[] } | null;
 }
 export interface RealizedKpis {
   total_hvac_energy_kwh?: number;

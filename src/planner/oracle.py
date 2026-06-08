@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional, Sequence
 
 from planner.kpi import OracleSettings
-from planner.oracle_worker import EvalTask, evaluate_one, evaluate_one_with_samples
+from planner.oracle_worker import EvalTask, evaluate_one, evaluate_one_with_samples, evaluate_one_schedule
 from planner.types import Evaluator, Setpoints, WeeklyKPI
 from planner.week_config import write_week_config
 
@@ -134,6 +134,56 @@ class ParallelEnvOracle(Evaluator):
             monitored_hall=cfg.monitored_hall)
         worker = self._sample_worker or evaluate_one_with_samples
         return worker(task)
+
+    def evaluate_schedules(self, schedules, forecast=None,
+                           on_result: Optional[Callable[[], None]] = None) -> list[WeeklyKPI]:
+        """Score time-block WeeklySchedules with full-week EnergyPlus runs (per-step action by hour)."""
+        cfg = self.config
+        hours_per_step = 1.0 / cfg.timesteps_per_hour
+        if forecast is not None and hasattr(forecast, "materialize"):
+            forecast.materialize(self.project_root)
+        log_root = Path(cfg.log_root).resolve()
+        log_root.mkdir(parents=True, exist_ok=True)
+        if forecast is not None and getattr(forecast, "week_start", None) is not None:
+            week_cfg_path = str(log_root / "week.prototxt")
+            self._write_week_cfg(forecast, week_cfg_path)
+        else:
+            week_cfg_path = str(Path(self.base_prototxt).resolve())
+        tasks = [
+            EvalTask(candidate=s.setpoints[0].as_tuple(), week_config_path=week_cfg_path,
+                     log_dir=str(log_root / f"sched-{i:04d}"), hours_per_step=hours_per_step,
+                     settings_kwargs=cfg.settings.__dict__, bcvtb_host=cfg.bcvtb_host,
+                     monitored_hall=cfg.monitored_hall, schedule=s)
+            for i, s in enumerate(schedules)
+        ]
+        if not cfg.use_process_pool:
+            out = []
+            for t in tasks:
+                try:
+                    out.append(evaluate_one_schedule(t))
+                except Exception:  # noqa: BLE001
+                    out.append(_infeasible())
+                if on_result is not None:
+                    on_result()
+            return out
+        results: list[WeeklyKPI] = [_infeasible()] * len(tasks)
+        ex = cf.ProcessPoolExecutor(max_workers=cfg.n_workers)
+        futs = {ex.submit(evaluate_one_schedule, t): i for i, t in enumerate(tasks)}
+        deadline = cfg.timeout_s * max(len(tasks), 1)
+        try:
+            for fut in cf.as_completed(futs, timeout=deadline):
+                i = futs[fut]
+                try:
+                    results[i] = fut.result()
+                except Exception:  # noqa: BLE001
+                    results[i] = _infeasible()
+                if on_result is not None:
+                    on_result()
+        except cf.TimeoutError:
+            pass
+        finally:
+            ex.shutdown(wait=False, cancel_futures=True)
+        return results
 
     def _write_week_cfg(self, forecast, week_cfg_path):
         return write_week_config(

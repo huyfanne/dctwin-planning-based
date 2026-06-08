@@ -150,3 +150,19 @@ def test_build_recommendation_records_margin_schema_1_4():
     assert rec["schema_version"] == "1.4"
     assert rec["inlet_forecast_margin"] == 0.6
     assert rec["k_sigma"] == 1.0
+
+
+def test_build_recommendation_schedule_block_schema_1_5():
+    from planner.recommendation import build_recommendation
+    from planner.types import Setpoints, WeeklyKPI
+    from planner.schedule import WeeklySchedule, DEFAULT_BLOCKS
+    from datetime import date
+    kpi = WeeklyKPI(total_hvac_energy_kwh=100.0, pue_mean=1.2, inlet_temp_max=24.0,
+                    inlet_violation_steps=0, rh_violation_steps=0, feasible=True)
+    sched = WeeklySchedule(DEFAULT_BLOCKS, (Setpoints(23.0, 9.0, 16.0), Setpoints(25.0, 6.0, 15.0)))
+    rec = build_recommendation(setpoints=Setpoints(23.0, 9.0, 16.0), kpi=kpi, week_start=date(2013, 11, 11),
+                               days=7, forecast_method="persistence", search_meta={"evals": 1}, schedule=sched)
+    assert rec["schema_version"] == "1.5"
+    blocks = rec["schedule"]["blocks"]
+    assert blocks[0]["label"] == "day" and blocks[0]["setpoints"]["crah_supply_air_temperature_c"] == 23.0
+    assert blocks[1]["label"] == "night" and blocks[1]["setpoints"]["crah_supply_air_temperature_c"] == 25.0

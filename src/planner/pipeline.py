@@ -35,6 +35,7 @@ class PlanRequest:
     beam_width: int = 5
     levels: int = 3
     timesteps_per_hour: int = 4
+    time_block: bool = False
 
 
 def validate_plan_request(request: "PlanRequest", weights: ObjectiveWeights,
@@ -110,6 +111,13 @@ def run_weekly_plan(
         kpi = calibration.apply(fb_kpi) if calibration is not None else fb_kpi
         best, raw, status = fb, fb_kpi, "infeasible_fallback"
 
+    schedule = None
+    if request.time_block and status == "pending_approval" and hasattr(evaluator, "evaluate_schedules"):
+        from planner.schedule_search import refine_schedule
+        sched_res = refine_schedule(best, evaluator, weights, forecast, calibration)
+        schedule = sched_res.schedule
+        best, kpi, raw = schedule.setpoints[0], sched_res.kpi, sched_res.kpi_raw   # top-level mirrors DAY block
+
     return build_recommendation(
         setpoints=best, kpi=kpi, week_start=request.week_start, days=request.days,
         forecast_method=getattr(forecast, "method", "persistence"),
@@ -127,4 +135,5 @@ def run_weekly_plan(
         forecast_meta=forecast_meta,
         inlet_forecast_margin=weights.inlet_forecast_margin,
         k_sigma=K_SIGMA,
+        schedule=schedule,
     )

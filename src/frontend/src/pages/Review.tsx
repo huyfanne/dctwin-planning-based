@@ -383,6 +383,29 @@ export default function Review({ planId: initialPlanId }: Props) {
             </div>
           </div>
 
+          {/* Day/Night Schedule */}
+          {rec?.schedule && (
+            <div className="card bracket-card animate-in animate-in-3">
+              <div className="card-header">
+                <span className="card-title">Day/Night Schedule</span>
+                <span className="text-xs text-dim">{rec.schedule.cadence}</span>
+              </div>
+              <table className="data-table">
+                <thead><tr><th>Block</th><th>SAT °C</th><th>Flow kg/s</th><th>CHWST °C</th></tr></thead>
+                <tbody>
+                  {rec.schedule.blocks.map(b => (
+                    <tr key={b.label}>
+                      <td className="label-cell">{b.label} ({b.start_hour}:00–{b.end_hour}:00)</td>
+                      <td style={{ color: 'var(--cyan)' }}>{b.setpoints.crah_supply_air_temperature_c}</td>
+                      <td style={{ color: 'var(--text-secondary)' }}>{b.setpoints.crah_supply_air_mass_flow_rate_kg_s}</td>
+                      <td style={{ color: 'var(--text-secondary)' }}>{b.setpoints.chilled_water_supply_temperature_c}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {/* Confidence Bands */}
           {robust?.confidence_bands && (
             <div className="card bracket-card animate-in animate-in-4">
