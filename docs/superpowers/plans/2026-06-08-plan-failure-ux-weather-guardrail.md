@@ -192,7 +192,7 @@ In `webapp/main.py` `create_plan`, insert between the `except ValueError … rai
 - [ ] **Step 4: Run them, verify pass**
 
 Run: `env -C /mnt/lv/home/hoanghuy/newcode/dctwin/src $PY -m pytest tests/test_api.py -v`
-Expected: PASS (the 2 new + all existing api tests; existing tests have no forecaster pkl so `_wf` is None and they are unaffected).
+Expected: PASS (the 2 new + all existing api tests). Note: `models/forecaster.pkl` *does* exist and tests run with cwd `src/`, so the real `pickle_load` succeeds and `_wf` is non-None for the un-monkeypatched existing tests — but every existing create test uses `week_start="2013-11-11"` (a Nov week), which is inside the EPW's month/day coverage, so the guardrail passes them through (202). The W2 tests monkeypatch `pickle_load` to the fixture, so they don't depend on the real asset.
 
 - [ ] **Step 5: Commit**
 
@@ -389,7 +389,10 @@ In `frontend/src/pages/NewPlan.test.tsx`:
     fireEvent.click(screen.getByText(/launch optimization/i));
     await waitFor(() => expect(MockEventSource.instances.length).toBe(1));
     MockEventSource.instances[0].emit({ progress: { error: 'week 2026-06-08 is outside coverage' }, status: 'failed' });
-    await waitFor(() => expect(screen.getByText(/outside coverage/i)).toBeInTheDocument());
+    // {error} renders in BOTH the form card and the live-progress card once planId is set,
+    // so use getAllByText (single-match getByText throws on the duplicate — see the sibling
+    // 'shows an error when the stream errors' test).
+    await waitFor(() => expect(screen.getAllByText(/outside coverage/i).length).toBeGreaterThan(0));
   });
 
   it('prefills week start and shows the coverage hint', async () => {
