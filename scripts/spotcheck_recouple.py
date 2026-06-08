@@ -14,10 +14,15 @@ SRC = Path("/mnt/lv/home/hoanghuy/newcode/dctwin/src")
 os.chdir(SRC)
 sys.path.insert(0, str(SRC))
 
+from datetime import date                         # noqa: E402
+
 from planner.kpi import OracleSettings            # noqa: E402
 from planner.oracle_worker import EvalTask, evaluate_one  # noqa: E402
+from planner.week_config import write_week_config  # noqa: E402
 
-WC = "runs/gds-2024-12-01-3d6342/oracle/week.prototxt"   # existing 7-day config (relative to src/)
+# Fresh config with the ACU masking LIFTED (the fix under test) — 2 days for speed.
+WC = write_week_config("configs/dt/dt.prototxt", date(2024, 12, 1),
+                       "runs/_recouple_check/week.prototxt", days=2)
 
 
 def _ite1_and_max(log_dir: Path):

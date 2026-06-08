@@ -44,3 +44,26 @@ def test_write_week_config_without_weather_file_unchanged(tmp_path):
     cfg = read_engine_config(str(out))
     env = getattr(cfg, cfg.WhichOneof("EnvConfig"))
     assert env.weather_file.endswith("IWEC.epw")
+
+
+def test_write_week_config_lifts_acu_masking(tmp_path):
+    """The controlled hall's AGENT_CONTROLLED actuators have their on/off masking removed
+    by default, so the planner's setpoints are always applied."""
+    from dctwin.utils import read_engine_config
+    out = tmp_path / "week.prototxt"
+    write_week_config("configs/dt/dt.prototxt", date(2024, 11, 11), str(out), days=7)
+    cfg = read_engine_config(str(out))
+    env_cfg = getattr(cfg, cfg.WhichOneof("EnvConfig"))
+    masked = [a for a in env_cfg.actions if a.control_type == 2 and a.masking_variable_name]
+    assert masked == []
+
+
+def test_write_week_config_can_keep_acu_masking(tmp_path):
+    from dctwin.utils import read_engine_config
+    out = tmp_path / "week.prototxt"
+    write_week_config("configs/dt/dt.prototxt", date(2024, 11, 11), str(out), days=7,
+                      lift_acu_masking=False)
+    cfg = read_engine_config(str(out))
+    env_cfg = getattr(cfg, cfg.WhichOneof("EnvConfig"))
+    masked = [a for a in env_cfg.actions if a.control_type == 2 and a.masking_variable_name]
+    assert len(masked) == 44   # original GDS 1F-2A config: 22 SAT + 22 flow masked

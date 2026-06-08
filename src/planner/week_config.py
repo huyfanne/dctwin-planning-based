@@ -36,10 +36,18 @@ def write_week_config(
     days: int = 7,
     timesteps_per_hour: int | None = None,
     weather_file: Optional[str] = None,
+    lift_acu_masking: bool = True,
 ) -> str:
     """Read the base DT prototxt, set the weekly run period, write to out_path.
 
     Imports dctwin lazily so the pure logic above stays import-free for unit tests.
+
+    When ``lift_acu_masking`` (default), the ACU on/off masking is removed from the
+    controlled hall's AGENT_CONTROLLED actuators. The planner is *optimising* this hall's
+    cooling, so its ACUs are treated as ON for the planning week; otherwise the on/off
+    schedule masks (zeros) the agent's SAT/airflow setpoints and the rack inlets decouple
+    from the search (2026-06-08 root cause: the masking pins ~5 racks at 43.6 C regardless
+    of setpoint). See docs/superpowers/specs/2026-06-08-setpoint-invariance-rootcause-design.md.
     """
     from dctwin.utils import read_engine_config
     from google.protobuf import text_format
@@ -60,6 +68,11 @@ def write_week_config(
     stc.end_day_of_month = period.end_day
     if timesteps_per_hour is not None:
         stc.number_of_timesteps_per_hour = timesteps_per_hour
+    if lift_acu_masking:
+        AGENT_CONTROLLED = 2   # dctwin ControlType enum (dt_engine.proto); see planner.env_actions
+        for a in env_cfg.actions:
+            if a.control_type == AGENT_CONTROLLED and a.masking_variable_name:
+                a.masking_variable_name = ""
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     Path(out_path).write_text(text_format.MessageToString(cfg))
     return str(out_path)
