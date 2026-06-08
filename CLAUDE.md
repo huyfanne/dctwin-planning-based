@@ -37,7 +37,11 @@ env -C /mnt/lv/home/hoanghuy/newcode/dctwin/src/frontend npm run build      # ts
 env -C /mnt/lv/home/hoanghuy/newcode/dctwin/src/frontend npm run dev        # dev server
 ```
 
-**Run the web app** (operator/expert tokens + Docker for the worker — full command in `src/webapp/README.md`):
+**Run the web app** — one command clears plan state and starts both halves (backend under `sg docker` + Vite frontend; Ctrl-C stops both). Flags: `--keep-runs`, `-y`, `--backend-only`, `--frontend-only`, `--help`:
+```bash
+scripts/clear-and-run.sh
+```
+Then open `http://localhost:5173` and enter the operator/expert token. To start the backend by hand instead (full command in `src/webapp/README.md`):
 ```bash
 sg docker -c "PYTHONPATH=\$PWD OPERATOR_TOKEN=op EXPERT_TOKEN=ex \
   /mnt/lv/home/hoanghuy/newcode/dctwin/.venv-dtwin/bin/python -m uvicorn webapp.main:app --port 8000"
