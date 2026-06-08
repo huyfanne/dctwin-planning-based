@@ -25,13 +25,16 @@ class JobRunner:
     """Single-worker background runner for plan + deploy jobs (one at a time)."""
 
     def __init__(self, store: PlanStore, runner: Optional[RunnerFn] = None,
-                 deploy_runner: Optional[Callable] = None):
+                 deploy_runner: Optional[Callable] = None, container_teardown=None):
         self.store = store
         self.runner = runner or run_plan_job
         self.deploy_runner = deploy_runner or run_deploy_job
         self._q: "queue.Queue[Optional[tuple]]" = queue.Queue()
         self._thread: Optional[threading.Thread] = None
         self._stop = threading.Event()
+        self._cancel: set[str] = set()
+        self._cancel_lock = threading.Lock()
+        self._container_teardown = container_teardown or _kill_eplus_containers
 
     def reconcile_orphans(self) -> None:
         """A restart loses the in-memory job queue, so any plan still marked non-terminal
@@ -41,6 +44,19 @@ class JobRunner:
             st = row.get("status")
             if st in ("queued", "running", "deploying"):
                 self.store.set_status(row["plan_id"], "deploy_failed" if st == "deploying" else "failed")
+
+    def request_cancel(self, plan_id: str) -> None:
+        with self._cancel_lock:
+            self._cancel.add(plan_id)
+        self._container_teardown()          # best-effort: unblock a hung batch immediately
+
+    def _is_cancelled(self, plan_id: str) -> bool:
+        with self._cancel_lock:
+            return plan_id in self._cancel
+
+    def _clear_cancel(self, plan_id: str) -> None:
+        with self._cancel_lock:
+            self._cancel.discard(plan_id)
 
     def start(self) -> None:
         if self._thread is not None:
@@ -82,13 +98,27 @@ class JobRunner:
             if kind == "deploy":
                 self.run_deploy_sync(plan_id)
                 continue
+            if self._is_cancelled(plan_id):                 # queued-cancel: never started
+                self._clear_cancel(plan_id)
+                self.store.set_status(plan_id, "cancelled")
+                continue
             self.store.set_status(plan_id, "running")
+
+            def progress_cb(p, pid=plan_id):
+                if self._is_cancelled(pid):
+                    raise PlanCancelled()
+                self.store.write_progress(pid, p)
+
             try:
-                self.runner(plan_id, params, self.store,
-                            lambda p, pid=plan_id: self.store.write_progress(pid, p))
+                self.runner(plan_id, params, self.store, progress_cb)
+            except PlanCancelled:
+                logger.info("plan %s cancelled", plan_id)
+                self.store.set_status(plan_id, "cancelled")
             except Exception as e:  # noqa: BLE001
                 logger.exception("plan %s failed", plan_id)
                 record_failure(self.store, plan_id, e)
+            finally:
+                self._clear_cancel(plan_id)
 
 
 def run_plan_job(plan_id: str, params: dict, store: PlanStore,
@@ -176,6 +206,26 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
                                       baseline=baseline, out_dir=str(plan_dir / "prevalidation"))
     except Exception:  # noqa: BLE001 - pre-validation is advisory; never fail the plan on it
         logger.exception("prevalidation for %s failed", plan_id)
+
+
+class PlanCancelled(Exception):
+    """Raised cooperatively (from progress_cb) when an operator cancels a running plan."""
+
+
+def _kill_eplus_containers() -> None:
+    """Kill running EnergyPlus containers so a hung batch unblocks. One plan runs at a time,
+    so every E+ container belongs to the current plan. Best-effort — fully guarded."""
+    try:
+        import docker
+        client = docker.from_env()
+        for c in client.containers.list():
+            if any("energyplus" in t.lower() for t in (c.image.tags or [])):
+                try:
+                    c.kill()
+                except Exception:
+                    pass
+    except Exception:
+        pass
 
 
 def pickle_load(path: str) -> dict:

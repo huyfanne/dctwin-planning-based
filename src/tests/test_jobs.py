@@ -195,3 +195,56 @@ def test_start_reconciles_orphans(tmp_path):
         assert store.get_plan_row("run")["status"] == "failed"
     finally:
         runner.stop()
+
+
+def test_request_cancel_stops_a_running_plan(tmp_path):
+    import threading
+    from unittest.mock import Mock
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("p1", "2024-11-11", {})
+    started = threading.Event()
+
+    def looping_runner(plan_id, params, store, progress_cb):
+        started.set()
+        for _ in range(100000):
+            progress_cb({"level": 0, "evals": 1})   # raises PlanCancelled once cancelled
+            time.sleep(0.005)
+
+    teardown = Mock()
+    runner = JobRunner(store, runner=looping_runner, container_teardown=teardown)
+    runner.start()
+    try:
+        runner.submit("p1", {})
+        assert started.wait(2)
+        _wait_status(store, "p1", "running")
+        runner.request_cancel("p1")
+        _wait_status(store, "p1", "cancelled")
+        teardown.assert_called_once()       # in-flight containers torn down
+    finally:
+        runner.stop()
+
+
+def test_request_cancel_skips_a_queued_plan(tmp_path):
+    from unittest.mock import Mock
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("p1", "2024-11-11", {})
+    ran = []
+
+    def runner_fn(plan_id, params, store, progress_cb):
+        ran.append(plan_id)
+
+    runner = JobRunner(store, runner=runner_fn, container_teardown=Mock())
+    runner.request_cancel("p1")             # cancel BEFORE it is dequeued
+    runner.submit("p1", {})
+    # NB: start() runs reconcile_orphans first, which transiently flips the still-'queued'
+    # p1 to 'failed'; the loop then dequeues it, sees the cancel flag, and sets 'cancelled'.
+    # _wait_status only waits FOR 'cancelled', so the intermediate 'failed' is harmless.
+    runner.start()
+    try:
+        _wait_status(store, "p1", "cancelled")
+        time.sleep(0.2)
+        assert ran == []                    # never executed
+    finally:
+        runner.stop()
