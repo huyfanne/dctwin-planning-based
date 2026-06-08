@@ -74,6 +74,16 @@ export interface Topology {
 
 let TOKEN = localStorage.getItem("token") || "";
 export function setToken(t: string) { TOKEN = t; localStorage.setItem("token", t); }
+export function getToken(): string { return TOKEN; }
+export function clearToken(): void { TOKEN = ""; localStorage.removeItem("token"); }
+
+// Validate a token WITHOUT mutating the stored TOKEN: raw GET /api/plans (operator-min;
+// an expert token satisfies it too). 200 -> valid, 401/403 -> invalid. May throw on a
+// network failure (caller treats that as "backend unreachable").
+export async function verifyToken(token: string): Promise<boolean> {
+  const res = await fetch("/api/plans", { headers: { Authorization: `Bearer ${token}` } });
+  return res.ok;
+}
 
 async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(path, {
