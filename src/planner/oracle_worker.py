@@ -32,12 +32,17 @@ class EvalTask:
 def read_step_sample(unwrapped, monitor: MonitorSpec) -> StepSample:
     def g(name):
         return unwrapped.inspect_current_observation(observation_name=name, use_unnormed=True)
+    # Sum the controllable-HVAC power channels when discovered; None otherwise so
+    # aggregate_kpi falls back to the facility total-IT (mock/legacy envs).
+    hvac_power_w = (sum(g(n) for n in monitor.hvac_power_names)
+                    if monitor.hvac_power_names else None)
     return StepSample(
         total_power_w=g(monitor.total_power_name),
         it_power_w=g(monitor.it_power_name),
         inlet_temps=[g(n) for n in monitor.inlet_temp_names],
         inlet_rhs=[g(n) for n in monitor.inlet_rh_names],
         zone_temps=[g(n) for n in monitor.zone_temp_names],
+        hvac_power_w=hvac_power_w,
     )
 
 

@@ -53,6 +53,31 @@ def test_read_step_sample_collects_named_values():
     assert s.inlet_temps == [24.0]
 
 
+def test_read_step_sample_sums_hvac_power_names():
+    # hvac_power_w is the SUM of the named controllable-HVAC power channels.
+    traces = {
+        "total power": [9_000_000.0], "total it power": [8_000_000.0],
+        "i1": [24.0],
+        "acu1": [1000.0], "acu2": [1500.0], "chiller1": [300_000.0],
+    }
+    u = _FakeUnwrapped(traces)
+    u.advance()
+    m = MonitorSpec("total power", "total it power", ["i1"],
+                    hvac_power_names=["acu1", "acu2", "chiller1"])
+    s = read_step_sample(u, m)
+    assert s.hvac_power_w == 302_500.0
+
+
+def test_read_step_sample_hvac_power_none_when_unscoped():
+    # No hvac_power_names -> hvac_power_w stays None so aggregate_kpi uses the fallback.
+    traces = {"total power": [2000.0], "total it power": [1000.0], "i1": [24.0]}
+    u = _FakeUnwrapped(traces)
+    u.advance()
+    m = MonitorSpec("total power", "total it power", ["i1"])
+    s = read_step_sample(u, m)
+    assert s.hvac_power_w is None
+
+
 def test_run_episode_aggregates_over_steps():
     traces = {
         "total power": [2000.0, 2000.0, 2000.0],

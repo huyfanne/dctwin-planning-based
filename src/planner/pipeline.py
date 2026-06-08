@@ -68,6 +68,8 @@ def run_weekly_plan(
     on_eval: Optional[Callable[[int], None]] = None,
     calibration=None,
     robust_rerank_fn=None,
+    baseline_setpoints: Optional[Setpoints] = None,
+    energy_scope: Optional[str] = None,
 ) -> dict:
     """Forecast -> best-first search -> recommendation dict. The DRY planning core.
 
@@ -90,6 +92,17 @@ def run_weekly_plan(
         "weather": os.path.basename(_wf) if _wf else "TMY-window",
         "bands": getattr(forecast, "bands", None) is not None,
     }
+
+    # Real "as-operated" baseline: evaluate the plant's current setpoints once on the
+    # same forecast week so energy_reduction_vs_baseline is honest (vs the old UI 450
+    # placeholder). One extra full-week eval; calibrated like the plan KPI for fairness.
+    baseline_kpi = None
+    if baseline_setpoints is not None and baseline_energy_kwh is None:
+        base_kpi = evaluator.evaluate([baseline_setpoints], forecast)[0]
+        if calibration is not None:
+            base_kpi = calibration.apply(base_kpi)
+        baseline_energy_kwh = base_kpi.total_hvac_energy_kwh
+        baseline_kpi = base_kpi
 
     planner = BeamPlanner(space, evaluator, weights, beam, calibration=calibration)
     result = planner.plan(forecast, on_level=on_level, on_eval=on_eval)
@@ -143,4 +156,7 @@ def run_weekly_plan(
         k_sigma=K_SIGMA,
         schedule=schedule,
         degenerate_no_signal=result.degenerate_no_signal,
+        baseline_setpoints=baseline_setpoints,
+        energy_scope=energy_scope,
+        baseline_kpi=baseline_kpi,
     )

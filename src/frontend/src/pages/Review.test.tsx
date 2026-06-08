@@ -231,4 +231,25 @@ describe('Review', () => {
     render(<Review planId={PLAN_SUMMARY.plan_id} />);
     await waitFor(() => expect(screen.getByText(/Day\/Night Schedule/i)).toBeInTheDocument());
   });
+
+  it('shows the real computed baseline energy, not a placeholder', async () => {
+    (listPlans as ReturnType<typeof vi.fn>).mockResolvedValue([PLAN_SUMMARY]);
+    (getPlan as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...PLAN_DETAIL,
+      recommendation: {
+        ...PLAN_DETAIL.recommendation,
+        energy_scope: 'hall_controllable_v1',
+        baseline: {
+          source: 'as_operated',
+          energy_kwh: 512345.678,
+          setpoints: { crah_supply_air_temperature_c: 23, crah_supply_air_mass_flow_rate_kg_s: 6.9, chilled_water_supply_temperature_c: 16 },
+          kpis: { total_hvac_energy_kwh: 512345.678, pue_mean: 1.21, inlet_temp_max_c: 25.9, inlet_violation_steps: 0 },
+        },
+      },
+    });
+    render(<Review planId={PLAN_SUMMARY.plan_id} />);
+    // the real baseline energy renders (toFixed(3)); the old 450 placeholder is gone
+    expect(await screen.findByText(/512345\.678/)).toBeInTheDocument();
+    expect(screen.queryByText('450kWh')).not.toBeInTheDocument();
+  });
 });

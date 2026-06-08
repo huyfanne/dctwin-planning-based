@@ -13,6 +13,13 @@ export interface Recommendation {
   status: string;
   setpoints: Record<string, number>;
   predicted_kpis: Record<string, number | null>;
+  energy_scope?: string;
+  baseline?: {
+    source: string;
+    energy_kwh: number | null;
+    setpoints: Record<string, number> | null;
+    kpis?: Record<string, number | null>;
+  } | null;
   robust?: {
     robust_feasible: boolean;
     cvar_energy_kwh: number;

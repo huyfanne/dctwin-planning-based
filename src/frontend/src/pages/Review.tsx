@@ -27,15 +27,6 @@ const SETPOINT_LABELS: Record<string, string> = {
   chilled_water_supply_temperature_c:  'Chilled Water Supply Temp (°C)',
 };
 
-// Pseudo-baseline values for comparison (representative defaults)
-const BASELINE_KPIS: Record<string, number> = {
-  total_hvac_energy_kwh:            450,
-  pue_mean:                         1.6,
-  inlet_temp_max_c:                 27,
-  inlet_violation_steps:            12,
-  energy_reduction_vs_baseline_pct: 0,
-};
-
 function statusClass(s: string) {
   if (s.includes('pending')) return 'badge-pending';
   if (s === 'approved')      return 'badge-approved';
@@ -176,6 +167,12 @@ export default function Review({ planId: initialPlanId }: Props) {
 
   const rec    = detail?.recommendation;
   const kpi    = rec?.predicted_kpis ?? {};
+  // Real as-operated baseline KPIs computed by the planner (schema 1.7+); older runs
+  // have none, so the comparison is hidden rather than faked.
+  const baseKpis = rec?.baseline?.kpis;
+  const baselineKpis: Record<string, number | null> = baseKpis
+    ? { ...baseKpis, energy_reduction_vs_baseline_pct: 0 }
+    : {};
   const sp     = rec?.setpoints ?? {};
   const robust = rec?.robust;
   const status = detail?.status ?? '';
@@ -189,7 +186,7 @@ export default function Review({ planId: initialPlanId }: Props) {
     name: m.label.replace(' ', '\n'),
     shortName: m.label.split(' ').slice(0, 2).join(' '),
     Predicted: kpi[m.key] != null ? Number(kpi[m.key]) : null,
-    Baseline:  BASELINE_KPIS[m.key] ?? null,
+    Baseline:  baselineKpis[m.key] ?? null,
   }));
 
   return (
@@ -307,8 +304,8 @@ export default function Review({ planId: initialPlanId }: Props) {
                 <tbody>
                   {KPI_META.map(m => {
                     const pred = kpi[m.key];
-                    const base = BASELINE_KPIS[m.key];
-                    const delta = pred != null && base != null ? Number(pred) - base : null;
+                    const base = baselineKpis[m.key];
+                    const delta = pred != null && base != null ? Number(pred) - Number(base) : null;
                     const lower_is_better = m.key !== 'energy_reduction_vs_baseline_pct';
                     const deltaColor = delta == null
                       ? 'var(--text-muted)'
@@ -321,7 +318,7 @@ export default function Review({ planId: initialPlanId }: Props) {
                           {pred != null ? `${Number(pred).toFixed(3)}${m.unit}` : '—'}
                         </td>
                         <td style={{ color: 'var(--text-secondary)' }}>
-                          {`${base}${m.unit}`}
+                          {base != null ? `${Number(base).toFixed(3)}${m.unit}` : '—'}
                         </td>
                         <td style={{ color: deltaColor, fontWeight: 600 }}>
                           {delta != null ? `${delta > 0 ? '+' : ''}${delta.toFixed(3)}` : '—'}

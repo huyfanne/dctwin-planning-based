@@ -45,6 +45,9 @@ def build_recommendation(
     k_sigma: Optional[float] = None,
     schedule=None,   # planner.schedule.WeeklySchedule
     degenerate_no_signal: bool = False,
+    baseline_setpoints: Optional[Setpoints] = None,
+    energy_scope: Optional[str] = None,
+    baseline_kpi: Optional[WeeklyKPI] = None,
 ) -> dict:
     week_end = week_start + timedelta(days=days - 1)
     reduction = (
@@ -118,6 +121,29 @@ def build_recommendation(
         rec["schema_version"] = "1.5"
     if degenerate_no_signal:
         rec["schema_version"] = "1.6"
+    # 1.7: real (computed) baseline + the energy-metric scope. `energy_scope` tells a
+    # reader whether total_hvac_energy_kwh is the controlled-hall HVAC (ACU fans +
+    # chiller/CHW plant) or the legacy facility-wide total. `baseline` carries the
+    # as-operated setpoints + their energy, replacing the old frontend placeholder.
+    if baseline_setpoints is not None or energy_scope is not None:
+        rec["energy_scope"] = energy_scope or "hall_controllable_v1"
+        rec["baseline"] = {
+            "source": "as_operated",
+            "energy_kwh": baseline_energy_kwh,
+            "setpoints": ({
+                "crah_supply_air_temperature_c": round(baseline_setpoints.sat_c, 2),
+                "crah_supply_air_mass_flow_rate_kg_s": round(baseline_setpoints.flow_kg_s, 2),
+                "chilled_water_supply_temperature_c": round(baseline_setpoints.chwst_c, 2),
+            } if baseline_setpoints is not None else None),
+        }
+        if baseline_kpi is not None:
+            rec["baseline"]["kpis"] = {
+                "total_hvac_energy_kwh": baseline_kpi.total_hvac_energy_kwh,
+                "pue_mean": baseline_kpi.pue_mean,
+                "inlet_temp_max_c": baseline_kpi.inlet_temp_max,
+                "inlet_violation_steps": baseline_kpi.inlet_violation_steps,
+            }
+        rec["schema_version"] = "1.7"
     return rec
 
 
