@@ -3,6 +3,8 @@ import Dashboard from './pages/Dashboard';
 import NewPlan from './pages/NewPlan';
 import Review from './pages/Review';
 import History from './pages/History';
+import Login from './pages/Login';
+import { getToken, clearToken } from './api';
 // Lazy-load the 3D twin so the heavy three.js bundle is only fetched on demand.
 const DigitalTwin3D = lazy(() => import('./pages/DigitalTwin3D'));
 
@@ -17,9 +19,12 @@ const NAV: { id: Page; label: string }[] = [
 ];
 
 export default function App() {
+  const [authed, setAuthed] = useState(() => !!getToken());
   const [page, setPage] = useState<Page>('dashboard');
   // reviewPlanId can be set from History to deep-link to a specific plan
   const [reviewPlanId, setReviewPlanId] = useState<string | undefined>(undefined);
+
+  if (!authed) return <Login onAuthed={() => setAuthed(true)} />;
 
   function openReview(id: string) {
     setReviewPlanId(id);
@@ -51,6 +56,8 @@ export default function App() {
           ))}
         </nav>
 
+        <button className="signout" onClick={() => { clearToken(); setAuthed(false); }}
+          style={{ marginLeft: 'auto' }}>Sign out</button>
       </header>
 
       <main className="app-content">
