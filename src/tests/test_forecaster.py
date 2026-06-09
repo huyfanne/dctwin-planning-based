@@ -6,7 +6,7 @@ import pandas as pd
 
 from planner.forecaster import (
     loading_from_it_loads, persistence_window, StatisticalForecaster, Forecast,
-    seasonal_climatology,
+    seasonal_climatology, calendar_level_scale,
 )
 
 
@@ -166,3 +166,68 @@ def test_build_forecaster_threads_weather_file():
     hcr = {"Data Hall 1F 2A": col}
     s = build_forecaster("seasonal", his, room2ite, hcr, weather_file="w.epw")
     assert s.forecast(date(2024, 12, 2), 96).weather_file == "w.epw"
+
+
+# --- G1: calendar-aware load LEVEL (different calendar weeks track their period's level) ---
+
+_LOAD_COL = "1F_Datahall 2A 1F Data Hall 2A IT loads"
+
+
+def _two_month_his(low=1000.0, high=1400.0):
+    """Nov 2024 at `low`, Dec 2024 at `high`, with an 08:00-20:00 day/night diurnal shape.
+    cap=2_000_000 W so loading stays in (0,1). Used to test calendar-level tracking."""
+    times = pd.date_range("2024-11-01 00:00", "2024-12-31 23:45", freq="15min",
+                          tz="Asia/Singapore")
+    base = np.where(times.month == 11, low, high)
+    day = (times.hour >= 8) & (times.hour < 20)
+    load = base * np.where(day, 1.0, 0.5)
+    return pd.DataFrame({"_time": times.astype(str), _LOAD_COL: load})
+
+
+def test_calendar_level_scale_tracks_period():
+    his = _two_month_his()
+    loading = loading_from_it_loads(his[_LOAD_COL], total_watts=2_000_000.0)
+    s_nov = calendar_level_scale(loading, his["_time"], date(2024, 11, 15))
+    s_dec = calendar_level_scale(loading, his["_time"], date(2024, 12, 15))
+    assert s_nov < 1.0 < s_dec        # Nov below all-time mean, Dec above
+    assert s_dec > s_nov
+
+
+def test_calendar_level_scale_clamps_out_of_range_week():
+    his = _two_month_his()
+    loading = loading_from_it_loads(his[_LOAD_COL], total_watts=2_000_000.0)
+    s_future = calendar_level_scale(loading, his["_time"], date(2025, 6, 1))
+    s_dec = calendar_level_scale(loading, his["_time"], date(2024, 12, 15))
+    assert 0.5 <= s_future <= 1.5
+    np.testing.assert_allclose(s_future, s_dec, atol=0.05)   # clamps to the last (Dec) level
+
+
+def test_calendar_level_scale_flat_history_is_unity():
+    times = pd.date_range("2024-11-01 00:00", periods=4 * 96, freq="15min", tz="Asia/Singapore")
+    loading = pd.Series(np.full(len(times), 0.5))
+    assert calendar_level_scale(loading, pd.Series(times.astype(str)),
+                                date(2024, 11, 2)) == 1.0
+
+
+def test_seasonal_forecast_tracks_calendar_month():
+    his = _two_month_his()
+    room2ite = {"Data Hall 1F 2A": {"Data Hall 1F 2A ite-1": {"totalWatts": 2_000_000.0}}}
+    hcr = {"Data Hall 1F 2A": _LOAD_COL}
+    ite = "Data Hall 1F 2A ite-1"
+    fc = SeasonalForecaster(his, room2ite, hcr)
+    nov = np.array(fc.forecast(date(2024, 11, 18), 96).workload_schedules[ite])   # Monday
+    dec = np.array(fc.forecast(date(2024, 12, 16), 96).workload_schedules[ite])   # Monday
+    assert nov.mean() < dec.mean()             # tracks the calendar period's level
+    assert not np.allclose(nov, dec)           # different calendar weeks no longer identical
+
+
+def test_seasonal_forecast_preserves_diurnal_shape_when_leveling():
+    his = _two_month_his()
+    room2ite = {"Data Hall 1F 2A": {"Data Hall 1F 2A ite-1": {"totalWatts": 2_000_000.0}}}
+    hcr = {"Data Hall 1F 2A": _LOAD_COL}
+    ite = "Data Hall 1F 2A ite-1"
+    fc = SeasonalForecaster(his, room2ite, hcr)
+    nov = np.array(fc.forecast(date(2024, 11, 18), 96).workload_schedules[ite])
+    dec = np.array(fc.forecast(date(2024, 12, 16), 96).workload_schedules[ite])
+    # only the LEVEL shifts; the normalized diurnal shape is identical
+    np.testing.assert_allclose(nov / nov.mean(), dec / dec.mean(), atol=1e-6)
