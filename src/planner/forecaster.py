@@ -72,6 +72,45 @@ def seasonal_climatology(loading, times, week_start, n_steps: int,
     return point, bands
 
 
+def calendar_level_scale(loading, times, week_start, window_days: int = 10,
+                         clip: tuple[float, float] = (0.5, 1.5)) -> float:
+    """Level shift that ties the (pooled) weekday climatology to the load LEVEL expected
+    for the *calendar period* of `week_start`.
+
+    The (weekday x time-of-day) climatology pools ALL history, so two different calendar
+    weeks with the same start-weekday come out identical — it carries the diurnal/weekly
+    SHAPE but not the slow month-to-month drift. This returns
+        mean(loading in [week_start +/- window_days]) / mean(loading)
+    so multiplying the climatology by it re-levels the week to its period: 1.0 at the
+    all-time average, <1 / >1 for lighter / heavier periods. `week_start` is clamped into
+    the data span, so a future week uses the most recent window's level (honest
+    persistence; no trend extrapolation). Clipped to `clip` to stay robust to thin windows.
+    """
+    v = np.asarray(loading, dtype=float)
+    if not v.size:
+        return 1.0
+    t = pd.to_datetime(pd.Series(times).to_numpy(), utc=True).tz_convert("Asia/Singapore")
+    # Aggregate to whole-day means first: the level must be invariant to the diurnal phase
+    # of the window edges, else a window not aligned to midnight skews the day/night mix
+    # and perturbs level-stationary data. Daily means cancel the within-day shape.
+    daily = pd.Series(v, index=t).resample("1D").mean().dropna()
+    if daily.empty:
+        return 1.0
+    mu_global = float(daily.mean())
+    if not np.isfinite(mu_global) or mu_global <= 0:
+        return 1.0
+    ws = pd.Timestamp(week_start.year, week_start.month, week_start.day, tz="Asia/Singapore")
+    center = min(max(ws, daily.index.min()), daily.index.max())   # clamp into the data span
+    win = pd.Timedelta(days=window_days)
+    sel = daily[(daily.index >= center - win) & (daily.index <= center + win)]
+    if sel.empty:
+        return 1.0
+    mu_local = float(sel.mean())
+    if not np.isfinite(mu_local) or mu_local <= 0:
+        return 1.0
+    return float(np.clip(mu_local / mu_global, *clip))
+
+
 @dataclass
 class Forecast:
     week_start: date
@@ -130,7 +169,7 @@ class SeasonalForecaster:
 
     def __init__(self, his_data: pd.DataFrame, room2ite: dict, his_col_for_room: dict,
                  time_col: str = "_time", freq_min: int = 15, min_samples: int = 4,
-                 weather_file: Optional[str] = None):
+                 weather_file: Optional[str] = None, level_window_days: int = 10):
         self.his = his_data
         self.room2ite = room2ite
         self.his_col_for_room = his_col_for_room
@@ -138,6 +177,7 @@ class SeasonalForecaster:
         self.freq_min = freq_min
         self.min_samples = min_samples
         self.weather_file = weather_file
+        self.level_window_days = level_window_days
 
     def forecast(self, week_start: date, n_steps: int) -> Forecast:
         times = self.his[self.time_col]
@@ -150,6 +190,12 @@ class SeasonalForecaster:
             loading = loading_from_it_loads(self.his[self.his_col_for_room[room]], total_watts)
             point, band = seasonal_climatology(loading, times, week_start, n_steps,
                                                freq_min=self.freq_min, min_samples=self.min_samples)
+            # re-level the pooled (weekday) shape to the calendar period of week_start so
+            # different calendar weeks track their month's load level, not just the weekday.
+            scale = calendar_level_scale(loading, times, week_start,
+                                         window_days=self.level_window_days)
+            point = np.clip(np.asarray(point) * scale, 0.0, 1.0)
+            band = {k: np.clip(np.asarray(band[k]) * scale, 0.0, 1.0) for k in band}
             p50 = [float(x) for x in point]
             room_band = {k: [float(x) for x in band[k]] for k in band}
             for ite_name in ites:
