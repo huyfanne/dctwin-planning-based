@@ -1,0 +1,458 @@
+2026-06-08 07:06:16.336 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:06:16.950 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:06:16.955 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:06:17.136 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0099/eplus_output/episode-1
+2026-06-08 07:06:17.136 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:06:17.544 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:06:17.913 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:06:22.204 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:06:22.769 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:06:22.769 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:06:22.885 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:06:22.885 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:06:22.896 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:44191
+2026-06-08 07:06:22.899 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:06:23.005 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 42818)
+2026-06-08 07:06:23.111 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:06:23.111 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:06:23.214 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:06:23.214 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:06:23.225 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:53039
+2026-06-08 07:06:23.230 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:06:23.429 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:06:23.432 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:06:23.619 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0100/eplus_output/episode-1
+2026-06-08 07:06:23.620 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:06:23.759 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:06:23.761 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:06:23.916 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0101/eplus_output/episode-1
+2026-06-08 07:06:23.916 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:06:27.394 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:06:27.394 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:06:27.511 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:06:27.512 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:06:27.522 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:36277
+2026-06-08 07:06:27.527 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:06:28.232 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:06:28.233 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:06:28.414 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0102/eplus_output/episode-1
+2026-06-08 07:06:28.414 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:06:29.312 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 36240)
+2026-06-08 07:06:29.562 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 52706)
+2026-06-08 07:06:31.049 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:06:34.262 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 50354)
+2026-06-08 07:06:36.163 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:06:36.163 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:06:36.270 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:06:36.270 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:06:36.282 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:45665
+2026-06-08 07:06:36.285 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:06:36.760 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:06:36.762 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:06:36.861 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:06:36.913 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0103/eplus_output/episode-1
+2026-06-08 07:06:36.913 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:06:39.301 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:06:42.019 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:06:42.019 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:06:42.131 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:06:42.131 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:06:42.142 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:41185
+2026-06-08 07:06:42.145 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:06:42.628 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:06:42.630 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:06:42.781 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0104/eplus_output/episode-1
+2026-06-08 07:06:42.782 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:06:42.864 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 32920)
+2026-06-08 07:06:43.760 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:06:44.479 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:06:44.480 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:06:44.612 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:06:44.613 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:06:44.626 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:39485
+2026-06-08 07:06:44.629 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:06:45.056 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:06:45.059 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:06:45.228 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0105/eplus_output/episode-1
+2026-06-08 07:06:45.228 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:06:48.325 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 37010)
+2026-06-08 07:06:48.943 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:06:48.943 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:06:49.053 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:06:49.053 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:06:49.064 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:39355
+2026-06-08 07:06:49.066 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:06:49.604 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:06:49.606 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:06:49.757 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0106/eplus_output/episode-1
+2026-06-08 07:06:49.757 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:06:50.167 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:06:50.645 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 44102)
+2026-06-08 07:06:55.330 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:06:55.330 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:06:55.431 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:06:55.431 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:06:55.441 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:39041
+2026-06-08 07:06:55.445 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:06:55.462 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 47346)
+2026-06-08 07:06:55.729 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:06:55.956 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:06:55.957 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:06:56.097 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0107/eplus_output/episode-1
+2026-06-08 07:06:56.097 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:06:59.721 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:07:00.894 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:07:00.895 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:07:01.022 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:07:01.023 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:07:01.032 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:55795
+2026-06-08 07:07:01.035 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:07:01.536 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:07:01.538 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:07:01.692 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0108/eplus_output/episode-1
+2026-06-08 07:07:01.692 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:07:02.007 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 33414)
+2026-06-08 07:07:04.919 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:07:04.920 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:07:05.023 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:07:05.023 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:07:05.035 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:34851
+2026-06-08 07:07:05.038 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:07:05.254 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:07:05.602 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:07:05.604 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:07:05.761 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0109/eplus_output/episode-1
+2026-06-08 07:07:05.761 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:07:08.316 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 56930)
+2026-06-08 07:07:09.031 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:07:10.480 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:07:10.480 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:07:10.590 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:07:10.590 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:07:10.600 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:42275
+2026-06-08 07:07:10.603 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:07:11.079 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:07:11.080 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:07:11.230 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0110/eplus_output/episode-1
+2026-06-08 07:07:11.230 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:07:12.312 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 57150)
+2026-06-08 07:07:14.204 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:07:14.205 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:07:14.309 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:07:14.309 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:07:14.320 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:59883
+2026-06-08 07:07:14.322 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:07:14.798 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:07:14.800 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:07:14.944 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0111/eplus_output/episode-1
+2026-06-08 07:07:14.944 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:07:15.370 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:07:16.498 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 35502)
+2026-06-08 07:07:20.480 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:07:20.481 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:07:20.590 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:07:20.590 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:07:20.601 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:44345
+2026-06-08 07:07:20.606 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:07:20.891 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 49018)
+2026-06-08 07:07:21.172 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:07:21.176 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:07:21.179 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:07:21.343 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0112/eplus_output/episode-1
+2026-06-08 07:07:21.343 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:07:24.275 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:07:26.362 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:07:26.363 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:07:26.493 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:07:26.493 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:07:26.505 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:34473
+2026-06-08 07:07:26.507 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:07:26.728 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 59778)
+2026-06-08 07:07:27.031 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:07:27.032 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:07:27.184 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0113/eplus_output/episode-1
+2026-06-08 07:07:27.185 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:07:29.420 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:07:29.420 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:07:29.515 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:07:29.515 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:07:29.525 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:47861
+2026-06-08 07:07:29.528 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:07:30.010 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:07:30.012 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:07:30.141 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:07:30.154 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0114/eplus_output/episode-1
+2026-06-08 07:07:30.154 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:07:33.058 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 59034)
+2026-06-08 07:07:35.056 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:07:35.243 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:07:35.244 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:07:35.326 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:07:35.326 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:07:35.336 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:55983
+2026-06-08 07:07:35.342 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:07:35.866 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:07:35.868 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:07:36.023 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0115/eplus_output/episode-1
+2026-06-08 07:07:36.023 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:07:36.201 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 46218)
+2026-06-08 07:07:40.216 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:07:40.217 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:07:40.299 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:07:40.299 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:07:40.306 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:48753
+2026-06-08 07:07:40.309 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:07:40.825 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:07:40.827 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:07:40.932 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:07:41.010 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0116/eplus_output/episode-1
+2026-06-08 07:07:41.011 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:07:41.804 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 44058)
+2026-06-08 07:07:45.342 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:07:46.140 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:07:46.140 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:07:46.280 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:07:46.280 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:07:46.292 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:47557
+2026-06-08 07:07:46.297 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:07:46.907 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:07:46.910 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:07:47.089 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0117/eplus_output/episode-1
+2026-06-08 07:07:47.089 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:07:47.784 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 47038)
+2026-06-08 07:07:50.466 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:07:50.466 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:07:50.559 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:07:50.559 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:07:50.568 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:35765
+2026-06-08 07:07:50.571 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:07:50.955 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:07:51.207 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:07:51.211 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:07:51.391 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0118/eplus_output/episode-1
+2026-06-08 07:07:51.391 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:07:53.400 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 53662)
+2026-06-08 07:07:56.165 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:07:56.166 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:07:56.281 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:07:56.282 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:07:56.295 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:37359
+2026-06-08 07:07:56.299 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:07:56.732 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:07:56.734 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:07:56.889 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0119/eplus_output/episode-1
+2026-06-08 07:07:56.889 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:07:58.195 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 52820)
+2026-06-08 07:07:59.325 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:08:03.235 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:08:03.783 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 59266)
+2026-06-08 07:08:04.522 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:08:04.523 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:08:04.645 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:08:04.645 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:08:04.658 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:60645
+2026-06-08 07:08:04.662 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:08:05.181 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:08:05.626 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:08:05.765 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0120/eplus_output/episode-1
+2026-06-08 07:08:05.765 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:08:06.650 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:08:08.442 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:08:08.442 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:08:08.576 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:08:08.576 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:08:08.590 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:49557
+2026-06-08 07:08:08.593 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:08:09.085 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:08:09.613 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:08:09.750 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0121/eplus_output/episode-1
+2026-06-08 07:08:09.750 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:08:11.856 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:08:11.856 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:08:11.965 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:08:11.965 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:08:11.978 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:39889
+2026-06-08 07:08:11.982 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:08:12.565 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:08:12.779 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 36028)
+2026-06-08 07:08:13.064 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:08:13.207 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0122/eplus_output/episode-1
+2026-06-08 07:08:13.207 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:08:13.422 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:08:16.745 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 41620)
+2026-06-08 07:08:18.599 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:08:18.599 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:08:18.712 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:08:18.712 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:08:18.725 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:39057
+2026-06-08 07:08:18.729 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:08:19.293 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:08:19.629 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:08:19.664 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 40060)
+2026-06-08 07:08:19.762 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0123/eplus_output/episode-1
+2026-06-08 07:08:19.762 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:08:22.072 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:08:26.493 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:08:26.634 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 59340)
+2026-06-08 07:08:27.299 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:08:27.299 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:08:27.434 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:08:27.434 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:08:27.447 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:57351
+2026-06-08 07:08:27.453 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:08:27.946 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:08:27.948 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:08:28.104 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0124/eplus_output/episode-1
+2026-06-08 07:08:28.105 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:08:29.807 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:08:31.691 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:08:31.691 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:08:34.143 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 34664)
+2026-06-08 07:08:34.997 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:08:34.997 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:08:36.443 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:08:41.640 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:08:41.641 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:08:42.968 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:08:48.187 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:08:48.187 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+/mnt/lv/home/hoanghuy/miniconda3/lib/python3.13/multiprocessing/popen_fork.py:67: DeprecationWarning: This process (pid=1599111) is multi-threaded, use of fork() may lead to deadlocks in the child.
+  self.pid = os.fork()
+/mnt/lv/home/hoanghuy/miniconda3/lib/python3.13/multiprocessing/popen_fork.py:67: DeprecationWarning: This process (pid=1599111) is multi-threaded, use of fork() may lead to deadlocks in the child.
+  self.pid = os.fork()
+/mnt/lv/home/hoanghuy/miniconda3/lib/python3.13/multiprocessing/popen_fork.py:67: DeprecationWarning: This process (pid=1599111) is multi-threaded, use of fork() may lead to deadlocks in the child.
+  self.pid = os.fork()
+/mnt/lv/home/hoanghuy/miniconda3/lib/python3.13/multiprocessing/popen_fork.py:67: DeprecationWarning: This process (pid=1599111) is multi-threaded, use of fork() may lead to deadlocks in the child.
+  self.pid = os.fork()
+2026-06-08 07:08:48.850 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:08:48.850 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:08:48.851 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:08:48.851 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:08:48.859 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:08:48.859 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:08:48.874 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:08:48.874 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:08:48.881 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:52337
+2026-06-08 07:08:48.881 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:38741
+2026-06-08 07:08:48.886 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:39067
+2026-06-08 07:08:48.888 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:08:48.888 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:08:48.891 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:08:48.891 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:44885
+2026-06-08 07:08:48.897 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:08:51.122 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:08:51.123 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:08:51.123 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:08:51.125 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:08:51.127 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:08:51.129 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:08:51.365 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0001/eplus_output/episode-1
+2026-06-08 07:08:51.365 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:08:51.365 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:08:51.369 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:08:51.406 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0000/eplus_output/episode-1
+2026-06-08 07:08:51.406 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:08:51.437 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0003/eplus_output/episode-1
+2026-06-08 07:08:51.437 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:08:51.594 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0002/eplus_output/episode-1
+2026-06-08 07:08:51.594 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:08:57.989 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 56530)
+2026-06-08 07:08:58.058 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 57286)
+2026-06-08 07:08:58.319 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 53044)
+2026-06-08 07:08:58.479 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 56568)
+2026-06-08 07:09:05.706 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:09:06.932 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:09:07.010 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:09:07.066 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:09:10.932 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:09:10.933 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:09:11.067 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:09:11.067 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:09:11.081 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:50573
+2026-06-08 07:09:11.085 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:09:11.618 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:09:11.619 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:09:11.808 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0004/eplus_output/episode-1
+2026-06-08 07:09:11.808 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:09:12.070 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:09:12.070 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:09:12.203 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:09:12.204 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:09:12.215 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:32809
+2026-06-08 07:09:12.240 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:09:12.390 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:09:12.391 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:09:12.438 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:09:12.438 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:09:12.516 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:09:12.516 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:09:12.529 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:45127
+2026-06-08 07:09:12.550 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:09:12.551 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:09:12.562 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:09:12.563 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:38527
+2026-06-08 07:09:12.615 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:09:12.859 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:09:12.862 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:09:13.182 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0005/eplus_output/episode-1
+2026-06-08 07:09:13.182 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:09:13.185 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:09:13.185 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:09:13.187 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:09:13.189 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:09:13.448 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0006/eplus_output/episode-1
+2026-06-08 07:09:13.449 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:09:13.449 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0007/eplus_output/episode-1
+2026-06-08 07:09:13.449 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:09:18.294 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 41352)
+2026-06-08 07:09:19.793 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 45604)
+2026-06-08 07:09:20.267 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 53792)
+2026-06-08 07:09:20.335 | INFO     | dctwin.third_parties.eplus.core:_run_backend:224 - Got connection from ('10.96.72.147', 54086)
+2026-06-08 07:09:26.325 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:09:29.055 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:09:29.645 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+2026-06-08 07:09:29.905 | DEBUG    | dctwin.third_parties.eplus.core:receive_status:310 - Came to the end of one episode, terminating
+^CINFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2026-06-08 07:09:31.537 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:09:31.537 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:09:31.668 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:09:31.668 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:09:31.682 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:56705
+2026-06-08 07:09:31.718 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:09:32.332 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:09:32.336 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+^C2026-06-08 07:09:33.022 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0008/eplus_output/episode-1
+2026-06-08 07:09:33.022 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:09:34.342 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:09:34.343 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:09:34.478 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:09:34.478 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:09:34.491 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:35111
+2026-06-08 07:09:34.495 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:09:34.854 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:09:34.855 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:09:34.981 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:09:34.984 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:09:34.991 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:09:34.992 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:09:35.004 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:60907
+2026-06-08 07:09:35.010 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:09:35.066 | DEBUG    | dctwin.third_parties.eplus.core:__del__:324 - Closing socket...
+2026-06-08 07:09:35.066 | DEBUG    | dctwin.third_parties.eplus.core:__del__:328 - EnergyPlus backend closed
+2026-06-08 07:09:35.166 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:119 - Using pre-set simulation time
+2026-06-08 07:09:35.166 | INFO     | dctwin.gym_envs.base_env:_set_simulation_time:149 - Simulation time: 11-11 00:00
+2026-06-08 07:09:35.179 | INFO     | dctwin.third_parties.eplus.core:_set_up_socket:98 - socket listening on host.docker.internal:43477
+2026-06-08 07:09:35.185 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:137 - Parsing IDF file...
+2026-06-08 07:09:35.491 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:09:35.493 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+2026-06-08 07:09:35.545 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0009/eplus_output/episode-1
+2026-06-08 07:09:35.546 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:09:35.664 | INFO     | dctwin.third_parties.eplus.core:_parse_idf_and_gen_bcvtb_config:156 - Generating BCVTB Config ...
+2026-06-08 07:09:35.666 | INFO     | dctwin.third_parties.eplus.parser:save_cfg_xml:911 - no internal schedule config added
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1599111]
+2026-06-08 07:09:36.171 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0010/eplus_output/episode-1
+2026-06-08 07:09:36.171 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
+2026-06-08 07:09:36.186 | INFO     | dctwin.third_parties.docker_backend:run_container:54 - docker mount: /mnt/lv/home/hoanghuy/newcode/dctwin/src/runs/gds-2024-11-11-3873ed/oracle/cand-0011/eplus_output/episode-1
+2026-06-08 07:09:36.186 | INFO     | dctwin.third_parties.docker_backend:run_container:55 - docker run: /bin/bash -c /usr/local/EnergyPlus-9-5-0/energyplus -w Singapore_Changi_Nov2024-Jan2025.epw -r building.idf
