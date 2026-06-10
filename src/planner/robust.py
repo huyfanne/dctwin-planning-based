@@ -35,11 +35,41 @@ def make_scenarios(base: PlantConfig, n: int, spread: float) -> list[PlantConfig
 
 def scenario_spread(calibration: Optional[Calibration], base_spread: float = 0.1,
                     sigma_ref: float = 1.0) -> float:
-    """Ensemble half-width: a prior at cold-start, widened by the calibrated inlet
-    uncertainty so the ensemble brackets the observed mismatch."""
-    if calibration is None or calibration.n_weeks == 0:
+    """Ensemble half-width. `base_spread` is the conservative cold-start prior bracketing
+    plant uncertainty; as calibration CONFIRMS the twin is accurate (sigma_inlet < sigma_ref)
+    the ensemble TIGHTENS toward the measured uncertainty. It never widens beyond base_spread.
+
+    (The old `* (1 + sigma/ref)` WIDENED the ensemble as sigma rose — so acquiring the first
+    calibration week DOUBLED the spread (0.1 -> 0.2 at the sigma=1.0 prior). That deadlocked
+    the robust gate: more data inflated the modeled uncertainty, every plan came back
+    blocked_unsafe, and a blocked plan can't deploy to lower sigma. Acquiring evidence of
+    accuracy must REDUCE, never inflate, the bracket.)"""
+    if calibration is None or calibration.n_weeks == 0 or sigma_ref <= 0:
         return base_spread
-    return base_spread * (1.0 + calibration.sigma_for("inlet_temp_max_c") / sigma_ref)
+    return base_spread * min(1.0, calibration.sigma_for("inlet_temp_max_c") / sigma_ref)
+
+
+def safety_ladder(best: Setpoints, space, steps: int = 6) -> list:
+    """A sweep of the energy<->robustness frontier: interpolate from the (fragile) energy
+    optimum `best` toward the max-cooling corner (min SAT, max airflow, min CHWST) in `steps`
+    increments. robust_select then recommends the CHEAPEST robust-feasible point on the sweep,
+    so a fragile optimum yields the LEAST-energy plan that still survives the ensemble — not
+    the costly corner (a coarse single-axis ladder collapsed to the corner, wasting energy).
+    Denser near the cheap end (where the robust boundary usually sits). Last point = the
+    guaranteed-safe corner. Out-of-range duplicates dropped."""
+    corner = Setpoints(space.sat.lb, space.flow.ub, space.chwst.lb)
+    # quadratic spacing -> more samples near `best` (the cheap end of the frontier)
+    fracs = sorted({round((i / steps) ** 1.5, 4) for i in range(1, steps + 1)})
+    out, seen = [], {best.as_tuple()}
+    for f in fracs:
+        v = Setpoints(
+            best.sat_c + f * (corner.sat_c - best.sat_c),
+            best.flow_kg_s + f * (corner.flow_kg_s - best.flow_kg_s),
+            best.chwst_c + f * (corner.chwst_c - best.chwst_c))
+        if v.as_tuple() not in seen:
+            seen.add(v.as_tuple())
+            out.append(v)
+    return out
 
 
 @dataclass

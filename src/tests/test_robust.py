@@ -18,12 +18,36 @@ def test_make_scenarios_n1_is_base():
     assert len(scs) == 1 and scs[0] == DEFAULT_PLANT
 
 
-def test_scenario_spread_cold_start_and_widens():
+def test_scenario_spread_cold_start_and_tightens():
+    # Cold start uses the conservative prior bracket.
     assert scenario_spread(None) == 0.1
     assert scenario_spread(Calibration({}, {}, 0, "weeks-0")) == 0.1
-    wide = scenario_spread(Calibration({}, {"inlet_temp_max_c": 1.0}, 3, "weeks-3"),
-                           base_spread=0.1, sigma_ref=1.0)
-    assert wide == 0.2
+    # At the prior sigma (== sigma_ref) it must CAP at base — never widen past it (the old
+    # bug doubled it to 0.2 here, deadlocking the gate after the first deploy).
+    assert scenario_spread(Calibration({}, {"inlet_temp_max_c": 1.0}, 1, "weeks-1"),
+                           base_spread=0.1, sigma_ref=1.0) == 0.1
+    # As calibration confirms accuracy (sigma below the reference), the bracket TIGHTENS.
+    assert scenario_spread(Calibration({}, {"inlet_temp_max_c": 0.5}, 4, "weeks-4"),
+                           base_spread=0.1, sigma_ref=1.0) == 0.05
+    assert scenario_spread(Calibration({}, {"inlet_temp_max_c": 0.0}, 9, "weeks-9"),
+                           base_spread=0.1, sigma_ref=1.0) == 0.0
+
+
+def test_safety_ladder_adds_cooling_within_bounds():
+    from planner.robust import safety_ladder
+    from planner.types import DEFAULT_SEARCH_SPACE as S, Setpoints
+    best = Setpoints(23.0, 4.8, 19.0)            # fragile energy optimum: min flow, warm CHW
+    ladder = safety_ladder(best, S)
+    assert len(ladder) >= 3
+    for v in ladder:
+        # every variant adds cooling margin along at least one axis
+        assert v.chwst_c < best.chwst_c or v.flow_kg_s > best.flow_kg_s or v.sat_c < best.sat_c
+        # ...and stays within the search bounds
+        assert S.sat.lb <= v.sat_c <= S.sat.ub
+        assert S.flow.lb <= v.flow_kg_s <= S.flow.ub
+        assert S.chwst.lb <= v.chwst_c <= S.chwst.ub
+    # includes the guaranteed-safe max-cooling corner
+    assert any(v.as_tuple() == (S.sat.lb, S.flow.ub, S.chwst.lb) for v in ladder)
 
 
 from planner.robust import RobustResult, robust_select
