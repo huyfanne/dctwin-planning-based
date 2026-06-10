@@ -142,6 +142,37 @@ def test_run_weekly_plan_blocks_when_not_robust_feasible():
     assert rec["setpoints"]["crah_supply_air_temperature_c"] == 21.0
 
 
+def test_run_weekly_plan_substitutes_robust_variant_when_optimum_fragile():
+    """When the energy-optimal finalists are robust-infeasible, the planner escalates to the
+    safety ladder and recommends the cheapest robust-feasible variant (robust_substituted)
+    instead of returning blocked_unsafe."""
+    calls = []
+
+    def fake_rerank(finalists, forecast):
+        calls.append([f[0] for f in finalists])
+        best = min(finalists, key=lambda f: f[2])
+        if len(calls) == 1:
+            # the energy-optimal beam finalists sit on the cooling cliff -> fragile
+            return RobustResult(winner=best[0], winner_kpi=best[1], robust_feasible=False,
+                                cvar_energy_kwh=2000.0, confidence_bands={}, n_scenarios=3,
+                                winner_kpi_raw=best[1], scenarios_ok=3)
+        # the margin-increasing safety-ladder variants include a robust-feasible one
+        return RobustResult(winner=best[0], winner_kpi=best[1], robust_feasible=True,
+                            cvar_energy_kwh=1500.0, confidence_bands={}, n_scenarios=3,
+                            winner_kpi_raw=best[1], scenarios_ok=3)
+
+    rec = run_weekly_plan(
+        PlanRequest(week_start=date(2013, 11, 11), days=7, grid=4, beam_width=3, levels=2),
+        evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
+        forecaster=_FakeForecaster(),
+        robust_rerank_fn=fake_rerank,
+    )
+    assert len(calls) == 2                            # escalated to the safety ladder
+    assert rec["status"] == "pending_approval"        # a robust plan was found, not blocked
+    assert rec["robust"]["robust_feasible"] is True
+    assert rec["robust"]["robust_substituted"] is True
+
+
 import pytest
 from planner.pipeline import validate_plan_request, PlanRequest
 from planner.beam_search import BeamConfig

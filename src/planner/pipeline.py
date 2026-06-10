@@ -110,6 +110,29 @@ def run_weekly_plan(
     robust = None
     if robust_rerank_fn is not None and result.beam_finalists:
         robust = robust_rerank_fn(result.beam_finalists, forecast)
+        # If the energy-optimal finalists are all fragile (robust-infeasible under the
+        # perturbed-plant ensemble), don't just block: evaluate margin-increasing variants
+        # (more cooling) and recommend the CHEAPEST genuinely-robust one. Only stay
+        # blocked_unsafe if even the max-cooling fallback can't hold the cap. This turns the
+        # common "energy optimum sits on a cooling cliff" case into a safe, slightly-costlier
+        # recommendation instead of an un-actionable block.
+        if robust is not None and not robust.robust_feasible:
+            from planner.objective import score as _obj_score
+            from planner.robust import safety_ladder
+            variants = safety_ladder(robust.winner, space)
+            # The as-operated baseline is a known safe operating point — include it so the
+            # cheapest robust plan is, at worst, ~the baseline (a 0% reduction), never the
+            # energy-wasteful max-cooling corner.
+            if baseline_setpoints is not None:
+                variants = variants + [baseline_setpoints]
+            if variants:
+                vk = evaluator.evaluate(variants, forecast)
+                if calibration is not None:
+                    vk = [calibration.apply(k) for k in vk]
+                vfinalists = [(sp, k, _obj_score(k, weights)) for sp, k in zip(variants, vk)]
+                robust2 = robust_rerank_fn(vfinalists, forecast)
+                if robust2 is not None and robust2.robust_feasible:
+                    robust = dataclasses.replace(robust2, robust_substituted=True)
 
     if robust is not None:
         # when the robust ensemble ran, robust feasibility is decisive
