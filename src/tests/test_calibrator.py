@@ -108,3 +108,37 @@ def test_sigma_shrinks_toward_sample_as_n_grows():
     s2, s10, s1000 = sigma_for_n(2), sigma_for_n(10), sigma_for_n(1000)
     assert s2 > s10 > s1000          # monotonic shrinkage as n grows
     assert s1000 < 10.0              # well below the 5000 prior, heading toward sample (~1.0)
+
+
+def test_sigma_post_blends_prior_with_measured_residuals():
+    """sigma_post = sqrt((n*s^2 + prior^2)/(n+1)) — prior counts as one pseudo-week."""
+    # n=1: a single (near-perfect) week -> sample std 0 -> post = prior/sqrt(2),
+    # NOT the full prior (the fading floor stays at the full prior here by design).
+    one = [{"predicted": {"inlet_temp_max_c": 24.0}, "realized": {"inlet_temp_max_c": 24.005}}]
+    cal1 = fit_calibration(one)
+    assert math.isclose(cal1.sigma_post["inlet_temp_max_c"],
+                        SIGMA_PRIOR["inlet_temp_max_c"] / math.sqrt(2.0), rel_tol=1e-9)
+    assert cal1.sigma["inlet_temp_max_c"] == SIGMA_PRIOR["inlet_temp_max_c"]  # floor unchanged
+    # n=4 accurate weeks (residuals +-0.01 -> s=0.01): post ~ sqrt((4e-4+1)/5) ~ 0.447
+    four = [{"predicted": {"inlet_temp_max_c": 24.0},
+             "realized": {"inlet_temp_max_c": 24.0 + (0.01 if i % 2 else -0.01)}}
+            for i in range(4)]
+    cal4 = fit_calibration(four)
+    assert math.isclose(cal4.sigma_post["inlet_temp_max_c"],
+                        ((4 * 0.01 ** 2 + 1.0) / 5.0) ** 0.5, rel_tol=1e-9)
+    # monotone: more accurate evidence -> tighter posterior
+    assert cal4.sigma_post["inlet_temp_max_c"] < cal1.sigma_post["inlet_temp_max_c"]
+
+
+def test_sigma_post_roundtrips_and_falls_back():
+    cal = fit_calibration([{"predicted": {"inlet_temp_max_c": 24.0},
+                            "realized": {"inlet_temp_max_c": 24.0}}])
+    d = cal.to_dict()
+    assert "sigma_post" in d
+    back = Calibration.from_dict(d)
+    assert back.sigma_post_for("inlet_temp_max_c") == cal.sigma_post["inlet_temp_max_c"]
+    # a legacy dict (no sigma_post) falls back to the floor-pinned sigma — never less
+    # conservative than the old behavior
+    legacy = Calibration.from_dict({"bias": {}, "sigma": {"inlet_temp_max_c": 0.8},
+                                    "n_weeks": 2, "version": "weeks-2"})
+    assert legacy.sigma_post_for("inlet_temp_max_c") == 0.8

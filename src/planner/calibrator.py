@@ -29,6 +29,12 @@ class Calibration:
     sigma: dict
     n_weeks: int
     version: str
+    # Empirical-Bayes posterior error scale: sqrt((n*s^2 + prior^2)/(n+1)) — the prior
+    # counts as ONE pseudo-week of evidence, so measured accuracy tightens it smoothly
+    # (n=0 -> prior; n=1,s~0 -> prior/sqrt(2); n->inf -> s). Used to size the robust
+    # ensemble. Distinct from `sigma` (fading floor max(s, prior/n)), which backs the
+    # nominal k*sigma margin and deliberately never under-states error at small n.
+    sigma_post: dict = dataclasses.field(default_factory=dict)
 
     @staticmethod
     def identity() -> "Calibration":
@@ -53,19 +59,27 @@ class Calibration:
     def sigma_for(self, key: str) -> float:
         return self.sigma.get(key, 0.0)
 
+    def sigma_post_for(self, key: str) -> float:
+        """Posterior error scale for ensemble sizing; a calibration file written before
+        sigma_post existed falls back to the (floor-pinned) sigma — never less conservative
+        than the old behavior."""
+        v = self.sigma_post.get(key)
+        return float(v) if v is not None else self.sigma_for(key)
+
     def to_dict(self) -> dict:
-        return {"bias": self.bias, "sigma": self.sigma,
+        return {"bias": self.bias, "sigma": self.sigma, "sigma_post": self.sigma_post,
                 "n_weeks": self.n_weeks, "version": self.version}
 
     @staticmethod
     def from_dict(d: dict) -> "Calibration":
         return Calibration(bias=d.get("bias", {}), sigma=d.get("sigma", {}),
                            n_weeks=int(d.get("n_weeks", 0)),
-                           version=d.get("version", f"weeks-{int(d.get('n_weeks', 0))}"))
+                           version=d.get("version", f"weeks-{int(d.get('n_weeks', 0))}"),
+                           sigma_post=d.get("sigma_post", {}))
 
 
 def fit_calibration(history: list) -> Calibration:
-    bias, sigma = {}, {}
+    bias, sigma, sigma_post = {}, {}, {}
     for key in CALIB_KEYS:
         clip = RESIDUAL_CLIP.get(key, float("inf"))
         res = []
@@ -85,8 +99,13 @@ def fit_calibration(history: list) -> Calibration:
             # sigma=0 cold-start poison); as weeks accumulate prior/n -> 0 and the
             # sample std takes over. max() keeps it monotonically shrinking.
             sigma[key] = max(sample, prior / n)
+            # Empirical-Bayes posterior: prior = one pseudo-week. Smoothly blends the
+            # measured residual spread with the prior, so observed accuracy tightens
+            # the robust ensemble without ever collapsing it on thin evidence.
+            sigma_post[key] = ((n * sample ** 2 + prior ** 2) / (n + 1)) ** 0.5
     n = len(history)
-    return Calibration(bias=bias, sigma=sigma, n_weeks=n, version=f"weeks-{n}")
+    return Calibration(bias=bias, sigma=sigma, n_weeks=n, version=f"weeks-{n}",
+                       sigma_post=sigma_post)
 
 
 def load_calibration(path: str = "data/calibration.json") -> Calibration:

@@ -33,42 +33,72 @@ def make_scenarios(base: PlantConfig, n: int, spread: float) -> list[PlantConfig
     return out
 
 
-def scenario_spread(calibration: Optional[Calibration], base_spread: float = 0.1,
-                    sigma_ref: float = 1.0) -> float:
-    """Ensemble half-width. `base_spread` is the conservative cold-start prior bracketing
-    plant uncertainty; as calibration CONFIRMS the twin is accurate (sigma_inlet < sigma_ref)
-    the ensemble TIGHTENS toward the measured uncertainty. It never widens beyond base_spread.
+MIN_SPREAD = 0.02   # physical floor: ~±2% week-scale parameter drift (fouling/filter
+                    # loading/fan wear under normal operation). The ensemble hedge never
+                    # vanishes however accurate the twin has been — past accuracy is not
+                    # immunity to future drift. Discrete failures (a chiller trip) are not
+                    # coverable by a continuous ensemble; they are the deploy-blocked
+                    # backstop's and live monitoring's job.
 
-    (The old `* (1 + sigma/ref)` WIDENED the ensemble as sigma rose — so acquiring the first
-    calibration week DOUBLED the spread (0.1 -> 0.2 at the sigma=1.0 prior). That deadlocked
-    the robust gate: more data inflated the modeled uncertainty, every plan came back
-    blocked_unsafe, and a blocked plan can't deploy to lower sigma. Acquiring evidence of
-    accuracy must REDUCE, never inflate, the bracket.)"""
+
+def scenario_spread(calibration: Optional[Calibration], base_spread: float = 0.1,
+                    sigma_ref: float = 1.0, min_spread: float = MIN_SPREAD) -> float:
+    """Ensemble half-width. `base_spread` is the conservative cold-start prior bracketing
+    plant-state uncertainty; as deployed weeks MEASURE the twin's accuracy the bracket
+    tightens toward the evidence. Scaled by the empirical-Bayes posterior error
+    (sigma_post = sqrt((n*s^2 + prior^2)/(n+1)), prior = one pseudo-week) rather than the
+    fading-floor sigma: the floor is the right statistic for the nominal safety margin
+    (never under-state error at small n) but it stays pinned at the full prior at n=1,
+    which froze the ensemble at maximum width exactly when evidence said the twin was
+    accurate. Bounded by [min_spread, base_spread]: never wider than the cold-start prior,
+    never below the physical drift floor.
+
+    (History: an earlier `* (1 + sigma/ref)` WIDENED the ensemble as sigma rose, so the
+    first calibration week doubled the spread and deadlocked the robust gate.)"""
     if calibration is None or calibration.n_weeks == 0 or sigma_ref <= 0:
         return base_spread
-    return base_spread * min(1.0, calibration.sigma_for("inlet_temp_max_c") / sigma_ref)
+    scaled = base_spread * (calibration.sigma_post_for("inlet_temp_max_c") / sigma_ref)
+    return min(base_spread, max(min_spread, scaled))
 
 
 def safety_ladder(best: Setpoints, space, steps: int = 6) -> list:
-    """A sweep of the energy<->robustness frontier: interpolate from the (fragile) energy
-    optimum `best` toward the max-cooling corner (min SAT, max airflow, min CHWST) in `steps`
-    increments. robust_select then recommends the CHEAPEST robust-feasible point on the sweep,
-    so a fragile optimum yields the LEAST-energy plan that still survives the ensemble — not
-    the costly corner (a coarse single-axis ladder collapsed to the corner, wasting energy).
-    Denser near the cheap end (where the robust boundary usually sits). Last point = the
-    guaranteed-safe corner. Out-of-range duplicates dropped."""
+    """Candidates on the energy<->robustness frontier for the robust gate to SUBSTITUTE
+    when the energy optimum `best` is fragile. robust_select recommends the CHEAPEST
+    robust-feasible one, so the ladder must buy thermal margin along the CHEAP axes first:
+
+    - CHWST down (toward space.chwst.lb), flow/SAT held: colder chilled water restores
+      coil capacity — the binding failure mode in a degraded plant is the coil starving
+      at warm CHWST (measured: CHWST 17.8-19 breached the cap in worse-plant scenarios
+      while CHWST <=16.9 held 25.3 C) — at a modest chiller-COP cost (~3% energy span).
+    - CHWST + SAT down, flow held: SAT is nearly energy-free (~0.5% span) and adds
+      supply-air margin.
+    - The diagonal toward the max-cooling corner (min SAT, MAX AIRFLOW, min CHWST):
+      airflow is the EXPENSIVE axis (~15% fan-energy span), so it is the last resort —
+      but its endpoint is the guaranteed-safe fallback.
+
+    Quadratic spacing puts more samples near the cheap end, where the robust boundary
+    lives. Out-of-range duplicates dropped."""
     corner = Setpoints(space.sat.lb, space.flow.ub, space.chwst.lb)
-    # quadratic spacing -> more samples near `best` (the cheap end of the frontier)
-    fracs = sorted({round((i / steps) ** 1.5, 4) for i in range(1, steps + 1)})
     out, seen = [], {best.as_tuple()}
-    for f in fracs:
-        v = Setpoints(
-            best.sat_c + f * (corner.sat_c - best.sat_c),
-            best.flow_kg_s + f * (corner.flow_kg_s - best.flow_kg_s),
-            best.chwst_c + f * (corner.chwst_c - best.chwst_c))
+
+    def add(v: Setpoints) -> None:
         if v.as_tuple() not in seen:
             seen.add(v.as_tuple())
             out.append(v)
+
+    # cheap axes first: chilled-water only, then chw+SAT (flow stays at the optimum's)
+    for f in (1.0 / 3.0, 2.0 / 3.0, 1.0):
+        chw = best.chwst_c + f * (space.chwst.lb - best.chwst_c)
+        add(Setpoints(best.sat_c, best.flow_kg_s, round(chw, 3)))
+        sat = best.sat_c + f * (space.sat.lb - best.sat_c)
+        add(Setpoints(round(sat, 3), best.flow_kg_s, round(chw, 3)))
+    # the all-axes diagonal (incl. airflow) up to the guaranteed-safe corner
+    fracs = sorted({round((i / steps) ** 1.5, 4) for i in range(1, steps + 1)})
+    for f in fracs:
+        add(Setpoints(
+            round(best.sat_c + f * (corner.sat_c - best.sat_c), 3),
+            round(best.flow_kg_s + f * (corner.flow_kg_s - best.flow_kg_s), 3),
+            round(best.chwst_c + f * (corner.chwst_c - best.chwst_c), 3)))
     return out
 
 
@@ -144,7 +174,17 @@ def make_oracle_robust_rerank(base_prototxt, oracle_config, calibration,
                               weights, n_scenarios, log_root, oracle_cls=None):
     """Build a robust_rerank_fn(finalists, forecast) -> RobustResult that evaluates
     the finalists under N perturbed-plant scenarios (each a real EnergyPlus run).
-    `oracle_cls` is injectable for testing (default ParallelEnvOracle)."""
+    `oracle_cls` is injectable for testing (default ParallelEnvOracle).
+
+    Uncertainty is SINGLE-counted across the two safety layers:
+    - the NOMINAL check (beam search) hedges twin-vs-plant model error with the
+      k*sigma pre-tighten (cap - margin), because no degradation is physically
+      modeled there;
+    - a SCENARIO already physically realizes a degraded plant, so each scenario KPI
+      is corrected by the MEASURED bias and then tested against the hard cap
+      (inlet_forecast_margin=0 inside scenarios). Stacking the full prior margin on
+      top of the realized degradation hedged the same uncertainty twice
+      (e.g. cold start: a ~17-24%-degraded plant ALSO had to hold cap-1.0 C)."""
     from pathlib import Path
 
     if oracle_cls is None:
@@ -153,6 +193,7 @@ def make_oracle_robust_rerank(base_prototxt, oracle_config, calibration,
 
     spread = scenario_spread(calibration)
     scenarios = make_scenarios(DEFAULT_PLANT, n_scenarios, spread)
+    scen_weights = replace(weights, inlet_forecast_margin=0.0)
 
     def rerank(finalists, forecast):
         setpoints = [f[0] for f in finalists]
@@ -165,10 +206,12 @@ def make_oracle_robust_rerank(base_prototxt, oracle_config, calibration,
                     base_prototxt=sproto, project_root=".",
                     config=replace(oracle_config, log_root=str(Path(sdir) / "oracle")))
                 for i, k in enumerate(oracle.evaluate(setpoints, forecast=forecast)):
+                    if calibration is not None:
+                        k = calibration.apply(k)   # measured bias; flags cap breach itself
                     per_finalist[i].append(k)
             except Exception:  # noqa: BLE001 - a failed scenario is dropped, never fatal
                 import logging
                 logging.getLogger(__name__).warning("robust scenario %d failed; dropping", j)
-        return robust_select(finalists, per_finalist, weights, n_requested=len(scenarios))
+        return robust_select(finalists, per_finalist, scen_weights, n_requested=len(scenarios))
 
     return rerank
