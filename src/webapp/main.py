@@ -63,6 +63,39 @@ async def plan_sse_stream(store, plan_id: str, is_disconnected, *, sleep=asyncio
         await sleep(_STREAM_POLL_S)
 
 
+def _previous_setpoints(store, prev_week, his, cfg) -> Optional[dict]:
+    """The setpoints that ran 'last week': a prior plan whose week_start == prev_week,
+    else the as-operated median from telemetry. Fully guarded -> None on any failure."""
+    iso = prev_week.isoformat()
+    try:
+        for p in store.list_plans():                       # newest first
+            if p.get("week_start") == iso:
+                rec = store.get_recommendation(p["plan_id"])
+                if rec and rec.get("setpoints"):
+                    return {"source": "previous_plan", "week_start": iso,
+                            "setpoints": rec["setpoints"]}
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        from planner.baseline import as_operated_setpoints, BaselineColumns
+        from planner.types import DEFAULT_SEARCH_SPACE
+        bc = cfg.get("baseline_columns", {})
+        cols = BaselineColumns(
+            sat_supply_temp=bc.get("sat_supply_temp", r"CRACW\d+_AirSupplyTemperature$"),
+            chwst_supply_temp=bc.get("chwst_supply_temp", r"CHILLER\d+_ChilledWaterSupplyTemperature$"),
+            fan_speed=bc.get("fan_speed", r"CRACW\d+_FanSpeed$"))
+        sp = as_operated_setpoints(
+            his, DEFAULT_SEARCH_SPACE, cols,
+            design_flow_kg_s_per_acu=cfg.get("design_flow_kg_s_per_acu", DEFAULT_SEARCH_SPACE.flow.ub),
+            fan_speed_max=cfg.get("fan_speed_max", 100.0))
+        return {"source": "as_operated", "week_start": None, "setpoints": {
+            "crah_supply_air_temperature_c": round(float(sp.sat_c), 2),
+            "crah_supply_air_mass_flow_rate_kg_s": round(float(sp.flow_kg_s), 2),
+            "chilled_water_supply_temperature_c": round(float(sp.chwst_c), 2)}}
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = None,
                runner=None, run_sync: bool = False, deploy_runner=None,
                frontend_dist: Optional[str] = None, container_teardown=None) -> FastAPI:
@@ -261,6 +294,72 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
         except Exception:
             return {"label": None, "start_md": None, "end_md": None,
                     "file": None, "suggested_week_start": None}
+
+    @app.get("/api/planning-context")
+    def get_planning_context(week_start: str, days: int = 7, timesteps_per_hour: int = 4,
+                             role: str = Depends(operator)):
+        """Planning context for the controlled hall (1F 2A): the PAST week + FORECAST week
+        of IT load (kW) and weather (°C), plus the previous week's setpoints — so the
+        operator sees the inputs before launching a plan. Fully guarded: any missing
+        piece degrades to [] / null rather than 500."""
+        from datetime import date as _date, timedelta as _td
+        import pandas as pd
+        from webapp.jobs import pickle_load
+        from planner.forecaster import build_forecaster
+        from planner.planning_context import past_hall_load_kw, forecast_hall_load_kw
+        from planner.epw import weather_timeseries
+
+        HALL = "Data Hall 1F 2A"
+        out = {"week_start": week_start, "days": days, "timesteps_per_hour": timesteps_per_hour,
+               "it_load": {"unit": "kW", "past": [], "forecast": []},
+               "weather": {"unit": "°C", "past": [], "forecast": []},
+               "previous_setpoints": None}
+        try:
+            ws = _date.fromisoformat(week_start)
+        except Exception:  # noqa: BLE001 - bad date -> empty context, never error
+            return out
+        past_start = ws - _td(days=days)
+        n_steps = max(1, days * 24 * timesteps_per_hour)
+
+        try:
+            cfg = pickle_load("models/forecaster.pkl")
+        except Exception:  # noqa: BLE001
+            return out
+        wf = cfg.get("weather_file")
+        if wf:
+            try:
+                out["weather"]["past"] = weather_timeseries(wf, past_start, days)
+            except Exception:  # noqa: BLE001
+                pass
+            try:
+                out["weather"]["forecast"] = weather_timeseries(wf, ws, days)
+            except Exception:  # noqa: BLE001
+                pass
+        his = None
+        try:
+            his = pd.read_csv(cfg["his_csv"])
+        except Exception:  # noqa: BLE001
+            his = None
+        if his is not None:
+            load_col = cfg.get("his_col_for_room", {}).get(HALL)
+            if load_col:
+                try:
+                    out["it_load"]["past"] = past_hall_load_kw(his, "_time", load_col, past_start, days)
+                except Exception:  # noqa: BLE001
+                    pass
+            try:
+                room2ite = json.loads(Path(cfg["room2ite_path"]).read_text())
+                if HALL in room2ite:
+                    caps = {ite: float(v.get("totalWatts", 0.0)) / 1000.0
+                            for ite, v in room2ite[HALL].items()}
+                    forecaster = build_forecaster(cfg["method"], his, room2ite,
+                                                  cfg["his_col_for_room"], weather_file=wf)
+                    fc = forecaster.forecast(ws, n_steps)
+                    out["it_load"]["forecast"] = forecast_hall_load_kw(fc, caps, ws, timesteps_per_hour)
+            except Exception:  # noqa: BLE001
+                pass
+            out["previous_setpoints"] = _previous_setpoints(store, past_start, his, cfg)
+        return out
 
     # Serve the built frontend at "/" (single origin — no separate dev server needed).
     # Mounted LAST so every /api/* route and /docs take precedence. If the UI isn't

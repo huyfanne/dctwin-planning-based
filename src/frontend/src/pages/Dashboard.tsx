@@ -203,7 +203,10 @@ export default function Dashboard({ onReview }: Props) {
                 fontWeight: 600,
                 color: latest.reduction_pct != null && latest.reduction_pct > 0 ? 'var(--green)' : 'var(--text-primary)',
                 marginTop: 3,
-              }}>
+              }}
+              title={latest.reduction_pct == null
+                ? 'No baseline recorded for this plan (created before the baseline feature) — re-run the plan to compute the reduction.'
+                : undefined}>
                 {latest.reduction_pct != null ? `${latest.reduction_pct > 0 ? '−' : ''}${Math.abs(latest.reduction_pct).toFixed(1)}%` : '—'}
               </div>
             </div>

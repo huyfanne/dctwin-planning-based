@@ -328,6 +328,12 @@ export default function Review({ planId: initialPlanId }: Props) {
                   })}
                 </tbody>
               </table>
+              {!baseKpis && (
+                <p className="text-dim text-sm" style={{ padding: '0 16px 14px' }}>
+                  Baseline comparison unavailable for this plan (created before the
+                  as-operated baseline feature) — re-run the plan to compute it.
+                </p>
+              )}
             </div>
 
             {/* Setpoint editor */}

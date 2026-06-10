@@ -138,6 +138,18 @@ export interface WeatherCoverage {
 }
 export const getWeather = () => req<WeatherCoverage>("/api/weather");
 
+// ── Planning context for the New-Plan page (GET /api/planning-context) ──
+export interface LoadPoint { t: string; kw: number; }
+export interface WeatherPoint { t: string; temp_c: number; }
+export interface PlanningContext {
+  week_start: string; days: number; timesteps_per_hour: number;
+  it_load: { unit: string; past: LoadPoint[]; forecast: LoadPoint[] };
+  weather: { unit: string; past: WeatherPoint[]; forecast: WeatherPoint[] };
+  previous_setpoints: { source: string; week_start: string | null; setpoints: Record<string, number> } | null;
+}
+export const getPlanningContext = (weekStart: string, days = 7) =>
+  req<PlanningContext>(`/api/planning-context?week_start=${encodeURIComponent(weekStart)}&days=${days}`);
+
 export interface TrajRow { step: number; inlet_temp_max_c: number | null; hvac_power_kw: number | null; pue: number | null; }
 export interface Trajectory { nominal: TrajRow[]; worst: TrajRow[]; }
 export const getTrajectory = (id: string) => req<Trajectory>(`/api/plans/${id}/trajectory`);
