@@ -22,15 +22,78 @@ def test_scenario_spread_cold_start_and_tightens():
     # Cold start uses the conservative prior bracket.
     assert scenario_spread(None) == 0.1
     assert scenario_spread(Calibration({}, {}, 0, "weeks-0")) == 0.1
-    # At the prior sigma (== sigma_ref) it must CAP at base — never widen past it (the old
-    # bug doubled it to 0.2 here, deadlocking the gate after the first deploy).
+    # Legacy calibration (no sigma_post) falls back to the floor-pinned sigma: at the
+    # prior it CAPS at base — never widens past it (the old bug doubled it to 0.2 and
+    # deadlocked the gate after the first deploy).
     assert scenario_spread(Calibration({}, {"inlet_temp_max_c": 1.0}, 1, "weeks-1"),
                            base_spread=0.1, sigma_ref=1.0) == 0.1
-    # As calibration confirms accuracy (sigma below the reference), the bracket TIGHTENS.
-    assert scenario_spread(Calibration({}, {"inlet_temp_max_c": 0.5}, 4, "weeks-4"),
-                           base_spread=0.1, sigma_ref=1.0) == 0.05
-    assert scenario_spread(Calibration({}, {"inlet_temp_max_c": 0.0}, 9, "weeks-9"),
-                           base_spread=0.1, sigma_ref=1.0) == 0.0
+    # With the empirical-Bayes posterior, ONE accurate measured week tightens the
+    # bracket by sqrt(2) — modest, evidence-proportional.
+    one_week = Calibration({}, {"inlet_temp_max_c": 1.0}, 1, "weeks-1",
+                           sigma_post={"inlet_temp_max_c": 0.7071})
+    assert abs(scenario_spread(one_week) - 0.07071) < 1e-4
+    # The bracket never collapses below the physical drift floor, however accurate...
+    nine = Calibration({}, {"inlet_temp_max_c": 0.05}, 9, "weeks-9",
+                       sigma_post={"inlet_temp_max_c": 0.05})
+    assert scenario_spread(nine) == 0.02
+    # ...and never exceeds the cold-start base, however bad the residuals look.
+    wild = Calibration({}, {"inlet_temp_max_c": 5.0}, 2, "weeks-2",
+                       sigma_post={"inlet_temp_max_c": 5.0})
+    assert scenario_spread(wild) == 0.1
+
+
+def test_rerank_scenario_check_is_hard_cap_not_margined(tmp_path, monkeypatch):
+    """Single-counting: a scenario inlet of 25.5 C is BELOW the hard 26 cap in a plant
+    that is already physically degraded — it must pass even when the nominal weights
+    carry the full cold-start k*sigma margin (which alone would demand <= 25.0)."""
+    import planner.robust as R
+    from planner.robust import make_oracle_robust_rerank
+    from planner.oracle import OracleConfig
+    monkeypatch.setattr(R, "build_plant_prototxt",
+                        lambda base, plant, out_dir: f"{out_dir}/plant.prototxt")
+
+    class _Oracle:
+        def __init__(self, base_prototxt, config=None, project_root="."):
+            pass
+
+        def evaluate(self, candidates, forecast=None, on_result=None):
+            return [_kpi(100.0, 25.5) for _ in candidates]
+
+    sp = Setpoints(24, 8, 17)
+    margined = ObjectiveWeights(inlet_forecast_margin=1.0)   # nominal cold-start margin
+    fn = make_oracle_robust_rerank(
+        base_prototxt="p", oracle_config=OracleConfig(n_workers=1, log_root=str(tmp_path)),
+        calibration=None, weights=margined, n_scenarios=2,
+        log_root=str(tmp_path), oracle_cls=_Oracle)
+    rr = fn([(sp, _kpi(100, 25.5), 100.0)], forecast=None)
+    assert rr.robust_feasible is True
+
+
+def test_rerank_applies_measured_bias_to_scenarios(tmp_path, monkeypatch):
+    """The MEASURED bias is single-counted into each scenario: a +0.7 C under-prediction
+    pushes a 25.6 C scenario to 26.3 C — over the hard cap -> not robust-feasible."""
+    import planner.robust as R
+    from planner.robust import make_oracle_robust_rerank
+    from planner.oracle import OracleConfig
+    monkeypatch.setattr(R, "build_plant_prototxt",
+                        lambda base, plant, out_dir: f"{out_dir}/plant.prototxt")
+
+    class _Oracle:
+        def __init__(self, base_prototxt, config=None, project_root="."):
+            pass
+
+        def evaluate(self, candidates, forecast=None, on_result=None):
+            return [_kpi(100.0, 25.6) for _ in candidates]
+
+    cal = Calibration(bias={"inlet_temp_max_c": 0.7}, sigma={"inlet_temp_max_c": 1.0},
+                      n_weeks=1, version="weeks-1")
+    sp = Setpoints(24, 8, 17)
+    fn = make_oracle_robust_rerank(
+        base_prototxt="p", oracle_config=OracleConfig(n_workers=1, log_root=str(tmp_path)),
+        calibration=cal, weights=ObjectiveWeights(), n_scenarios=2,
+        log_root=str(tmp_path), oracle_cls=_Oracle)
+    rr = fn([(sp, _kpi(100, 25.6), 100.0)], forecast=None)
+    assert rr.robust_feasible is False
 
 
 def test_safety_ladder_adds_cooling_within_bounds():
@@ -48,6 +111,14 @@ def test_safety_ladder_adds_cooling_within_bounds():
         assert S.chwst.lb <= v.chwst_c <= S.chwst.ub
     # includes the guaranteed-safe max-cooling corner
     assert any(v.as_tuple() == (S.sat.lb, S.flow.ub, S.chwst.lb) for v in ladder)
+    # buys margin along the CHEAP axis first: chilled-water-only variants that KEEP the
+    # optimum's low (cheap) airflow — colder water restores degraded-coil capacity without
+    # paying the ~15% fan-energy premium of the corner diagonal
+    assert any(v.flow_kg_s == best.flow_kg_s and v.chwst_c < best.chwst_c
+               and v.sat_c == best.sat_c for v in ladder)
+    # ...and chw+SAT variants still at the optimum's airflow
+    assert any(v.flow_kg_s == best.flow_kg_s and v.chwst_c < best.chwst_c
+               and v.sat_c < best.sat_c for v in ladder)
 
 
 from planner.robust import RobustResult, robust_select
