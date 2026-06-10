@@ -118,8 +118,10 @@ export default function History({ onReview }: Props) {
                     <XAxis dataKey="week" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
                     <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} width={55} />
                     <Tooltip />
-                    <Line type="monotone" dataKey="predicted" name="Predicted" stroke="rgba(0,200,255,0.9)" dot={false} />
-                    <Line type="monotone" dataKey="realized" name="Realized" stroke="rgba(245,158,11,0.9)" dot={false} />
+                    {/* Visible dots so an isolated realised point (often only one week is
+                        deployed) still shows — a dotless line needs >=2 connected points. */}
+                    <Line type="monotone" dataKey="predicted" name="Predicted" stroke="rgba(0,200,255,0.9)" dot={{ r: 2 }} connectNulls />
+                    <Line type="monotone" dataKey="realized" name="Realized" stroke="rgba(245,158,11,0.9)" dot={{ r: 4 }} connectNulls={false} />
                     <Legend />
                   </LineChart>
                 </ResponsiveContainer>

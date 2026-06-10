@@ -1,5 +1,82 @@
 import { useState, useEffect, useRef } from 'react';
-import { createPlan, planStreamUrl, getWeather, cancelPlan, type Progress } from '../api';
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
+import { createPlan, planStreamUrl, getWeather, cancelPlan, getPlanningContext, type Progress, type PlanningContext } from '../api';
+
+const PREV_SETPOINT_LABELS: Record<string, string> = {
+  crah_supply_air_temperature_c:       'CRAH Supply Air Temp',
+  crah_supply_air_mass_flow_rate_kg_s: 'CRAH Air Mass Flow',
+  chilled_water_supply_temperature_c:  'Chilled Water Supply Temp',
+};
+
+// One deck combining a PAST (actual) and FORECAST series on a shared time axis, with a
+// dashed "now" divider at the week boundary. Used for both IT load and weather.
+function SeriesDeck({ title, subtitle, unit, past, forecast, boundary, color }: {
+  title: string; subtitle: string; unit: string;
+  past: { t: string; v: number }[]; forecast: { t: string; v: number }[];
+  boundary: string; color: string;
+}) {
+  const data = [
+    ...past.map(p => ({ t: p.t, past: p.v })),
+    ...forecast.map(p => ({ t: p.t, forecast: p.v })),
+  ];
+  const interval = Math.max(0, Math.floor(data.length / 7) - 1);
+  return (
+    <div className="card animate-in">
+      <div className="card-header">
+        <span className="card-title">{title}</span>
+        <span className="text-xs text-dim">{subtitle}</span>
+      </div>
+      <div className="card-body">
+        {data.length > 0 ? (
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-dim)" vertical={false} />
+              <XAxis dataKey="t" tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
+                     interval={interval} tickFormatter={(t: string) => String(t).slice(5, 10)} />
+              <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} width={48} />
+              <Tooltip />
+              <ReferenceLine x={boundary} stroke="var(--cyan)" strokeDasharray="4 4"
+                             label={{ value: 'now', fill: 'var(--cyan)', fontSize: 10, position: 'top' }} />
+              <Line type="monotone" dataKey="past" name={`Past (actual, ${unit})`} stroke={color} dot={false} connectNulls={false} />
+              <Line type="monotone" dataKey="forecast" name={`Forecast (${unit})`} stroke="rgba(245,158,11,0.9)" strokeDasharray="5 3" dot={false} connectNulls={false} />
+              <Legend />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <p className="text-dim text-sm">No data available for this week.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PrevSetpointsDeck({ prev }: { prev: PlanningContext['previous_setpoints'] }) {
+  const caption = prev
+    ? (prev.source === 'previous_plan' ? `plan · week of ${prev.week_start}` : 'as-operated estimate')
+    : '—';
+  return (
+    <div className="card bracket-card animate-in">
+      <div className="card-header">
+        <span className="card-title">Previous Week Setpoints</span>
+        <span className="text-xs text-dim">{caption}</span>
+      </div>
+      <div className="card-body">
+        {prev && prev.setpoints ? (
+          Object.entries(PREV_SETPOINT_LABELS).map(([k, lbl]) => (
+            <div key={k} className="setpoint-row">
+              <span className="setpoint-name">{lbl}</span>
+              <span className="mono" style={{ fontSize: 18, fontWeight: 600, color: 'var(--cyan)', fontFamily: 'var(--font-data)' }}>
+                {prev.setpoints[k] != null ? Number(prev.setpoints[k]).toFixed(2) : '—'}
+              </span>
+            </div>
+          ))
+        ) : (
+          <p className="text-dim text-sm">No previous-week setpoints available.</p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // A long plan can outlive a single SSE connection (the server closes the stream after a
 // while, or a proxy drops an idle one). Reconnect quietly a few times before declaring the
@@ -12,7 +89,8 @@ interface Props {
 }
 
 export default function NewPlan({ onDone }: Props) {
-  const [weekStart, setWeekStart]   = useState('');
+  // Default to 2024-11-08 so the "past week" (Nov 1-7) sits inside the data coverage.
+  const [weekStart, setWeekStart]   = useState('2024-11-08');
   const [days, setDays]             = useState('7');
   const [grid, setGrid]             = useState('5');
   const [beamWidth, setBeamWidth]   = useState('3');
@@ -29,15 +107,30 @@ export default function NewPlan({ onDone }: Props) {
   const [coverage, setCoverage]     = useState<string | null>(null);
   const [cancelled, setCancelled]   = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [ctx, setCtx]               = useState<PlanningContext | null>(null);
+  const [ctxLoading, setCtxLoading] = useState(false);
 
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    getWeather().then(w => {
-      setCoverage(w.label);
-      if (w.suggested_week_start) setWeekStart(prev => prev || w.suggested_week_start!);
-    }).catch(() => {});
+    getWeather().then(w => setCoverage(w.label)).catch(() => {});
   }, []);
+
+  // Fetch the planning context (past/forecast IT load + weather + previous setpoints)
+  // when the week (or days) changes, debounced, until a run starts.
+  useEffect(() => {
+    if (planId) return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(weekStart)) { setCtx(null); return; }
+    let live = true;
+    setCtxLoading(true);
+    const id = setTimeout(() => {
+      getPlanningContext(weekStart, Number(days) || 7)
+        .then(c => { if (live) setCtx(c); })
+        .catch(() => { if (live) setCtx(null); })
+        .finally(() => { if (live) setCtxLoading(false); });
+    }, 300);
+    return () => { live = false; clearTimeout(id); };
+  }, [weekStart, days, planId]);
 
   useEffect(() => {
     if (!planId || done || error || cancelled) return;
@@ -337,6 +430,35 @@ export default function NewPlan({ onDone }: Props) {
           </div>
         )}
       </div>
+
+      {/* Planning-context decks — shown before a run starts */}
+      {!planId && (ctx || ctxLoading) && (
+        <div style={{ marginTop: 24 }}>
+          <div className="section-header" style={{ marginBottom: 12 }}>
+            <h3 className="section-title" style={{ fontSize: 16 }}>
+              <span className="title-accent">~</span> Planning Context — week of {weekStart}
+              {ctxLoading && <span className="spinner" style={{ width: 14, height: 14, marginLeft: 10, display: 'inline-block' }} />}
+            </h3>
+          </div>
+          {ctx ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+              <SeriesDeck
+                title="IT Load — past & forecast" subtitle={`1F 2A · ${ctx.it_load.unit}`} unit={ctx.it_load.unit}
+                past={ctx.it_load.past.map(p => ({ t: p.t, v: p.kw }))}
+                forecast={ctx.it_load.forecast.map(p => ({ t: p.t, v: p.kw }))}
+                boundary={ctx.it_load.forecast[0]?.t ?? `${weekStart}T00:00`} color="rgba(0,200,255,0.9)" />
+              <SeriesDeck
+                title="Weather — past & forecast" subtitle={`outdoor · ${ctx.weather.unit}`} unit={ctx.weather.unit}
+                past={ctx.weather.past.map(p => ({ t: p.t, v: p.temp_c }))}
+                forecast={ctx.weather.forecast.map(p => ({ t: p.t, v: p.temp_c }))}
+                boundary={ctx.weather.forecast[0]?.t ?? `${weekStart}T00:00`} color="rgba(0,200,255,0.9)" />
+              <PrevSetpointsDeck prev={ctx.previous_setpoints} />
+            </div>
+          ) : (
+            <p className="text-dim text-sm">Loading planning context…</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

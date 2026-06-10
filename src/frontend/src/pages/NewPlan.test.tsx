@@ -8,10 +8,18 @@ vi.mock('../api', () => ({
   getPlan: vi.fn(),
   getWeather: vi.fn(),
   cancelPlan: vi.fn(),
+  getPlanningContext: vi.fn(),
   planStreamUrl: (id: string) => `/api/plans/${id}/stream?token=t`,
 }));
 
-import { createPlan, getWeather, cancelPlan } from '../api';
+import { createPlan, getWeather, cancelPlan, getPlanningContext } from '../api';
+
+const EMPTY_CTX = {
+  week_start: '2024-11-08', days: 7, timesteps_per_hour: 4,
+  it_load: { unit: 'kW', past: [], forecast: [] },
+  weather: { unit: '°C', past: [], forecast: [] },
+  previous_setpoints: null,
+};
 
 class MockEventSource {
   static instances: MockEventSource[] = [];
@@ -28,6 +36,7 @@ class MockEventSource {
 beforeEach(() => {
   vi.clearAllMocks();
   (getWeather as ReturnType<typeof vi.fn>).mockResolvedValue({ label: null, suggested_week_start: null });
+  (getPlanningContext as ReturnType<typeof vi.fn>).mockResolvedValue(EMPTY_CTX);
   MockEventSource.instances = [];
   (globalThis as unknown as { EventSource: unknown }).EventSource = MockEventSource;
 });
@@ -39,9 +48,11 @@ describe('NewPlan', () => {
     expect(screen.getByText(/launch optimization/i)).toBeInTheDocument();
   });
 
-  it('shows validation error when week start is missing and form is submitted programmatically', async () => {
+  it('shows validation error when week start is cleared and form is submitted programmatically', async () => {
     render(<NewPlan onDone={() => {}} />);
-    // Submit the form directly to bypass HTML5 required validation in jsdom
+    // Clear the (now non-empty default) week, then submit the form directly to bypass
+    // HTML5 required validation in jsdom.
+    fireEvent.change(screen.getByLabelText(/week start/i), { target: { value: '' } });
     const form = document.querySelector('form')!;
     fireEvent.submit(form);
     await waitFor(() => {
@@ -134,11 +145,29 @@ describe('NewPlan', () => {
     await waitFor(() => expect(screen.getAllByText(/outside coverage/i).length).toBeGreaterThan(0));
   });
 
-  it('prefills week start and shows the coverage hint', async () => {
+  it('defaults the week start to 2024-11-08 and shows the coverage hint', async () => {
     (getWeather as ReturnType<typeof vi.fn>).mockResolvedValue({ label: 'Nov 1 – Jan 31', suggested_week_start: '2024-11-01' });
     render(<NewPlan onDone={() => {}} />);
     await waitFor(() => expect(screen.getByText(/weather data covers/i)).toBeInTheDocument());
-    expect((screen.getByLabelText(/week start/i) as HTMLInputElement).value).toBe('2024-11-01');
+    // The explicit default wins (so the past week sits inside the data coverage).
+    expect((screen.getByLabelText(/week start/i) as HTMLInputElement).value).toBe('2024-11-08');
+  });
+
+  it('renders the planning-context decks (IT load, weather, previous setpoints) when context loads', async () => {
+    (getPlanningContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+      week_start: '2024-11-08', days: 7, timesteps_per_hour: 4,
+      it_load: { unit: 'kW', past: [{ t: '2024-11-01T00:00', kw: 950 }], forecast: [{ t: '2024-11-08T00:00', kw: 970 }] },
+      weather: { unit: '°C', past: [{ t: '2024-11-01T00:00', temp_c: 28.1 }], forecast: [{ t: '2024-11-08T00:00', temp_c: 29.0 }] },
+      previous_setpoints: { source: 'as_operated', week_start: null,
+        setpoints: { crah_supply_air_temperature_c: 23, crah_supply_air_mass_flow_rate_kg_s: 6.9, chilled_water_supply_temperature_c: 16.07 } },
+    });
+    render(<NewPlan onDone={() => {}} />);
+    await waitFor(() => expect(getPlanningContext).toHaveBeenCalledWith('2024-11-08', 7));
+    await waitFor(() => expect(screen.getByText(/IT Load — past & forecast/i)).toBeInTheDocument());
+    expect(screen.getByText(/Weather — past & forecast/i)).toBeInTheDocument();
+    expect(screen.getByText(/Previous Week Setpoints/i)).toBeInTheDocument();
+    expect(screen.getByText(/as-operated estimate/i)).toBeInTheDocument();
+    expect(screen.getByText('16.07')).toBeInTheDocument();   // a prev-setpoint value renders
   });
 
   it('shows Cancel while running and calls cancelPlan', async () => {

@@ -55,3 +55,31 @@ def week_within_epw(weather_file: str, week_start: date, days: int = 7) -> bool:
         if not _md_in_range((d.month, d.day), start, end):
             return False
     return True
+
+
+def weather_timeseries(weather_file: str, start_date: date, days: int = 7) -> list[dict]:
+    """Per-hour outdoor dry-bulb temperature for [start_date, start_date+days) from the
+    EPW data rows. Returns [{"t": "YYYY-MM-DDTHH:00", "temp_c": float}]; [] if no rows
+    fall in the window (e.g. the requested window is outside the EPW's coverage).
+
+    EPW data block: 8 header lines, then CSV rows
+    'year,month,day,hour,minute,datasource,dry_bulb,dew_point,rel_hum,…'. The hour field
+    is 1-24; we map hour h -> (h-1):00 local so a day spans 00:00..23:00."""
+    rows = Path(weather_file).read_text().splitlines()[8:]
+    end = start_date + timedelta(days=days)
+    out: list[dict] = []
+    for line in rows:
+        f = line.split(",")
+        if len(f) < 7:
+            continue
+        try:
+            rd = date(int(f[0]), int(f[1]), int(f[2]))
+            hour = int(f[3])
+            temp = float(f[6])
+        except (ValueError, IndexError):
+            continue
+        if not (start_date <= rd < end):
+            continue
+        hh = min(23, max(0, hour - 1))
+        out.append({"t": f"{rd.isoformat()}T{hh:02d}:00", "temp_c": temp})
+    return out
