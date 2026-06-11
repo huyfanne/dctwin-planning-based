@@ -189,3 +189,36 @@ def test_evaluate_bounds_a_hung_worker_by_the_deadline(tmp_path):
     elapsed = time.time() - t0
     assert len(results) == 4 and all(not r.feasible for r in results)   # hung -> infeasible
     assert elapsed < 2.5                                # bounded by the wave deadline (~0.9s), not 3s
+
+
+def _pool_wedge_one(task):
+    """Simulates a wedged candidate that defeats its own per-candidate watchdog
+    (incident gds-2024-12-06-a368bc): candidate sat==99 never returns in time."""
+    import time
+    from planner.types import WeeklyKPI
+    if task.candidate[0] >= 99.0:
+        time.sleep(6.0)
+    return WeeklyKPI(total_hvac_energy_kwh=100.0 + task.candidate[0], pue_mean=1.2,
+                     inlet_temp_max=24.0, inlet_violation_steps=0,
+                     rh_violation_steps=0, feasible=True)
+
+
+def test_stalled_future_is_abandoned_within_stall_window(monkeypatch, tmp_path):
+    """If nothing completes within ~1.5x timeout_s while futures are pending, the
+    stragglers are abandoned as infeasible — the batch must NOT wait for the absolute
+    waves-deadline (70 min in the real incident; here 7s vs the ~2s stall path)."""
+    import time
+    _stub_week_config(monkeypatch)
+    fast = [Setpoints(20.0 + i * 0.5, 8.0, 17.0) for i in range(11)]   # sat 20..25
+    wedged = Setpoints(99.0, 8.0, 17.0)
+    orc = ParallelEnvOracle("ignored.prototxt", worker_fn=_pool_wedge_one,
+                            config=OracleConfig(n_workers=2, use_process_pool=True,
+                                                timeout_s=1.0, log_root=str(tmp_path)))
+    t0 = time.monotonic()
+    out = orc.evaluate(fast + [wedged], forecast=_FakeForecast(tmp_path))
+    elapsed = time.monotonic() - t0
+    # waves-deadline would be 1.0 * (ceil(12/2)+1) = 7s; the stall guard cuts out at
+    # ~last-completion + 1.5s
+    assert elapsed < 5.0, f"took {elapsed:.1f}s — stall guard did not fire"
+    assert all(k.feasible for k in out[:-1])            # fast results all collected
+    assert out[-1].feasible is False                    # the wedged one abandoned
