@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
 import Dashboard from './pages/Dashboard';
+import Live from './pages/Live';
 import NewPlan from './pages/NewPlan';
 import Review from './pages/Review';
 import History from './pages/History';
@@ -8,10 +9,11 @@ import { getToken, clearToken } from './api';
 // Lazy-load the 3D twin so the heavy three.js bundle is only fetched on demand.
 const DigitalTwin3D = lazy(() => import('./pages/DigitalTwin3D'));
 
-type Page = 'dashboard' | 'newplan' | 'review' | 'history' | 'twin3d';
+type Page = 'dashboard' | 'live' | 'newplan' | 'review' | 'history' | 'twin3d';
 
 const NAV: { id: Page; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
+  { id: 'live',      label: 'Live' },
   { id: 'newplan',   label: 'New Plan' },
   { id: 'review',    label: 'Review' },
   { id: 'history',   label: 'History' },
@@ -62,6 +64,7 @@ export default function App() {
 
       <main className="app-content">
         {page === 'dashboard' && <Dashboard onReview={openReview} />}
+        {page === 'live'      && <Live />}
         {page === 'newplan'   && <NewPlan onDone={id => { setReviewPlanId(id); setPage('review'); }} />}
         {page === 'review'    && <Review planId={reviewPlanId} />}
         {page === 'history'   && <History onReview={openReview} />}

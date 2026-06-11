@@ -266,6 +266,49 @@ def test_infeasible_fallback_is_data_driven_not_hardcoded_corner():
     assert "degenerate_no_signal" in rec
 
 
+import json
+
+
+def test_run_weekly_plan_recirc_default_config_is_noop(tmp_path):
+    """B4 guard: with the default recirc config (demand_kg_s == flow.lb) the recirc
+    wrapper must not engage — the recommendation is identical to no config at all."""
+    cfg_path = tmp_path / "recirc.json"
+    cfg_path.write_text(json.dumps({"r0": 0.10, "demand_kg_s": 4.8, "k": 0.5}))
+    req = dict(week_start=date(2013, 11, 11), days=7, grid=4, beam_width=3, levels=2)
+    rec_without = run_weekly_plan(
+        PlanRequest(**req), evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
+        forecaster=_FakeForecaster(), recirc_config_path=str(tmp_path / "absent.json"))
+    rec_with = run_weekly_plan(
+        PlanRequest(**req), evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
+        forecaster=_FakeForecaster(), recirc_config_path=str(cfg_path))
+    assert rec_with == rec_without
+
+
+def test_run_weekly_plan_recirc_penalizes_low_flow(tmp_path):
+    """With a calibrated ITE airflow demand (6.0 > flow.lb), low-flow candidates carry the
+    recirc inlet penalty BEFORE feasibility: the fragile (sat=26, flow=4.8) energy optimum
+    (inlet exactly at the 26 C cap) is pushed over the cap and rejected for a cooler plan."""
+    surface = MockSurface(sat_opt=26.0, flow_opt=4.8, chwst_opt=13.0, inlet_base=20.0)
+    req = dict(week_start=date(2013, 11, 11), days=1, grid=4, beam_width=3, levels=0)
+    rec_plain = run_weekly_plan(
+        PlanRequest(**req), evaluator=MockEvaluator(surface), forecaster=_FakeForecaster(),
+        recirc_config_path=str(tmp_path / "absent.json"))
+    assert rec_plain["setpoints"]["crah_supply_air_temperature_c"] == 26.0  # sits on the cap
+    assert rec_plain["setpoints"]["crah_supply_air_mass_flow_rate_kg_s"] == 4.8
+
+    cfg_path = tmp_path / "recirc.json"
+    cfg_path.write_text(json.dumps({"r0": 0.10, "demand_kg_s": 6.0, "k": 0.5}))
+    rec = run_weekly_plan(
+        PlanRequest(**req), evaluator=MockEvaluator(surface), forecaster=_FakeForecaster(),
+        recirc_config_path=str(cfg_path))
+    assert rec["status"] == "pending_approval"
+    sp = rec["setpoints"]
+    assert sp["crah_supply_air_temperature_c"] == 24.0       # backed off the cooling cliff
+    assert sp["crah_supply_air_mass_flow_rate_kg_s"] == 4.8
+    # the surfaced KPI is the recirc-adjusted inlet: 24 + 0.1*(32-24) = 24.8
+    assert rec["predicted_kpis"]["inlet_temp_max_c"] == pytest.approx(24.8)
+
+
 def test_degenerate_no_signal_surfaced_in_recommendation():
     """A control-invariant evaluator -> the recommendation flags degenerate_no_signal + schema 1.6."""
     from planner.types import WeeklyKPI

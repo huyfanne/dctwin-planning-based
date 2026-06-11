@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import uuid
 from pathlib import Path
 from typing import Optional
@@ -15,6 +16,8 @@ from webapp.jobs import JobRunner
 from webapp.schemas import PlanCreated, PlanParams, SetpointEdit
 from webapp.status import PlanStatus, can_transition
 from webapp.store import PlanStore
+from webapp.telemetry import (SimTelemetryFeed, TelemetryIngest, TelemetryStore,
+                              commanded_setpoints, live_frame, live_sse_stream)
 
 _RUNNING = {"queued", "running", "deploying"}
 
@@ -98,9 +101,11 @@ def _previous_setpoints(store, prev_week, his, cfg) -> Optional[dict]:
 
 def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = None,
                runner=None, run_sync: bool = False, deploy_runner=None,
-               frontend_dist: Optional[str] = None, container_teardown=None) -> FastAPI:
+               frontend_dist: Optional[str] = None, container_teardown=None,
+               telemetry_store: Optional[TelemetryStore] = None) -> FastAPI:
     store = store or PlanStore()
     auth = auth or TokenAuth.from_env()
+    telemetry_store = telemetry_store or TelemetryStore()
     job_runner = JobRunner(store, runner=runner, deploy_runner=deploy_runner,
                            container_teardown=container_teardown)
 
@@ -115,6 +120,25 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
     def _shutdown():
         if not run_sync:
             job_runner.stop()
+
+    # Simulated telemetry feed: dev/demo opt-in only (DTWIN_SIM_TELEMETRY=1, set by
+    # clear-and-run + the driver; never in tests). Held setpoints track the latest
+    # deployed plan via commanded_fn, and every snapshot carries simulated=1.0.
+    sim_feed: list[SimTelemetryFeed] = []
+
+    @app.on_event("startup")
+    def _telemetry_startup():
+        if os.environ.get("DTWIN_SIM_TELEMETRY") == "1":
+            feed = SimTelemetryFeed(telemetry_store,
+                                    commanded_fn=lambda: commanded_setpoints(store))
+            feed.start()
+            sim_feed.append(feed)
+
+    @app.on_event("shutdown")
+    def _telemetry_shutdown():
+        for feed in sim_feed:
+            feed.stop()
+        sim_feed.clear()
 
     operator = auth.require("operator")
     expert = auth.require("expert")
@@ -366,6 +390,32 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
                 pass
             out["previous_setpoints"] = _previous_setpoints(store, past_start, his, cfg)
         return out
+
+    @app.get("/api/live")
+    def get_live(role: str = Depends(operator)):
+        return live_frame(telemetry_store, commanded_setpoints(store))
+
+    @app.get("/api/live/series")
+    def get_live_series(minutes: int = 30, role: str = Depends(operator)):
+        s = telemetry_store.series(["hall_power_kw", "pue"], minutes)
+        return {"minutes": minutes,
+                "hall_power_kw": s["hall_power_kw"], "pue": s["pue"],
+                "worst_inlet_c": telemetry_store.worst_inlet_series(minutes)}
+
+    @app.get("/api/live/stream")
+    async def stream_live(request: Request, token: str = ""):
+        # EventSource can't send headers, so the bearer rides in ?token= (same as plans).
+        auth.check(f"Bearer {token}", "operator")
+        return StreamingResponse(
+            live_sse_stream(lambda: live_frame(telemetry_store, commanded_setpoints(store)),
+                            request.is_disconnected),
+            media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
+
+    @app.post("/api/telemetry", status_code=202)
+    def post_telemetry(body: TelemetryIngest, role: str = Depends(operator)):
+        # The real-historian seam: a field collector pushes the sim feed's point names.
+        ts = telemetry_store.write(body.points, ts=body.ts)
+        return {"written": len(body.points), "ts": ts}
 
     # Serve the built frontend at "/" (single origin — no separate dev server needed).
     # Mounted LAST so every /api/* route and /docs take precedence. If the UI isn't

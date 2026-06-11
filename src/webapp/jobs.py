@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import queue
 import threading
 from typing import Callable, Optional
@@ -288,6 +289,19 @@ def residual_predicted_for(rec: dict) -> dict:
     return rec.get("predicted_kpis_raw") or rec.get("predicted_kpis", {})
 
 
+def bms_adapter_for_mode(mode: Optional[str] = None):
+    """DTWIN_DEPLOY_MODE selects the deploy seam: 'shadow' (the webapp default)
+    records the 45 BMS commands without actuating; 'sim' keeps the pure-sim
+    deploy (bms=None, today's exact behavior). Lazy import: the adapter is
+    planner-side and only needed when a deploy actually runs."""
+    if mode is None:
+        mode = os.environ.get("DTWIN_DEPLOY_MODE", "shadow")
+    if mode == "shadow":
+        from planner.bms import ShadowBmsAdapter
+        return ShadowBmsAdapter()
+    return None
+
+
 def run_deploy_job(plan_id: str, store: PlanStore,
                    progress_cb: Callable[[dict], None]) -> None:
     """Run the PERTURBED PLANT for the approved week, persist realized KPIs, advance
@@ -328,7 +342,7 @@ def run_deploy_job(plan_id: str, store: PlanStore,
                             log_root=str(plan_dir / "deploy" / "oracle")),
     )
 
-    rec = deploy(rec_path, plant_oracle, forecast=forecast)
+    rec = deploy(rec_path, plant_oracle, forecast=forecast, bms=bms_adapter_for_mode())
     realized = rec["realized_kpis"]
     store.save_realized(plan_id, realized)
     # ALWAYS learn from the realized week (esp. the bad ones) ...

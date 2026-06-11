@@ -153,3 +153,25 @@ export const getPlanningContext = (weekStart: string, days = 7) =>
 export interface TrajRow { step: number; inlet_temp_max_c: number | null; hvac_power_kw: number | null; pue: number | null; }
 export interface Trajectory { nominal: TrajRow[]; worst: TrajRow[]; }
 export const getTrajectory = (id: string) => req<Trajectory>(`/api/plans/${id}/trajectory`);
+
+// ── Live telemetry (GET /api/live, /api/live/series; SSE /api/live/stream) ──
+export interface LivePoint { ts: number; value: number; }
+export interface LiveAlert { level: 'warn' | 'critical'; point: string; value: number; message: string; }
+export interface LiveCompliance {
+  commanded: Record<string, number> | null;   // null until a plan is deployed
+  held: Record<string, number> | null;
+  ok: boolean | null;
+  deltas: Record<string, number> | null;
+}
+export interface LiveFrame {
+  ts: number;
+  points: Record<string, LivePoint>;          // rack_inlet_c/ite-N, hall_power_kw, pue, rh_pct, held/*
+  alerts: LiveAlert[];
+  compliance: LiveCompliance;
+  simulated: boolean;                          // true ⇒ the built-in sim feed, not a physical BMS
+}
+export interface LiveSeriesPoint { t: number; v: number; }
+export const getLive = () => req<LiveFrame>('/api/live');
+export const getLiveSeries = (minutes = 30) =>
+  req<{ series: Record<string, LiveSeriesPoint[]> }>(`/api/live/series?minutes=${minutes}`);
+export const liveStreamUrl = () => `/api/live/stream?token=${encodeURIComponent(TOKEN)}`;
