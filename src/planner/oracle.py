@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import concurrent.futures as cf
+import logging
 import math
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Optional, Sequence
+
+logger = logging.getLogger(__name__)
 
 from planner.kpi import OracleSettings
 from planner.oracle_worker import EvalTask, evaluate_one, evaluate_one_with_samples, evaluate_one_schedule
@@ -28,6 +32,11 @@ class OracleConfig:
     # Scope the thermal KPI (inlet/zone) to the controlled hall; we only actuate
     # the 1F 2A ACUs, so other halls' sensors are uncontrollable noise ("" = all).
     monitored_hall: str = "1f 2a"
+    # Stall watchdog: abandon a batch's stragglers if NO future completes within this
+    # window while some are pending. None -> 1.5 * timeout_s. A healthy batch always
+    # completes something within timeout_s (the per-candidate worker watchdog), so a
+    # silent window means a wedged worker or a lost future.
+    stall_window_s: Optional[float] = None
 
 
 def _batch_deadline(timeout_s: float, n_tasks: int, n_workers: int) -> float:
@@ -37,6 +46,43 @@ def _batch_deadline(timeout_s: float, n_tasks: int, n_workers: int) -> float:
     block the batch for hours."""
     waves = math.ceil(max(n_tasks, 1) / max(n_workers, 1))
     return timeout_s * (waves + 1)
+
+
+def _collect_with_stall_guard(futs: dict, results: list, on_result, cfg) -> None:
+    """Collect pool futures into `results` (pre-filled infeasible) with TWO backstops:
+
+    1. STALL watchdog — if no future completes within ~1.5x the per-candidate timeout
+       while futures are pending, abandon the stragglers as infeasible. The worker
+       watchdog bounds every healthy candidate to timeout_s, so a silent window can
+       only mean a wedged worker or a future that will never resolve. (Incident
+       gds-2024-12-06-a368bc: 2 of 125 futures never resolved while every pool worker
+       sat idle; the batch then waited on backstop 2 — 70 minutes at that config.)
+    2. The absolute batch deadline (waves * timeout_s) as the outer bound.
+    """
+    stall = (cfg.stall_window_s if cfg.stall_window_s and cfg.stall_window_s > 0
+             else 1.5 * cfg.timeout_s)
+    deadline = time.monotonic() + _batch_deadline(cfg.timeout_s, len(futs), cfg.n_workers)
+    pending = set(futs)
+    while pending:
+        budget = deadline - time.monotonic()
+        if budget <= 0:
+            logger.warning("oracle batch deadline hit: abandoning %d candidate(s)",
+                           len(pending))
+            break
+        done, pending = cf.wait(pending, timeout=min(stall, budget),
+                                return_when=cf.FIRST_COMPLETED)
+        if not done:
+            logger.warning("oracle batch stalled (%.0fs without a completion): "
+                           "abandoning %d candidate(s) as infeasible", stall, len(pending))
+            break
+        for fut in done:
+            i = futs[fut]
+            try:
+                results[i] = fut.result()
+            except Exception:  # noqa: BLE001 - worker crash / broken pool
+                results[i] = _infeasible()
+            if on_result is not None:
+                on_result()  # one tick per completed candidate (any order)
 
 
 def _infeasible() -> WeeklyKPI:
@@ -105,21 +151,8 @@ class ParallelEnvOracle(Evaluator):
         results: list[WeeklyKPI] = [_infeasible()] * len(tasks)
         ex = cf.ProcessPoolExecutor(max_workers=cfg.n_workers)
         futs = {ex.submit(self._worker, t): i for i, t in enumerate(tasks)}
-        # batch deadline backstop, sized to the number of parallel waves. The worker
-        # enforces the per-candidate timeout (tearing down a hung container); this is the
-        # last-resort net so the batch can't stall past ~timeout_s * waves.
-        deadline = _batch_deadline(cfg.timeout_s, len(tasks), cfg.n_workers)
         try:
-            for fut in cf.as_completed(futs, timeout=deadline):
-                i = futs[fut]
-                try:
-                    results[i] = fut.result()
-                except Exception:  # noqa: BLE001 - worker crash
-                    results[i] = _infeasible()
-                if on_result is not None:
-                    on_result()  # one tick per completed candidate (any order)
-        except cf.TimeoutError:
-            pass  # unfinished candidates remain _infeasible()
+            _collect_with_stall_guard(futs, results, on_result, cfg)
         finally:
             ex.shutdown(wait=False, cancel_futures=True)
         return results
@@ -180,18 +213,8 @@ class ParallelEnvOracle(Evaluator):
         results: list[WeeklyKPI] = [_infeasible()] * len(tasks)
         ex = cf.ProcessPoolExecutor(max_workers=cfg.n_workers)
         futs = {ex.submit(evaluate_one_schedule, t): i for i, t in enumerate(tasks)}
-        deadline = _batch_deadline(cfg.timeout_s, len(tasks), cfg.n_workers)
         try:
-            for fut in cf.as_completed(futs, timeout=deadline):
-                i = futs[fut]
-                try:
-                    results[i] = fut.result()
-                except Exception:  # noqa: BLE001
-                    results[i] = _infeasible()
-                if on_result is not None:
-                    on_result()
-        except cf.TimeoutError:
-            pass
+            _collect_with_stall_guard(futs, results, on_result, cfg)
         finally:
             ex.shutdown(wait=False, cancel_futures=True)
         return results
