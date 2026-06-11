@@ -248,3 +248,60 @@ def test_request_cancel_skips_a_queued_plan(tmp_path):
         assert ran == []                    # never executed
     finally:
         runner.stop()
+
+
+def test_duplicate_deploy_is_skipped_and_does_not_clobber(tmp_path):
+    """A stale duplicate deploy (repeat clicks while the worker was busy) must neither
+    re-run deploy nor clobber the terminal 'deployed' status. (Incident
+    gds-2024-11-29-729156: the deploy succeeded, then two queued duplicates re-ran,
+    hit deploy()'s approval guard, and overwrote 'deployed' with 'deploy_failed'.)"""
+    from webapp.jobs import JobRunner
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("p1", "2024-11-29", {})
+    store.save_recommendation("p1", {"plan_id": "p1", "status": "deployed",
+                                     "setpoints": {}, "predicted_kpis": {}})
+    store.save_realized("p1", {"total_hvac_energy_kwh": 1.0, "inlet_violation_steps": 0})
+    store.set_status("p1", "deployed")
+    calls = []
+    runner = JobRunner(store, deploy_runner=lambda pid, st, cb: calls.append(pid))
+    runner.run_deploy_sync("p1")
+    assert calls == []                                          # deploy NOT re-run
+    assert store.get_plan_row("p1")["status"] == "deployed"     # not clobbered
+
+
+def test_duplicate_deploy_heals_a_clobbered_row(tmp_path):
+    """If a duplicate already clobbered the row, the next stale duplicate restores the
+    truthful terminal state from the realized KPIs (deployed, or deploy_blocked on a
+    breach) instead of running deploy again."""
+    from webapp.jobs import JobRunner
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    for pid, viol, expect in (("ok", 0, "deployed"), ("bad", 3, "deploy_blocked")):
+        store.create_plan(pid, "2024-11-29", {})
+        store.save_recommendation(pid, {"plan_id": pid, "status": "deployed",
+                                        "setpoints": {}, "predicted_kpis": {}})
+        store.save_realized(pid, {"total_hvac_energy_kwh": 1.0, "inlet_violation_steps": viol})
+        store.set_status(pid, "deploy_failed")                  # the clobbered state
+        runner = JobRunner(store, deploy_runner=lambda *_: (_ for _ in ()).throw(AssertionError))
+        runner.run_deploy_sync(pid)
+        assert store.get_plan_row(pid)["status"] == expect
+
+
+def test_deploy_failure_does_not_downgrade_terminal_status(tmp_path):
+    """If the runner reached 'deployed' before raising, the failure handler must not
+    downgrade the terminal state."""
+    from webapp.jobs import JobRunner
+    from webapp.store import PlanStore
+    store = PlanStore(runs_dir=str(tmp_path / "r"), db_path=str(tmp_path / "i.db"))
+    store.create_plan("p1", "2024-11-29", {})
+    store.save_recommendation("p1", {"plan_id": "p1", "status": "approved",
+                                     "setpoints": {}, "predicted_kpis": {}})
+
+    def runner_sets_deployed_then_raises(pid, st, cb):
+        st.set_status(pid, "deployed")
+        raise RuntimeError("post-deploy hiccup")
+
+    runner = JobRunner(store, deploy_runner=runner_sets_deployed_then_raises)
+    runner.run_deploy_sync("p1")
+    assert store.get_plan_row("p1")["status"] == "deployed"

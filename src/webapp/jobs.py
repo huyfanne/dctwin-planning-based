@@ -80,14 +80,31 @@ class JobRunner:
 
     def run_deploy_sync(self, plan_id: str) -> None:
         """Run a deploy job now. Sets 'deploying'; the deploy_runner must set
-        'deployed' itself on success (run_deploy_job does); failures -> 'deploy_failed'."""
+        'deployed' itself on success (run_deploy_job does); failures -> 'deploy_failed'.
+
+        Duplicate-safe: a stale queued duplicate (repeat clicks while the worker was
+        busy) for an already-deployed plan is SKIPPED — re-running deploy() would hit
+        its approval guard and clobber the terminal status with 'deploy_failed'. If a
+        prior duplicate already clobbered the row, restore the truthful terminal state
+        from the realized KPIs."""
+        rec = self.store.get_recommendation(plan_id) or {}
+        if rec.get("status") == "deployed":
+            logger.info("deploy %s skipped: already deployed (duplicate request)", plan_id)
+            row = self.store.get_plan_row(plan_id) or {}
+            if row.get("status") not in ("deployed", "deploy_blocked"):
+                realized = self.store.get_realized(plan_id) or rec.get("realized_kpis") or {}
+                self.store.set_status(plan_id, deploy_status_for(realized))
+            return
         self.store.set_status(plan_id, "deploying")
         try:
             self.deploy_runner(plan_id, self.store,
                                lambda p, pid=plan_id: self.store.write_progress(pid, p))
         except Exception:  # noqa: BLE001
             logger.exception("deploy %s failed", plan_id)
-            self.store.set_status(plan_id, "deploy_failed")
+            row = self.store.get_plan_row(plan_id) or {}
+            # never downgrade a run that already reached a terminal deploy state
+            if row.get("status") not in ("deployed", "deploy_blocked"):
+                self.store.set_status(plan_id, "deploy_failed")
 
     def _loop(self) -> None:
         while not self._stop.is_set():

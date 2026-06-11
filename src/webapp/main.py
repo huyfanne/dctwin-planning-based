@@ -251,6 +251,12 @@ def create_app(store: Optional[PlanStore] = None, auth: Optional[TokenAuth] = No
         if run_sync:
             job_runner.run_deploy_sync(plan_id)
         else:
+            # Reserve the plan at ACCEPT time, not at dequeue: while the worker is busy
+            # the status would otherwise stay 'approved', so every repeat click passed
+            # the transition check above and enqueued ANOTHER deploy job — the stale
+            # duplicates then re-ran after success and clobbered 'deployed' with
+            # 'deploy_failed' (incident gds-2024-11-29-729156).
+            store.set_status(plan_id, PlanStatus.DEPLOYING)
             job_runner.submit_deploy(plan_id)
         return {"status": PlanStatus.DEPLOYING}
 

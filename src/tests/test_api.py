@@ -348,3 +348,26 @@ def test_delete_endpoint_terminal_404_409(tmp_path):
     assert c.delete("/api/plans/run", headers=_op()).status_code == 409     # active -> cancel first
     assert c.delete("/api/plans/nope", headers=_op()).status_code == 404
     assert c.delete("/api/plans/run").status_code == 401                    # no token
+
+
+def test_deploy_reserves_status_at_accept_so_repeat_clicks_409(tmp_path):
+    """Async mode: the endpoint must mark the plan 'deploying' at ACCEPT time, not at
+    dequeue — otherwise every repeat click while the worker is busy passes the
+    transition check and enqueues a duplicate deploy job (the incident that clobbered
+    gds-2024-11-29-729156)."""
+    store = PlanStore(runs_dir=str(tmp_path / "runs"), db_path=str(tmp_path / "index.db"))
+    auth = TokenAuth({"op": "operator", "ex": "expert"})
+    # run_sync=False + bare TestClient (no lifespan) -> the queue never drains, exactly
+    # like a worker busy with another job.
+    app = create_app(store=store, auth=auth, run_sync=False,
+                     deploy_runner=lambda pid, st, cb: None)
+    client = TestClient(app)
+    store.create_plan("p1", "2024-11-29", {})
+    store.save_recommendation("p1", {"plan_id": "p1", "week_start": "2024-11-29",
+                                     "status": "pending_approval", "setpoints": {}})
+    client.post("/api/plans/p1/approve", headers={"Authorization": "Bearer ex"})
+    r1 = client.post("/api/plans/p1/deploy", headers={"Authorization": "Bearer ex"})
+    assert r1.status_code == 202
+    assert store.get_plan_row("p1")["status"] == "deploying"    # reserved immediately
+    r2 = client.post("/api/plans/p1/deploy", headers={"Authorization": "Bearer ex"})
+    assert r2.status_code == 409                                # duplicate click rejected
