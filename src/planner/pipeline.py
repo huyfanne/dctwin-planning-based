@@ -72,6 +72,7 @@ def run_weekly_plan(
     baseline_setpoints: Optional[Setpoints] = None,
     energy_scope: Optional[str] = None,
     recirc_config_path: Optional[str] = None,
+    tariff_kind: Optional[str] = None,
 ) -> dict:
     """Forecast -> best-first search -> recommendation dict. The DRY planning core.
 
@@ -191,4 +192,5 @@ def run_weekly_plan(
         baseline_setpoints=baseline_setpoints,
         energy_scope=energy_scope,
         baseline_kpi=baseline_kpi,
+        tariff_kind=tariff_kind,
     )

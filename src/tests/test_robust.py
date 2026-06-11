@@ -219,3 +219,115 @@ def test_robust_select_majority_present_is_feasible():
     res = robust_select(finalists, scenario_kpis, ObjectiveWeights(), n_requested=4)
     assert res.robust_feasible is True
     assert res.scenarios_ok == 3
+
+
+def _capture_rerank_centers(tmp_path, monkeypatch, plant_config_path):
+    """Run a 3-scenario rerank capturing the PlantConfig of each scenario; the middle
+    scenario of an odd ensemble IS the center (make_scenarios multiplier 1.0)."""
+    import planner.robust as R
+    captured = []
+
+    def fake_build(base, plant, out_dir):
+        captured.append(plant)
+        return f"{out_dir}/plant.prototxt"
+
+    monkeypatch.setattr(R, "build_plant_prototxt", fake_build)
+    sp = Setpoints(24, 8, 17)
+    fn = make_oracle_robust_rerank(
+        base_prototxt="p", oracle_config=OracleConfig(n_workers=1, log_root=str(tmp_path)),
+        calibration=None, weights=ObjectiveWeights(), n_scenarios=3,
+        log_root=str(tmp_path), oracle_cls=_FakeOracle,
+        plant_config_path=plant_config_path)
+    fn([(sp, _kpi(100, 24), 100.0)], forecast=None)
+    return captured
+
+
+def test_rerank_center_defaults_to_default_plant_without_calibration_file(tmp_path, monkeypatch):
+    # #9 no-behavior-change proof: absent plant_calibration.json -> the ensemble
+    # center is DEFAULT_PLANT exactly.
+    captured = _capture_rerank_centers(tmp_path, monkeypatch, str(tmp_path / "absent.json"))
+    assert len(captured) == 3
+    assert captured[1] == DEFAULT_PLANT
+
+
+def test_rerank_center_is_data_driven_when_calibration_file_present(tmp_path, monkeypatch):
+    # #9: the deploy loop's fitted fan factor replaces the matching DEFAULT_PLANT
+    # perturbation in the ensemble center; the coil perturbation is kept.
+    import json
+    cfg_path = tmp_path / "plant_calibration.json"
+    cfg_path.write_text(json.dumps({"perturbations": [
+        {"table": "Fan_VariableVolume", "field": "fan_total_efficiency", "factor": 0.9}],
+        "basis": {"n_weeks": 4}}))
+    captured = _capture_rerank_centers(tmp_path, monkeypatch, str(cfg_path))
+    center = captured[1]
+    by_key = {(p.table, p.field): p.factor for p in center.perturbations}
+    assert by_key[("Fan_VariableVolume", "fan_total_efficiency")] == 0.9
+    assert by_key[("Coil_Cooling_Water", "design_water_flow_rate")] == 0.85
+
+
+def test_rerank_adds_hot_weather_scenario_when_forecast_has_weather(tmp_path, monkeypatch):
+    """Stage 6 #7: a forecast carrying a real EPW adds ONE hot-weather run (believed plant,
+    dry-bulb +1*sigma) — weather uncertainty gates plans like plant uncertainty does."""
+    import dataclasses
+    from datetime import date
+    import planner.robust as R
+    from planner.robust import make_oracle_robust_rerank
+    from planner.oracle import OracleConfig
+    monkeypatch.setattr(R, "build_plant_prototxt",
+                        lambda base, plant, out_dir: f"{out_dir}/plant.prototxt")
+    # tiny EPW: header(8) + 3 weeks of hourly rows around Nov 8 (reuse the epw fixture style)
+    rows = ["H%d" % i for i in range(7)] + ["DATA PERIODS,1,1,Data,Sunday, 11/ 1, 11/30"]
+    for d in range(1, 22):
+        for h in range(1, 25):
+            rows.append(f"2024,11,{d},{h},0,C9,{28 + (d % 3):.1f},20.0,80,101325,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0")
+    epw = tmp_path / "w.epw"; epw.write_text("\n".join(rows))
+
+    @dataclasses.dataclass
+    class _F:
+        week_start: object
+        weather_file: str
+
+    seen = []
+
+    class _Oracle:
+        def __init__(self, base_prototxt, config=None, project_root="."):
+            pass
+
+        def evaluate(self, candidates, forecast=None, on_result=None):
+            seen.append(getattr(forecast, "weather_file", None))
+            return [_kpi(100.0, 24.0) for _ in candidates]
+
+    fn = make_oracle_robust_rerank(
+        base_prototxt="p", oracle_config=OracleConfig(n_workers=1, log_root=str(tmp_path)),
+        calibration=None, weights=ObjectiveWeights(), n_scenarios=2,
+        log_root=str(tmp_path), oracle_cls=_Oracle,
+        plant_config_path=str(tmp_path / "absent.json"))
+    rr = fn([(Setpoints(24, 8, 17), _kpi(100, 24), 100.0)],
+            forecast=_F(week_start=date(2024, 11, 8), weather_file=str(epw)))
+    assert rr.n_scenarios == 3                       # 2 plant + 1 hot-weather
+    assert len(seen) == 3
+    assert any(w and w != str(epw) for w in seen)    # the hot EPW variant was evaluated
+    assert rr.robust_feasible is True
+
+
+def test_rerank_no_weather_scenario_without_weather_file(tmp_path, monkeypatch):
+    import planner.robust as R
+    from planner.robust import make_oracle_robust_rerank
+    from planner.oracle import OracleConfig
+    monkeypatch.setattr(R, "build_plant_prototxt",
+                        lambda base, plant, out_dir: f"{out_dir}/plant.prototxt")
+
+    class _Oracle:
+        def __init__(self, base_prototxt, config=None, project_root="."):
+            pass
+
+        def evaluate(self, candidates, forecast=None, on_result=None):
+            return [_kpi(100.0, 24.0) for _ in candidates]
+
+    fn = make_oracle_robust_rerank(
+        base_prototxt="p", oracle_config=OracleConfig(n_workers=1, log_root=str(tmp_path)),
+        calibration=None, weights=ObjectiveWeights(), n_scenarios=2,
+        log_root=str(tmp_path), oracle_cls=_Oracle,
+        plant_config_path=str(tmp_path / "absent.json"))
+    rr = fn([(Setpoints(24, 8, 17), _kpi(100, 24), 100.0)], forecast=None)
+    assert rr.n_scenarios == 2                       # unchanged without weather

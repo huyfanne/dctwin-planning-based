@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
-  getTopology, listPlans, getPlan,
-  type Topology, type PlanSummary, type PlanDetail,
+  getTopology, listPlans, getPlan, getLive,
+  type Topology, type PlanSummary, type PlanDetail, type LiveFrame,
 } from '../api';
 import HallScene from '../three/HallScene';
 import SceneBoundary from '../three/SceneBoundary';
@@ -18,6 +18,51 @@ const DEFAULT_INLET_MAX = 27;
 
 function num(v: number | null | undefined, fallback: number): number {
   return typeof v === 'number' && isFinite(v) ? v : fallback;
+}
+
+// ── Live rack-row coloring ──
+// Same cadence as the Live page's poll fallback; same inlet zone thresholds.
+const LIVE_POLL_MS = 5000;
+const N_ITES = 22;
+
+type LiveZone = 'green' | 'amber' | 'red';
+
+function liveZone(v: number): LiveZone {
+  if (v >= 25.5) return 'red';
+  if (v >= 24.5) return 'amber';
+  return 'green';
+}
+
+const LIVE_ZONE_COLOR: Record<LiveZone, string> = {
+  green: '#10b981',   // var(--green)
+  amber: '#f59e0b',   // var(--amber)
+  red:   '#ef4444',   // var(--red)
+};
+
+/**
+ * Worst live inlet per rack row of the controlled hall.
+ *
+ * SCHEMATIC mapping: the 22 telemetry points (`rack_inlet_c/ite-1..22`) are
+ * spread row-major across the hall's rack rows — with the 6-row layout the
+ * rows take 4,4,4,4,3,3 ITEs — not a surveyed rack→row assignment. It gives
+ * the operator a spatial hotspot cue, not rack-level ground truth.
+ */
+export function rowWorstInlets(frame: LiveFrame, nRows: number): (number | null)[] {
+  if (nRows <= 0) return [];
+  const base = Math.floor(N_ITES / nRows);
+  const extra = N_ITES % nRows;
+  const out: (number | null)[] = [];
+  let ite = 1;
+  for (let r = 0; r < nRows; r++) {
+    const count = base + (r < extra ? 1 : 0);
+    let worst: number | null = null;
+    for (let k = 0; k < count; k++, ite++) {
+      const v = frame.points[`rack_inlet_c/ite-${ite}`]?.value;
+      if (v != null && (worst == null || v > worst)) worst = v;
+    }
+    out.push(worst);
+  }
+  return out;
 }
 
 interface HudStatProps {
@@ -61,6 +106,22 @@ export default function DigitalTwin3D() {
   const [topoErr, setTopoErr] = useState<string | null>(null);
   const [loadingTopo, setLoadingTopo] = useState(true);
   const [loadingPlan, setLoadingPlan] = useState(false);
+  const [liveFrame, setLiveFrame] = useState<LiveFrame | null>(null);
+
+  // Live rack telemetry: plain 5 s polling (no SSE here — the scene only needs
+  // a slow refresh). Any failure clears the frame so the rack rows fall back to
+  // the static plan-gradient coloring.
+  useEffect(() => {
+    let alive = true;
+    const tick = () => {
+      getLive()
+        .then((f) => { if (alive) setLiveFrame(f); })
+        .catch(() => { if (alive) setLiveFrame(null); });
+    };
+    tick();
+    const id = setInterval(tick, LIVE_POLL_MS);
+    return () => { alive = false; clearInterval(id); };
+  }, []);
 
   // Load topology + plan list on mount.
   useEffect(() => {
@@ -105,6 +166,17 @@ export default function DigitalTwin3D() {
   const inletAnchor = inletMax > sat + 1 ? inletMax : sat + 5;
 
   const speedPct = useMemo(() => Math.round(particleSpeed(flow) * 100), [flow]);
+
+  // Per-row worst live inlet for the controlled hall (null entries = no data).
+  const ctrlHall = topo?.building.halls.find((h) => h.controlled) ?? null;
+  const liveRowInlets = useMemo(
+    () => (liveFrame && ctrlHall ? rowWorstInlets(liveFrame, ctrlHall.rackRows.length) : null),
+    [liveFrame, ctrlHall],
+  );
+  const liveActive = liveRowInlets != null && liveRowInlets.some((v) => v != null);
+  const liveRowColors = liveActive && liveRowInlets
+    ? liveRowInlets.map((v) => (v == null ? null : LIVE_ZONE_COLOR[liveZone(v)]))
+    : undefined;
 
   if (loadingTopo) {
     return (
@@ -200,6 +272,7 @@ export default function DigitalTwin3D() {
               showContext={showContext}
               selectedCode={selHall?.code}
               onSelectHall={setSelectedHallCode}
+              liveRowColors={liveRowColors}
             />
           </SceneBoundary>
         </div>
@@ -217,6 +290,32 @@ export default function DigitalTwin3D() {
             <HudStat label="Air Flow" value={flow.toFixed(1)} unit="kg/s" sub={`${speedPct}% jet speed`} />
             <HudStat label="CHW Supply" value={chwst.toFixed(1)} unit="°C" accent="var(--violet)" />
           </div>
+
+          {/* Live rack-row legend — only when telemetry is flowing */}
+          {liveActive && liveRowInlets && (
+            <div
+              data-testid="live-rack-legend"
+              data-row-zones={liveRowInlets.map((v) => (v == null ? 'none' : liveZone(v))).join(',')}
+              style={{
+                background: 'rgba(13,19,32,0.78)',
+                border: '1px solid var(--border-bright)',
+                borderRadius: 6,
+                padding: '7px 11px',
+                maxWidth: 360,
+                backdropFilter: 'blur(6px)',
+              }}
+            >
+              <div className="mono" style={{ fontSize: 10, color: 'var(--text-secondary)' }}>
+                <span className="live-dot" style={{ marginRight: 6 }}>Live telemetry</span>
+                rack rows · worst ITE inlet (schematic ite-1..22)
+              </div>
+              <div className="mono flex items-center" style={{ fontSize: 10, gap: 10, marginTop: 4 }}>
+                <span style={{ color: LIVE_ZONE_COLOR.green }}>● &lt;24.5 °C</span>
+                <span style={{ color: LIVE_ZONE_COLOR.amber }}>● 24.5–25.5 °C</span>
+                <span style={{ color: LIVE_ZONE_COLOR.red }}>● ≥25.5 °C</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Top-right: predicted KPIs */}

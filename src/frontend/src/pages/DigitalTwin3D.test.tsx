@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { ReactNode } from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import DigitalTwin3D from './DigitalTwin3D';
+import DigitalTwin3D, { rowWorstInlets } from './DigitalTwin3D';
 
 // react-three-fiber cannot render under jsdom (no WebGL), so we stub the GL
 // boundary: <Canvas> becomes a plain div that still renders its children, and
@@ -26,9 +26,10 @@ vi.mock('../api', () => ({
   getTopology: vi.fn(),
   listPlans: vi.fn(),
   getPlan: vi.fn(),
+  getLive: vi.fn(),
 }));
 
-import { getTopology, listPlans, getPlan } from '../api';
+import { getTopology, listPlans, getPlan, getLive, type LiveFrame } from '../api';
 
 const TOPO = {
   hall: { name: 'Data Hall 1F 2A', size: [30, 20, 4] },
@@ -62,7 +63,15 @@ const TOPO = {
         controlled: true, ite: 22,
         infra: { acuTotal: 22, acuControlled: 22, iteObjects: 22, iteUnits: 22000, itPowerKw: 2000, hvac: '22 ACUs · agent-controlled SAT + airflow · water-cooled VAV' },
         crahs: [{ id: 'crah-1', pos: [10, 0, 1.75], wall: 'south' }, { id: 'crah-2', pos: [20, 22, 1.75], wall: 'north' }],
-        rackRows: [{ id: 'row-1', pos: [21, 8, 0], aisle: 'cold', nracks: 8 }, { id: 'row-2', pos: [21, 14, 0], aisle: 'hot', nracks: 8 }],
+        // 6 rows — the live ite-1..22 mapping spreads 4,4,4,4,3,3 across them.
+        rackRows: [
+          { id: 'row-1', pos: [21, 3, 0],  aisle: 'cold', nracks: 4 },
+          { id: 'row-2', pos: [21, 6, 0],  aisle: 'hot',  nracks: 4 },
+          { id: 'row-3', pos: [21, 9, 0],  aisle: 'cold', nracks: 4 },
+          { id: 'row-4', pos: [21, 12, 0], aisle: 'hot',  nracks: 4 },
+          { id: 'row-5', pos: [21, 15, 0], aisle: 'cold', nracks: 3 },
+          { id: 'row-6', pos: [21, 18, 0], aisle: 'hot',  nracks: 3 },
+        ],
       },
       {
         code: 'Data Hall 2F 3A', level: '2F', origin: [0, 0, 14], size: [42.46, 22.55, 3.5], z0: 14,
@@ -103,11 +112,29 @@ const PLAN_DETAIL = {
   },
 };
 
+function mkLiveFrame(over: Partial<LiveFrame> = {}): LiveFrame {
+  const points: LiveFrame['points'] = {};
+  for (let i = 1; i <= 22; i++) points[`rack_inlet_c/ite-${i}`] = { ts: 100, value: 23.5 };
+  return {
+    ts: 100,
+    points,
+    alerts: [],
+    compliance: { commanded: null, held: null, ok: null, deltas: null },
+    simulated: true,
+    ...over,
+  };
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   (getTopology as ReturnType<typeof vi.fn>).mockResolvedValue(TOPO);
   (listPlans as ReturnType<typeof vi.fn>).mockResolvedValue([PLAN_SUMMARY]);
   (getPlan as ReturnType<typeof vi.fn>).mockResolvedValue(PLAN_DETAIL);
+  (getLive as ReturnType<typeof vi.fn>).mockResolvedValue(mkLiveFrame());
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe('DigitalTwin3D', () => {
@@ -174,5 +201,51 @@ describe('DigitalTwin3D', () => {
       expect(screen.getByTestId('canvas')).toBeInTheDocument();
       expect(screen.getByText(/no plan selected/i)).toBeInTheDocument();
     });
+  });
+
+  // ── live rack-row coloring (#6) ──
+
+  it('rowWorstInlets maps ite-1..22 row-major across 6 rows as 4,4,4,4,3,3', () => {
+    const f = mkLiveFrame();
+    // value = ite index, so the worst of each group is its last member
+    for (let i = 1; i <= 22; i++) f.points[`rack_inlet_c/ite-${i}`] = { ts: 1, value: i };
+    expect(rowWorstInlets(f, 6)).toEqual([4, 8, 12, 16, 19, 22]);
+  });
+
+  it('rowWorstInlets yields null per row when telemetry points are missing', () => {
+    expect(rowWorstInlets(mkLiveFrame({ points: {} }), 6))
+      .toEqual([null, null, null, null, null, null]);
+  });
+
+  it('colors controlled-hall rack rows from live telemetry and shows legend + caption', async () => {
+    const f = mkLiveFrame();
+    f.points['rack_inlet_c/ite-6']  = { ts: 100, value: 25.8 };   // row 2 (ites 5-8)  → red
+    f.points['rack_inlet_c/ite-20'] = { ts: 100, value: 24.7 };   // row 6 (ites 20-22) → amber
+    (getLive as ReturnType<typeof vi.fn>).mockResolvedValue(f);
+    render(<DigitalTwin3D />);
+    const legend = await screen.findByTestId('live-rack-legend');
+    expect(legend.dataset.rowZones).toBe('green,red,green,green,green,amber');
+    expect(screen.getByText(/live telemetry/i)).toBeInTheDocument();
+  });
+
+  it('falls back to static plan coloring (no legend) when live telemetry is unavailable', async () => {
+    (getLive as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('503: live feed unavailable'));
+    render(<DigitalTwin3D />);
+    await waitFor(() => expect(screen.getByTestId('canvas')).toBeInTheDocument());
+    expect(screen.queryByTestId('live-rack-legend')).toBeNull();
+    expect(screen.queryByText(/live telemetry/i)).toBeNull();
+  });
+
+  it('polls live telemetry every 5 s and stops on unmount', async () => {
+    vi.useFakeTimers();
+    const { unmount } = render(<DigitalTwin3D />);
+    expect(getLive).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(getLive).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(getLive).toHaveBeenCalledTimes(3);
+    unmount();
+    await vi.advanceTimersByTimeAsync(15000);
+    expect(getLive).toHaveBeenCalledTimes(3);   // interval cleared
   });
 });

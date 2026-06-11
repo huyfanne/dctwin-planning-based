@@ -1,7 +1,9 @@
+import json
 from pathlib import Path
 
 import opyplus as op
-from planner.plant import Perturbation, PlantConfig, DEFAULT_PLANT, apply_perturbation, build_plant_prototxt
+from planner.plant import (Perturbation, PlantConfig, DEFAULT_PLANT, apply_perturbation,
+                           build_plant_prototxt, load_plant_config)
 
 # Stable fan name present in building.idf; used to avoid opyplus reordering fans
 # after a save/load round-trip (opyplus sorts alphabetically on write).
@@ -40,6 +42,41 @@ def test_default_plant_apply_perturbation_scales_fan_and_coil(tmp_path):
     coil = epm.Coil_Cooling_Water.select(lambda r: r.name == coil_name).one()
     coil0 = base.Coil_Cooling_Water.select(lambda r: r.name == coil_name).one()
     assert coil.design_water_flow_rate == coil0.design_water_flow_rate * 0.85
+
+
+def test_load_plant_config_absent_file_is_default_plant(tmp_path):
+    # Cold start (#9): no data/plant_calibration.json -> DEFAULT_PLANT exactly,
+    # so the robust ensemble center is provably unchanged.
+    assert load_plant_config(str(tmp_path / "absent.json")) == DEFAULT_PLANT
+
+
+def test_load_plant_config_fitted_factor_replaces_matching_perturbation(tmp_path):
+    p = tmp_path / "plant_calibration.json"
+    p.write_text(json.dumps({"perturbations": [
+        {"table": "Fan_VariableVolume", "field": "fan_total_efficiency", "factor": 0.9},
+    ], "basis": {"n_weeks": 4}}))
+    cfg = load_plant_config(str(p))
+    by_key = {(q.table, q.field): q.factor for q in cfg.perturbations}
+    assert by_key[("Fan_VariableVolume", "fan_total_efficiency")] == 0.9      # replaced
+    assert by_key[("Coil_Cooling_Water", "design_water_flow_rate")] == 0.85   # kept
+    assert len(cfg.perturbations) == len(DEFAULT_PLANT.perturbations)
+
+
+def test_load_plant_config_extends_with_unmatched_perturbations(tmp_path):
+    p = tmp_path / "plant_calibration.json"
+    p.write_text(json.dumps({"perturbations": [
+        {"table": "Pump_VariableSpeed", "field": "motor_efficiency", "factor": 0.95},
+    ]}))
+    cfg = load_plant_config(str(p))
+    n = len(DEFAULT_PLANT.perturbations)
+    assert cfg.perturbations[:n] == DEFAULT_PLANT.perturbations               # all kept
+    assert cfg.perturbations[n] == Perturbation("Pump_VariableSpeed", "motor_efficiency", 0.95)
+
+
+def test_load_plant_config_malformed_file_falls_back_to_default(tmp_path):
+    p = tmp_path / "plant_calibration.json"
+    p.write_text("{definitely not json")
+    assert load_plant_config(str(p)) == DEFAULT_PLANT
 
 
 def test_build_plant_prototxt_points_at_perturbed_idf(tmp_path):

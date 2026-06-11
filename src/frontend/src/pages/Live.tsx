@@ -49,6 +49,14 @@ function fmt(v: number | null | undefined, digits = 1): string {
   return v != null ? Number(v).toFixed(digits) : '—';
 }
 
+// Status chip for the rack-detail table: zone styling + an operator-readable label.
+function rackChip(v: number | null): { label: string; zone: Zone } {
+  if (v == null) return { label: 'No Data', zone: 'none' };
+  if (v >= INLET_CAP_C) return { label: 'Over Cap', zone: 'red' };
+  const zone = inletZone(v);
+  return { label: zone === 'red' ? 'Hot' : zone === 'amber' ? 'Warm' : 'Nominal', zone };
+}
+
 function fmtClock(t: number): string {
   const d = new Date(t > 1e12 ? t : t * 1000);   // accept epoch seconds or ms
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -152,6 +160,10 @@ export default function Live() {
   const rackVals = RACKS
     .map(r => frame.points[`rack_inlet_c/${r}`]?.value)
     .filter((v): v is number => v != null);
+  // Hotspot list: every rack ranked by inlet descending; missing telemetry sinks to the bottom.
+  const rackDetail = RACKS
+    .map(rack => ({ rack, inlet: frame.points[`rack_inlet_c/${rack}`]?.value ?? null }))
+    .sort((a, b) => (b.inlet ?? -1e9) - (a.inlet ?? -1e9));
   const worst = rackVals.length ? Math.max(...rackVals) : null;
   const margin = worst != null ? INLET_CAP_C - worst : null;
   const hasCritical = frame.alerts.some(a => a.level === 'critical');
@@ -252,6 +264,51 @@ export default function Live() {
                 );
               })}
             </div>
+          </div>
+        </div>
+
+        {/* Rack detail — the operator's hotspot list, hottest first */}
+        <div className="card animate-in animate-in-2" style={{ gridColumn: '1 / -1' }}>
+          <div className="card-header">
+            <span className="card-title">Rack Detail</span>
+            <span className="text-xs text-dim mono">ranked by inlet · margin to {INLET_CAP_C.toFixed(0)} °C cap</span>
+          </div>
+          <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Rack</th>
+                  <th>Inlet °C</th>
+                  <th>Margin °C</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rackDetail.map((r, i) => {
+                  const chip = rackChip(r.inlet);
+                  const zs = ZONE_STYLE[chip.zone];
+                  const m = r.inlet != null ? INLET_CAP_C - r.inlet : null;
+                  return (
+                    <tr key={r.rack} data-rack={r.rack}>
+                      <td className="mono" style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
+                      <td className="label-cell">{r.rack}</td>
+                      <td className="mono" style={{ color: zs.color }}>{fmt(r.inlet)}</td>
+                      <td className="mono" style={{ color: m != null && m < 1 ? 'var(--red)' : 'var(--text-secondary)' }}>
+                        {m != null ? m.toFixed(1) : '—'}
+                      </td>
+                      <td>
+                        <span className="badge" data-chip={chip.zone} style={{
+                          fontSize: 9, color: zs.color, background: zs.bg, border: `1px solid ${zs.border}`,
+                        }}>
+                          {chip.label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PlanParams(BaseModel):
@@ -13,6 +13,8 @@ class PlanParams(BaseModel):
     levels: int = 3
     n_workers: int = 8
     time_block: bool = False
+    # robust-ensemble size (Stage 6 #9); jobs.run_plan_job reads it with default 4
+    n_scenarios: int = Field(default=4, ge=2, le=8)
 
 
 class PlanCreated(BaseModel):

@@ -40,6 +40,8 @@ def test_rh_hard_constraint_toggle():
 def test_score_dominated_by_energy_and_monotonic():
     w = ObjectiveWeights()
     assert score(_kpi(energy=100.0), w) < score(_kpi(energy=200.0), w)
+    # no tariff (weighted_energy_cost defaults to None) -> raw energy is the term
+    assert score(_kpi(energy=100.0), w) == 100.0
 
 
 def test_score_adds_soft_penalties():

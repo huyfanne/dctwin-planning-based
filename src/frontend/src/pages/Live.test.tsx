@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import Live from './Live';
 
 vi.mock('../api', () => ({
@@ -180,6 +180,50 @@ describe('Live', () => {
     await waitFor(() => expect(getLiveSeries).toHaveBeenCalledWith(30));
     expect(await screen.findByText(/rolling window/i)).toBeInTheDocument();
     expect(screen.queryByText(/no series data yet/i)).not.toBeInTheDocument();
+  });
+
+  // Rack-detail table rows (tbody <tr data-rack=…>), in rendered (ranked) order.
+  function detailRows(): HTMLElement[] {
+    return screen.getAllByRole('row').filter(r => (r as HTMLElement).dataset.rack) as HTMLElement[];
+  }
+
+  it('renders the rack-detail table ranked by inlet descending with margin + status chips', async () => {
+    const f = mkFrame();
+    f.points['rack_inlet_c/ite-5']  = { ts: 100, value: 25.7 };   // red  → Hot
+    f.points['rack_inlet_c/ite-12'] = { ts: 100, value: 24.9 };   // amber → Warm
+    (getLive as ReturnType<typeof vi.fn>).mockResolvedValue(f);
+    render(<Live />);
+    await screen.findByText(/rack detail/i);
+    const rows = detailRows();
+    expect(rows.length).toBe(22);
+    // hottest first, then the warm one, then the 23.5 pack
+    expect(rows[0].dataset.rack).toBe('ite-5');
+    expect(rows[1].dataset.rack).toBe('ite-12');
+    expect(within(rows[0]).getByText('25.7')).toBeInTheDocument();
+    expect(within(rows[0]).getByText('0.3')).toBeInTheDocument();     // 26 − 25.7 margin
+    expect(within(rows[0]).getByText('Hot')).toBeInTheDocument();
+    expect((within(rows[0]).getByText('Hot') as HTMLElement).dataset.chip).toBe('red');
+    expect(within(rows[1]).getByText('1.1')).toBeInTheDocument();     // 26 − 24.9
+    expect(within(rows[1]).getByText('Warm')).toBeInTheDocument();
+    expect(within(rows[2]).getByText('2.5')).toBeInTheDocument();     // 26 − 23.5
+    expect(within(rows[2]).getByText('Nominal')).toBeInTheDocument();
+  });
+
+  it('flags over-cap racks first and puts missing-data racks last in the rack detail', async () => {
+    const f = mkFrame();
+    f.points['rack_inlet_c/ite-9'] = { ts: 100, value: 26.2 };
+    delete f.points['rack_inlet_c/ite-3'];
+    (getLive as ReturnType<typeof vi.fn>).mockResolvedValue(f);
+    render(<Live />);
+    await screen.findByText(/rack detail/i);
+    const rows = detailRows();
+    expect(rows[0].dataset.rack).toBe('ite-9');
+    expect(within(rows[0]).getByText('Over Cap')).toBeInTheDocument();
+    expect(within(rows[0]).getByText('-0.2')).toBeInTheDocument();    // negative margin
+    const last = rows[rows.length - 1];
+    expect(last.dataset.rack).toBe('ite-3');
+    expect(within(last).getByText('No Data')).toBeInTheDocument();
+    expect(within(last).getAllByText('—').length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows an error when the initial fetch fails and no stream frame arrives', async () => {

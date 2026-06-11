@@ -39,6 +39,12 @@ class OracleSettings:
     # few steps before setpoints propagate through the HVAC system) before scoring.
     # Guarded so tiny test runs (<= warmup_steps samples) are unaffected.
     warmup_steps: int = 6
+    # Optional tariff/carbon objective weighting: 24 hourly rates indexed by
+    # hour-of-day (planner.tariff). None -> weighted_energy_cost stays None and
+    # behavior is identical to today. week_start_hour is the hour-of-day of the
+    # first SCORED (post-warmup) step.
+    tariff_rates: Optional[tuple] = None
+    week_start_hour: int = 0
 
 
 def aggregate_kpi(samples: list[StepSample], hours_per_step: float,
@@ -64,10 +70,16 @@ def aggregate_kpi(samples: list[StepSample], hours_per_step: float,
     rh_violation_steps = 0
     rh_excursion = 0.0
     zone_band_steps = 0.0
+    # tariff-weighted cost over the SAME post-warmup samples the energy sums
+    weighted_cost: Optional[float] = 0.0 if s.tariff_rates is not None else None
 
-    for smp in samples:
+    for i, smp in enumerate(samples):
         hvac_w = _hvac_watts(smp)
-        energy_kwh += hvac_w * hours_per_step / 1000.0
+        step_kwh = hvac_w * hours_per_step / 1000.0
+        energy_kwh += step_kwh
+        if s.tariff_rates is not None:
+            hour = (s.week_start_hour + int(i * hours_per_step)) % 24
+            weighted_cost += step_kwh * s.tariff_rates[hour]
         if smp.it_power_w > 0:
             pue_sum += smp.total_power_w / smp.it_power_w
             pue_count += 1
@@ -102,6 +114,7 @@ def aggregate_kpi(samples: list[StepSample], hours_per_step: float,
         inlet_excess_degc_steps=inlet_excess,
         rh_excursion_steps=rh_excursion,
         zone_temp_band_steps=zone_band_steps,
+        weighted_energy_cost=weighted_cost,
     )
 
 

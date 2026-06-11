@@ -10,6 +10,9 @@ interface Props {
   sat: number;
   /** Plan peak inlet temperature (°C) — anchors the hot (red) end. */
   inletMax: number;
+  /** Optional live telemetry color per row (zone green/amber/red), index-aligned
+   *  with `rows`; a null entry or absent prop → plan-gradient coloring. */
+  liveColors?: (string | null)[];
 }
 
 const RACK_W = 0.6;   // along the row (x)
@@ -23,7 +26,7 @@ const GAP = 0.06;
  * "hot" aisle row trends toward the peak inlet temperature (red). Within a row
  * the temperature ramps slightly from front to back so the gradient reads in 3D.
  */
-export default function RackRows({ rows, size, sat, inletMax }: Props) {
+export default function RackRows({ rows, size, sat, inletMax, liveColors }: Props) {
   const span = Math.max(inletMax - sat, 0.001);
 
   return (
@@ -38,6 +41,8 @@ export default function RackRows({ rows, size, sat, inletMax }: Props) {
         // Base temperature for the aisle type.
         const aisleBase =
           row.aisle === 'cold' ? sat + span * 0.1 : sat + span * 0.75;
+        // Live telemetry zone color overrides the whole row when available.
+        const live = liveColors?.[ri] ?? null;
 
         return (
           <Fragment key={row.id ?? ri}>
@@ -45,7 +50,7 @@ export default function RackRows({ rows, size, sat, inletMax }: Props) {
               // Mild front→back ramp so racks aren't flat-colored.
               const ramp = (i / Math.max(n - 1, 1)) * span * 0.18;
               const t = aisleBase + ramp;
-              const color = tempColor(t, sat, inletMax);
+              const color = live ?? tempColor(t, sat, inletMax);
               return (
                 <mesh
                   key={i}

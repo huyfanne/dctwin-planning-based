@@ -185,11 +185,20 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
         fan_speed_max=fc_cfg.get("fan_speed_max", 100.0),
     )
 
+    # Optional tariff/carbon weighting: only when the operator provides
+    # data/tariff.json — absent file keeps the raw-kWh objective exactly.
+    from planner.kpi import OracleSettings
+    from planner.tariff import load_tariff
+    tariff = load_tariff()
+    settings = (OracleSettings(tariff_rates=tariff.rates) if tariff is not None
+                else OracleSettings())
+
     oracle = ParallelEnvOracle(
         base_prototxt=dt_cfg, project_root=".",
         config=OracleConfig(n_workers=int(params.get("n_workers", 8)),
                             timesteps_per_hour=int(params.get("timesteps_per_hour", 4)),
-                            log_root=str(plan_dir / "oracle")),
+                            log_root=str(plan_dir / "oracle"),
+                            settings=settings),
     )
 
     calibration = load_calibration("data/calibration.json")
@@ -229,6 +238,7 @@ def run_plan_job(plan_id: str, params: dict, store: PlanStore,
         robust_rerank_fn=robust_rerank_fn,
         baseline_setpoints=baseline_sp,
         energy_scope="hall_controllable_v1",
+        tariff_kind=(tariff.kind if tariff is not None else None),
     )
     store.save_recommendation(plan_id, rec)
 
@@ -287,6 +297,35 @@ def residual_predicted_for(rec: dict) -> dict:
     """Calibration residuals must be fit against the RAW (uncalibrated) prediction,
     not the already-corrected predicted_kpis (which would double-correct). Spec §4.3b."""
     return rec.get("predicted_kpis_raw") or rec.get("predicted_kpis", {})
+
+
+def write_plant_calibration(calibration,
+                            history_path: str = "data/calibration_history.json",
+                            out_path: str = "data/plant_calibration.json") -> Optional[dict]:
+    """Stage 6 #5: fit + persist the physics-recalibration proposal (a persistent
+    energy bias maps to a fan-efficiency factor; planner.recalibrator). #9's
+    load_plant_config recenters the robust ensemble on it at the next plan.
+    FULLY GUARDED — a recalibration hiccup must never fail the deploy that
+    triggered it. Returns the proposal dict, or None (no drift / not enough
+    weeks / any error). Only writes when a proposal exists."""
+    try:
+        import json as _json
+        from pathlib import Path
+
+        from planner.recalibrator import recalibrate
+
+        hp = Path(history_path)
+        history = _json.loads(hp.read_text()) if hp.exists() else []
+        proposal = recalibrate(calibration, history)
+        if proposal is None:
+            return None
+        out = Path(out_path)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(_json.dumps(proposal, indent=2))
+        return proposal
+    except Exception:  # noqa: BLE001 - advisory; never fail the deploy
+        logger.exception("plant recalibration write failed (deploy unaffected)")
+        return None
 
 
 def bms_adapter_for_mode(mode: Optional[str] = None):
@@ -349,6 +388,9 @@ def run_deploy_job(plan_id: str, store: PlanStore,
     advance_history(realized, week_start, "data/realized_history.csv")
     advance_calibration(residual_predicted_for(rec), realized, week_start,
                         "data/calibration_history.json")
-    recompute_calibration("data/calibration_history.json", "data/calibration.json")
+    cal = recompute_calibration("data/calibration_history.json", "data/calibration.json")
+    # Stage 6 #5: persist the physics-recalibration proposal for #9's ensemble
+    # recentering. Guarded inside — it can never fail the deploy.
+    write_plant_calibration(cal, "data/calibration_history.json", "data/plant_calibration.json")
     # ... but only call the week 'deployed' if it did NOT breach on the real plant.
     store.set_status(plan_id, deploy_status_for(realized))

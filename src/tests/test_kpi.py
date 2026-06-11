@@ -12,6 +12,7 @@ def test_energy_is_hvac_power_times_hours():
     s = [_sample(2000.0, 1000.0, [24.0]), _sample(2000.0, 1000.0, [24.0])]
     k = aggregate_kpi(s, hours_per_step=0.25, settings=OracleSettings())
     assert k.total_hvac_energy_kwh == 0.5
+    assert k.weighted_energy_cost is None   # no tariff configured -> None
 
 
 def test_energy_uses_scoped_hvac_power_when_present():
