@@ -23,23 +23,27 @@ interface Props {
   selectedCode?: string;
   /** called when a hall box/label is clicked. */
   onSelectHall?: (code: string) => void;
+  /** live telemetry colors for the CONTROLLED hall's rack rows, index-aligned
+   *  with its rackRows; null entries / absent prop → plan-gradient coloring. */
+  liveRowColors?: (string | null)[];
 }
 
 /** A hall's equipment (ACUs + rack rows, optionally animated airflow), lifted to
  *  its real z-level in the building stack. */
 function HallEquipment({
-  hall, buildingHeight, sat, flow, inletMax, showLabels, withAirflow,
+  hall, buildingHeight, sat, flow, inletMax, showLabels, withAirflow, liveRowColors,
 }: {
   hall: BuildingHall; buildingHeight: number;
   sat: number; flow: number; inletMax: number;
   showLabels: boolean; withAirflow: boolean;
+  liveRowColors?: (string | null)[];
 }) {
   return (
     <group position={[0, hall.z0 - buildingHeight / 2, 0]}>
       {hall.crahs.map((c) => (
         <CRAH key={c.id} crah={c} size={hall.size} showLabel={showLabels} />
       ))}
-      <RackRows rows={hall.rackRows} size={hall.size} sat={sat} inletMax={inletMax} />
+      <RackRows rows={hall.rackRows} size={hall.size} sat={sat} inletMax={inletMax} liveColors={liveRowColors} />
       {withAirflow && (
         <Airflow
           crahs={hall.crahs}
@@ -56,7 +60,7 @@ function HallEquipment({
 
 export default function HallScene({
   topo, sat, flow, inletMax, showLabels = false, showContext = true,
-  selectedCode, onSelectHall,
+  selectedCode, onSelectHall, liveRowColors,
 }: Props) {
   const building = topo.building;
   const [W, D] = building.footprint;
@@ -131,6 +135,7 @@ export default function HallScene({
             inletMax={inletMax}
             showLabels={showLabels}
             withAirflow
+            liveRowColors={liveRowColors}
           />
           <group position={[0, ctrl.z0 - H / 2, 0]}>
             <Plant plant={topo.plant} crahs={ctrl.crahs} links={topo.links} size={ctrl.size} />

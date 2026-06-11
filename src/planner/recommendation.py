@@ -48,6 +48,7 @@ def build_recommendation(
     baseline_setpoints: Optional[Setpoints] = None,
     energy_scope: Optional[str] = None,
     baseline_kpi: Optional[WeeklyKPI] = None,
+    tariff_kind: Optional[str] = None,   # label for kpi.weighted_energy_cost
 ) -> dict:
     week_end = week_start + timedelta(days=days - 1)
     reduction = (
@@ -81,6 +82,12 @@ def build_recommendation(
         # model): the recommendation is a least-bad fallback, not a real optimum.
         "degenerate_no_signal": degenerate_no_signal,
     }
+    # Tariff/carbon objective surfacing (additive — the KPI dict is open, so no
+    # schema bump). Only present when a tariff was actually in play.
+    if kpi.weighted_energy_cost is not None:
+        rec["predicted_kpis"]["weighted_energy_cost"] = kpi.weighted_energy_cost
+    if tariff_kind is not None:
+        rec["predicted_kpis"]["tariff_kind"] = tariff_kind
     if robust_feasible is not None:
         rec["schema_version"] = "1.1"
         rec["robust"] = {

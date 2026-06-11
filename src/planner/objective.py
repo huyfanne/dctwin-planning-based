@@ -45,11 +45,21 @@ def is_feasible(kpi: WeeklyKPI, w: ObjectiveWeights) -> bool:
 
 
 def score(kpi: WeeklyKPI, w: ObjectiveWeights) -> float:
-    """Lower is better. Infeasible candidates score +inf and never enter the beam."""
+    """Lower is better. Infeasible candidates score +inf and never enter the beam.
+
+    When a tariff was in play (`weighted_energy_cost` is not None) the cost
+    REPLACES raw energy as the dominant term; the soft penalties and the
+    feasibility gate are unchanged (safety never trades against price).
+    """
     if not is_feasible(kpi, w):
         return INFEASIBLE
+    energy_term = (
+        kpi.weighted_energy_cost
+        if kpi.weighted_energy_cost is not None
+        else kpi.total_hvac_energy_kwh
+    )
     val = (
-        kpi.total_hvac_energy_kwh
+        energy_term
         + w.lambda_temp * kpi.inlet_excess_degc_steps
         + w.lambda_rh * kpi.rh_excursion_steps
         + w.lambda_zone * kpi.zone_temp_band_steps

@@ -305,6 +305,71 @@ def test_bms_adapter_for_mode_sim_keeps_todays_behavior(monkeypatch):
     assert bms_adapter_for_mode() is None
 
 
+def _hist_week(pred, real):
+    return {"week_start": "2026-01-05",
+            "predicted": {"total_hvac_energy_kwh": pred},
+            "realized": {"total_hvac_energy_kwh": real}}
+
+
+def test_write_plant_calibration_persists_proposal(tmp_path):
+    import json
+    from planner.calibrator import Calibration
+    from webapp.jobs import write_plant_calibration
+    hist = tmp_path / "calibration_history.json"
+    hist.write_text(json.dumps([_hist_week(1000.0, 1100.0)] * 4))
+    out = tmp_path / "plant_calibration.json"
+    prop = write_plant_calibration(Calibration.identity(), str(hist), str(out))
+    assert prop is not None and out.exists()
+    data = json.loads(out.read_text())
+    [p] = data["perturbations"]
+    assert p["table"] == "Fan_VariableVolume"
+    assert p["field"] == "fan_total_efficiency"
+    assert abs(p["factor"] - 1 / 1.1) < 1e-9
+    assert data["basis"]["n_weeks"] == 4
+
+
+def test_write_plant_calibration_no_proposal_writes_nothing(tmp_path):
+    import json
+    from planner.calibrator import Calibration
+    from webapp.jobs import write_plant_calibration
+    hist = tmp_path / "calibration_history.json"
+    hist.write_text(json.dumps([_hist_week(1000.0, 1100.0)] * 2))   # below min_weeks
+    out = tmp_path / "plant_calibration.json"
+    assert write_plant_calibration(Calibration.identity(), str(hist), str(out)) is None
+    assert not out.exists()
+    # an absent history file is fine too (cold start)
+    assert write_plant_calibration(Calibration.identity(),
+                                   str(tmp_path / "missing.json"), str(out)) is None
+    assert not out.exists()
+
+
+def test_write_plant_calibration_is_guarded_never_raises(tmp_path):
+    # The deploy-loop write must NEVER fail the deploy: malformed history (and even a
+    # None calibration) -> None, no exception, no file.
+    from webapp.jobs import write_plant_calibration
+    hist = tmp_path / "calibration_history.json"
+    hist.write_text("{definitely not json")
+    out = tmp_path / "plant_calibration.json"
+    assert write_plant_calibration(None, str(hist), str(out)) is None
+    assert not out.exists()
+
+
+def test_plan_params_n_scenarios_default_and_bounds():
+    import pytest
+    from pydantic import ValidationError
+    from webapp.schemas import PlanParams
+    p = PlanParams(week_start="2013-11-11")
+    assert p.n_scenarios == 4
+    # jobs.run_plan_job reads params.get("n_scenarios", 4) from the dumped dict
+    assert p.model_dump()["n_scenarios"] == 4
+    assert PlanParams(week_start="2013-11-11", n_scenarios=2).n_scenarios == 2
+    assert PlanParams(week_start="2013-11-11", n_scenarios=8).n_scenarios == 8
+    with pytest.raises(ValidationError):
+        PlanParams(week_start="2013-11-11", n_scenarios=1)
+    with pytest.raises(ValidationError):
+        PlanParams(week_start="2013-11-11", n_scenarios=9)
+
+
 def test_deploy_failure_does_not_downgrade_terminal_status(tmp_path):
     """If the runner reached 'deployed' before raising, the failure handler must not
     downgrade the terminal state."""

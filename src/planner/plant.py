@@ -2,8 +2,12 @@
 physical parameters (fan efficiency, coil UA). Same opyplus path dctwin uses."""
 from __future__ import annotations
 
+import json
+import logging
 from dataclasses import dataclass
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -25,6 +29,30 @@ DEFAULT_PLANT = PlantConfig((
     Perturbation("Fan_VariableVolume", "fan_total_efficiency", 0.93),
     Perturbation("Coil_Cooling_Water", "design_water_flow_rate", 0.85),
 ))
+
+
+def load_plant_config(path: str | Path = "data/plant_calibration.json") -> PlantConfig:
+    """The data-driven believed plant state (Stage 6 #9): DEFAULT_PLANT with the
+    deploy loop's fitted factors (planner.recalibrator proposals persisted by
+    webapp/jobs) merged in. A fitted (table, field) REPLACES the matching
+    DEFAULT_PLANT perturbation; unmatched fitted entries are appended; the rest of
+    DEFAULT_PLANT is kept. Absent (or unreadable) file -> DEFAULT_PLANT exactly,
+    so cold start is provably today's behavior."""
+    p = Path(path)
+    if not p.exists():
+        return DEFAULT_PLANT
+    try:
+        entries = json.loads(p.read_text()).get("perturbations", [])
+        fitted = {(str(e["table"]), str(e["field"])): float(e["factor"]) for e in entries}
+    except Exception:  # noqa: BLE001 - a malformed file must never break planning
+        logger.warning("unreadable plant calibration %s; using DEFAULT_PLANT", path)
+        return DEFAULT_PLANT
+    default_keys = {(q.table, q.field) for q in DEFAULT_PLANT.perturbations}
+    merged = [Perturbation(q.table, q.field, fitted.get((q.table, q.field), q.factor))
+              for q in DEFAULT_PLANT.perturbations]
+    merged += [Perturbation(t, f, v) for (t, f), v in fitted.items()
+               if (t, f) not in default_keys]
+    return PlantConfig(tuple(merged))
 
 
 def apply_perturbation(idf_in: str | Path, plant: PlantConfig, idf_out: str | Path) -> str:

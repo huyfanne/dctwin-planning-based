@@ -59,6 +59,10 @@ class WeeklyKPI:
     inlet_excess_degc_steps: float = 0.0
     rh_excursion_steps: float = 0.0
     zone_temp_band_steps: float = 0.0
+    # Tariff/carbon-weighted energy: sum(step_kwh * rate[hour]) when the oracle
+    # was given a tariff, else None (objective then uses raw energy). Appended
+    # LAST with a default so positional construction sites keep working.
+    weighted_energy_cost: Optional[float] = None
 
 
 class Evaluator(Protocol):

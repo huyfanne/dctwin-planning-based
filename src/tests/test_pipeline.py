@@ -325,3 +325,13 @@ def test_degenerate_no_signal_surfaced_in_recommendation():
     assert rec["degenerate_no_signal"] is True
     assert rec["schema_version"] == "1.6"
     assert rec["status"] == "infeasible_fallback"
+
+
+def test_run_weekly_plan_threads_tariff_kind_into_predicted_kpis():
+    rec = run_weekly_plan(
+        PlanRequest(week_start=date(2013, 11, 11), days=7, grid=4, beam_width=3, levels=2),
+        evaluator=MockEvaluator(MockSurface(inlet_cap=999.0)),
+        forecaster=_FakeForecaster(),
+        tariff_kind="carbon",
+    )
+    assert rec["predicted_kpis"]["tariff_kind"] == "carbon"

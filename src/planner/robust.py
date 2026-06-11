@@ -9,7 +9,7 @@ from typing import Optional
 
 from planner.calibrator import Calibration
 from planner.objective import ObjectiveWeights, is_feasible
-from planner.plant import DEFAULT_PLANT, Perturbation, PlantConfig, build_plant_prototxt
+from planner.plant import Perturbation, PlantConfig, build_plant_prototxt, load_plant_config
 from planner.types import Setpoints, WeeklyKPI
 
 ROBUST_KEYS = ("total_hvac_energy_kwh", "inlet_temp_max_c", "pue_mean")
@@ -171,10 +171,15 @@ def robust_select(finalists: list, scenario_kpis: list,
 
 
 def make_oracle_robust_rerank(base_prototxt, oracle_config, calibration,
-                              weights, n_scenarios, log_root, oracle_cls=None):
+                              weights, n_scenarios, log_root, oracle_cls=None,
+                              plant_config_path="data/plant_calibration.json"):
     """Build a robust_rerank_fn(finalists, forecast) -> RobustResult that evaluates
     the finalists under N perturbed-plant scenarios (each a real EnergyPlus run).
     `oracle_cls` is injectable for testing (default ParallelEnvOracle).
+
+    The ensemble CENTER is the data-driven believed plant state (Stage 6 #9):
+    load_plant_config(plant_config_path) — DEFAULT_PLANT exactly until the deploy
+    loop has fitted plant factors (data/plant_calibration.json).
 
     Uncertainty is SINGLE-counted across the two safety layers:
     - the NOMINAL check (beam search) hedges twin-vs-plant model error with the
@@ -192,26 +197,49 @@ def make_oracle_robust_rerank(base_prototxt, oracle_config, calibration,
         oracle_cls = ParallelEnvOracle
 
     spread = scenario_spread(calibration)
-    scenarios = make_scenarios(DEFAULT_PLANT, n_scenarios, spread)
+    scenarios = make_scenarios(load_plant_config(plant_config_path), n_scenarios, spread)
     scen_weights = replace(weights, inlet_forecast_margin=0.0)
+
+    def _weather_runs(forecast):
+        """One extra (plant, forecast, tag) run: the believed plant under a HOT week —
+        dry-bulb shifted +1·sigma of the historical-analog spread (Stage 6 #7). Weather
+        uncertainty then gates plans the same way plant uncertainty does. Fully guarded:
+        no weather file / no week_start / any failure -> no extra scenario."""
+        wf = getattr(forecast, "weather_file", None)
+        ws = getattr(forecast, "week_start", None)
+        if not wf or ws is None:
+            return []
+        try:
+            import dataclasses as _dc
+            from planner.weather_forecast import weather_scenarios
+            hot = next(s for s in weather_scenarios(wf, ws, str(Path(log_root) / "weather"))
+                       if s["label"] == "hot")
+            return [(load_plant_config(plant_config_path),
+                     _dc.replace(forecast, weather_file=hot["epw"]), "hot-weather")]
+        except Exception:  # noqa: BLE001 - weather hedge is additive, never fatal
+            import logging
+            logging.getLogger(__name__).warning("hot-weather scenario unavailable; skipping")
+            return []
 
     def rerank(finalists, forecast):
         setpoints = [f[0] for f in finalists]
         per_finalist = [[] for _ in finalists]
-        for j, sc in enumerate(scenarios):
-            sdir = str(Path(log_root) / f"scenario-{j:02d}")
+        runs = [(sc, forecast, f"scenario-{j:02d}") for j, sc in enumerate(scenarios)]
+        runs += _weather_runs(forecast)
+        for j, (sc, fc, tag) in enumerate(runs):
+            sdir = str(Path(log_root) / tag)
             try:
                 sproto = build_plant_prototxt(base_prototxt, sc, sdir)
                 oracle = oracle_cls(
                     base_prototxt=sproto, project_root=".",
                     config=replace(oracle_config, log_root=str(Path(sdir) / "oracle")))
-                for i, k in enumerate(oracle.evaluate(setpoints, forecast=forecast)):
+                for i, k in enumerate(oracle.evaluate(setpoints, forecast=fc)):
                     if calibration is not None:
                         k = calibration.apply(k)   # measured bias; flags cap breach itself
                     per_finalist[i].append(k)
             except Exception:  # noqa: BLE001 - a failed scenario is dropped, never fatal
                 import logging
-                logging.getLogger(__name__).warning("robust scenario %d failed; dropping", j)
-        return robust_select(finalists, per_finalist, scen_weights, n_requested=len(scenarios))
+                logging.getLogger(__name__).warning("robust scenario %s failed; dropping", tag)
+        return robust_select(finalists, per_finalist, scen_weights, n_requested=len(runs))
 
     return rerank
