@@ -288,6 +288,23 @@ def test_duplicate_deploy_heals_a_clobbered_row(tmp_path):
         assert store.get_plan_row(pid)["status"] == expect
 
 
+def test_bms_adapter_for_mode_defaults_to_shadow(monkeypatch):
+    # DTWIN_DEPLOY_MODE unset -> shadow is the webapp default (spec A1)
+    from planner.bms import ShadowBmsAdapter
+    from webapp.jobs import bms_adapter_for_mode
+    monkeypatch.delenv("DTWIN_DEPLOY_MODE", raising=False)
+    assert isinstance(bms_adapter_for_mode(), ShadowBmsAdapter)
+    monkeypatch.setenv("DTWIN_DEPLOY_MODE", "shadow")
+    assert isinstance(bms_adapter_for_mode(), ShadowBmsAdapter)
+
+
+def test_bms_adapter_for_mode_sim_keeps_todays_behavior(monkeypatch):
+    # 'sim' -> bms=None: deploy() takes today's exact sim-only path
+    from webapp.jobs import bms_adapter_for_mode
+    monkeypatch.setenv("DTWIN_DEPLOY_MODE", "sim")
+    assert bms_adapter_for_mode() is None
+
+
 def test_deploy_failure_does_not_downgrade_terminal_status(tmp_path):
     """If the runner reached 'deployed' before raising, the failure handler must not
     downgrade the terminal state."""

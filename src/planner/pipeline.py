@@ -8,6 +8,7 @@ from typing import Any, Callable, Optional
 from planner.beam_search import BeamConfig, BeamPlanner
 from planner.calibrator import SIGMA_PRIOR
 from planner.objective import ObjectiveWeights
+from planner.recirc import RecircAwareEvaluator, load_recirc_config
 from planner.recommendation import build_recommendation, safest_fallback
 from planner.types import DEFAULT_SEARCH_SPACE, Evaluator, Setpoints
 
@@ -70,6 +71,7 @@ def run_weekly_plan(
     robust_rerank_fn=None,
     baseline_setpoints: Optional[Setpoints] = None,
     energy_scope: Optional[str] = None,
+    recirc_config_path: Optional[str] = None,
 ) -> dict:
     """Forecast -> best-first search -> recommendation dict. The DRY planning core.
 
@@ -77,6 +79,13 @@ def run_weekly_plan(
     in tests). `forecaster` must expose `.method` and `.forecast(week_start, n_steps)`.
     """
     space = DEFAULT_SEARCH_SPACE
+    # B4 live recirculation: once fit_recirc.py has calibrated a real ITE airflow demand
+    # (demand_kg_s > flow.lb in data/recirc.json), every candidate's inlet KPI carries the
+    # flow-shortfall recirc penalty BEFORE feasibility. With the shipped default
+    # (demand == flow.lb) nothing is wrapped, so legacy behavior is bit-identical.
+    recirc_cfg = load_recirc_config(recirc_config_path)
+    if recirc_cfg["demand_kg_s"] > space.flow.lb:
+        evaluator = RecircAwareEvaluator(evaluator, recirc_cfg)
     weights = weights or ObjectiveWeights()
     weights = apply_forecast_margin(weights, calibration)
     beam = BeamConfig(grid=request.grid, beam_width=request.beam_width, levels=request.levels)

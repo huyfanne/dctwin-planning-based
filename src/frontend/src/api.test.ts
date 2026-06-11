@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { listPlans, createPlan, approvePlan, setToken, getToken, clearToken, verifyToken } from "./api";
+import {
+  listPlans, createPlan, approvePlan, setToken, getToken, clearToken, verifyToken,
+  getLive, getLiveSeries, liveStreamUrl,
+} from "./api";
 
 beforeEach(() => {
   setToken("op-tok");
@@ -25,6 +28,35 @@ describe("api client", () => {
   it("throws on non-ok response", async () => {
     (fetch as any).mockResolvedValue({ ok: false, status: 403, json: async () => ({ detail: "nope" }) });
     await expect(approvePlan("p1")).rejects.toThrow();
+  });
+});
+
+describe("live telemetry api", () => {
+  it("getLive GETs /api/live with the auth header", async () => {
+    (fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        ts: 1, points: {}, alerts: [],
+        compliance: { commanded: null, held: null, ok: null, deltas: null },
+        simulated: true,
+      }),
+    });
+    const res = await getLive();
+    expect(res.simulated).toBe(true);
+    const [url, opts] = (fetch as any).mock.calls[0];
+    expect(url).toBe("/api/live");
+    expect(opts.headers.Authorization).toBe("Bearer op-tok");
+  });
+
+  it("getLiveSeries GETs /api/live/series with the minutes param", async () => {
+    (fetch as any).mockResolvedValue({ ok: true, json: async () => ({ series: {} }) });
+    await getLiveSeries(30);
+    expect((fetch as any).mock.calls[0][0]).toBe("/api/live/series?minutes=30");
+  });
+
+  it("liveStreamUrl embeds the url-encoded token", () => {
+    setToken("tok x");
+    expect(liveStreamUrl()).toBe("/api/live/stream?token=tok%20x");
   });
 });
 

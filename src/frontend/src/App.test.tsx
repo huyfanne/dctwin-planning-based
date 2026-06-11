@@ -19,6 +19,7 @@ vi.mock('./api', () => ({
 import { getToken, clearToken } from './api';
 
 vi.mock('./pages/Dashboard', () => ({ default: () => <div>DashboardPage</div> }));
+vi.mock('./pages/Live',      () => ({ default: () => <div>LivePage</div> }));
 vi.mock('./pages/NewPlan',   () => ({ default: () => <div>NewPlanPage</div> }));
 vi.mock('./pages/Review',    () => ({ default: () => <div>ReviewPage</div> }));
 vi.mock('./pages/History',   () => ({ default: () => <div>HistoryPage</div> }));
@@ -32,13 +33,22 @@ beforeEach(() => {
 });
 
 describe('App', () => {
-  it('renders the nav with all 5 items', () => {
+  it('renders the nav with all 6 items', () => {
     render(<App />);
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Live')).toBeInTheDocument();
     expect(screen.getByText('New Plan')).toBeInTheDocument();
     expect(screen.getByText('Review')).toBeInTheDocument();
     expect(screen.getByText('History')).toBeInTheDocument();
     expect(screen.getByText('Digital Twin (3D)')).toBeInTheDocument();
+  });
+
+  it('places the Live tab between Dashboard and New Plan', () => {
+    render(<App />);
+    const labels = screen.getAllByRole('button')
+      .map(b => b.textContent)
+      .filter(t => t === 'Dashboard' || t === 'Live' || t === 'New Plan');
+    expect(labels).toEqual(['Dashboard', 'Live', 'New Plan']);
   });
 
   it('renders the DCTwin logo', () => {
@@ -55,6 +65,12 @@ describe('App', () => {
     render(<App />);
     fireEvent.click(screen.getByText('New Plan'));
     expect(screen.getByText('NewPlanPage')).toBeInTheDocument();
+  });
+
+  it('switches to Live page on nav click', () => {
+    render(<App />);
+    fireEvent.click(screen.getByText('Live'));
+    expect(screen.getByText('LivePage')).toBeInTheDocument();
   });
 
   it('switches to History page on nav click', () => {

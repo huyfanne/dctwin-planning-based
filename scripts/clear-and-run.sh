@@ -68,7 +68,7 @@ resolve_port() {                       # echo a usable port: $1 if free, else th
 
 start_backend_bg() {   # backgrounded + logged (used by --dev)
   mkdir -p "$SRC/log"
-  sg docker -c "cd '$SRC' && PYTHONPATH='$SRC' OPERATOR_TOKEN='$OPERATOR_TOKEN' EXPERT_TOKEN='$EXPERT_TOKEN' \
+  sg docker -c "cd '$SRC' && PYTHONPATH='$SRC' DTWIN_SIM_TELEMETRY=${DTWIN_SIM_TELEMETRY:-1} OPERATOR_TOKEN='$OPERATOR_TOKEN' EXPERT_TOKEN='$EXPERT_TOKEN' \
     '$PY' -m uvicorn webapp.main:app --host 0.0.0.0 --port $BACKEND_PORT" > "$SRC/log/backend.out" 2>&1 &
   for _ in $(seq 1 30); do port_listening "$BACKEND_PORT" && return 0; sleep 1; done
   echo "  (backend not up yet — see src/log/backend.out)"
@@ -76,7 +76,7 @@ start_backend_bg() {   # backgrounded + logged (used by --dev)
 
 run_backend_fg() {     # foreground (used by single / --backend-only); Ctrl-C stops it
   cd "$SRC"
-  sg docker -c "PYTHONPATH='$SRC' OPERATOR_TOKEN='$OPERATOR_TOKEN' EXPERT_TOKEN='$EXPERT_TOKEN' \
+  sg docker -c "PYTHONPATH='$SRC' DTWIN_SIM_TELEMETRY=${DTWIN_SIM_TELEMETRY:-1} OPERATOR_TOKEN='$OPERATOR_TOKEN' EXPERT_TOKEN='$EXPERT_TOKEN' \
     '$PY' -m uvicorn webapp.main:app --host 0.0.0.0 --port $BACKEND_PORT"
 }
 

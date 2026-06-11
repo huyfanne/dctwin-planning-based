@@ -51,7 +51,7 @@ cmd_start() {
   mkdir -p "$SRC/log"
   # sg docker: the oracle needs the docker group; env -C because a leading cd is
   # stripped by the agent sandbox. Detached so it survives the shell.
-  nohup sg docker -c "env -C $SRC PYTHONPATH=$SRC OPERATOR_TOKEN=$OP EXPERT_TOKEN=$EX \
+  nohup sg docker -c "env -C $SRC PYTHONPATH=$SRC DTWIN_SIM_TELEMETRY=${DTWIN_SIM_TELEMETRY:-1} OPERATOR_TOKEN=$OP EXPERT_TOKEN=$EX \
     $PY -m uvicorn webapp.main:app --host 0.0.0.0 --port $PORT" > "$LOG" 2>&1 &
   disown
   local i=0

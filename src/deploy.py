@@ -25,12 +25,15 @@ class _NullForecast:
         pass
 
 
-def deploy(recommendation_path: str, oracle, forecast=None) -> dict:
-    """Sim-only deployment: require approval, run the plant week, record realized KPIs.
+def deploy(recommendation_path: str, oracle, forecast=None, bms=None) -> dict:
+    """Deployment: require approval, run the plant week, record realized KPIs.
 
-    The physical-BMS adapter is intentionally a stub here (sim-only ground truth).
-    To target a real BMS later, implement a `BmsAdapter.apply(setpoints, week)` and
-    call it in place of the oracle plant-run below; the contract is the same dict.
+    `bms` is the BMS-adapter seam (planner.bms). When given, its apply() records
+    the 45 per-actuator commands under <plan_dir>/deploy/ and the rec is stamped
+    deploy_mode/bms/realized_source (schema 1.8, additive). Shadow mode never
+    actuates; the realized week still comes from the oracle plant run (the
+    observation stand-in), so calibration keeps learning. bms=None is the
+    sim-only path, byte-for-byte the pre-1.8 behavior.
     """
     rec = json.loads(Path(recommendation_path).read_text())
     if rec.get("status") != "approved":
@@ -41,6 +44,13 @@ def deploy(recommendation_path: str, oracle, forecast=None) -> dict:
     setpoints = _setpoints_from_rec(rec)
     if forecast is None:
         forecast = _NullForecast(date.fromisoformat(rec["week_start"]))
+
+    if bms is not None:
+        out_dir = Path(recommendation_path).parent / "deploy"
+        rec["bms"] = bms.apply(setpoints, rec["week_start"], out_dir)
+        rec["deploy_mode"] = "shadow"
+        rec["realized_source"] = "sim"
+        rec["schema_version"] = "1.8"
 
     realized = oracle.evaluate([setpoints], forecast=forecast)[0]
     rec["realized_kpis"] = {
