@@ -1,0 +1,68 @@
+\documentclass[11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage[most]{tcolorbox}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+\captionsetup{font=small,labelfont=bf,width=0.92\textwidth}
+\setlength{\parskip}{4pt}
+\setlength{\parindent}{0pt}
+
+% ---- callout boxes (must match what the section writers use) ----
+\definecolor{kibg}{HTML}{EAF3FB}\definecolor{kirule}{HTML}{2F6FB0}
+\definecolor{anbg}{HTML}{FBF4E6}\definecolor{anrule}{HTML}{C0862A}
+\definecolor{wlbg}{HTML}{ECF7EE}\definecolor{wlrule}{HTML}{3C8C53}
+
+\newtcolorbox{keyidea}{colback=kibg,colframe=kirule,boxrule=0.8pt,arc=3pt,
+  left=9pt,right=9pt,top=6pt,bottom=6pt,fonttitle=\bfseries,coltitle=white,
+  colbacktitle=kirule,title=Key idea,breakable}
+\newtcolorbox{analogy}{colback=anbg,colframe=anrule,boxrule=0.8pt,arc=3pt,
+  left=9pt,right=9pt,top=6pt,bottom=6pt,fonttitle=\bfseries,coltitle=white,
+  colbacktitle=anrule,title=Think of it like\ldots,breakable}
+% tolerate an accidental optional argument from a writer, e.g. \begin{keyidea}[x]
+\newcommand{\plainwords}[1]{\par\smallskip\noindent{\itshape In plain words.}~#1\par\smallskip}
+
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\titleformat{\section}{\normalfont\Large\bfseries\color{kirule}}{\thesection.}{0.6em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+
+\begin{document}
+\pagestyle{plain}
+
+% ---- chapter front matter ----
+\begin{center}
+{\small\bfseries\color{kirule}\MakeUppercase{A chapter on safe AI for the physical world}}\\[10pt]
+{\huge\bfseries Cool Heads}\\[6pt]
+{\Large How a Digital Twin Saves Energy Without\\[2pt] Ever Overheating a Data Center}\\[14pt]
+{\large Hoang-Huy Nguyen}\\[6pt]
+\end{center}
+
+\vspace{4pt}
+\noindent\textit{Somewhere right now, a data center is being kept colder than it needs to be ---
+burning electricity to buy peace of mind. This chapter is about a machine that learned to stop
+doing that, safely: to run a server hall warmer and cheaper while promising, and proving week
+after week, that it would never let a single computer breathe air that is too hot.}
+
+\begin{tcolorbox}[colback=wlbg,colframe=wlrule,boxrule=0.8pt,arc=3pt,
+  left=9pt,right=9pt,top=6pt,bottom=6pt,fonttitle=\bfseries,coltitle=white,
+  colbacktitle=wlrule,title=What you'll learn]
+\begin{itemize}[leftmargin=1.2em,nosep,itemsep=2pt]
+  \item Why cooling a data center is a tug-of-war between saving energy and staying safe.
+  \item What a ``digital twin'' is, and how planning inside a physics simulation beats guessing.
+  \item The handful of equations that decide how cold to run a building --- each explained in plain words.
+  \item How to let an optimizer get bolder \emph{only} as fast as it earns trust --- and never cross a safety line.
+\end{itemize}
+\end{tcolorbox}
+
+\vspace{6pt}

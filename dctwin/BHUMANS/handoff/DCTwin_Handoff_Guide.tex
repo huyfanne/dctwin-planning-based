@@ -1,0 +1,273 @@
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=0.70in]{geometry}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage[table]{xcolor}
+\usepackage{fancyvrb}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{nv}{HTML}{1F4E79}
+\definecolor{cmdrule}{HTML}{B9C4D0}
+\definecolor{cmdbg}{HTML}{F4F6F9}
+
+\setlength{\parskip}{2.5pt}\setlength{\parindent}{0pt}
+\setlist{nosep,leftmargin=1.25em,topsep=2pt,itemsep=1.5pt}
+\titlespacing*{\section}{0pt}{7pt}{3pt}
+\titleformat{\section}{\normalfont\large\bfseries\color{nv}}{}{0pt}{}
+\renewcommand{\arraystretch}{1.12}
+\fvset{fontsize=\footnotesize,frame=single,framesep=4pt,rulecolor=\color{cmdrule},xleftmargin=2pt,xrightmargin=2pt}
+\DefineVerbatimEnvironment{cmd}{Verbatim}{}
+\setlength{\tabcolsep}{4pt}
+\sloppy\setlength{\emergencystretch}{3em}
+
+\title{\vspace{-1.2cm}\textbf{DCTwin --- Code Handoff Guide}}
+\author{}\date{}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries\color{nv} DCTwin --- Code Handoff Guide}\\[3pt]
+{\normalsize A 5-page quickstart for taking over the codebase.}\\[1pt]
+{\small Condensed from \texttt{docs/DCTwin\_User\_Guide.md} (the full 16-page reference). Digital-twin dual-loop optimizer for weekly data-center cooling setpoints.}
+\end{center}
+\vspace{2pt}\hrule\vspace{4pt}
+\section*{What DCTwin is}
+DCTwin is a digital-twin dual-loop optimizer for weekly data-center cooling setpoints. Each week it searches three global setpoints — CRAH supply-air temperature (SAT, 20–26 C), CRAH airflow (4.8–13.8 kg/\allowbreak{}s), and chilled-water supply temperature (CHWST, 13–19 C) — and broadcasts each candidate to 45 actuators (22 SAT + 22 FLOW + 1 CHWST, fixed order) for the controlled 1F-2A hall. There is no surrogate: every candidate is scored by a full-week EnergyPlus 9.5 run in Docker.
+
+\smallskip\noindent\textbf{Two loops, one oracle}\\[1pt]
+\begin{itemize}
+\item Inner (per week): forecast (IT-load + weather) $\rightarrow$ beam search (coarse-to-fine) $\rightarrow$ EnergyPlus oracle $\rightarrow$ objective + feasibility $\rightarrow$ robust three-net safety gate $\rightarrow$ recommendation.json.
+\item Outer (deployment): pre-validate $\rightarrow$ expert approve $\rightarrow$ shadow deploy (writes 45 BMS commands, never actuates) $\rightarrow$ record realized KPIs $\rightarrow$ calibrate (bias/\allowbreak{}sigma + physics) $\rightarrow$ feed the next week's search.
+\end{itemize}
+HARD INVARIANT: rack inlet $\leq$ 26 C at every timestep, enforced in search (k.sigma pre-tighten), in the scenario ensemble, and as a 0-tolerance deploy backstop. Never weaken it to make a search succeed.
+
+
+\section*{Repository layout}
+Package dctwin v3.0.3, Python $\geq$3.11,<3.15, managed with Poetry. Run Python from src/\allowbreak{} (package roots are planner/\allowbreak{}, webapp/\allowbreak{}) or set PYTHONPATH=\$DCTWIN/\allowbreak{}src. Most-used paths:
+
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}>{\ttfamily\small}p{0.30\linewidth} X@{}}
+\toprule
+\textbf{Path} & \textbf{Purpose} \\
+\midrule
+src/\allowbreak{}planner/\allowbreak{} & Inner loop: beam\_\allowbreak{}search, oracle, objective, robust, forecaster, calibrator, broadcast, baseline, schedule. backtest\_\allowbreak{}forecaster.py lives here. \\
+src/\allowbreak{}webapp/\allowbreak{} & FastAPI backend: main.py (routes + SSE), jobs.py (JobRunner), store.py (SQLite), auth.py, status.py, telemetry.py, topology.py. \\
+src/\allowbreak{}frontend/\allowbreak{} & React 19 + Vite + TS UI. pages/\allowbreak{} (Dashboard, NewPlan, Review, Live, History, DigitalTwin3D), api.ts client. Node 22. \\
+src/\allowbreak{}*.py & CLI entry scripts: plan\_\allowbreak{}weekly.py, fit\_\allowbreak{}forecaster.py, prevalidation.py, deploy.py, fit\_\allowbreak{}recirc.py. \\
+dctwin/\allowbreak{} & EnergyPlus/\allowbreak{}BCVTB co-sim engine: registration.py (make\_\allowbreak{}env), gym\_\allowbreak{}envs/\allowbreak{}eplus\_\allowbreak{}env.py, third\_\allowbreak{}parties/\allowbreak{}docker\_\allowbreak{}backend.py. \\
+src/\allowbreak{}runs/\allowbreak{} & Per-week artifacts (gds-2024-MM-DD-HASH/\allowbreak{}): recommendation.json, realized.json, oracle/\allowbreak{}, robust/\allowbreak{}, prevalidation/\allowbreak{}, deploy/\allowbreak{}, plant/\allowbreak{}. \\
+models/\allowbreak{} configs/\allowbreak{} data/\allowbreak{} & Planner assets, GITIGNORED. forecaster.pkl must be fit first. Copy GDS model from mycode/\allowbreak{}Tropical\_\allowbreak{}DC\_\allowbreak{}Files/\allowbreak{}GDS\_\allowbreak{}Nov\_\allowbreak{}Supply\_\allowbreak{}Return32\_\allowbreak{}CHWT\_\allowbreak{}Backup. \\
+docs/\allowbreak{}superpowers/\allowbreak{}specs|plans/\allowbreak{} & Dated spec+plan pairs per shipped tier; the design record. \\
+graphify-out/\allowbreak{} & AST knowledge graph of src/\allowbreak{} (GRAPH\_\allowbreak{}REPORT.md, graph.html, graph.json) — navigation aid. \\
+scripts/\allowbreak{}clear-and-run.sh & One-command launcher: clears state, builds frontend, serves whole app at http:/\allowbreak{}/\allowbreak{}localhost:8000 (--dev = Vite hot-reload at :5173). \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+
+\section*{Setup (first 30 minutes)}
+Goal: clone to a running env with a green test run. Pick the repo root once and reuse it everywhere; commands below are portable.
+
+\smallskip\noindent\textit{\small Convention — set these first (every later command uses them)}\\[1pt]
+\begin{cmd}
+export DCTWIN=/path/to/your/dctwin/checkout
+PY="$DCTWIN/.venv-dtwin/bin/python"  # or just `python` inside `poetry shell`
+\end{cmd}
+\smallskip\noindent\textbf{Prerequisites}\\[1pt]
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}p{0.24\linewidth} p{0.30\linewidth} X@{}}
+\toprule
+\textbf{Tool} & \textbf{Version} & \textbf{Needed for} \\
+\midrule
+Python & 3.11–3.14 & planner + webapp \\
+Poetry & latest & Python deps (pyproject.toml + poetry.lock) \\
+Docker & engine + EnergyPlus image & running a plan (oracle); NOT for unit tests \\
+Node & $\geq$18 (22 works) & frontend build/\allowbreak{}test \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+\smallskip\noindent\textit{\small Pull the EnergyPlus 9.5 image (only needed to RUN a plan)}\\[1pt]
+\begin{cmd}
+docker pull ghcr.io/cap-dcwiz/energyplus-9-5-0:latest
+\end{cmd}
+\smallskip\noindent\textbf{1. Install Python deps}\\[1pt]
+poetry install creates the venv and installs package dctwin v3.0.3. On the reference machine the interpreter is the prebuilt \$DCTWIN/\allowbreak{}.venv-dtwin/\allowbreak{}bin/\allowbreak{}python; on a fresh checkout it is whatever poetry provides (use `poetry shell` or `poetry run python`).
+
+
+\begin{cmd}
+env -C "$DCTWIN" poetry install
+# then either: env -C "$DCTWIN" poetry shell   (gives you `python`)
+# or set: PY="$(env -C "$DCTWIN" poetry env info --path)/bin/python"
+\end{cmd}
+\smallskip\noindent\textbf{2. Copy the gitignored model assets}\\[1pt]
+src/\allowbreak{}models, src/\allowbreak{}configs, src/\allowbreak{}data are gitignored and absent on a fresh clone. The planner cannot run without them. Copy the GDS model tree from the shared source (mycode/\allowbreak{}Tropical\_\allowbreak{}DC\_\allowbreak{}Files/\allowbreak{}GDS\_\allowbreak{}Nov\_\allowbreak{}Supply\_\allowbreak{}Return32\_\allowbreak{}CHWT\_\allowbreak{}Backup — external to this repo; get it from a teammate or shared storage). The dirs must contain: models/\allowbreak{}forecaster.pkl, building.json, idf/\allowbreak{}; configs/\allowbreak{}dt (dt.prototxt) + policy; data/\allowbreak{}calibration.json, his\_\allowbreak{}data\_\allowbreak{}processed.csv, weather/\allowbreak{} (EPW). forecaster.pkl must be fit before any plan.
+
+\smallskip\noindent\textit{\small Place assets under src/\allowbreak{} (they live at src/\allowbreak{}models, src/\allowbreak{}configs, src/\allowbreak{}data — not repo root)}\\[1pt]
+\begin{cmd}
+export GDS=/path/to/mycode/Tropical_DC_Files/GDS_Nov_Supply_Return32_CHWT_Backup
+cp -r "$GDS/models" "$GDS/configs" "$GDS/data" "$DCTWIN/src/"
+ls "$DCTWIN/src/models/forecaster.pkl" "$DCTWIN/src/data/weather"  # sanity check
+# if forecaster.pkl is missing, fit it (run from src/ so `planner` imports resolve):
+env -C "$DCTWIN/src" "$PY" fit_forecaster.py
+\end{cmd}
+\smallskip\noindent\textbf{3. Build the frontend}\\[1pt]
+
+\begin{cmd}
+env -C "$DCTWIN/src/frontend" npm install
+env -C "$DCTWIN/src/frontend" npm run build  # tsc -b && vite build → dist/
+\end{cmd}
+webapp/\allowbreak{}main.py mounts src/\allowbreak{}frontend/\allowbreak{}dist at /\allowbreak{} only when built; skip this and /\allowbreak{} shows a "not built" hint. scripts/\allowbreak{}clear-and-run.sh builds it for you.
+
+\smallskip\noindent\textbf{4. Smoke test}\\[1pt]
+Fast unit tests mock EnergyPlus via MockEvaluator (no Docker); pyproject addopts deselects integration tests. Run from src/\allowbreak{} (package roots are planner/\allowbreak{}, webapp/\allowbreak{}) or set PYTHONPATH=\$DCTWIN/\allowbreak{}src. Rely on exit code + the "N passed" count.
+
+
+\begin{cmd}
+env -C "$DCTWIN/src" "$PY" -m pytest -q
+# optional frontend tests (vitest):
+env -C "$DCTWIN/src/frontend" npm test
+\end{cmd}
+Then launch the whole app at one origin (clears state, builds UI, serves backend at http:/\allowbreak{}/\allowbreak{}localhost:8000; --dev gives Vite hot-reload at :5173): scripts/\allowbreak{}clear-and-run.sh
+
+\smallskip\noindent\textbf{Reference-environment note}\\[1pt]
+\begin{itemize}
+\item The reference sandbox strips a leading `cd`, so the commands above use `env -C <dir>`. On a normal shell you can just `cd` instead.
+\item On the reference sandbox Docker requires `sg docker -c "..."`; e.g. integration tests: sg docker -c 'env -C \$DCTWIN/\allowbreak{}src PYTHONPATH=\$PWD \$PY -m pytest -m integration -q'. On a normal machine drop the `sg docker -c` wrapper.
+\end{itemize}
+
+\section*{Running it end-to-end}
+Set the convention once; every command below uses it. PY is the project interpreter (a prebuilt venv on the reference machine; on a fresh checkout run poetry install, then PY is whatever poetry/\allowbreak{}venv provides, or just python inside poetry shell).
+
+\smallskip\noindent\textit{\small convention (paste once per shell)}\\[1pt]
+\begin{cmd}
+export DCTWIN=/path/to/your/dctwin/checkout
+PY="$DCTWIN/.venv-dtwin/bin/python"  # ref machine; fresh checkout: `poetry shell` -> PY=python
+export PYTHONPATH="$DCTWIN/src"  # package roots are planner/, webapp/
+\end{cmd}
+Reference-environment note: the dev sandbox strips a leading cd (so it uses env -C <dir> ...) and needs Docker wrapped as sg docker -c "...". On a normal machine you can cd \$DCTWIN/\allowbreak{}src and run docker directly; the commands below are written portably.
+
+\smallskip\noindent\textbf{1. Fit the forecaster (once, required before any plan)}\\[1pt]
+Pickles models/\allowbreak{}forecaster.pkl (room$\rightarrow$column map + config). No plan runs without it. fit\_\allowbreak{}forecaster.py:42 is a Python main(), not a CLI flag parser.
+
+
+\begin{cmd}
+$PY $DCTWIN/src/fit_forecaster.py  # default his_data_processed.csv
+# thread a weather file / method:
+$PY -c "import fit_forecaster as f; f.main(weather_file='data/weather/<your-file>.epw')"
+\end{cmd}
+\smallskip\noindent\textbf{2. Launch the web app}\\[1pt]
+clear-and-run.sh clears plan state, builds the frontend, and serves the whole app from one origin at http:/\allowbreak{}/\allowbreak{}localhost:8000 (UI at /\allowbreak{}, API at /\allowbreak{}api/\allowbreak{}*). --dev gives Vite hot-reload at :5173 proxying /\allowbreak{}api to :8000. The frontend MUST be built or /\allowbreak{} returns a "not built" hint instead of the UI (webapp/\allowbreak{}main.py mounts frontend/\allowbreak{}dist at /\allowbreak{} only when present).
+
+
+\begin{cmd}
+$DCTWIN/scripts/clear-and-run.sh  # http://localhost:8000 (single origin)
+$DCTWIN/scripts/clear-and-run.sh --dev  # http://localhost:5173 (hot reload)
+
+# by hand (needs Docker to run real plans; build frontend first):
+npm --prefix $DCTWIN/src/frontend run build
+OPERATOR_TOKEN=op EXPERT_TOKEN=ex $PY -m uvicorn webapp.main:app --port 8000
+\end{cmd}
+\smallskip\noindent\textbf{3. Operator workflow (UI)}\\[1pt]
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}X X X X@{}}
+\toprule
+\textbf{\#} & \textbf{Step} & \textbf{Role} & \textbf{Endpoint} \\
+\midrule
+1 & Paste token, log in & operator/\allowbreak{}expert & GET /\allowbreak{}api/\allowbreak{}plans (verify) \\
+2 & Create weekly plan (week\_\allowbreak{}start, days, search params) & operator & POST /\allowbreak{}api/\allowbreak{}plans \\
+3 & Watch live search (level, evals, best score) & operator & SSE GET /\allowbreak{}api/\allowbreak{}plans/\allowbreak{}\{id\}/\allowbreak{}stream \\
+4 & Review setpoints, predicted KPIs, baseline, robust bands & expert & GET /\allowbreak{}api/\allowbreak{}plans/\allowbreak{}\{id\} \\
+5 & Approve (or reject) & expert & POST /\allowbreak{}api/\allowbreak{}plans/\allowbreak{}\{id\}/\allowbreak{}approve \\
+6 & Deploy approved plan (shadow mode) & expert & POST /\allowbreak{}api/\allowbreak{}plans/\allowbreak{}\{id\}/\allowbreak{}deploy \\
+7 & Monitor live racks /\allowbreak{} power /\allowbreak{} compliance & operator & GET /\allowbreak{}api/\allowbreak{}live, SSE /\allowbreak{}api/\allowbreak{}live/\allowbreak{}stream \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+\smallskip\noindent\textbf{4. Headless CLI flow}\\[1pt]
+deploy.py exposes deploy(rec\_\allowbreak{}path, oracle, ...) as a function (deploy.py:28), not a \_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{} CLI; it raises PermissionError unless status=="approved". prevalidation.py is advisory and carries the --approve/\allowbreak{}--reject flags.
+
+
+\begin{cmd}
+$PY $DCTWIN/src/plan_weekly.py --week-start 2024-11-11 --days 7
+$PY $DCTWIN/src/prevalidation.py --recommendation runs/<id>/recommendation.json  # validate (advisory)
+$PY $DCTWIN/src/prevalidation.py --recommendation runs/<id>/recommendation.json --approve  # expert approve
+# deploy (shadow): deploy(recommendation_path, ParallelEnvOracle(...), bms=ShadowBmsAdapter())
+#   bms=None = pure-sim path (no shadow write). Requires status 'approved'.
+\end{cmd}
+\smallskip\noindent\textbf{5. Reading results}\\[1pt]
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}p{0.24\linewidth} p{0.30\linewidth} X@{}}
+\toprule
+\textbf{What} & \textbf{Where} & \textbf{Pass criterion} \\
+\midrule
+Predicted energy & recommendation.json $\rightarrow$ predicted\_\allowbreak{}kpis & — \\
+Realized energy & realized.json $\rightarrow$ total\_\allowbreak{}hvac\_\allowbreak{}energy\_\allowbreak{}kwh & gap vs predicted = week error \\
+Savings \% & predicted\_\allowbreak{}kpis.energy\_\allowbreak{}reduction\_\allowbreak{}vs\_\allowbreak{}baseline\_\allowbreak{}pct & (baseline-plan)/\allowbreak{}baseline x100 \\
+Safety: peak inlet & realized.json $\rightarrow$ inlet\_\allowbreak{}temp\_\allowbreak{}max\_\allowbreak{}c & $\leq$ 26.0 C \\
+Safety: violations & realized.json $\rightarrow$ inlet\_\allowbreak{}violation\_\allowbreak{}steps & == 0 (else deploy\_\allowbreak{}blocked) \\
+Status & recommendation.json $\rightarrow$ status & pending\_\allowbreak{}approval /\allowbreak{} approved /\allowbreak{} deployed; also blocked\_\allowbreak{}unsafe, infeasible\_\allowbreak{}fallback, deploy\_\allowbreak{}blocked \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+Check recommendation.json schema is $\geq$ 1.7 before comparing baseline/\allowbreak{}savings fields (1.7 adds the as-operated baseline + energy\_\allowbreak{}scope; 1.8 adds deploy\_\allowbreak{}mode/\allowbreak{}bms/\allowbreak{}realized\_\allowbreak{}source).
+
+\smallskip\noindent\textbf{6. Tests}\\[1pt]
+
+\begin{cmd}
+$PY -m pytest -q  # unit; EnergyPlus mocked (MockEvaluator), integration deselected
+$PY -m pytest -m integration -q  # Docker-gated, real EnergyPlus (slow, BCVTB-flaky)
+npm --prefix $DCTWIN/src/frontend test  # vitest
+\end{cmd}
+Run pytest from \$DCTWIN/\allowbreak{}src (or with PYTHONPATH set). Rely on the exit code + the "N passed" count; the summary is often buried under warnings.
+
+
+\section*{Architecture in brief}
+\smallskip\noindent\textbf{Inner planning loop (forecast $\rightarrow$ beam search $\rightarrow$ oracle $\rightarrow$ robust gate $\rightarrow$ recommendation)}\\[1pt]
+run\_\allowbreak{}weekly\_\allowbreak{}plan (pipeline.py:62) builds a BeamPlanner and runs a best-first coarse-to-fine search over 3 globals: SAT [20,26 C], flow [4.8,13.8 kg/\allowbreak{}s], CHWST [13,19 C]. Level 0 scores a grid\textasciicircum{}3 coarse grid (default 5\textasciicircum{}3=125); each later level emits up to 8 local neighbors with a halving step. Every candidate gets one full-week EnergyPlus 9.5 run.
+
+Objective (objective.py:47, minimized): score = energy\_\allowbreak{}term + 1.0*inlet\_\allowbreak{}excess\_\allowbreak{}degc\_\allowbreak{}steps + 0.2*rh\_\allowbreak{}excursion\_\allowbreak{}steps + 0.1*zone\_\allowbreak{}temp\_\allowbreak{}band\_\allowbreak{}steps; +inf if not feasible. energy\_\allowbreak{}term = total\_\allowbreak{}hvac\_\allowbreak{}energy\_\allowbreak{}kwh, or weighted\_\allowbreak{}energy\_\allowbreak{}cost when a tariff is loaded (never both). The oracle computes the soft accumulators; the objective only sums them. Hard gate is\_\allowbreak{}feasible (objective.py:35) is conjunctive: kpi.feasible AND inlet\_\allowbreak{}violation\_\allowbreak{}steps$\leq$tol(0) AND inlet\_\allowbreak{}temp\_\allowbreak{}max+inlet\_\allowbreak{}forecast\_\allowbreak{}margin$\leq$inlet\_\allowbreak{}cap(26.0) AND (rh only if rh\_\allowbreak{}hard).
+
+Oracle: each candidate is scored by a real full-week EnergyPlus run in Docker (ghcr.io/\allowbreak{}cap-dcwiz/\allowbreak{}energyplus-9-5-0), fanned out across PROCESSES (the dctwin config is a process-global singleton) via ParallelEnvOracle. Candidate gen expands the 3-tuple to the GDS hall's 45 AGENT\_\allowbreak{}CONTROLLED actuators in fixed order [22 SAT, 22 FLOW, 1 CHWST] (broadcast.py:59); a single SAT/\allowbreak{}FLOW value replicates, CHWST is global. This order is load-bearing — it must match dt.prototxt and bms.py. Running a plan needs Docker: on Linux bcvtb\_\allowbreak{}host must be the Docker0 gateway 172.17.0.1 (OracleConfig default); non-Linux Docker Desktop needs host.docker.internal.
+
+Three-net safety gate enforces inlet$\leq$26 C with single-counted allocation (no double-hedging). Net 1 k.sigma pre-tighten: search cap = 26 - K\_\allowbreak{}SIGMA*sigma (K\_\allowbreak{}SIGMA=1.0; cold-start sigma=1.0 $\rightarrow$ cap 25.0). Net 2 robust ensemble: each finalist re-simulated across \textasciitilde{}4 perturbed-plant scenarios, bias-corrected, tested vs the hard cap with margin cleared. Net 3 safety ladder: if all finalists fragile, enumerate the energy<$\rightarrow$robustness frontier (CHWST down, then SAT down, then max-cooling corner) and pick the cheapest provably-robust variant; only the corner failing yields blocked\_\allowbreak{}unsafe.
+
+\smallskip\noindent\textbf{Outer deployment loop}\\[1pt]
+Pre-validation (prevalidation.py:68) re-evaluates the recommendation with a fresh oracle (nominal + worst-case) right after planning, but is ADVISORY — it never fails the plan. Deploy (deploy.py:28) is approval-guarded; in shadow mode ShadowBmsAdapter.apply (bms.py:52) writes 45 denormalized commands to bms\_\allowbreak{}commands.json but never actuates; realized KPIs still come from the oracle. Calibration (calibrator.py) fits per-KPI additive bias + sigma (fading floor) from paired deploy history; physics recalibration (recalibrator.py) maps a persistent energy bias to a fan-efficiency factor. As-operated baseline (baseline.py:41) derives current setpoints from telemetry medians, evaluated once per run so savings are honest.
+
+\smallskip\noindent\textbf{Forecasters \& webapp}\\[1pt]
+Forecasters: IT-load persistence/\allowbreak{}seasonal (forecaster.py) — 1F-2A load is empirically flat, so week-to-week variation is weather-driven; weather is a historical-analog EPW spread (weather\_\allowbreak{}forecast.py) generating nominal/\allowbreak{}hot/\allowbreak{}cool scenarios. Webapp: single-origin FastAPI backend (port 8000) serving a React 19 + Vite + TS frontend; single-worker JobRunner runs plans + deploys, SSE streams progress and live telemetry, fail-closed token auth (operator/\allowbreak{}expert).
+
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}>{\ttfamily\scriptsize}p{0.24\linewidth} p{0.30\linewidth} X@{}}
+\toprule
+\textbf{Symbol} & \textbf{File:line} & \textbf{Role} \\
+\midrule
+run\_\allowbreak{}weekly\_\allowbreak{}plan & src/\allowbreak{}planner/\allowbreak{}pipeline.py:62 & Inner-loop orchestration \\
+BeamPlanner.plan & src/\allowbreak{}planner/\allowbreak{}beam\_\allowbreak{}search.py:85 & Coarse-to-fine search entry \\
+score /\allowbreak{} is\_\allowbreak{}feasible & src/\allowbreak{}planner/\allowbreak{}objective.py:47 /\allowbreak{} :35 & Scalar objective + hard gate \\
+ParallelEnvOracle.evaluate & src/\allowbreak{}planner/\allowbreak{}oracle.py:107 & Process-parallel EnergyPlus scoring \\
+evaluate\_\allowbreak{}one & src/\allowbreak{}planner/\allowbreak{}oracle\_\allowbreak{}worker.py:168 & Per-worker full-week episode \\
+gds\_\allowbreak{}action\_\allowbreak{}spec & src/\allowbreak{}planner/\allowbreak{}broadcast.py:59 & 45-actuator order [22 SAT,22 FLOW,1 CHWST] \\
+robust\_\allowbreak{}select /\allowbreak{} safety\_\allowbreak{}ladder & src/\allowbreak{}planner/\allowbreak{}robust.py:132 /\allowbreak{} :64 & Net-2 ensemble + net-3 backstop \\
+run\_\allowbreak{}prevalidation\_\allowbreak{}with\_\allowbreak{}oracle & src/\allowbreak{}prevalidation.py:68 & Advisory replay gate \\
+deploy /\allowbreak{} ShadowBmsAdapter.apply & src/\allowbreak{}deploy.py:28 /\allowbreak{} bms.py:52 & Approval-guarded shadow deploy \\
+JobRunner /\allowbreak{} run\_\allowbreak{}plan\_\allowbreak{}job & src/\allowbreak{}webapp/\allowbreak{}jobs.py:25 /\allowbreak{} :142 & Threaded job queue + plan job \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+
+\section*{Invariants you must not break}
+\begin{itemize}
+\item Inlet $\leq$ 26 C at every timestep — enforced in search (net 1), scenarios (net 2), and the deploy backstop (0-tolerance). Never relax it to make a search succeed.
+\item Process-based parallelism only — the dctwin/\allowbreak{}EnergyPlus config is a process-global singleton; never assume thread-safety for config-dependent state.
+\item No double-hedging — net-2 scenarios clear inlet\_\allowbreak{}forecast\_\allowbreak{}margin (robust.py); don't stack net-1's k.sigma inside net-2.
+\item Schema is versioned and ADDITIVE — recommendation.json 1.0 $\rightarrow$ 1.5 $\rightarrow$ 1.7 $\rightarrow$ 1.8; bump on shape changes and keep older readers working.
+\item Residuals fit against RAW predictions (residual\_\allowbreak{}predicted\_\allowbreak{}for) to prevent double-correction; the sigma fading floor never collapses to 0.
+\item Don't weaken tests — plans are test-first; implementers make code pass, never relax an assertion. Frontend build (tsc -b) type-checks tests with noUnusedLocals ON.
+\item Regenerate graphify-out/\allowbreak{} after merging code changes (it's a navigation aid, not a build artifact).
+\item Don't push to origin without an explicit go-ahead — main is intentionally local-only.
+\end{itemize}
+
+\section*{Where to go deeper}
+\begin{itemize}
+\item Full guide: docs/\allowbreak{}DCTwin\_\allowbreak{}User\_\allowbreak{}Guide.md — operator quick-start, per-module deep dives, results, extension recipes, and a complete file:line reference map.
+\item docs/\allowbreak{}superpowers/\allowbreak{}specs/\allowbreak{} + docs/\allowbreak{}superpowers/\allowbreak{}plans/\allowbreak{} — dated spec+plan pairs (test-first) for every shipped tier; read before any large change.
+\item graphify-out/\allowbreak{}GRAPH\_\allowbreak{}REPORT.md + graph.html — AST knowledge graph of src/\allowbreak{}; the fastest way to navigate by symbol.
+\item src/\allowbreak{}README.md — headless CLI flow (plan\_\allowbreak{}weekly.py, fit\_\allowbreak{}forecaster.py, prevalidation.py, deploy.py); src/\allowbreak{}webapp/\allowbreak{}README.md — backend run/\allowbreak{}build details.
+\item Reference map at the end of the full guide (docs/\allowbreak{}DCTwin\_\allowbreak{}User\_\allowbreak{}Guide.md) — concern $\rightarrow$ primary file:line for every subsystem.
+\end{itemize}
+\end{document}

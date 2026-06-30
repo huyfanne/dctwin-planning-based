@@ -1,0 +1,197 @@
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=0.70in]{geometry}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage[table]{xcolor}
+\usepackage{fancyvrb}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{nv}{HTML}{1F4E79}
+\definecolor{cmdrule}{HTML}{B9C4D0}
+\definecolor{cmdbg}{HTML}{F4F6F9}
+
+\setlength{\parskip}{2.5pt}\setlength{\parindent}{0pt}
+\setlist{nosep,leftmargin=1.25em,topsep=2pt,itemsep=1.5pt}
+\titlespacing*{\section}{0pt}{7pt}{3pt}
+\titleformat{\section}{\normalfont\large\bfseries\color{nv}}{}{0pt}{}
+\renewcommand{\arraystretch}{1.12}
+\fvset{fontsize=\footnotesize,frame=single,framesep=4pt,rulecolor=\color{cmdrule},xleftmargin=2pt,xrightmargin=2pt}
+\DefineVerbatimEnvironment{cmd}{Verbatim}{}
+\setlength{\tabcolsep}{4pt}
+\sloppy\setlength{\emergencystretch}{3em}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries\color{nv} DCTwin --- dcwiz Template Compliance}\\[3pt]
+{\normalsize Proof that the code follows the dcwiz standard policy templates --- 5-page summary for code handoff.}\\[1pt]
+{\small Condensed from docs/DCTwin\_Template\_Compliance.md (full 15-page report); verdicts and file:line evidence verified against the repository.}
+\end{center}
+\vspace{2pt}\hrule\vspace{4pt}
+\section*{Compliance verdict}
+DCTwin adopts both dcwiz standard policy templates. RecommendTemplate is subclassed by WeeklyPlanTemplate (src/\allowbreak{}plan\_\allowbreak{}weekly.py:22, import :11); TrajectoryPolicyTemplate is subclassed by AITrajectoryReplay (src/\allowbreak{}ai\_\allowbreak{}trajectory\_\allowbreak{}test.py:14, import :8) and BaselineTrajectory (src/\allowbreak{}baseline\_\allowbreak{}policy\_\allowbreak{}test.py:12, import :6). The base-class lifecycle \_\allowbreak{}\_\allowbreak{}init\_\allowbreak{}\_\allowbreak{} $\rightarrow$ \_\allowbreak{}\_\allowbreak{}call\_\allowbreak{}\_\allowbreak{} $\rightarrow$ initialize $\rightarrow$ run is honored: subclasses override initialize() (and run() for the planner) at the designated extension points (plan\_\allowbreak{}weekly.py:30,67). The sample\_\allowbreak{}template/\allowbreak{} layout for configs/\allowbreak{}, data/\allowbreak{}, and models/\allowbreak{} is mirrored: device-map JSON schemas and the dt/\allowbreak{}test/\allowbreak{}train prototxt shapes match identically or near-identically. DCTwin intentionally omits the RL-training artifacts (ai\_\allowbreak{}policy\_\allowbreak{}train.py, single-file hooks.py, policy/\allowbreak{}policy.pth, recommend.prototxt, train\_\allowbreak{}test.prototxt) by design, because it is a search/\allowbreak{}planning optimizer, not a trained dcbrain RL policy; those responsibilities are relocated into planner/\allowbreak{}. One honest defect remains to remediate: AITrajectoryReplay calls run(policy="ai") without setting self.test\_\allowbreak{}collector, so the template's run\_\allowbreak{}ai() raises at runtime.
+
+
+\section*{Compliance at a glance}
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}p{0.24\linewidth} p{0.30\linewidth} X@{}}
+\toprule
+\textbf{Template artifact} & \textbf{DCTwin counterpart} & \textbf{Verdict} \\
+\midrule
+RecommendTemplate /\allowbreak{} ai\_\allowbreak{}policy\_\allowbreak{}test.py & src/\allowbreak{}plan\_\allowbreak{}weekly.py $\rightarrow$ WeeklyPlanTemplate(RecommendTemplate) & adapted \\
+TrajectoryPolicyTemplate /\allowbreak{} ai\_\allowbreak{}trajectory\_\allowbreak{}test.py & src/\allowbreak{}ai\_\allowbreak{}trajectory\_\allowbreak{}test.py $\rightarrow$ AITrajectoryReplay(TrajectoryPolicyTemplate) & adapted (partial: test\_\allowbreak{}collector unset) \\
+baseline\_\allowbreak{}policy\_\allowbreak{}test.py & src/\allowbreak{}baseline\_\allowbreak{}policy\_\allowbreak{}test.py $\rightarrow$ BaselineTrajectory(TrajectoryPolicyTemplate) & followed \\
+ai\_\allowbreak{}policy\_\allowbreak{}train.py & none (analogue: src/\allowbreak{}fit\_\allowbreak{}forecaster.py) & missing (by design) \\
+hooks.py (single file) & distributed: planner/\allowbreak{}objective.py, kpi.py, monitor.py, oracle\_\allowbreak{}worker.py, recommendation.py, broadcast.py, configs/\allowbreak{}dt/\allowbreak{}room2ite\_\allowbreak{}map.json & adapted \\
+configs/\allowbreak{} (dt + policy) & src/\allowbreak{}configs/\allowbreak{} (4-file dt set; test+train prototxt) & adapted (omits recommend, train\_\allowbreak{}test prototxt) \\
+data/\allowbreak{} formats & src/\allowbreak{}data/\allowbreak{} (EPW + schedule JSON kept; adds calibration/\allowbreak{}realized-history) & adapted \\
+models/\allowbreak{} & src/\allowbreak{}models/\allowbreak{} (same building.json schema; idf/\allowbreak{} subfolder; adds forecaster.pkl) & extended \\
+policy/\allowbreak{} (policy.pth) & none -- BeamPlanner (planner/\allowbreak{}beam\_\allowbreak{}search.py) is the policy & missing (by design) \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+Legend: followed = contract honored as-is; adapted = honored with deliberate, justified divergences; partial = contract partly honored with a gap; missing = artifact absent (here, by architectural design); extended = template honored plus domain-specific additions.
+
+
+\section*{Side-by-side directory map}
+DCTwin mirrors the dcwiz sample\_\allowbreak{}template/\allowbreak{} layout file-for-file where its architecture overlaps, and diverges only on the RL-training slots it does not need. Marks: match = same role/\allowbreak{}shape honored; + extension = honored plus a DCTwin-specific addition; absent = not present (every absence here is by design, the planner has no trained RL policy). All src/\allowbreak{} rows below were verified against the repo.
+
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}p{0.24\linewidth} p{0.30\linewidth} X@{}}
+\toprule
+\textbf{sample\_\allowbreak{}template/\allowbreak{} (dcwiz)} & \textbf{src/\allowbreak{} (DCTwin)} & \textbf{Status} \\
+\midrule
+ai\_\allowbreak{}policy\_\allowbreak{}test.py & plan\_\allowbreak{}weekly.py — WeeklyPlanTemplate(RecommendTemplate) & match (adapted role) \\
+ai\_\allowbreak{}trajectory\_\allowbreak{}test.py & ai\_\allowbreak{}trajectory\_\allowbreak{}test.py — AITrajectoryReplay(TrajectoryPolicyTemplate) & match (test\_\allowbreak{}collector defect) \\
+baseline\_\allowbreak{}policy\_\allowbreak{}test.py & baseline\_\allowbreak{}policy\_\allowbreak{}test.py — BaselineTrajectory(TrajectoryPolicyTemplate) & match \\
+ai\_\allowbreak{}policy\_\allowbreak{}train.py & — (closest: fit\_\allowbreak{}forecaster.py) & absent (no RL training) \\
+hooks.py (single file) & — (logic split into planner/\allowbreak{}*) & absent file /\allowbreak{} match logic \\
+configs/\allowbreak{}dt/\allowbreak{}dt.prototxt & configs/\allowbreak{}dt/\allowbreak{}dt.prototxt & match \\
+configs/\allowbreak{}dt/\allowbreak{}device\_\allowbreak{}key\_\allowbreak{}map.json & configs/\allowbreak{}dt/\allowbreak{}device\_\allowbreak{}key\_\allowbreak{}map.json & match \\
+configs/\allowbreak{}dt/\allowbreak{}device\_\allowbreak{}his\_\allowbreak{}map.json & configs/\allowbreak{}dt/\allowbreak{}device\_\allowbreak{}his\_\allowbreak{}map.json & match \\
+configs/\allowbreak{}dt/\allowbreak{}room2ite\_\allowbreak{}map.json & configs/\allowbreak{}dt/\allowbreak{}room2ite\_\allowbreak{}map.json & match \\
+configs/\allowbreak{}policy/\allowbreak{}test.prototxt & configs/\allowbreak{}policy/\allowbreak{}test.prototxt & match \\
+configs/\allowbreak{}policy/\allowbreak{}train.prototxt & configs/\allowbreak{}policy/\allowbreak{}train.prototxt & match \\
+configs/\allowbreak{}policy/\allowbreak{}recommend.prototxt & — & absent (no RL inference) \\
+configs/\allowbreak{}policy/\allowbreak{}train\_\allowbreak{}test.prototxt & — & absent (no RL train+test) \\
+data/\allowbreak{}weather/\allowbreak{}*.epw & data/\allowbreak{}weather/\allowbreak{}SGP\_\allowbreak{}Singapore.486980\_\allowbreak{}IWEC.epw & match (EPW format) \\
+data/\allowbreak{}schedule/\allowbreak{}\{acus,branches,workloads\}/\allowbreak{} & data/\allowbreak{}schedule/\allowbreak{}\{acus/\allowbreak{}fan\_\allowbreak{}on\_\allowbreak{}off,branches,workloads\}/\allowbreak{} & match (acus nested) \\
+— & data/\allowbreak{}schedule/\allowbreak{}pumps/\allowbreak{} & + extension (CHW plant) \\
+data/\allowbreak{}data\_\allowbreak{}sample.json & data/\allowbreak{}his\_\allowbreak{}data\_\allowbreak{}processed.csv & match (adapted role) \\
+— & data/\allowbreak{}\{calibration.json,calibration\_\allowbreak{}history.json,realized\_\allowbreak{}history.csv\} & + extension (dual-loop) \\
+models/\allowbreak{}building.json & models/\allowbreak{}building.json & match \\
+models/\allowbreak{}building.idf & models/\allowbreak{}idf/\allowbreak{}building.idf & match (subfolder) \\
+— & models/\allowbreak{}forecaster.pkl & + extension (statistical forecaster) \\
+policy/\allowbreak{}policy.pth & — (planner/\allowbreak{}beam\_\allowbreak{}search.py::BeamPlanner) & absent (algorithmic policy) \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+
+\section*{Evidence by template}
+DCTwin subclasses both dcwiz standard policy templates and mirrors the sample\_\allowbreak{}template layout for configs/\allowbreak{}, data/\allowbreak{}, and models/\allowbreak{}. Each base-class contract (\_\allowbreak{}\_\allowbreak{}init\_\allowbreak{}\_\allowbreak{} $\rightarrow$ \_\allowbreak{}\_\allowbreak{}call\_\allowbreak{}\_\allowbreak{} $\rightarrow$ initialize $\rightarrow$ run) is honored at the designated extension points. All DCTwin-side (src/\allowbreak{}...) citations below were re-verified against the repo. Template-side citations are taken as given from the source report (external dcwiz/\allowbreak{}dcbrain sample). Verdict vocabulary: followed = contract honored as-is; adapted = honored with justified divergences; partial = honored with a gap; missing = absent by design; extended = honored plus domain additions.
+
+\smallskip\noindent\textbf{(a) RecommendTemplate $\rightarrow$ WeeklyPlanTemplate [adapted]}\\[1pt]
+WeeklyPlanTemplate subclasses RecommendTemplate and imports it from dcwiz\_\allowbreak{}policy\_\allowbreak{}template, overriding initialize() to wire forecaster/\allowbreak{}oracle/\allowbreak{}beam-planner and fully replacing run() to call run\_\allowbreak{}weekly\_\allowbreak{}plan(). The base run() (which expects a reactive dcbrain policy and would call log\_\allowbreak{}recommendations()) is never reached -- a justified divergence for a deterministic batch planner, not a contract violation.
+
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}p{0.24\linewidth} p{0.30\linewidth} X@{}}
+\toprule
+\textbf{Claim} & \textbf{DCTwin ref (file:line)} & \textbf{Note} \\
+\midrule
+Subclasses RecommendTemplate; imports from dcwiz\_\allowbreak{}policy\_\allowbreak{}template & src/\allowbreak{}plan\_\allowbreak{}weekly.py:11,22 & import at :11, class WeeklyPlanTemplate(RecommendTemplate) at :22 \\
+initialize() overridden with concrete impl & src/\allowbreak{}plan\_\allowbreak{}weekly.py:30 & Base raises NotImplementedError; DCTwin sets forecaster, ParallelEnvOracle, BeamPlanner; self.policy stub at :63 \\
+run() replaced to call run\_\allowbreak{}weekly\_\allowbreak{}plan() & src/\allowbreak{}plan\_\allowbreak{}weekly.py:67-86 & Calls run\_\allowbreak{}weekly\_\allowbreak{}plan() at :73, write\_\allowbreak{}recommendation() at :83-84; base policy call bypassed, log\_\allowbreak{}recommendations() never reached \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+\smallskip\noindent\textbf{(b) TrajectoryPolicyTemplate $\rightarrow$ AITrajectoryReplay [adapted, partial]}\\[1pt]
+AITrajectoryReplay subclasses TrajectoryPolicyTemplate and overrides initialize() to set self.env and self.act (the fixed replay action expanded from the recommendation JSON), as the contract requires. The gap: \_\allowbreak{}\_\allowbreak{}call\_\allowbreak{}\_\allowbreak{} is invoked with policy="ai" but self.test\_\allowbreak{}collector is never set, so the template's run\_\allowbreak{}ai() raises ValueError("Test collector is not set") at runtime. Fix: set self.test\_\allowbreak{}collector in initialize(), or call with policy="baseline" (the fixed-action replay is baseline-shaped anyway). This is the one honest defect; everything else here is followed.
+
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}p{0.24\linewidth} p{0.30\linewidth} X@{}}
+\toprule
+\textbf{Claim} & \textbf{DCTwin ref (file:line)} & \textbf{Note} \\
+\midrule
+Subclasses TrajectoryPolicyTemplate & src/\allowbreak{}ai\_\allowbreak{}trajectory\_\allowbreak{}test.py:14 & import at :8; class AITrajectoryReplay(TrajectoryPolicyTemplate) \\
+initialize() sets self.env + self.act (fixed replay) & src/\allowbreak{}ai\_\allowbreak{}trajectory\_\allowbreak{}test.py:17-28 & self.env via dctwin.make\_\allowbreak{}env at :20; self.act = mapper\_\allowbreak{}from\_\allowbreak{}env(self.env).expand(setpoints) at :28 \\
+GAP: policy="ai" with no self.test\_\allowbreak{}collector $\rightarrow$ run\_\allowbreak{}ai() raises & src/\allowbreak{}ai\_\allowbreak{}trajectory\_\allowbreak{}test.py:36 & \_\allowbreak{}\_\allowbreak{}call\_\allowbreak{}\_\allowbreak{}(policy="ai", ...) dispatches to run\_\allowbreak{}ai(), which rejects an unset test\_\allowbreak{}collector -- crashes as written \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+\smallskip\noindent\textbf{(c) TrajectoryPolicyTemplate $\rightarrow$ BaselineTrajectory [followed]}\\[1pt]
+BaselineTrajectory honors the contract end-to-end: subclass, initialize() sets self.env and a conservative self.act (coolest SAT/\allowbreak{}CHW, maximum airflow), and the base run\_\allowbreak{}baseline() runs unchanged via policy="baseline". No gaps; the only difference from the template is a benign encoding choice (parametrized Setpoints + broadcast vs hand-built per-zone arrays), with identical physical semantics.
+
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}p{0.24\linewidth} p{0.30\linewidth} X@{}}
+\toprule
+\textbf{Claim} & \textbf{DCTwin ref (file:line)} & \textbf{Note} \\
+\midrule
+Subclasses TrajectoryPolicyTemplate & src/\allowbreak{}baseline\_\allowbreak{}policy\_\allowbreak{}test.py:12 & import at :6; class BaselineTrajectory(TrajectoryPolicyTemplate) \\
+initialize() sets conservative self.act (coolest SAT/\allowbreak{}CHW, max airflow) & src/\allowbreak{}baseline\_\allowbreak{}policy\_\allowbreak{}test.py:15-20 & Setpoints(sat\_\allowbreak{}c=s.sat.lb, flow\_\allowbreak{}kg\_\allowbreak{}s=s.flow.ub, chwst\_\allowbreak{}c=s.chwst.lb) from DEFAULT\_\allowbreak{}SEARCH\_\allowbreak{}SPACE (types.py:81-85: sat[20,26], flow[4.8,13.8], chwst[13,19]); expanded at :20 \\
+Base run\_\allowbreak{}baseline() via policy="baseline" & src/\allowbreak{}baseline\_\allowbreak{}policy\_\allowbreak{}test.py:27 & \_\allowbreak{}\_\allowbreak{}call\_\allowbreak{}\_\allowbreak{}(policy="baseline", ...) routes to unmodified base run\_\allowbreak{}baseline() \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+
+\section*{Shared layouts honored: configs, data, models}
+The configs/\allowbreak{}, data/\allowbreak{}, and models/\allowbreak{} trees mirror the dcwiz sample\_\allowbreak{}template layout. Shared JSON schemas and protobuf shapes are honored exactly; DCTwin adds domain-specific files for its dual loop and omits only the RL-only configs. Every src/\allowbreak{} fact below was verified against the repository.
+
+\smallskip\noindent\textbf{configs/\allowbreak{} — JSON schemas and prototxt shapes match}\\[1pt]
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}p{0.30\linewidth} X@{}}
+\toprule
+\textbf{Artifact} & \textbf{Evidence (verified)} \\
+\midrule
+configs/\allowbreak{}dt/\allowbreak{}device\_\allowbreak{}key\_\allowbreak{}map.json & Identical set of 13 top-level device keys (acus, chillers, ites, zones, cooling towers, ...); same schema, fewer device instances \\
+zones /\allowbreak{} ites sub-schemas & zones = \{air temperature, air relative humidity, ite power\}; ites = \{inlet dry-bulb temp, inlet RH, cpu/\allowbreak{}fan/\allowbreak{}ups power\} — identical \\
+device\_\allowbreak{}his\_\allowbreak{}map.json, room2ite\_\allowbreak{}map.json & Same structure; room2ite = \{room $\rightarrow$ \{ite $\rightarrow$ \{wattsPerUnit, numberOfUnits, totalWatts\}\}\} \\
+dt.prototxt, test.prototxt, train.prototxt & Same protobuf sections (eplus\_\allowbreak{}env\_\allowbreak{}config; logging\_\allowbreak{}config + policy\_\allowbreak{}config + test\_\allowbreak{}collector /\allowbreak{} off\_\allowbreak{}policy\_\allowbreak{}trainer) \\
+recommend.prototxt, train\_\allowbreak{}test.prototxt & Omitted by design (RL-only inference /\allowbreak{} combined train+test) \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+\smallskip\noindent\textbf{data/\allowbreak{} — formats kept, dual-loop files added}\\[1pt]
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}p{0.30\linewidth} X@{}}
+\toprule
+\textbf{Artifact} & \textbf{Evidence (verified)} \\
+\midrule
+weather/\allowbreak{}*.epw & Identical ASHRAE EPW header format (SGP\_\allowbreak{}Singapore.486980\_\allowbreak{}IWEC.epw) \\
+schedule/\allowbreak{}\{acus,branches,workloads\}/\allowbreak{} & JSON-array schedules honored (acus nested under fan\_\allowbreak{}on\_\allowbreak{}off/\allowbreak{}); + pumps/\allowbreak{} added for the CHW plant \\
+data\_\allowbreak{}sample.json $\rightarrow$ his\_\allowbreak{}data\_\allowbreak{}processed.csv & Static policy sample replaced by per-15-min telemetry (adapted role) \\
++ calibration.json, calibration\_\allowbreak{}history.json, realized\_\allowbreak{}history.csv & Dual-loop additions: bias/\allowbreak{}sigma, paired predicted/\allowbreak{}realized weeks, weekly KPI history \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+\smallskip\noindent\textbf{models/\allowbreak{} — schema-compliant, plus a forecaster}\\[1pt]
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}p{0.30\linewidth} X@{}}
+\toprule
+\textbf{Artifact} & \textbf{Evidence (verified)} \\
+\midrule
+building.json & Identical top-level keys: constructions, geometry, inputs, meta, models \\
+building.idf $\rightarrow$ idf/\allowbreak{}building.idf & Moved into an idf/\allowbreak{} subfolder (logical grouping); same IDF format \\
++ forecaster.pkl (655 B config) & Statistical forecaster config replaces policy.pth (2.9 MB neural weights) — model-prep slot \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+
+\section*{Why DCTwin diverges (by design)}
+One architectural fact explains every "missing" verdict: DCTwin is a search/\allowbreak{}planning optimizer, not a trained RL agent. The dcwiz template assumes a dcbrain SAC policy persisted as policy/\allowbreak{}policy.pth, fed per-step rewards and states through hooks.py, and trained by ai\_\allowbreak{}policy\_\allowbreak{}train.py. DCTwin instead beam-searches three global setpoints (SAT, airflow, CHWST), scoring every candidate with a full-week EnergyPlus oracle run. That swap removes the RL training pipeline and relocates its responsibilities into the planner/\allowbreak{} package and JSON config, verified present in src/\allowbreak{} (all targets below confirmed).
+
+\vspace{1pt}\begin{tabularx}{\linewidth}{@{}p{0.24\linewidth} p{0.30\linewidth} X@{}}
+\toprule
+\textbf{Template (RL) artifact} & \textbf{DCTwin replacement} & \textbf{Where it lives} \\
+\midrule
+policy/\allowbreak{}policy.pth (trained weights) & BeamPlanner (in-code algorithm) & planner/\allowbreak{}beam\_\allowbreak{}search.py:70 \\
+ai\_\allowbreak{}policy\_\allowbreak{}train.py (trainer.run()) & one-shot model/\allowbreak{}config prep & fit\_\allowbreak{}forecaster.py:42 $\rightarrow$ models/\allowbreak{}forecaster.pkl \\
+hooks.get\_\allowbreak{}reward\_\allowbreak{}fn() (per-step scalar) & weekly objective rollup & planner/\allowbreak{}objective.py:47 + planner/\allowbreak{}kpi.py \\
+hooks.get\_\allowbreak{}current\_\allowbreak{}state() & observation discovery + sampling & planner/\allowbreak{}monitor.py + planner/\allowbreak{}oracle\_\allowbreak{}worker.py \\
+hooks.log\_\allowbreak{}recommendations() & recommendation builder/\allowbreak{}serializer & planner/\allowbreak{}recommendation.py \\
+zone maps (zone\_\allowbreak{}acu\_\allowbreak{}dict /\allowbreak{} model\_\allowbreak{}map) & global$\rightarrow$actuator broadcast + plant model & planner/\allowbreak{}broadcast.py + planner/\allowbreak{}plant.py + configs/\allowbreak{}dt/\allowbreak{}room2ite\_\allowbreak{}map.json \\
+recommend.prototxt /\allowbreak{} train\_\allowbreak{}test.prototxt & Python BeamConfig dataclass & plan\_\allowbreak{}weekly.py:56-60 (def beam\_\allowbreak{}search.py:33) \\
+\bottomrule
+\end{tabularx}\vspace{2pt}
+
+\section*{One item to remediate}
+One honest defect. AITrajectoryReplay (src/\allowbreak{}ai\_\allowbreak{}trajectory\_\allowbreak{}test.py:14) overrides initialize() at :17-28 to set self.env and self.act, but never sets self.test\_\allowbreak{}collector, then is invoked with policy="ai" at :36. The template's run\_\allowbreak{}ai() requires a test collector and raises ValueError("Test collector is not set"), so the call crashes as written. Fix, two options: set self.test\_\allowbreak{}collector in initialize(), OR call with policy="baseline" (the fixed-action replay is baseline-shaped anyway). BaselineTrajectory (src/\allowbreak{}baseline\_\allowbreak{}policy\_\allowbreak{}test.py:12) is unaffected and fully followed.
+
+
+\section*{Conclusion}
+\begin{itemize}
+\item RecommendTemplate: followed via adaptation. WeeklyPlanTemplate (plan\_\allowbreak{}weekly.py:22) imports from dcwiz\_\allowbreak{}policy\_\allowbreak{}template (:11), overrides initialize() (:30) and run() (:67) at the designated extension points, and honors the \_\allowbreak{}\_\allowbreak{}init\_\allowbreak{}\_\allowbreak{}/\allowbreak{}\_\allowbreak{}\_\allowbreak{}call\_\allowbreak{}\_\allowbreak{} lifecycle.
+\item TrajectoryPolicyTemplate: followed for baseline, partial for AI replay. BaselineTrajectory honors the contract end-to-end via policy="baseline"; AITrajectoryReplay honors structure + initialize() but has the test\_\allowbreak{}collector gap above.
+\item configs/\allowbreak{}, data/\allowbreak{}, models/\allowbreak{}: honored with extensions. JSON device-map schemas, EPW weather, schedule-folder convention, and dt/\allowbreak{}test/\allowbreak{}train prototxt shapes all match; DCTwin adds calibration/\allowbreak{}realized-history, pumps/\allowbreak{}, and forecaster.pkl without breaking shared schemas.
+\item RL-training artifacts (ai\_\allowbreak{}policy\_\allowbreak{}train.py, single-file hooks.py, policy/\allowbreak{}policy.pth, recommend.prototxt, train\_\allowbreak{}test.prototxt): intentionally absent, replaced by fit\_\allowbreak{}forecaster.py, the planner/\allowbreak{} package, and BeamPlanner.
+\item Net: the template contracts (base-class subclassing, the initialize/\allowbreak{}run/\allowbreak{}\_\allowbreak{}\_\allowbreak{}call\_\allowbreak{}\_\allowbreak{} lifecycle, the config/\allowbreak{}data/\allowbreak{}model layouts) are honored. One gap to fix: the AITrajectoryReplay test\_\allowbreak{}collector omission; everything else is a justified architectural adaptation.
+\end{itemize}
+\end{document}

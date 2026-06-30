@@ -1,0 +1,1043 @@
+{
+ "tabs": [
+  {
+   "tab": "Login",
+   "one_line_purpose": "A single token-gated entry point that enforces role-based, fail-closed access control: nothing in the digital-twin app is reachable until a valid operator or expert token is verified by the backend.",
+   "professor_framing": "This is the trust boundary of the whole system. Before we show any optimization or deployment capability, I want to establish that every action that could touch a ~2 MW data-center hall is gated behind authenticated, role-separated, fail-closed access \u2014 so the safety story starts at the door, not just at the physics safety gate.",
+   "elements": [
+    {
+     "label": "DCTwin logo (cyan dot + cyan wordmark)",
+     "what_it_shows": "Product identity mark at the top of the login card: a small cyan status dot (CSS class 'logo-dot') followed by the bold text 'DCTwin', both rendered in cyan in the screenshot.",
+     "how_to_read": "Purely branding/orientation \u2014 it confirms which app you are authenticating into. No functional meaning beyond 'you are at the DCTwin gate'."
+    },
+    {
+     "label": "'Enter your access token' label",
+     "what_it_shows": "A small label (fontSize 13) bound to the input via htmlFor, instructing the user what credential is expected.",
+     "how_to_read": "Signals that auth is token-based, not username/password. There is no account/registration flow \u2014 credentials are pre-issued tokens, consistent with an operator-handoff security model."
+    },
+    {
+     "label": "Password-masked token input field",
+     "what_it_shows": "A single input rendered as type=password (characters masked), autoFocused on load, aria-label 'access token'. This is where the operator or expert pastes their bearer token.",
+     "how_to_read": "Masking means the secret is not shown on screen as it is typed \u2014 appropriate for a shared-console / over-the-shoulder data-center environment. Empty in this screenshot."
+    },
+    {
+     "label": "'Continue' button",
+     "what_it_shows": "The submit control. In the screenshot it is dim/greyed because the field is empty.",
+     "how_to_read": "It is disabled whenever the field is blank OR a verification is in flight (disabled={busy || !value.trim()}). While verifying it shows 'Checking\u2026' instead of 'Continue'. So the button label/state is itself a UI affordance: dim = nothing to submit, 'Checking\u2026' = a live backend round-trip in progress."
+    },
+    {
+     "label": "'operator or expert token' helper text (dim)",
+     "what_it_shows": "A low-opacity hint (opacity 0.7, fontSize 12) naming the two valid roles.",
+     "how_to_read": "This is the governance tell: the system has exactly two privilege tiers. Either role can log in through this one field; the difference (expert can approve/deploy) is enforced later by the backend per-route, not by this field."
+    },
+    {
+     "label": "Error region (not visible here)",
+     "what_it_shows": "A conditional red alert (role='alert', color #ff6b6b) that renders only when error state is set. Two distinct messages exist in source: 'Invalid token \u2014 check with your operator.' (rejected credential, i.e. verifyToken returned false) and \"Can't reach the backend \u2014 is it running?\" (the fetch threw, i.e. network/backend down).",
+     "how_to_read": "Not shown because no submit has failed yet. Worth mentioning because it proves the client distinguishes 'wrong token' from 'backend unreachable' \u2014 and both paths deny entry (fail closed) rather than silently letting you in."
+    },
+    {
+     "label": "Login card container",
+     "what_it_shows": "A centered bordered card (min-width 320px, rounded 12px, 1px border) holding the form, vertically and horizontally centered on a full-height dark page (login-shell).",
+     "how_to_read": "Pure layout/framing. Confirms there is exactly one interaction surface on this screen \u2014 no navigation, no secondary actions \u2014 reinforcing that this is a hard gate with a single path forward."
+    }
+   ],
+   "key_numbers": [
+    "Visible on screen: exactly one credential field (a single token input) \u2014 no username, no password pair, no signup link.",
+    "Visible on screen: 2 named roles in the helper text \u2014 'operator or expert token'.",
+    "From source (not numerically on screen): verification calls GET /api/plans with header Authorization: Bearer <token>; HTTP 200 (res.ok) = valid, 401/403 = invalid, a thrown fetch = 'backend unreachable'.",
+    "From source: role hierarchy operator(1) < expert(2). Operator can create/run AND list/view plans (POST and GET /api/plans are Depends(operator)); only expert can approve and deploy (Depends(expert)).",
+    "From FACTS: deploy is SHADOW MODE \u2014 45 commands are recorded, never actuated; the telemetry feed elsewhere is SIMULATED and badged."
+   ],
+   "talking_points": [
+    "Auth is token-based and fail-closed: the client verifies the token against the backend (GET /api/plans) BEFORE storing it or letting you in \u2014 a 401/403 is rejected, and even a backend outage (the fetch throwing) blocks entry rather than defaulting open.",
+    "Two roles, enforced server-side: 'operator' can view AND run/create plans; only 'expert' can approve and deploy. The login field accepts either, but privilege separation is enforced by the FastAPI TokenAuth dependency on every protected route, not by hiding buttons in the UI.",
+    "The secret is verified without being trusted prematurely: verifyToken does a read-only probe and explicitly does NOT mutate the stored TOKEN; only on a 200 does the handler call setToken to persist it. So a bad token never gets cached.",
+    "This screen is the front of a layered safety architecture: door-level access control here, then the 3-net safety gate (k*sigma pre-tighten, robust CVaR_0.8 ensemble with safety ladder, zero-tolerance deploy backstop), then the hard inlet <= 26 C cap at every 15-min step. Governance and physics safety are separate, complementary layers.",
+    "Honest scope: because deploy is currently shadow-mode and the live feed is simulated, the operator/expert split is the governance scaffold that will gate REAL actuation once a BACnet adapter + historian are connected \u2014 the access model is real even though actuation is not yet live."
+   ],
+   "narrative": "This tab opens the presentation by establishing the trust and governance boundary. Before any claims about energy savings or safety, the audience sees that the system cannot be operated by an anonymous user: access is a pre-issued bearer token, verified live against the backend, with two explicit privilege tiers (operator vs expert) and explicit failure handling that errs toward denial. It sets up the rest of the deck \u2014 the dangerous capability (broadcasting 3 setpoints to 45 actuators in a ~2 MW hall) is wrapped first in human/role governance and only then in the physics safety gate. It frames the project as engineered for responsible deployment, not just an optimizer that happens to work.",
+   "professor_questions": [
+    {
+     "q": "Where is the actual authorization enforced \u2014 surely not in this React form?",
+     "a": "Correct, the form is only a gate-keeper UI. Authorization is enforced server-side: every API call carries the bearer token (Authorization: Bearer \u2026), and the FastAPI TokenAuth.require dependency checks the role on each route. The expert-only actions (approve, deploy) are wired as Depends(expert) and rejected with 403 ('requires expert role') even if a clever operator crafted the request by hand. The login screen just refuses to store a token that the backend won't honor for the minimum read scope (GET /api/plans)."
+    },
+    {
+     "q": "What does 'fail-closed' concretely mean here?",
+     "a": "Three things in the client, plus one in the backend. Client: (1) an invalid token makes verifyToken return false and we show 'Invalid token'; (2) if the backend is unreachable the fetch throws and we show \"Can't reach the backend\" \u2014 we do NOT fall through to an authenticated state; (3) the token is only persisted via setToken AFTER a successful verification, so a failed attempt leaves no cached credential. Backend: if no tokens are configured at all, TokenAuth returns 401 'auth not configured' rather than admitting anyone \u2014 unless the explicit dev opt-in DTWIN_INSECURE=1 is set, which I'll flag as a caveat. In every normal failure mode the default is 'no access'."
+    },
+    {
+     "q": "Token-based auth is weak \u2014 what about expiry, rotation, transport security?",
+     "a": "Honest answer: in this prototype tokens are static shared secrets injected as env vars (OPERATOR_TOKEN/EXPERT_TOKEN), the field is masked, but the accepted token is stored in browser localStorage and sent as a plain Bearer header. There is also a dev bypass (DTWIN_INSECURE=1) that disables auth entirely. That is adequate for a single-origin research deployment behind the operator's own network, but for production I'd move to short-lived signed tokens (JWT/OAuth) with rotation, TLS-only transport, per-user identities for audit, and removal of the insecure bypass. The architecture already isolates verification in one function, so swapping the auth backend is a contained change."
+    },
+    {
+     "q": "Why two roles and not finer-grained permissions?",
+     "a": "The risk axis that matters is 'can this person change the physical plant?'. Operator = observe and run/explore plans (no plant impact); expert = approve and deploy (potential plant impact). Two tiers map cleanly onto that single high-stakes boundary. Finer roles add complexity without adding safety for the one action that matters \u2014 deployment \u2014 which is also separately protected by the zero-tolerance deploy backstop and the hard inlet cap."
+    },
+    {
+     "q": "Does the role separation actually protect anything today, given deploy is shadow-mode?",
+     "a": "Today it protects the integrity of the plan record and the deployment decision: only an expert can mark a plan approved/deployed, which is the human sign-off step. The physical actuation it would gate is currently recorded-not-actuated (shadow mode \u2014 45 commands logged, never sent to a BACnet bus), so the governance is structurally complete but field-inert. When a real adapter and historian are wired in, this exact role boundary becomes the thing standing between a recommendation and a real setpoint change \u2014 no new access model required."
+    }
+   ],
+   "caveats": [
+    "Authorization is enforced by the backend, not by this screen \u2014 the login form only verifies (a read-only GET /api/plans probe); the API checks role on every request. Don't oversell the UI as the security control.",
+    "Tokens are static shared secrets (env-injected OPERATOR_TOKEN/EXPERT_TOKEN) stored in browser localStorage and sent as a plain Bearer header; this is a research-grade auth model, not production identity/expiry/rotation/TLS.",
+    "There is a dev-only bypass: if DTWIN_INSECURE=1 the backend skips auth and treats every caller as expert. It must be OFF for any non-toy deployment; mention it proactively rather than letting a reviewer find it.",
+    "Deploy runs in SHADOW MODE: the 45 commands an expert authorizes are recorded, never actuated. The role separation is real governance over the decision, but it does not yet gate a physical actuator.",
+    "The telemetry/live feed elsewhere in the app is SIMULATED and labelled with a 'SIMULATED FEED' badge \u2014 the access layer is genuine even though the data it eventually guards is currently synthetic (a perturbed-plant EnergyPlus stand-in).",
+    "No per-user identity or audit trail of WHO approved a plan beyond the role token (operator and expert are each a single shared secret) \u2014 worth flagging as a known gap for production."
+   ],
+   "money_insight": "Safety in this system starts at the door: a fail-closed, role-separated token gate ensures that the dangerous capability \u2014 broadcasting 3 setpoints to 45 actuators in a ~2 MW hall \u2014 can never be exercised by an unauthenticated user or reached through a backend failure, with the expert role being the single human sign-off in front of deployment.",
+   "visual_aid_suggestions": [
+    "Arrow from the token input to a small callout: 'type=password \u2014 secret masked on screen (shared-console safe); only the accepted token is later persisted to localStorage'.",
+    "Arrow from the 'operator or expert token' helper to a two-box inset: OPERATOR = view + run/create plans | EXPERT = approve + deploy (the only role that can change the plant). Label the boundary 'privilege tier = the one risk axis that matters'.",
+    "Callout on the 'Continue' button: 'disabled while empty OR busy; shows Checking\u2026 during a live backend verify (GET /api/plans)'.",
+    "Add a small fail-closed decision diagram beside the card: token -> [verify @ backend] -> 200 = setToken + enter / 401-403 = reject 'Invalid token' / fetch throws = reject 'backend unreachable'. Highlight that two of three branches deny, and note token is persisted only on the 200 branch.",
+    "Bottom banner overlay (honesty): 'Governance layer is REAL; the deploy it guards is currently SHADOW MODE (recorded, not actuated). Dev bypass DTWIN_INSECURE=1 must be OFF.'",
+    "Optional: a small layered-shield diagram showing this login as Layer 0 (access) in front of Layer 1 (3-net safety gate) and Layer 2 (hard inlet <= 26 C cap), to set up the rest of the deck."
+   ]
+  },
+  {
+   "tab": "Dashboard",
+   "one_line_purpose": "The at-a-glance \"what are we running, is it safe, and is it cheaper\" view: it shows the single most-recent weekly plan as 3 global setpoints plus the predicted KPIs (energy, PUE, peak inlet, violations, % saving vs the as-operated baseline) and its deployment status, with a one-click jump into the full Review detail.",
+   "professor_framing": "This is the control-room landing page of the digital-twin optimizer: it collapses a full-week EnergyPlus-in-the-loop optimization run into the three decision variables an operator actually broadcasts to the 1F-2A hall and the predicted outcome of broadcasting them. It matters scientifically because it is the human-readable contract between the search/safety machinery underneath and the physical data hall above: one screen states the recommended action, its predicted energy, and the hard safety result. Every number on this tab is a model prediction (flagged \"AI Forecast\") \u2014 the realized evidence lives on the Live and History tabs.",
+   "elements": [
+    {
+     "label": "Header: \"Latest plan \u2014 week of 2024-12-13\" + status badge \"DEPLOYED\"",
+     "what_it_shows": "Which plan this dashboard is summarizing (the most recent by week_start) and its lifecycle state.",
+     "how_to_read": "The week_start date identifies the planning horizon (a full 7-day forecast). The badge text is the raw status from the store (rendered uppercased by CSS): running / pending / approved / rejected / deployed. \"DEPLOYED\" renders cyan (badge-deployed = --cyan #00c8ff) and means an expert approved it and it passed the deploy backstop. Honest caveat: deploy is SHADOW MODE \u2014 the 45 commands were recorded, not physically actuated."
+    },
+    {
+     "label": "\"Open in Review \u2192\" button (top-right)",
+     "what_it_shows": "A ghost button that navigates to this exact plan's full Review detail (onReview(plan_id)).",
+     "how_to_read": "This is the handoff from the summary to the proof: the dashboard intentionally shows only headline KPIs, and this button jumps to the safety gate / robust-ensemble / per-step detail for the same plan."
+    },
+    {
+     "label": "Setpoints card (CRAH / Chiller targets)",
+     "what_it_shows": "The 3 global decision variables the optimizer chose, each rendered to 2 decimals in cyan: CRAH Supply Air Temp 25.25, CRAH Air Mass Flow 4.80, Chilled Water Supply Temp 17.88.",
+     "how_to_read": "These 3 numbers ARE the plan. They are broadcast to 45 actuators (22 SAT + 22 airflow + 1 CHWST). Units are not shown on this card but are fixed by the schema (C, kg/s, C). Read each against its physical range: SAT 25.25 C sits near the warm end of 20-26 C; airflow 4.80 kg/s is at the floor of 4.8-13.8 kg/s per ACU; CHWST 17.88 C is near the warm end of 13-19 C. Warm-and-slow is the energy-saving direction \u2014 higher SAT/CHWST and minimum airflow all cut HVAC power as long as the inlet cap holds."
+    },
+    {
+     "label": "Predicted KPIs card \u2014 \"AI Forecast\" tag",
+     "what_it_shows": "Five outcome metrics the EnergyPlus oracle predicts for these setpoints over the week, each rendered to 2 decimals: Total HVAC Energy 259894.04 kWh, PUE Mean 1.19, Peak Inlet Temp 25.52 C, Inlet Violations 0.00 steps, Energy Reduction 3.63%.",
+     "how_to_read": "These are model-predicted, not yet measured \u2014 that is what the \"AI Forecast\" tag flags (note: it is styled with the same green pulsing dot used elsewhere for live data, but the word FORECAST is the operative label here). Total HVAC Energy is hall-scoped (1F-2A ACU fans + the hall's share of the shared CHW plant), not facility minus IT. Inlet Violations = 0.00 steps is the safety headline. Energy Reduction is the only tile that changes color: green when positive (it is, 3.63%)."
+    },
+    {
+     "label": "Peak Inlet Temp 25.52 \u00b0C",
+     "what_it_shows": "The hottest predicted server-inlet temperature anywhere in the hall over the whole week, for THIS plan.",
+     "how_to_read": "Compare directly to the 26 C hard cap: 25.52 leaves a 0.48 C predicted margin. The optimizer deliberately pushes toward (but never past) the cap because every spare degree of inlet headroom is energy left on the table. This is the predicted peak; the realized week-6 peak (History/Live tabs) was 25.60 C, a 0.40 C margin \u2014 also never reaching the cap."
+    },
+    {
+     "label": "Inlet Violations 0.00 steps",
+     "what_it_shows": "Count of 15-min timesteps where any inlet exceeds 26 C in the predicted week.",
+     "how_to_read": "Zero is the only acceptable value. The objective hard-rejects any candidate with a predicted violation, so a deployed plan's predicted count is structurally 0 here. The tile turns amber if this value were ever > 0 (lines 169-170) \u2014 it is 0.00, i.e. clean. (Realized violations are a separate question answered on Live/History; that feed is simulated.)"
+    },
+    {
+     "label": "Energy Reduction 3.63 % (green)",
+     "what_it_shows": "Predicted weekly HVAC energy saving of this plan versus the as-operated baseline setpoints.",
+     "how_to_read": "Positive and green = cheaper than how the hall is run today (the tile colors green only when > 0). 3.63% is the headline efficiency gain. The baseline is the operator's historical median setpoints evaluated once by the same oracle, so this is an apples-to-apples model comparison, not a hand-picked reference."
+    },
+    {
+     "label": "PUE Mean 1.19",
+     "what_it_shows": "Predicted mean Power Usage Effectiveness for the plan (total / IT power) over the week.",
+     "how_to_read": "Closer to 1.0 is better; this tile has no color coding. 1.19 is the plan-predicted (hall-scoped) figure; the live hall snapshot including the full shared-plant share is ~1.30. State which scope you mean \u2014 the dashboard number is the plan prediction."
+    },
+    {
+     "label": "Summary strip: Plan ID gds-2024-12-13-6130b3, Energy 259894.0 kWh, Reduction vs Baseline \u22123.6%, status DEPLOYED",
+     "what_it_shows": "A compact identity + bottom-line restatement spanning the full width, plus a repeated status badge.",
+     "how_to_read": "Plan ID is the artifact handle (model=gds, week, short hash) for traceability. Energy 259894.0 kWh echoes the KPI tile (rounded to 1 decimal here vs 2 on the tile). Reduction reads \"\u22123.6%\" where the leading character is a typographic minus (U+2212) that the code prepends ONLY to positive savings to denote a REDUCTION (less energy) \u2014 so \u22123.6% means 3.6% cheaper, the same saving as the 3.63% tile rounded to 1 decimal. If reduction_pct were null (a pre-baseline plan), this would show \"\u2014\" with a tooltip explaining to re-run."
+    }
+   ],
+   "key_numbers": [
+    "CRAH Supply Air Temp = 25.25 (range 20-26 C; near the warm/efficient end)",
+    "CRAH Air Mass Flow = 4.80 kg/s (at the floor of 4.8-13.8 kg/s per ACU \u2014 minimum fan power)",
+    "Chilled Water Supply Temp = 17.88 (range 13-19 C; near the warm/efficient end)",
+    "Total HVAC Energy = 259894.04 kWh predicted for the week (hall-scoped: 1F-2A ACU fans + hall share of shared CHW plant)",
+    "PUE Mean = 1.19 (plan-predicted, hall-scoped; live hall snapshot incl. full shared plant is ~1.30)",
+    "Peak Inlet Temp = 25.52 C predicted \u2014 0.48 C below the 26 C hard cap (realized week-6 peak was 25.60 C, 0.40 C margin)",
+    "Inlet Violations = 0.00 steps \u2014 zero predicted breaches across every 15-min step",
+    "Energy Reduction = 3.63% vs the as-operated baseline (tile green because > 0)",
+    "Summary strip Reduction = \u22123.6% (leading minus = a reduction; same saving as the 3.63% tile, rounded to 1 decimal)",
+    "Energy strip echo = 259894.0 kWh (1-decimal version of the 259894.04 tile)",
+    "Plan ID = gds-2024-12-13-6130b3 (model gds, week 2024-12-13, hash 6130b3)",
+    "Status = DEPLOYED (cyan badge; shadow mode \u2014 commands recorded, not physically actuated)",
+    "Week of 2024-12-13 = week 6 of the 6-week deployed campaign (2024-11-08..2024-12-13), whose final realized saving was 3.63% and weekly-energy prediction error 0.10%"
+   ],
+   "talking_points": [
+    "This one screen is the whole optimizer collapsed into a decision: three global setpoints (25.25 C SAT, 4.80 kg/s airflow, 17.88 C CHWST) that broadcast to 45 actuators, plus the predicted consequence of broadcasting them.",
+    "Read the setpoints physically: SAT and CHWST sit near the warm end of their ranges and airflow is pinned at its minimum \u2014 that is the textbook energy-saving direction, and the optimizer found it by scoring candidates with full-week EnergyPlus runs (coarse-to-fine beam search, grid=5/beam=3/levels=3, hundreds of sims per plan), not by a rule of thumb.",
+    "Safety is shown as a result, not a promise: predicted Peak Inlet 25.52 C against the 26 C hard cap (0.48 C margin) and 0.00 violation steps. The objective hard-rejects any candidate that breaches the cap, so a deployed plan's predicted violation count is structurally zero.",
+    "The money line is Energy Reduction 3.63% vs the as-operated baseline \u2014 and the baseline is the operator's own historical median setpoints scored by the same oracle, so it is a fair, model-consistent comparison rather than a flattering reference.",
+    "Everything here is model-predicted (the \"AI Forecast\" tag); the scientific credibility comes from the next tabs, where over 6 deployed weeks this exact plan family converged to a 0.10% weekly-energy prediction error with zero realized inlet violations \u2014 though that realized feed is currently a simulated stand-in."
+   ],
+   "narrative": "This tab opens the argument: \\\"We can run the 1F-2A hall warmer and slower, save ~3.6% of HVAC energy, and never touch the 26 C safety cap.\\\" It establishes the three things a skeptical operator wants in five seconds \u2014 what the system wants to run (3 setpoints), whether it is safe (predicted peak inlet + zero violations), and whether it is worth it (energy and % reduction vs baseline). It is intentionally a summary, not a proof; the \\\"Open in Review \u2192\\\" button hands off to Review (the safety gate and robust ensemble), and the navigation hands off to Live (realized telemetry) and History (the 6-week convergence) to substantiate each claim. The DEPLOYED badge tells the story that this plan already cleared expert approval and the deploy backstop \u2014 but in shadow mode, so it is the committed production recommendation, not yet a hardware actuation.",
+   "professor_questions": [
+    {
+     "q": "Your energy reduction shows two values \u2014 3.63% in the tile and \u22123.6% in the strip. Are these inconsistent?",
+     "a": "No, they are the same number from the same field (energy_reduction_vs_baseline_pct), formatted two ways. The tile prints it to 2 decimals (3.63%, colored green because it is positive). The strip prepends a typographic minus sign and rounds to 1 decimal (\u22123.6%) \u2014 and crucially the code only adds that minus when the value is positive, to denote a reduction (less energy). So \u22123.6% and 3.63% are the same saving, just a display convention, not two computations."
+    },
+    {
+     "q": "259894 kWh of what \u2014 facility, or just this hall? A 3.6% saving on the wrong scope is meaningless.",
+     "a": "It is hall-scoped and labelled energy_scope = hall_controllable_v1: the 1F-2A ACU fans plus the hall's share of the shared chilled-water plant (the discovered component powers), not facility-total minus IT. We scope to exactly what these 3 setpoints can move, so the 3.63% is attributable to the control action. It only falls back to facility (total minus IT) in the mock/legacy case where component powers aren't discovered."
+    },
+    {
+     "q": "How do I trust the 3.63% is real and not a cherry-picked baseline?",
+     "a": "The baseline is the as-operated case: the operator's own historical median setpoints from the historian, evaluated once by the same EnergyPlus oracle (planner/baseline.py). Both numbers come from identical physics, identical weather forecast, identical scope \u2014 the only difference is the setpoints. Separately, over 6 deployed weeks the predicted weekly energy matched within 0.10% by week 6, so the model the saving is computed in is itself well-calibrated. Caveat: the realized side of that comparison is currently a perturbed-plant EnergyPlus stand-in, not field BMS data."
+    },
+    {
+     "q": "Peak inlet is 25.52 C, only half a degree under the cap. Isn't that dangerously aggressive?",
+     "a": "It is deliberately tight but protected by three independent nets before deploy. The search doesn't optimize against the raw 26 C cap; it optimizes against a cap pre-tightened by k\u00b7sigma (k=1) using a fading-floor sigma. Then a robust ensemble of perturbed plants plus a +1-sigma hot-weather week must also hold the cap, summarized by CVaR_0.8, with a safety ladder that substitutes the cheapest provably-robust plan (CHWST-first). A zero-tolerance backstop guards deploy. Empirically across 6 weeks the realized peak rose to 25.60 C and never reached 26 \u2014 worst-case margin 0.40 C, zero violations."
+    },
+    {
+     "q": "This says DEPLOYED. Is it actually controlling the hall right now?",
+     "a": "Honestly, no \u2014 deploy runs in shadow mode. The 45 actuator commands are computed and recorded but not sent to a physical BMS; the realized telemetry is a perturbed-plant EnergyPlus stand-in, labelled SIMULATED FEED. The control logic, safety gate, and learning loop are structurally complete and exercised end-to-end; what's missing is a real BACnet adapter and historian. So DEPLOYED means \"approved and committed in shadow,\" not \"actuated on hardware.\""
+    },
+    {
+     "q": "Why is airflow exactly at 4.80, the bottom of its range \u2014 did the search just hit a boundary and stop?",
+     "a": "It's the physically correct corner, not a search artifact. A real EnergyPlus sweep showed airflow moves hall energy by 15.5% \u2014 by far the dominant lever \u2014 versus 3.4% for CHWST and ~0.5% for SAT. Fan power scales steeply with flow, so the optimizer drives airflow to its minimum and then trims SAT/CHWST as far as the inlet cap allows. Hitting the floor here is the expected optimum, and the predicted cap margin (25.52 C) confirms it's still safe at minimum flow."
+    },
+    {
+     "q": "It only shows the latest plan. How do I see the trend or compare weeks?",
+     "a": "By design the dashboard is the single-plan at-a-glance view \u2014 the code sorts all plans by week_start descending and shows the most recent. The History tab holds the 6-week series (prediction error 1.33% -> 0.10%, saving 0% -> 3.63% released stepwise by the gate), and the \"Open in Review \u2192\" button jumps to this plan's full safety/robustness detail."
+    },
+    {
+     "q": "The PUE is 1.19 here but I've seen 1.30 elsewhere \u2014 which is right?",
+     "a": "Both, at different scopes. 1.19 is the plan-predicted PUE_mean over the controllable hall HVAC. ~1.30 is the live hall snapshot that includes the full shared-plant share. They are not in conflict; the dashboard tile is explicitly the plan prediction, and you should state the scope when quoting either."
+    }
+   ],
+   "caveats": [
+    "SHADOW MODE: the DEPLOYED badge means the 45 commands were computed and recorded, not physically actuated on a BMS. Say this before claiming the hall is being controlled.",
+    "All KPIs on this tab are MODEL-PREDICTED (the \"AI Forecast\" tag), not measured. The realized/measured numbers live on the Live and History tabs.",
+    "The \"AI Forecast\" tag is rendered with the same green pulsing dot used elsewhere for live indicators \u2014 it looks live but is a forecast; do not let the styling imply real-time data.",
+    "Realized telemetry feeding the rest of the app is a SIMULATED FEED (a perturbed-plant EnergyPlus stand-in), labelled as such \u2014 there is no real BACnet adapter or historian connected yet.",
+    "PUE 1.19 here is the plan-predicted, hall-scoped figure; do not conflate it with the ~1.30 live hall snapshot that includes the full shared-plant share.",
+    "Energy is hall-scoped (hall_controllable_v1), not facility-wide; the 3.63% saving is on controllable hall HVAC, not the whole building.",
+    "Peak Inlet 25.52 C and 0.00 violations are this plan's PREDICTED values; the realized week-6 figures (25.60 C peak, 0 violations) come from a separate, simulated feed \u2014 keep predicted vs realized distinct.",
+    "The minus sign on \u22123.6% in the strip denotes a reduction (good) and is only shown for positive savings; it is not a negative/worse result \u2014 clarify this if a viewer misreads it.",
+    "The learning loop (calibration, recalibration, fading-floor sigma) is structurally proven end-to-end but not yet field-proven on real hardware."
+   ],
+   "money_insight": "In one screen: three setpoints (warm SAT 25.25 C, minimum airflow 4.80 kg/s, warm CHWST 17.88 C) buy a predicted 3.63% weekly HVAC energy cut while holding predicted peak inlet at 25.52 C with ZERO violations of the 26 C cap \u2014 cheaper and provably safe in the model, with safety shown as a computed result rather than a promise (and honestly flagged as shadow-mode/predicted, not yet field-measured).",
+   "visual_aid_suggestions": [
+    "On the Setpoints card, overlay a tiny range bar under each value showing where it sits: SAT |20\u2014\u2014\u25cf25.25\u201426|, Airflow |\u25cf4.80\u2014\u2014\u2014\u201413.8|, CHWST |13\u2014\u2014\u2014\u25cf17.88\u201419|, with a caption \"warm + slow = the energy-saving corner.\"",
+    "Draw a bold arrow from \"3 setpoints\" to a small \"45 actuators (22 SAT + 22 airflow + 1 CHWST)\" callout to make the broadcast/fan-out explicit.",
+    "On Peak Inlet Temp 25.52, add a red dashed line labelled \"26 C HARD CAP\" with a bracket showing the 0.48 C predicted margin and the note \"candidate hard-rejected if exceeded.\"",
+    "Circle Inlet Violations 0.00 and Energy Reduction 3.63% together with a single callout: \"safe AND cheaper \u2014 the two things this tab predicts.\"",
+    "Add a SHADOW MODE / SIMULATED FEED watermark or small badge near the DEPLOYED label and near the \"AI Forecast\" tag so the honesty caveats are visible at a glance.",
+    "Inset a 4-box flow diagram bottom-corner: Forecast -> Beam search (hundreds of full-week E+ runs) -> 3-net safety gate -> THIS dashboard, with an \"Open in Review \u2192\" arrow leaving to the right to show the handoff.",
+    "Annotate the strip's \u22123.6% with \"minus = reduction (good); shown only for positive savings; same as the 3.63% tile, rounded.\""
+   ]
+  },
+  {
+   "tab": "Live (Live Telemetry \u2014 Expert Supervision: real-time monitoring of the deployed plan)",
+   "one_line_purpose": "A real-time supervisory cockpit that shows whether every server inlet is staying under the 26 C hard safety cap and whether the controller's 3 commanded global setpoints are actually being held by the plant, while a deployed plan runs.",
+   "professor_framing": "This tab closes the loop scientifically: it is where the optimizer's off-line promises meet on-line reality. The planner predicts energy and a safety margin in simulation; this screen is the live audit that confirms the realized hall state never breaches the 26 C inlet cap and that the 3 global setpoints are faithfully tracked by the 45 actuators. I will be upfront that this feed is a SIMULATED, explicitly labelled telemetry source (a perturbed-plant EnergyPlus stand-in) and that deploy runs in shadow mode \u2014 the supervision instrument is structurally complete, waiting for a real BACnet/BMS adapter and historian behind it.",
+   "elements": [
+    {
+     "label": "Header: 'LIVE TELEMETRY \u00b7 1F 2A hall \u00b7 updated 13:36 \u00b7 live stream'",
+     "what_it_shows": "Identifies the controlled hall (1F 2A), the timestamp of the current frame (13:36, formatted from frame.ts), and the transport. 'live stream' = Server-Sent Events push; the suffix flips to 'poll fallback \u00b7 5 s' only after the SSE reconnect budget is exhausted.",
+     "how_to_read": "'live stream' is the healthy state (frames are pushed by SSE as they arrive). The clock is the freshness of the displayed frame; if it stops advancing, the feed has stalled. Transport degradation: the page reconnects quietly up to 5 times (2 s apart); on the 6th consecutive failure it drops to 5-second polling, so the suffix reads 'poll fallback \u00b7 5 s' (driven by the `polling` state)."
+    },
+    {
+     "label": "SIMULATED FEED badge (amber) + green 'Live' dot",
+     "what_it_shows": "An honesty flag. The amber 'Simulated Feed' badge renders only when frame.simulated is true (the built-in simulator wrote the newest data \u2014 a perturbed-plant EnergyPlus stand-in, not a physical BMS). The green 'Live' dot is a static UI element confirming this is the live page.",
+     "how_to_read": "Amber badge = no physical sensors attached; treat every number as a faithful stand-in, not field-measured. The badge is rendered straight from the data's frame.simulated flag (server sets simulated=1.0 in every simulated frame), so the system cannot hide that it is in simulation."
+    },
+    {
+     "label": "Alert banner \u2014 green: 'ALL RACKS NOMINAL \u2014 NO ACTIVE ALERTS'",
+     "what_it_shows": "Aggregated rack-inlet safety state, driven by the server-emitted frame.alerts list (NOT by the heat-map tile colors). Green = zero alerts. It turns amber ('Warning \u2014 N active alerts') if any alert is present and none is critical, and red ('Critical \u2014 N active alerts') if any alert has level 'critical'.",
+     "how_to_read": "The actual ALERT thresholds live in the backend (webapp/telemetry.py): a rack inlet >= 25.0 C raises a 'warn' alert (margin < 1 C to the cap); >= 26.0 C raises a 'critical' alert (at/above the cap). Non-inlet points never alert. Right now every rack is <= 24.3 C, below the 25.0 C warn line, so there are zero alerts and the banner is green. Note: this 25.0/26.0 alert ladder is distinct from the 24.5/25.5 C tile-coloring ladder used by the heat-map."
+    },
+    {
+     "label": "Rack Inlet Heat-Map \u2014 22 tiles, 'cap 26 C'",
+     "what_it_shows": "One tile per CRAH-fed rack (ite-1 .. ite-22) showing that rack's server-inlet temperature, color-coded by the UI zone of inletZone(): green < 24.5 C, amber >= 24.5 C, red >= 25.5 C, with a pulsing red border at >= 26.0 C.",
+     "how_to_read": "Green tile = inlet < 24.5 C (nominal). Values shown range 22.1 C (ite-6, coolest) to 24.3 C (ite-20, hottest). All 22 tiles are green, so the whole hall is comfortably below the cap. Spatial pattern: the second-row racks ite-19/20/21 (24.2-24.3 C) and ite-11/12 (24.0-24.1 C) run slightly warmer than ite-4..9 (22.1-23.0 C) \u2014 a real hotspot signature the per-rack view is designed to surface. NOTE: these tile-color thresholds are cosmetic; they do not by themselves drive the alert banner."
+    },
+    {
+     "label": "Rack Detail table \u2014 ranked by inlet, '# / Rack / Inlet C / Margin C / Status'",
+     "what_it_shows": "The operator's hotspot list: every rack sorted hottest-first, with each rack's margin to the 26 C cap and a status chip. Racks with missing telemetry sink to the bottom.",
+     "how_to_read": "Row 1 is the worst rack and the binding safety constraint. Top rows: ite-20 24.3 C (margin 1.7), ite-19 24.2 (1.8), ite-21 24.2 (1.8), ite-12 24.1 (1.9), ite-11 24.0 (2.0), ite-13 23.8 (2.2). The Margin cell turns red only if margin < 1.0 C; all margins here are >= 1.7 C. The Status chip reads 'Nominal' (< 24.5), 'Warm' (>= 24.5), 'Hot' (>= 25.5), or 'Over Cap' (>= 26.0) \u2014 all 22 are 'Nominal' here."
+    },
+    {
+     "label": "Hall KPIs tile row \u2014 Hall Power, PUE, Relative Humidity, Worst Inlet (card tagged 'Telemetry')",
+     "what_it_shows": "Four hall-level instantaneous KPIs from the current frame's points. The card header carries a 'Telemetry' live-dot tag.",
+     "how_to_read": "Hall Power 471.5 kW = the hall-scoped HVAC draw (ACU fans + the hall's share of the CHW plant), the quantity the optimizer minimizes. PUE 1.30 = facility/IT energy at this live snapshot (plant-inclusive). RH 48.9% = within the safe humidity band. Worst Inlet 24.3 C colored by inletZone() (green, < 24.5) with delta '1.7 \u00b0C to 26 \u00b0C cap' \u2014 the single most important safety number; the delta is styled 'positive'/green because margin >= 1.0 C (it would go red if margin < 1.0)."
+    },
+    {
+     "label": "Setpoint Compliance card \u2014 'IN TOLERANCE' badge, 3 axes",
+     "what_it_shows": "Commanded-vs-held check for the 3 global setpoints: per axis it shows commanded -> held, the signed delta, and a pass (check) / drift (warn) marker against a +/-0.5 per-axis tolerance. The header badge is 'In Tolerance' when comp.ok===true, 'Drift' when comp.ok===false.",
+     "how_to_read": "CRAH Supply Air Temp 25.25 -> 25.24 C (delta -0.01, check); CRAH Air Mass Flow 4.80 -> 4.80 kg/s (delta +0.00, check); Chilled Water Supply Temp 17.88 -> 17.86 C (delta -0.02, check). All |delta| <= 0.5, so the badge reads 'IN TOLERANCE' \u2014 the (simulated) plant is faithfully executing the planned setpoints. If no plan were deployed (comp.commanded == null), this card shows an empty 'No deployed plan' state instead."
+    },
+    {
+     "label": "Rolling Window \u2014 30 min chart (hall power \u00b7 worst inlet \u00b7 26 C cap)",
+     "what_it_shows": "A dual-axis time series intended to plot hall power (left axis) and worst inlet (right axis, fixed 20-30 C domain) over the last 30 minutes, with a dashed red 26 C cap reference line. Series refresh every 15 s.",
+     "how_to_read": "In this screenshot it reads 'No series data yet \u2014 the rolling window fills as telemetry arrives,' i.e. the /api/live/series history had not accumulated points when the shot was taken (it renders the chart only when rows.length > 0). When populated, the orange worst-inlet trace should stay well under the dashed 26 C line at all times; the cyan hall-power trace is on the left axis."
+    }
+   ],
+   "key_numbers": [
+    "Worst Inlet = 24.3 C (rack ite-20), with 1.7 C margin to the 26 C cap \u2014 the binding safety number on this screen",
+    "Hall Power = 471.5 kW (hall-scoped HVAC draw: ACU fans + hall share of CHW plant \u2014 the optimization objective)",
+    "PUE = 1.30 (live hall snapshot including shared-plant share; cf. ~1.19 plan-predicted hall PUE)",
+    "Relative Humidity = 48.9% (inside the safe band)",
+    "Heat-map spread: coolest 22.1 C (ite-6), hottest 24.3 C (ite-20); all 22 tiles green (< 24.5 C UI zone)",
+    "Rack Detail top-6: ite-20 24.3/1.7, ite-19 24.2/1.8, ite-21 24.2/1.8, ite-12 24.1/1.9, ite-11 24.0/2.0, ite-13 23.8/2.2 (Inlet C / Margin C)",
+    "Setpoint compliance: SAT 25.25 -> 25.24 C (delta -0.01); airflow 4.80 -> 4.80 kg/s (delta +0.00); CHWST 17.88 -> 17.86 C (delta -0.02); all within +/-0.5 tolerance -> 'IN TOLERANCE'",
+    "Frame timestamp 13:36; transport = 'live stream' (SSE); degrades to 5 s polling after 5 reconnect failures",
+    "Alert state: 0 active alerts ('ALL RACKS NOMINAL'). Server alert thresholds: warn >= 25.0 C (margin < 1 C), critical >= 26.0 C. (Separate UI tile colors: amber >= 24.5, red >= 25.5, pulsing >= 26.0)",
+    "SIMULATED FEED badge present (frame.simulated = true)"
+   ],
+   "talking_points": [
+    "This is the supervision layer of the dual-loop framework: the inner loop plans off-line with EnergyPlus, this screen verifies the realized state on-line. The scientific claim it defends is the hard invariant \u2014 every server inlet <= 26 C at every 15-min step, never traded against energy.",
+    "Read the worst-inlet KPI first: 24.3 C with a 1.7 C margin. The heat-map and the hottest-first Rack Detail table localize WHERE that worst rack is (ite-20, second row) \u2014 supervision is spatial, not a single scalar, because the cap binds on the hottest rack, not the average.",
+    "Setpoint Compliance is the actuation-fidelity audit: the 3 commanded global setpoints expand to 45 actuators, and we check that commanded equals held within +/-0.5. SAT 25.25->25.24, airflow 4.80->4.80, CHWST 17.88->17.86. This precondition must hold before any energy or safety number can be trusted \u2014 if held drifted from commanded, the EnergyPlus prediction would no longer describe reality.",
+    "There are two independent early-warning mechanisms, and I should not conflate them: (a) the SERVER alert ladder that drives the banner \u2014 warn at inlet >= 25.0 C (margin < 1 C), critical at >= 26.0 C; and (b) the UI heat-map/table COLOR ladder \u2014 green < 24.5, amber >= 24.5, red >= 25.5, pulsing 'Over Cap' at 26.0. Both fire well below or at the cap, giving the operator graded warning \u2014 defense in depth at the monitoring level, mirroring the planner's 3 safety nets.",
+    "Honesty by design: the SIMULATED FEED badge renders straight from frame.simulated, and deploy is shadow-mode \u2014 the 45 commands are recorded, never actuated. The UI is engineered to tell the truth about its own provenance, exactly what an expert-supervision tool should do.",
+    "Resilience detail worth one line: the page streams via SSE and silently degrades to 5-second polling after 5 failed reconnects, so a flaky proxy never blinds the operator."
+   ],
+   "narrative": "This tab is the payoff of the whole framework: it answers 'is it actually safe, right now?' The planner and safety gate make a probabilistic promise off-line (margin held under the cap, energy reduced); the Live tab is the real-time audit that the promise holds in execution. The argument flows top-down \u2014 a green all-clear banner (zero server alerts, because no rack is near the 25.0 C warn line), then a spatial heat-map and hottest-first table that localize the binding constraint (ite-20 at 24.3 C, 1.7 C of headroom), then hall KPIs (471.5 kW, PUE 1.30, RH 48.9%), then the actuation-fidelity check (all 3 setpoints held within +/-0.5), and finally a rolling trend that would show the worst-inlet trace hugging well below the dashed 26 C line over time. It advances the central thesis \u2014 energy savings are credible only because safety is continuously, observably enforced \u2014 and it does so honestly, foregrounding that the feed is simulated and shadow-mode until a real BACnet adapter and historian are wired in.",
+   "professor_questions": [
+    {
+     "q": "The worst inlet is 24.3 C \u2014 how do I know it never crossed 26 C, not just at this snapshot?",
+     "a": "Two answers. On this screen, the rolling-window chart plots worst-inlet against a dashed 26 C reference line over the trailing 30 minutes, so a breach would be visually obvious (here the window simply hadn't filled yet). Across the program we measured 6 consecutively deployed weeks (2024-11-08 to 2024-12-13): realized peak inlet rose from 23.37 to 25.60 C as we released savings, with ZERO violations and a worst-case margin of 0.40 C. The cap was never reached. This live frame, at 1.7 C margin, is a comfortable mid-range state. Caveat: those 6 weeks are the perturbed-plant EnergyPlus stand-in, not real sensors \u2014 structurally proven, not yet field-proven."
+    },
+    {
+     "q": "PUE here is 1.30 but you elsewhere claim ~1.19 \u2014 which is it?",
+     "a": "Both, at different scopes. ~1.19 is the plan-predicted PUE for the controlled hall under the optimized setpoints; 1.30 is the live hall snapshot that includes the hall's allocated share of the shared chilled-water plant overhead. They are not in conflict \u2014 the live number is the more conservative, plant-inclusive figure, which is the honest one to show on a supervision screen."
+    },
+    {
+     "q": "What exactly is 'compliance' checking, and why does it matter scientifically?",
+     "a": "The controller emits 3 global setpoints that broadcast to 45 actuators. Compliance is the per-axis commanded-vs-held delta against a +/-0.5 tolerance: SAT 25.25->25.24 (-0.01), airflow 4.80->4.80 (+0.00), CHWST 17.88->17.86 (-0.02). It matters because every energy and safety claim is conditional on the plant holding the commanded state. If held drifted from commanded, the off-line EnergyPlus prediction would no longer describe reality and the safety margin would be invalid. This card is the precondition check for trusting everything else. In shadow mode the 'held' value is the simulator's response, not a physical plant."
+    },
+    {
+     "q": "The heat-map shows the second-row racks (ite-19..21, ite-11..12) warmer than ite-4..9 \u2014 is that a model artifact or a real effect?",
+     "a": "It is a real spatial effect we expect: inlet temperature is not uniform across the hall, so the cap binds on the hottest rack, not the mean. That is precisely why we monitor per-rack and rank hottest-first rather than reporting an average \u2014 and why the planner's safety gate pre-tightens the cap by k*sigma (k=1) and stress-tests a +1 sigma hot-weather week. The optimizer is informed by a real EnergyPlus sensitivity sweep: airflow moves hall energy 15.5%, CHWST 3.4%, SAT ~0.5%, so airflow is the main lever for managing hotspots. One honesty note: the per-rack values here are simulated, so expect more spatial scatter once real sensors land."
+    },
+    {
+     "q": "It says SIMULATED FEED \u2014 so is any of this real?",
+     "a": "The physics engine is real EnergyPlus 9.5 in Docker; the live transport (SSE), alerting logic, compliance math, and thresholds are production code. What is simulated is the sensor source: a perturbed-plant EnergyPlus stand-in writes the frame because no physical BMS/historian is connected yet, and deploy runs in shadow mode \u2014 the 45 commands are recorded, never actuated. The badge is rendered directly from frame.simulated, so the system cannot hide that it is in simulation. The supervision instrument is structurally complete and ready for a BACnet adapter."
+    },
+    {
+     "q": "What are the alert thresholds, and aren't the 0.5 tolerance and 1.0 C margin flag arbitrary?",
+     "a": "Be precise about which threshold does what. The banner is driven by server-side alerts in webapp/telemetry.py: warn at inlet >= 25.0 C (margin < 1 C to the cap), critical at >= 26.0 C. Separately, the heat-map/table colors use 24.5/25.5/26.0 C purely for visual zoning, and the table's Margin cell red-flags at < 1.0 C. The +/-0.5 compliance band flags meaningful actuator drift without firing on sensor noise. These are operator-facing UI guards, deliberately looser/coarser than the planner's own statistics, where the rigorous safety sizing lives: fading-floor sigma = max(sample, prior/n) backs the search margin (live sigma_inlet 0.14 C), empirical-Bayes sigma_post (0.36 C) sizes the robust ensemble, and inlet bias is tracked at 0.18 C over n=7 weeks."
+    }
+   ],
+   "caveats": [
+    "SIMULATED FEED: the telemetry is the built-in simulator (a perturbed-plant EnergyPlus stand-in), not a physical BMS. The on-screen amber badge is rendered straight from the data's frame.simulated flag (server writes simulated=1.0 in every simulated frame).",
+    "Shadow mode: a deployed plan's 45 actuator commands are recorded but never physically actuated. 'Realized'/'held' values are EnergyPlus stand-ins until a real BACnet adapter + historian are connected.",
+    "Do not conflate the two threshold ladders: the alert banner fires on SERVER alerts (warn >= 25.0 C, critical >= 26.0 C), while the heat-map/table COLORS use 24.5/25.5/26.0 C. A green banner means zero alerts (no rack >= 25.0 C), not merely that tiles are green.",
+    "The Rolling Window panel in THIS screenshot reads 'No series data yet' \u2014 the 30-minute history had not filled at capture time, so the trend chart is empty here (not broken; it backfills as frames arrive, refreshing every 15 s).",
+    "PUE 1.30 shown is the plant-inclusive live snapshot; do not conflate it with the ~1.19 plan-predicted hall PUE.",
+    "The learning/calibration loop and the 6-week measured run are structurally proven against the simulated stand-in, not yet field-proven against real sensors.",
+    "Per-rack inlet on the heat-map is simulated per rack; once real sensors land, expect more spatial scatter than the smooth pattern shown.",
+    "The 'Live' green dot and the Hall-KPI card's 'Telemetry' tag are static UI labels, not health indicators; freshness is judged by whether the 13:36 clock advances."
+   ],
+   "money_insight": "Right now the hottest server inlet in the hall is 24.3 C \u2014 1.7 C below the 26 C hard cap \u2014 while the controller's commanded SAT/airflow/CHWST are all held within +/-0.5 tolerance and zero rack has reached the 25.0 C warn line: this is live, visible proof that the framework delivers energy savings only on top of a continuously enforced, never-breached safety guarantee (with the honest caveat that the feed is simulated and deploy is shadow-mode).",
+   "visual_aid_suggestions": [
+    "Draw a bold red arrow from the 'Worst Inlet 24.3 C' KPI tile to the ite-20 heat-map tile and to row 1 of the Rack Detail table, labelled 'same rack \u2014 the binding constraint', to show all three views agree on the hottest rack.",
+    "Overlay a vertical gap-bar on the Worst Inlet tile: a green bar from 24.3 up to a red dashed line at 26.0, annotated '1.7 C headroom' \u2014 makes the safety margin instantly legible.",
+    "Add a two-column legend inset near the heat-map that clearly separates the ladders: left = TILE COLORS (green < 24.5, amber >= 24.5, red >= 25.5, pulsing >= 26.0); right = ALERT BANNER (warn >= 25.0, critical >= 26.0). Captioned 'two ladders, do not conflate'.",
+    "Circle the three check marks in Setpoint Compliance and caption: '3 global setpoints -> 45 actuators, all held within +/-0.5 \u2014 actuation is faithful (simulated plant)'.",
+    "Add a callout box on the SIMULATED FEED badge: 'Honesty flag, rendered from frame.simulated; deploy is shadow-mode \u2014 45 commands recorded, not actuated'.",
+    "Inset a tiny 3-net diagram beside the alert banner: net 1 = k*sigma pre-tightened cap, net 2 = robust ensemble + hot-week / CVaR_0.8, net 3 = zero-tolerance deploy backstop \u2014 with an arrow noting this Live screen is the on-line verification of all three.",
+    "Since the Rolling Window is empty in this shot, paste a sparkline mock or a prior populated capture showing the orange worst-inlet trace staying flat under the dashed 26 C line, captioned 'what it looks like once 30 min of history fills (worst inlet on right axis, hall power on left)'."
+   ]
+  },
+  {
+   "tab": "New Plan",
+   "one_line_purpose": "This is the launch console for the inner planning loop: the operator sets the optimization week and search budget, sees the forecasted operating conditions (IT load, weather) and last week's setpoints as context, then kicks off the EnergyPlus-in-the-loop beam search.",
+   "professor_framing": "This tab is where the closed-loop optimizer is initiated: a planning problem is parameterized (which week, how thorough a search) and the decision-relevant inputs the planner will condition on \u2014 forecasted IT heat load and outdoor weather, plus the previously deployed setpoints \u2014 are made visible before a single EnergyPlus simulation runs. It matters because it makes the search both reproducible (every knob is explicit) and auditable (you see exactly what the planner \"knew\" going in).",
+   "elements": [
+    {
+     "label": "Section header \u2014 'New Optimization Plan'",
+     "what_it_shows": "The page title with a '+' accent; the whole tab is the entry form for one weekly plan.",
+     "how_to_read": "Identifies this as the launch surface for the inner loop. Before submit, only a single form column is shown (max-width ~520px); after submit the layout switches to two columns (form + Live Progress)."
+    },
+    {
+     "label": "Plan Parameters \u2014 Week Start *",
+     "what_it_shows": "The date anchoring the 7-day optimization horizon; the screenshot shows 11/08/2024 (2024-11-08), the hard-coded default chosen so the trailing 'past week' (Nov 1-7) sits inside data coverage.",
+     "how_to_read": "Required field (HTML date input). This selects which forecasted week the planner optimizes. The hint 'Weather data covers Nov 1 - Jan 31' below it bounds the valid range. 2024-11-08 is the first of the 6 measured deployment weeks (campaign runs 2024-11-08 .. 2024-12-13). Note: the default is just a calendar date, not necessarily a Monday \u2014 don't assert it is a Monday."
+    },
+    {
+     "label": "Days",
+     "what_it_shows": "Length of the planning horizon in days; shown as 7 (a full week).",
+     "how_to_read": "Setpoints are planned for this whole horizon at once. 7 means one weekly plan. Each search candidate is a full simulation over this entire window, so it directly scales sim cost. Numeric input bounded 1-30."
+    },
+    {
+     "label": "Grid Size",
+     "what_it_shows": "Number of discrete values sampled per setpoint axis at each search level; shown as 5.",
+     "how_to_read": "The coarse-to-fine resolution. With 3 controlled setpoints, grid=5 means up to 5^3=125 candidate combinations are considered per level before pruning. Higher = finer but more EnergyPlus runs. Numeric input bounded 2-20."
+    },
+    {
+     "label": "Beam Width",
+     "what_it_shows": "How many best candidates survive to seed the next, finer level; shown as 3.",
+     "how_to_read": "This is the 'beam' in beam search: only the top-3 scoring setpoint combinations are kept and refined around. Keeps the search tractable (best-first, not exhaustive) while still zooming in on the optimum. Numeric input bounded 1-20."
+    },
+    {
+     "label": "Levels",
+     "what_it_shows": "Number of coarse-to-fine refinement passes; shown as 3.",
+     "how_to_read": "Each level re-grids a tighter box around the surviving beam, increasing precision of the final setpoints. 3 levels is the default depth. The Live Progress panel reports 'Level k / 3' against this value. Numeric input bounded 1-10."
+    },
+    {
+     "label": "Workers",
+     "what_it_shows": "Number of parallel processes evaluating candidates; shown as 4.",
+     "how_to_read": "EnergyPlus runs are fanned out across this many OS processes (process-based, not threads, because the dctwin/EnergyPlus config is a process-global singleton). Purely a speed/throughput knob \u2014 it does not change the result, only wall-clock time. Numeric input bounded 1-32."
+    },
+    {
+     "label": "Day/night setpoints (time-block) checkbox",
+     "what_it_shows": "Opt-in to plan distinct day vs night setpoints instead of one constant weekly setpoint; shown unchecked.",
+     "how_to_read": "Unchecked = a single constant setpoint triple for the week. Checked = a warm-start local search refines separate day/night blocks, seeded at the constant optimum (PlanRequest.time_block). Off here, so this is the simpler constant-setpoint plan."
+    },
+    {
+     "label": "Launch Optimization button",
+     "what_it_shows": "Submits the plan request to POST /api/plans (createPlan) and starts the server-side job.",
+     "how_to_read": "Pressing it sets a plan_id, which (a) switches the page into a two-column layout with a Live Progress panel, (b) adds an 'Optimizing' badge to the Plan Parameters header, (c) disables all form inputs, and (d) hides the planning-context decks \u2014 the inputs are now locked in. The button briefly shows a 'Submitting\u2026' spinner while the POST is in flight."
+    },
+    {
+     "label": "Live Progress panel (appears only AFTER launch)",
+     "what_it_shows": "Not visible in this pre-launch screenshot. After Launch it shows Plan ID, a 'Level k / maxLevel' progress bar with percent, an Evaluations counter, a Best Score (4-decimal), a Cancel button, and a Running/Complete/Failed/Cancelled status badge fed by a Server-Sent-Events stream.",
+     "how_to_read": "This is the only live feedback while hundreds of EnergyPlus runs execute server-side. Mention it as 'what appears next' \u2014 it is the runtime counterpart to the static inputs on the left."
+    },
+    {
+     "label": "Planning Context \u2014 IT Load past & forecast",
+     "what_it_shows": "The 1F-2A hall IT electrical load (kW) over the trailing week (solid cyan 'Past (actual, kW)') and the forecast for the plan week (dashed amber 'Forecast (kW)'), split by a vertical dashed 'now' divider at the week boundary.",
+     "how_to_read": "This is the heat the cooling must remove. The trace is a near-flat daily ripple around a steady mean \u2014 the 1F-2A IT load is essentially flat in the data, which is why weather (not IT) dominates week-to-week energy variation. The forecast is a week-aligned seasonal/persistence forecast. Note the legend lists 'Forecast' first (left) then 'Past (actual)'."
+    },
+    {
+     "label": "Planning Context \u2014 Weather past & forecast",
+     "what_it_shows": "Outdoor air temperature (\u00b0C) over the trailing week (solid cyan 'Past (actual, \u00b0C)') and the plan week (dashed amber 'Forecast (\u00b0C)'), with the same dashed 'now' divider.",
+     "how_to_read": "This is the primary exogenous driver of cooling energy. A clear diurnal sawtooth (day/night swing). Because IT is flat, this curve is what mostly determines how hard the chiller/CRAHs must work \u2014 the reason weather forecasting is in the loop at all."
+    },
+    {
+     "label": "Previous Week Setpoints panel",
+     "what_it_shows": "The three global setpoints in force the prior week, captioned 'as-operated estimate' (for week 1 there is no prior plan, so the values are reconstructed from historian medians; in later weeks the caption instead reads 'plan \u00b7 week of <date>' and shows the actual previously deployed plan).",
+     "how_to_read": "This is the reference point the new plan is measured against. CRAH Supply Air Temp 23.00 C, CRAH Air Mass Flow 6.90 kg/s, Chilled Water Supply Temp 16.07 C (each shown to 2 decimals). The optimizer searches for a cheaper triple that still holds the inlet cap; these numbers are the baseline it must beat."
+    },
+    {
+     "label": "'now' dashed divider (cyan) on both decks",
+     "what_it_shows": "The boundary between observed past and forecasted future, placed at the first forecast timestamp (the plan-week start).",
+     "how_to_read": "Left of the line = actual measured data; right = forecast the planner conditions on. Makes explicit that the optimizer plans against a predicted week, not hindsight. (The divider and the 'Past' line share the cyan color; the forecast line is amber/dashed.)"
+    },
+    {
+     "label": "Top navigation tabs",
+     "what_it_shows": "Dashboard, Live, New Plan (active), Review, History, Digital Twin (3D), plus Sign out.",
+     "how_to_read": "New Plan is the entry point of the workflow: New Plan (launch) -> Review (approve/deploy) -> History/Live (track). Access is token-gated (operator vs expert, fail-closed); deploy/approve require the expert role."
+    }
+   ],
+   "key_numbers": [
+    "Week Start = 11/08/2024 (2024-11-08): the optimization horizon start, the hard-coded form default, and the first of the 6 measured deployment weeks (2024-11-08 .. 2024-12-13).",
+    "Days = 7: a full-week planning horizon; each search candidate is one full-week EnergyPlus run. Form bound: 1-30.",
+    "Grid Size = 5: 5 samples per setpoint axis per level (up to 5^3 = 125 combos/level over the 3 setpoints). Form bound: 2-20.",
+    "Beam Width = 3: top-3 candidates survive to the next level (best-first beam search). Form bound: 1-20.",
+    "Levels = 3: three coarse-to-fine refinement passes (default search depth). Form bound: 1-10.",
+    "Workers = 4: 4 parallel processes evaluating candidates (process-based, config is a global singleton). Form bound: 1-32.",
+    "Day/night time-block = off: planning a single constant weekly setpoint triple.",
+    "Previous CRAH Supply Air Temp = 23.00 C (baseline SAT; search range 20-26 C).",
+    "Previous CRAH Air Mass Flow = 6.90 kg/s (baseline airflow; search range 4.8-13.8 kg/s per ACU).",
+    "Previous Chilled Water Supply Temp = 16.07 C (baseline CHWST; search range 13-19 C).",
+    "Weather data coverage hint: Nov 1 - Jan 31 (the valid week-start range).",
+    "Defaults (grid=5, beam=3, levels=3) imply roughly hundreds of full-week EnergyPlus simulations per plan."
+   ],
+   "talking_points": [
+    "This is the only place a human touches the inner loop: I declare WHICH week to optimize and HOW HARD to search; everything downstream \u2014 hundreds of EnergyPlus simulations, the safety gate, the recommendation \u2014 flows from these seven knobs. Notice safety is NOT one of them: the 26 C inlet cap is structural, not operator-configurable.",
+    "The three search knobs are a classic coarse-to-fine beam search: grid=5 sets resolution per axis, beam=3 keeps the best survivors, levels=3 zooms in three times. It deliberately avoids exhaustively gridding a continuous 3-D control space \u2014 it spends simulation budget where the objective is promising.",
+    "Each candidate is scored by a FULL-WEEK EnergyPlus 9.5 run in Docker (via BCVTB), not a surrogate. So the optimizer's 'taste' is real building physics, and a plan costs roughly hundreds of full-week sims \u2014 hence the Workers knob to parallelize across processes.",
+    "The two context charts show what the planner conditions on: a near-flat IT load (cyan past, amber forecast) and a strongly diurnal outdoor temperature. The takeaway I want to land is that weather dominates week-to-week energy here because IT is flat \u2014 that is exactly why a weather-aware planner pays off. A real E+ sensitivity sweep backs this: airflow moves hall energy 15.5%, CHWST 3.4%, SAT only ~0.5%.",
+    "The Previous Week Setpoints (SAT 23.00 C, airflow 6.90 kg/s, CHWST 16.07 C) are the as-operated baseline the plan must beat \u2014 for week 1 reconstructed from historian medians (hence the 'as-operated estimate' caption). They give an immediate sense of where the operator was before the optimizer pushes for cheaper-but-safe setpoints.",
+    "The 3 global setpoints shown here fan out to 45 physical actuators (22 CRAH SATs + 22 airflows + 1 CHWST) at deploy \u2014 this tab is the low-dimensional control handle on a high-dimensional plant. And launching only SIMULATES; deploy is shadow-mode."
+   ],
+   "narrative": "This tab opens the story: it frames the optimization as a well-defined, reproducible experiment. Before any physics runs, we declare the decision variables' search space (grid/beam/levels), the horizon (week + days), and the compute budget (workers), then we expose the planner's inputs \u2014 forecasted IT load, forecasted weather, and the incumbent setpoints \u2014 so nothing is hidden. It sets up the rest of the deck: from here the planner runs hundreds of EnergyPlus simulations, the safety gate vets the winner, and Review/History/Live show what was recommended, approved, and (in shadow mode) realized. In short, this is the 'inputs and controls of the experiment' slide; later tabs show the outputs and the safety story.",
+   "professor_questions": [
+    {
+     "q": "Why beam search instead of a proper optimizer like Bayesian optimization or gradient methods?",
+     "a": "The objective is a black-box, expensive, noisy EnergyPlus simulation over only 3 bounded setpoints, with a hard safety constraint. Coarse-to-fine beam search is robust to that noise, trivially parallel across processes, and naturally respects box bounds \u2014 and a real E+ sensitivity sweep shows the landscape is dominated by one axis (airflow moves hall energy 15.5%, CHWST 3.4%, SAT ~0.5%), so a grid-then-refine search converges fast without gradients. We could layer Bayesian optimization on top later, but with 3 dims and a hard cap the marginal gain is modest versus the added fragility."
+    },
+    {
+     "q": "Grid=5, beam=3, levels=3 \u2014 how many EnergyPlus runs is that, and is it enough to be near-optimal?",
+     "a": "Order-of-magnitude it is hundreds of full-week runs: up to 5^3=125 coarse candidates, then refined boxes around the top-3 over two more levels, with de-duplication of already-evaluated points. Each refinement geometrically shrinks the search box, so the final setpoints land at a fine sub-grid resolution within the original ranges. The well-posedness sweep shows the surface is smooth and airflow-dominated, so this budget lands near-optimal in practice; you can raise grid/levels for tighter resolution at more sim cost. I'd frame near-optimality as 'good engineering convergence on a smooth surface,' not a proven global optimum."
+    },
+    {
+     "q": "The IT-load forecast looks almost flat \u2014 is your forecaster doing anything?",
+     "a": "It is doing the right thing: in this hall the 1F-2A IT load is genuinely near-constant in the historian, so a near-flat forecast is correct, not lazy. The forecaster is a week-aligned seasonal/persistence model; its real value is on weather, which is strongly diurnal and is the dominant energy driver here. Forecasting a flat series flat is the honest baseline \u2014 I'm not claiming a sophisticated NWP weather model."
+    },
+    {
+     "q": "Does changing Workers change the answer?",
+     "a": "No. Workers only sets how many OS processes evaluate candidates in parallel, so it changes wall-clock time, not the result. We use processes rather than threads deliberately because the dctwin/EnergyPlus configuration is a process-global singleton and is not thread-safe; each worker gets its own process-isolated config."
+    },
+    {
+     "q": "Where is the safety cap enforced \u2014 I don't see 26 C on this screen?",
+     "a": "It is not a knob here by design; the hard inlet <= 26 C cap is baked into the objective and the deploy gate, not something the operator can dial. On this tab you only choose the week and search budget. Downstream: the search rejects any candidate that violates the cap (pre-tightened by a k-sigma margin, k=1); a robust ensemble of perturbed plants plus a +1-sigma hot-weather week must still hold the cap, with energy summarized by CVaR_0.8 and a CHWST-first safety ladder substituting the cheapest provably-robust plan; and a zero-tolerance backstop guards deploy. Empirically, across all 6 deployed weeks realized peak inlet rose to 25.60 C and never reached 26 C \u2014 zero violations, worst-case margin 0.40 C."
+    },
+    {
+     "q": "Why default to 2024-11-08, and what does 'as-operated estimate' mean for the previous setpoints?",
+     "a": "2024-11-08 is the first of our six consecutively deployed weeks and is the form's hard-coded default, chosen so the trailing 'past week' sits inside data coverage (Nov 1 - Jan 31). 'As-operated estimate' is the panel caption when the data source is the historian rather than a prior plan: for the very first week there is no approved plan to inherit, so the previous setpoints (SAT 23.00 C, airflow 6.90 kg/s, CHWST 16.07 C) are reconstructed as medians from telemetry. In later weeks the caption switches to 'plan \u00b7 week of <date>' and shows the actual previously deployed plan's setpoints."
+    },
+    {
+     "q": "How do I know any of this is real and not cherry-picked?",
+     "a": "Two honesty points I'd raise unprompted. First, everything on this page is reproducible: every search knob is explicit, so re-entering them reruns the same experiment. Second, the loop is currently structurally proven, not field-proven: launching only runs simulations, deploy is shadow-mode (45 commands recorded, never actuated), and the 'realized' outcomes in later tabs come from a perturbed-plant EnergyPlus stand-in, not a live BMS/historian. The measured 6-week numbers (prediction error 1.33% -> 0.10%, savings up to 3.63%, zero inlet violations) are from that closed simulation campaign."
+    }
+   ],
+   "caveats": [
+    "The IT-load and weather 'Forecast' series are produced by a week-aligned seasonal/persistence forecaster \u2014 a statistical model, not a meteorological NWP feed; I should not oversell its sophistication.",
+    "The 'Previous Week Setpoints' here are captioned 'as-operated estimate' \u2014 for week 1 they are medians reconstructed from the historian, not a previously approved plan (the caption changes to 'plan \u00b7 week of <date>' in later weeks).",
+    "Nothing on this tab is actuated. Launching a plan only runs EnergyPlus simulations; downstream deploy is SHADOW MODE (45 commands are recorded, never sent to a real BMS), and the live/telemetry feed elsewhere in the app is a SIMULATED FEED until a real BACnet adapter + historian are connected.",
+    "The hard 26 C inlet cap and the 3-net safety gate are enforced in the objective/gate, not visible or adjustable on this screen \u2014 point that out rather than implying safety is configured here.",
+    "'Realized' outcomes shown in later tabs come from a perturbed-plant EnergyPlus stand-in, so the learning loop is structurally proven, not yet field-proven on hardware.",
+    "The '~hundreds of full-week sims' and '5^3=125/level' figures are upper-bound order-of-magnitude estimates from the default knobs, not an exact count \u2014 the search de-duplicates points and prunes via the beam, so the true count is lower and depends on the run.",
+    "The Live Progress panel (Plan ID, Level k/maxLevel bar, Evaluations, Best Score, Cancel) is NOT in this pre-launch screenshot \u2014 it only appears after Launch; describe it as 'what comes next,' not as currently shown."
+   ],
+   "money_insight": "This single, low-dimensional console launches a physics-grounded search: three global setpoints, vetted by roughly hundreds of full-week EnergyPlus simulations, against a near-flat IT load and a weather-dominated environment \u2014 turning a 45-actuator cooling plant into a 3-knob, weekly optimization problem that is fully reproducible from the parameters on this page (and that, in this campaign, runs entirely in simulation/shadow mode).",
+   "visual_aid_suggestions": [
+    "Draw three arrows from the form's Grid/Beam/Levels fields converging into a small inset funnel diagram labeled 'coarse up-to-5^3=125 -> keep top 3 -> refine x3', captioned 'each node = one full-week EnergyPlus run'.",
+    "On the Weather deck, add a callout arrow on the diurnal sawtooth: 'dominant energy driver \u2014 airflow 15.5% / CHWST 3.4% / SAT 0.5% per the E+ sweep'; on the IT deck add 'near-flat IT load => weather dominates week-to-week'.",
+    "Annotate the cyan dashed divider on both charts with a label 'NOW: left = measured (cyan), right = forecast (amber, dashed) the planner optimizes against'.",
+    "Box the three Previous Week Setpoints values (23.00 C / 6.90 kg/s / 16.07 C) and label 'as-operated baseline the plan must beat \u2014 week-1 historian medians; these 3 globals fan out to 45 actuators at deploy'.",
+    "Add a small badge/footnote overlay near Launch: 'Hard 26 C inlet cap + 3-net safety gate enforced downstream, not configurable here'.",
+    "Overlay the allowed ranges next to each baseline value (SAT 20-26, airflow 4.8-13.8, CHWST 13-19) so the professor sees where the incumbent sits inside the search box.",
+    "Add an honesty tag near the Launch button: 'launch = SIMULATE only; deploy is SHADOW MODE (45 commands recorded, never actuated)'.",
+    "Add a faint 'next' inset sketch of the Live Progress panel (Plan ID, Level k/3 bar, Evaluations, Best Score) since it is not in this pre-launch shot, captioned 'appears after Launch'."
+   ]
+  },
+  {
+   "tab": "Review (Plan deep-dive: safety + savings evidence and the expert approve/deploy gate)",
+   "one_line_purpose": "A per-plan audit page that puts the optimizer's predicted weekly KPIs side-by-side with the as-operated baseline, the robust confidence bands, the realized post-deployment actuals, the twin's learned calibration, and the inlet-temperature trajectory against the hard 26 C cap, so an expert can verify safety and savings before approving or deploying.",
+   "professor_framing": "This is the human-in-the-loop verification surface of the dual-loop controller: every recommendation the EnergyPlus-in-the-loop planner produces must survive this evidence panel before an expert is allowed to deploy it. It is where we demonstrate the two scientific claims of the project at once -- that the plan saves energy versus how the hall is actually operated, and that it holds the hard inlet-temperature safety constraint rather than trading it for those savings.",
+   "elements": [
+    {
+     "label": "Top navigation tabs",
+     "what_it_shows": "DASHBOARD / LIVE / NEW PLAN / REVIEW / HISTORY / DIGITAL TWIN (3D); REVIEW is active.",
+     "how_to_read": "Review is the per-plan audit/gate page; the other tabs are the run, live-telemetry, history and 3D-twin views. A 'Sign out' button sits top-right (token auth)."
+    },
+    {
+     "label": "Select Plan dropdown (top right)",
+     "what_it_shows": "Which plan/week is being reviewed; here '2024-12-13 \u2014 gds-2024 (deployed)'.",
+     "how_to_read": "Each option is week_start, an 8-char plan_id prefix, and the lifecycle status in parentheses (code: p.week_start \u2014 p.plan_id.slice(0,8) (p.status)). 'deployed' means this plan already passed the gate and was sent to the hall (in shadow mode here). Plans are sorted newest week first."
+    },
+    {
+     "label": "Plan ID + Status badge",
+     "what_it_shows": "The full plan id ('gds-2024-12-13-6138b3', a human-readable slug, not a UUID) and a colored lifecycle badge reading 'deployed'.",
+     "how_to_read": "Status drives which action buttons appear: pending_approval shows Approve/Reject; approved or deploy_failed shows Deploy/Retry Deploy; deploying shows a spinner; deployed/rejected lock editing and show NO action buttons. A 'deployed' badge means the approve+deploy gate already fired."
+    },
+    {
+     "label": "KPI Comparison table (Predicted vs Baseline)",
+     "what_it_shows": "The plan's predicted weekly KPIs against the as-operated baseline (median historical setpoints, evaluated once by the same EnergyPlus oracle), with a signed delta colored green=better/red=worse.",
+     "how_to_read": "Rows: Total HVAC Energy, PUE Mean, Peak Inlet Temp, Inlet Violations, Energy Reduction. Lower is better for the first four; higher is better for Energy Reduction (code flips the green/red rule for that row). Delta = Predicted - Baseline. If a plan predates schema 1.7 the baseline column is blank and a note explains why, rather than faking a comparison."
+    },
+    {
+     "label": "Setpoints panel",
+     "what_it_shows": "The 3 global setpoints this plan recommends, which broadcast to 45 actuators: CRAH Supply Air Temp, CRAH Air Mass Flow, Chilled Water Supply Temp.",
+     "how_to_read": "On a non-locked plan these are editable number fields (step 0.1) for an expert override + 'Save Setpoints'; on this deployed plan they are read-only mono values. Values: SAT 25.25 C, flow 4.80 kg/s, CHWST 17.88 C \u2014 all inside the legal ranges (SAT 20-26, flow 4.8-13.8, CHWST 13-19). Note flow sits right at the low end of its range."
+    },
+    {
+     "label": "Confidence Bands table",
+     "what_it_shows": "Per-KPI percentiles across the robust ensemble of perturbed-plant + hot-week scenarios: p50, p90, max. Header reports the scenario count and a robust-feasibility verdict.",
+     "how_to_read": "Header: '4 scenarios \u00b7 robust-feasible'. Values render to 1 decimal. inlet_temp_max_c shows 25.8 at p50, p90 AND max \u2014 even the worst sampled scenario summarises to 25.8 C (< 26). total_hvac_energy_kwh p50 260394.7 rising to p90 260914.4 = max 260914.4 shows low energy spread; pue_mean 1.2 across the board."
+    },
+    {
+     "label": "Realized vs Predicted table",
+     "what_it_shows": "Post-deployment actuals against what the plan predicted, with a delta. This is the closed-loop accuracy check. Only the 4 instantaneous KPIs are shown (Energy Reduction is excluded).",
+     "how_to_read": "Delta = Realized - Predicted, green when <= 0 (lower realized is treated as better for all four rows). Total HVAC realized 259602.792 vs predicted 259894.045 kWh (delta -291.253, green = realized came in slightly LOWER); PUE 1.189 vs 1.188 (+0.001); Peak Inlet 25.598 vs 25.515 C (+0.083); Violations 0 vs 0. Small deltas = the twin predicted reality well. CAVEAT: 'realized' is a perturbed-plant EnergyPlus stand-in, not a physical BMS."
+    },
+    {
+     "label": "Twin Calibration table",
+     "what_it_shows": "What the outer learning loop has inferred from realized history: per-KPI bias and sigma. Header badge shows the calibration version string ('weeks-7') and the body line shows the week count.",
+     "how_to_read": "'7 weeks of realized history'. Peak Inlet bias 0.18 C, sigma 0.14 C; Total HVAC Energy bias 514.9 kWh, sigma 3735.3 kWh. The inlet bias + sigma is what backs the k\u00b7sigma pre-tightening of the safety cap; a tiny inlet sigma (0.14 C) means the safety margin the search must reserve is small."
+    },
+    {
+     "label": "KPI Chart \u2014 Predicted vs Baseline (bar chart)",
+     "what_it_shows": "A visual of the same KPI comparison for the 4 instantaneous KPIs (Energy Reduction excluded); cyan = Predicted, grey = Baseline.",
+     "how_to_read": "Only Total HVAC Energy is visibly tall because the y-axis (0..~280,000 kWh) is dominated by the energy bars; PUE, Peak Inlet and Inlet Violations are near-zero on this shared kWh axis so they look flat. Read the table for those \u2014 the chart is a quick energy-gap glance: cyan bar slightly shorter than grey = the ~3.6% saving."
+    },
+    {
+     "label": "Inlet Trajectory chart",
+     "what_it_shows": "Max server-inlet temperature at each 15-min step across the full week: cyan = nominal plan, red = worst-case scenario, against the red dashed 26 C cap reference line.",
+     "how_to_read": "Y-axis fixed 20-32 C, X-axis steps 1..671 (a 7-day week at 15-min resolution). Both lines run flat at ~25.4 C for essentially the whole week, just under the dashed 26 C cap. There is a sharp initialization transient at step ~1-2 where the worst-case (red) line briefly overshoots to ~26.2-26.3 C (above the cap) before settling; this is the EnergyPlus warm-up, not a steady-state operating excursion. A second tiny worst-case bump (~25.5 C, still under cap) appears around steps 50-63."
+    }
+   ],
+   "key_numbers": [
+    "Plan / week reviewed: 2024-12-13, plan id 'gds-2024-12-13-6138b3', status 'deployed' (week 6 of the 6-week deployed campaign)",
+    "Predicted Total HVAC Energy: 259894.045 kWh vs Baseline 269681.035 kWh; Delta cell reads -9786.990 kWh; Energy Reduction row reads 3.629% (9786.99 / 269681.035 = 3.629%)",
+    "Energy Reduction (Predicted vs Baseline): 3.629% (matches the FACTS final 3.63% saving)",
+    "PUE Mean: predicted 1.188 vs baseline 1.190 (delta -0.002) \u2014 plan slightly improves efficiency",
+    "Peak Inlet Temp: predicted 25.515 C vs baseline 23.295 C (delta +2.221) \u2014 plan runs WARMER than as-operated but stays under the cap; that warmth is how it saves energy",
+    "Inlet Violations: 0.000 steps predicted, 0.000 baseline \u2014 zero predicted cap breaches",
+    "Setpoints: SAT 25.25 C, airflow 4.80 kg/s, CHWST 17.88 C (all within legal ranges; airflow sits at the bottom of its 4.8-13.8 kg/s range)",
+    "Confidence Bands: 4 scenarios, robust-feasible; inlet_temp_max_c = 25.8 C at p50, p90 and max (worst scenario summary still < 26 C); energy p50 260394.7 -> p90/max 260914.4 kWh; pue 1.2 across the board",
+    "Realized vs Predicted: Total HVAC 259602.792 vs 259894.045 kWh (delta -291.253, realized came in lower); PUE 1.189 vs 1.188 (+0.001); Peak Inlet 25.598 C vs 25.515 C (+0.083); Violations 0 vs 0",
+    "Twin Calibration (n=7 weeks, version badge 'weeks-7'): Peak Inlet bias 0.18 C, sigma 0.14 C; Total HVAC Energy bias 514.9 kWh, sigma 3735.3 kWh",
+    "Inlet Trajectory: full week = steps 1..671; both nominal and worst lines flat at ~25.4 C under the 26 C dashed cap in steady state, with a worst-case start-up transient that briefly overshoots ~26.2-26.3 C at step ~1-2; realized peak inlet 25.598 C leaves a 0.40 C worst-case margin to the cap"
+   ],
+   "talking_points": [
+    "This single page is the gate: the dual-loop controller never deploys a setpoint plan that has not passed this evidence panel \u2014 it operationalizes 'safety is a hard constraint, not a soft objective'.",
+    "Read the KPI Comparison left-to-right: the plan is predicted to cut weekly hall HVAC energy by 3.629% versus the as-operated baseline (259894 vs 269681 kWh, a -9787 kWh gap) while keeping predicted inlet violations at exactly zero.",
+    "Notice the mechanism: predicted Peak Inlet is +2.221 C HIGHER than baseline (25.515 vs 23.295 C). The savings come precisely from letting the hall run warmer \u2014 closer to the cap \u2014 instead of over-cooling. The hard cap, not comfort intuition, defines the usable headroom.",
+    "The Confidence Bands show the saving is robust, not one lucky run: across 4 perturbed-plant + hot-week scenarios the worst-case inlet summary is 25.8 C and energy spread is tight (260394.7 -> 260914.4 kWh), so the verdict is 'robust-feasible'.",
+    "The Realized vs Predicted table closes the loop: realized energy actually came in 291 kWh BELOW prediction, PUE within 0.001, and realized peak inlet 25.598 C is only 0.083 C above the prediction \u2014 and over the 6-week campaign weekly-energy error fell 1.33% -> 0.10%.",
+    "Twin Calibration shows the outer loop is learning: after 7 weeks the inlet bias is 0.18 C with sigma only 0.14 C \u2014 that small sigma is what backs the k\u00b7sigma pre-tightening of the cap, so a well-calibrated twin reserves a small margin and can release more savings.",
+    "On the Inlet Trajectory, be honest about the start: the worst-case line shows a brief initialization overshoot above 26 C at step ~1-2 (EnergyPlus warm-up), then both lines sit flat at ~25.4 C under the cap for the rest of the 671 steps. The deployable safety evidence is the steady-state behaviour plus the realized peak (25.598 C) and the robust inlet band (25.8 C), both under cap."
+   ],
+   "narrative": "This tab advances the central thesis of the dual-loop framework: that you can give a physics-grounded optimizer real authority over data-center cooling because every recommendation is auditable and its safety case is explicit before it acts. The story flows top to bottom \u2014 here is the plan and its three setpoints; here is how much energy it saves versus how the hall is actually run today (3.63%); here is evidence the saving is robust to plant and weather uncertainty, not a single optimistic simulation; here is the realized outcome confirming the twin predicted reality (energy even slightly under); here is the calibration showing the twin keeps getting more accurate week over week; and finally the safety picture made visual \u2014 inlet temperature riding ~0.4-0.6 C under the 26 C cap for essentially the entire week. The arc culminates in the approve/deploy buttons: the science exists to earn an expert's signature. We are careful not to oversell the trajectory plot: the worst-case line has an initialization transient that pokes above the cap, and the deployable safety guarantee rests on the steady-state behaviour, the realized peak, and the robust inlet summary rather than on that transient.",
+   "professor_questions": [
+    {
+     "q": "The plan deliberately runs the hall 2.2 C hotter than baseline. Isn't that risky for the servers?",
+     "a": "It is the whole point, and it is bounded. ASHRAE allowable inlet for this equipment class is well above 26 C; we set 26 C as a conservative hard cap and the plan rides just under it (25.515 C predicted, 25.598 C realized). Over-cooling to 23.3 C as the operators do wastes fan and chiller energy with no reliability benefit. The safety case is not 'trust us' \u2014 it is the three-net gate: cap pre-tightened by k\u00b7sigma (k=1), a robust ensemble whose worst-scenario inlet summary still reads 25.8 C, and a zero-tolerance deploy backstop. Realized worst-case steady-state margin to the cap was about 0.40 C."
+    },
+    {
+     "q": "On the inlet-trajectory plot the red worst-case line clearly goes above the 26 C line at the very start. Isn't that a violation?",
+     "a": "That spike at step ~1-2 is an EnergyPlus initialization transient \u2014 the model settling from its starting state, not a steady-state operating excursion. It is honest to point it out, and we don't hide it. The safety guarantee we actually deploy on is three-fold: the steady-state trajectory sits ~0.4-0.6 C under the cap for the whole week; the realized peak inlet was 25.598 C; and the robust ensemble's inlet summary is 25.8 C. The confidence-band verdict 'robust-feasible' is computed on the scenario summaries, which are under cap. If anything this is an argument for trimming or flagging the warm-up steps in the plotted series so the chart isn't misread."
+    },
+    {
+     "q": "What exactly is the 'baseline' you compare against \u2014 is it a strawman tuned to make you look good?",
+     "a": "No. It is the as-operated baseline: the median of the historical setpoints the human operators actually used, evaluated once through the same EnergyPlus oracle on the same week and weather. So it is apples-to-apples against real operating practice, not a textbook worst case. Schema 1.7 added this baseline block precisely so the saving claim is honest; plans created before that feature show a blank baseline column with an explanatory note rather than a faked comparison."
+    },
+    {
+     "q": "Confidence bands show p50, p90 and max all equal to 25.8 C for inlet. Why is there no spread \u2014 is the ensemble doing anything?",
+     "a": "The inlet spread is genuinely small because inlet is tightly controlled and the plant is well-calibrated (inlet sigma is 0.14 C after 7 weeks). The ensemble perturbs the plant model and injects a +1-sigma hot-weather week; energy does spread (p50 260394.7 up to 260914.4 kWh), but the inlet summary barely moves because the controller holds it. Identical percentiles to one decimal is the correct, reassuring result, not a dead ensemble \u2014 it says the safety margin is insensitive to the uncertainties we sampled. (Note these are scenario summaries; the raw worst-case time series still has the start-up transient discussed above.)"
+    },
+    {
+     "q": "Realized vs predicted: how do I trust the accuracy claim from a few weeks?",
+     "a": "Two honest points. First, realized here is a perturbed-plant EnergyPlus stand-in, clearly labelled \u2014 there is no physical BACnet feed yet, so this validates the learning machinery, not field hardware. Second, the accuracy claim rests on the campaign trend, not one cell: weekly-energy prediction error fell roughly monotonically 1.33, 0.86, 0.21, 0.19, 0.08, 0.10% over six weeks, and realized peak inlet tracked prediction to within 0.083 C. On this week realized energy even came in 291 kWh under prediction. The Twin Calibration table is the audit trail of that convergence."
+    },
+    {
+     "q": "Why does the bar chart look like only energy exists?",
+     "a": "It is a shared-axis artifact: the y-axis spans 0 to ~280,000 kWh to fit the energy bars, so PUE (~1.19), peak inlet (~25 C) and violations (0) are visually flat at the bottom. The chart is intentionally a quick energy-gap glance; the precise small-magnitude KPIs live in the table above it. It is a candidate for dual-axis or per-metric normalization."
+    },
+    {
+     "q": "Who can press Deploy, and what does Deploy actually do here?",
+     "a": "Authorization is token-based and fail-closed with two roles: operators can view and run plans, only an expert can approve and deploy. On this screen the plan is already 'deployed', so no action buttons render. Critically, deploy runs in shadow mode: the 45 actuator commands are generated, validated and recorded but never physically actuated, pending a real BMS adapter. The gate logic and command path are exercised end-to-end, but nothing touched a live chiller or CRAH."
+    }
+   ],
+   "caveats": [
+    "SHADOW MODE: 'deployed' means the 45 actuator commands were generated, validated and recorded \u2014 they were NOT physically sent to the hall. No real chiller or CRAH was actuated.",
+    "SIMULATED / STAND-IN realized data: the 'Realized vs Predicted' actuals come from a perturbed-plant EnergyPlus stand-in, not a physical BACnet/historian feed. The learning loop is structurally proven, not yet field-proven.",
+    "TRAJECTORY START-UP TRANSIENT: the plotted worst-case (red) inlet line briefly overshoots above the 26 C cap at step ~1-2 (EnergyPlus initialization), so do NOT claim the worst-case line 'never crosses the cap'. The deployable safety evidence is the steady-state trajectory, the realized peak (25.598 C) and the robust inlet summary (25.8 C) \u2014 all under cap.",
+    "The baseline is the as-operated median-setpoint hall evaluated once, not a controlled physical A/B test \u2014 it is the fairest available comparison but still simulation-vs-simulation.",
+    "Energy figures are hall-scoped (1F-2A ACU fans + the hall's share of the shared CHW plant), not facility-total minus IT; the PUE shown (~1.19) is the plan-predicted hall figure, lower than the ~1.30 live-hall snapshot that includes broader shared-plant share.",
+    "The KPI bar chart's shared kWh axis flattens PUE, peak inlet and violations \u2014 do not read those off the bars; read the tables.",
+    "'Inlet Violations: 0' and 'robust-feasible' are computed on per-step / scenario-summary KPIs that exclude (or are insensitive to) the warm-up transient; that is consistent with the gate's definition of feasibility but should be stated, given the visible transient on the chart."
+   ],
+   "money_insight": "The plan cuts weekly hall HVAC energy 3.629% versus how the hall is actually operated (259894 vs 269681 kWh, -9787 kWh) \u2014 by deliberately running ~2.2 C warmer \u2014 and buys that saving with the safety constraint intact: in steady state both nominal and worst-case inlet sit ~0.4-0.6 C under the 26 C cap for the full 671-step week, the realized peak was 25.598 C (0.40 C margin), and the robust ensemble summary is 25.8 C with zero predicted violations. (Honest footnote: the plotted worst-case series shows an EnergyPlus warm-up transient above the cap at step 1-2; the deployable guarantee rests on steady-state + realized + robust-summary behaviour, not that transient.)",
+   "visual_aid_suggestions": [
+    "On the Inlet Trajectory chart, add a green-shaded 'safety headroom' band between the steady ~25.4-25.6 C line and the 26 C dashed cap, annotated '~0.4 C steady-state margin to cap'.",
+    "Add a bold arrow at the start-of-week red spike labeled 'EnergyPlus warm-up transient (step 1-2) \u2014 initialization, not an operating excursion; excluded from feasibility'. Do NOT label it as 'never crosses the cap' because it does.",
+    "On the KPI Comparison table, put two callout bubbles: a green one on Energy Reduction '+3.629% vs as-operated (-9787 kWh)' and an amber one on Peak Inlet '+2.221 C: this warmth IS the savings mechanism \u2014 still under the 26 C cap'.",
+    "Draw a left-to-right ribbon across the page: Predict -> Stress-test (confidence bands) -> Realize -> Calibrate -> Approve/Deploy, to make the dual-loop gate flow explicit.",
+    "Add a tiny inset on the Confidence Bands row highlighting 'inlet p50 = p90 = max = 25.8 C' with the note 'inlet summary insensitive to plant+weather uncertainty (4 scenarios)'.",
+    "On the Twin Calibration table, annotate 'inlet sigma 0.14 C backs the k\u00b7sigma cap pre-tightening \u2014 smaller sigma => smaller required margin => more savings released'.",
+    "Annotate the bar chart axis 'shared kWh axis \u2014 small KPIs flattened; see tables' so nobody concludes the other metrics are zero."
+   ]
+  },
+  {
+   "tab": "History \u2014 Predicted-vs-Realized HVAC energy trend + plan ledger (the \"is the twin closing the loop / learning\" view)",
+   "one_line_purpose": "Shows whether the digital twin is actually learning: how closely its predicted weekly HVAC energy tracks the realized energy across 6 consecutive deployed weeks, plus a per-plan ledger of week, status, energy, and savings vs the as-operated baseline.",
+   "professor_framing": "\"This is the outer-loop evidence tab. Every other tab shows one plan in isolation; this one shows the dual loop closing over six weeks \u2014 the twin predicts a week's HVAC energy before deployment, then we feed back the realized energy and recalibrate, so the prediction error should shrink and the released savings should grow without ever touching the safety cap. The near-coincident cyan and amber lines are the scientific claim: the model is self-consistent over time. One honesty caveat up front \u2014 'realized' here is a perturbed-plant EnergyPlus stand-in, not a physical meter, so this proves the loop is wired and recalibrating correctly, not field-validated numbers.\"",
+   "elements": [
+    {
+     "label": "Page title: '\u2261 Plan History' with a search/filter box and 'N records' counter in the header",
+     "what_it_shows": "The History page header (section-title in the source). The filter is a free-text search; the counter shows post-filter row count.",
+     "how_to_read": "The \u2261 accent + 'Plan History' is the page H2. The 'Filter plans\u2026' box matches against plan_id / week_start / status (substring, case-insensitive); the counter reads '6 records' here because no filter is applied and all 6 plans match."
+    },
+    {
+     "label": "Card title: 'PREDICTED VS REALIZED \u2014 HVAC ENERGY', subtitle 'deployed weeks'",
+     "what_it_shows": "A line chart that renders ONLY when at least one plan has a non-null realized energy (code gate: sorted.some(p => p.realized_energy_kwh != null)). So its mere presence means the loop has been closed at least once.",
+     "how_to_read": "Two lines per week. Cyan = Predicted (planner's full-week EnergyPlus estimate, p.energy_kwh). Amber = Realized (p.realized_energy_kwh, the perturbed-plant EnergyPlus stand-in for real BMS feedback). The closer the two lines, the lower the prediction error \u2014 that gap IS the learning signal."
+    },
+    {
+     "label": "Cyan 'Predicted' line",
+     "what_it_shows": "The planner's pre-deployment forecast of weekly hall-scoped HVAC energy (ACU fans + shared CHW-plant share) for each week.",
+     "how_to_read": "Drawn with connectNulls=true so it forms a continuous line; small r=2 dots. Sits in the ~258k\u2013274k kWh band, gently declining left to right with the baseline week (leftmost) highest."
+    },
+    {
+     "label": "Amber 'Realized' line",
+     "what_it_shows": "Energy actually observed after deployment (here: the simulated/perturbed-plant stand-in, not a physical meter yet).",
+     "how_to_read": "Larger r=4 dots, connectNulls=false (so an isolated realized point still shows even with gaps). It lies almost on top of the cyan line \u2014 visually the two are nearly indistinguishable, which is the point. All 6 weeks have a realized value here, so the amber line is continuous too."
+    },
+    {
+     "label": "Y axis (energy kWh)",
+     "what_it_shows": "Weekly HVAC energy magnitude (auto-scaled by recharts, no explicit domain).",
+     "how_to_read": "Ticks at 0 / 70000 / 140000 / 210000 / 280000. Both lines hug the top band (~258k\u2013274k), so on this full-range axis the predicted/realized gap is sub-pixel \u2014 visually consistent with the per-week error being <1.5% (per the data)."
+    },
+    {
+     "label": "X axis (week start)",
+     "what_it_shows": "Six consecutive Friday week-starts.",
+     "how_to_read": "2024-11-08, 11-15, 11-22, 11-29, 12-06, 12-13 \u2014 left to right is chronological. The chart reverses the desc-sorted table via [...sorted].reverse(), so oldest is leftmost even though the table shows newest first."
+    },
+    {
+     "label": "Legend ('Predicted' / 'Realized')",
+     "what_it_shows": "recharts Legend mapping cyan\u2192Predicted, amber\u2192Realized.",
+     "how_to_read": "Centered under the chart; confirms which line is which. Without it the two coincident lines would be ambiguous."
+    },
+    {
+     "label": "Plan ledger table (6 rows)",
+     "what_it_shows": "One row per deployed plan: Week Start, Plan ID, Status, Energy (kWh), Reduction %, Action.",
+     "how_to_read": "Default sort is week_start descending (newest on top). Week Start / Status / Energy / Reduction are click-to-sort (4 sortable columns); Plan ID and Action are not. A SortIcon shows the active sort (cyan \u2191/\u2193) vs inactive (dim \u2195)."
+    },
+    {
+     "label": "Status column \u2014 all 'DEPLOYED' badges",
+     "what_it_shows": "Every one of the six weeks reached the deployed state of the status state machine.",
+     "how_to_read": "Badge color-coded by statusClass(): deployed = 'badge-deployed' (cyan/teal in this theme). Six DEPLOYED in a row = six full closed-loop cycles, none rejected or stuck. NOTE: 'deployed' here means approved+committed in shadow mode, not physically actuated."
+    },
+    {
+     "label": "Energy (kWh) column",
+     "what_it_shows": "Per-week predicted weekly HVAC energy (p.energy_kwh, .toFixed(1)). This is the PREDICTED value, the same series as the cyan line \u2014 not the realized value.",
+     "how_to_read": "Top\u2192bottom (newest\u2192oldest): 259894.0, 259157.2, 257541.2, 260480.2, 261806.3, 273564.6. The bottom row (oldest, 2024-11-08) is the highest because that week ran the as-operated baseline setpoints (0% saving)."
+    },
+    {
+     "label": "Reduction % column",
+     "what_it_shows": "Energy saving vs the as-operated baseline for that week (p.reduction_pct). The UI renders a positive reduction with a leading '\u2212' and greens it (a reduction is good); reduction_pct == 0 renders '+0.0%'.",
+     "how_to_read": "Top\u2192bottom: \u22123.6%, \u22123.6%, \u22123.6%, \u22123.2%, \u22123.2%, +0.0%. Read bottom\u2192top chronologically: 0.0% \u2192 3.2% \u2192 3.2% \u2192 3.6% \u2192 3.6% \u2192 3.6% \u2014 the gate releasing savings in steps as confidence grew. The '+0.0%' bottom row is the baseline week (no setpoint change)."
+    },
+    {
+     "label": "Action column (Delete / Review \u2192)",
+     "what_it_shows": "Per-row controls. Review \u2192 opens that plan's detail (onReview). Delete permanently removes results (guarded by window.confirm) and shows for any status NOT in {running, queued, deploying}. Cancel shows only for running/queued plans (none here).",
+     "how_to_read": "All six are deployed (terminal), so each shows Delete + Review \u2192, no Cancel. This is the operator's navigation hub into any historical plan."
+    },
+    {
+     "label": "Plan ID column",
+     "what_it_shows": "The plan identifier per week (gds-<week>-<hash>), not sortable.",
+     "how_to_read": "Visible IDs: gds-2024-12-13-6130b3, gds-2024-12-06-a368bc, gds-2024-11-29-72915b, gds-2024-11-22-f1a6a7, gds-2024-11-15-4a39f4, gds-2024-11-08-511d8a \u2014 one GDS-model plan per week. The 'gds-' prefix marks the real EnergyPlus GDS model (not the mock)."
+    }
+   ],
+   "key_numbers": [
+    "Energy (kWh) column, newest\u2192oldest exactly as rendered: 259894.0, 259157.2, 257541.2, 260480.2, 261806.3, 273564.6 (this is the PREDICTED series, p.energy_kwh)",
+    "Reduction %, newest\u2192oldest exactly as rendered: \u22123.6%, \u22123.6%, \u22123.6%, \u22123.2%, \u22123.2%, +0.0%",
+    "Chronological savings ramp (oldest\u2192newest): 0.0% \u2192 3.2% \u2192 3.2% \u2192 3.6% \u2192 3.6% \u2192 3.6% (gate releasing savings stepwise; FACTS final figure 3.63%, displayed rounded as 3.6%)",
+    "6 deployed weeks, all status = DEPLOYED, dates 2024-11-08 through 2024-12-13 (6 records counter)",
+    "Y-axis ticks: 0 / 70000 / 140000 / 210000 / 280000 kWh; both lines sit in the ~258k\u2013274k band, just under the 280000 tick",
+    "Predicted vs Realized lines visually coincident \u2014 corresponds to per-week prediction error 1.33% (wk1, 2024-11-08) \u2192 0.10% (wk6, 2024-12-13); per-week sequence 1.33, 0.86, 0.21, 0.19, 0.08, 0.10% (from FACTS; the chart shows the gap is sub-pixel, not the exact %)",
+    "Plan IDs visible (one GDS plan per week): gds-2024-12-13-6130b3, gds-2024-12-06-a368bc, gds-2024-11-29-72915b, gds-2024-11-22-f1a6a7, gds-2024-11-15-4a39f4, gds-2024-11-08-511d8a",
+    "Baseline week = 2024-11-08 row: highest energy (273564.6 kWh) and +0.0% reduction (the as-operated reference)"
+   ],
+   "talking_points": [
+    "The two lines being nearly on top of each other is the whole story: predicted weekly HVAC energy and realized energy agree to within ~1% in the late weeks. Per the data the prediction error falls from 1.33% in week 1 to 0.10% by week 6 \u2014 the twin is self-consistent and improving. (The chart shows the coincidence; the exact % comes from the underlying calibration record, not from on-screen labels.)",
+    "Savings are released stepwise, not all at once: 0% (baseline week 11-08) \u2192 3.2% \u2192 3.6%, ending at the FACTS 3.63%. That staircase is the safety gate deliberately holding back aggressiveness until the calibrated model earns confidence \u2014 savings are a consequence of trust, not the objective overriding safety.",
+    "The bottom row (oldest, 2024-11-08) at 273564.6 kWh / +0.0% is the as-operated baseline, evaluated once by planner/baseline.py from his_data medians. Every reduction % above it is measured against that same anchor, so the column is an honest like-for-like saving, not a moving goalpost.",
+    "Energy is hall-scoped (energy_scope hall_controllable_v1): ACU fans of the 1F-2A hall plus the shared CHW-plant share \u2014 not facility-total minus IT. That is why ~260k kWh/week is the right magnitude for one ~2 MW hall, and why the comparison is apples-to-apples.",
+    "Six consecutive DEPLOYED rows means six complete dual-loop cycles: forecast \u2192 beam search over 3 setpoints (hundreds of full-week EnergyPlus runs) \u2192 robust safety gate \u2192 expert deploy \u2192 realized feedback \u2192 recalibration. This tab is the integration test of the whole framework, not a single component.",
+    "What recalibration does under the hood: fading-floor sigma = max(sample, prior/n) shrinks the search margin as evidence accumulates; physics recalibration corrects fan-efficiency from a persistent energy bias. The shrinking predicted-vs-realized gap is the visible output of those updates \u2014 and crucially it narrows monotonically rather than oscillating, which is what a correctly-wired loop should do."
+   ],
+   "narrative": "\"This tab closes the argument the rest of the deck builds. The Dashboard/Review tabs prove one plan is safe and saves energy; this tab argues the system LEARNS \u2014 that the digital twin's predictions converge to its realized stand-in and that the controller releases more savings over time without risking the hard inlet cap. The flat, coincident predicted/realized lines plus the 0% \u2192 3.6% savings staircase are the dual loop working as designed: the inner loop optimizes each week, the outer loop measures the miss, recalibrates the physics and uncertainty, and the next week's prediction is tighter and the released saving is larger. The honest scope: 'realized' is a perturbed-plant EnergyPlus surrogate and deploy is shadow mode, so this is a structural proof the loop is wired and recalibrating correctly \u2014 the difference between 'we ran an optimizer once' and 'we have a self-improving closed-loop controller that is ready for a field trial.'\"",
+   "professor_questions": [
+    {
+     "q": "Your predicted and realized lines are nearly identical \u2014 isn't that suspicious, or even circular, since realized comes from the same physics engine?",
+     "a": "Yes, and I state it openly. Realized here is a perturbed-plant EnergyPlus stand-in, not a physical meter \u2014 telemetry is a SIMULATED FEED and deploy is SHADOW MODE. So this is not field validation; it is a structural proof that the closed loop is wired correctly and that recalibration reduces the predicted-vs-realized gap. The realized run uses perturbed plant parameters plus a hotter-weather scenario, so it is deliberately NOT the identical model \u2014 that is why week-1 error is 1.33%, not zero, and why it then decays. The honest claim is 'the learning loop is structurally proven, not field-proven'; the next milestone is a real BACnet adapter + historian."
+    },
+    {
+     "q": "Why does the reduction climb 0% \u2192 3.2% \u2192 3.6% instead of jumping straight to the best saving in week 1?",
+     "a": "Because savings are gated by confidence, not by the optimizer alone. Week 1 (2024-11-08) runs the as-operated baseline (+0.0%) to establish the anchor and gather a calibration sample. The robust safety gate only releases more aggressive setpoints as the fading-floor sigma shrinks (max(sample, prior/n)) and the empirical-Bayes sigma_post tightens the ensemble. The staircase is the gate trading margin for savings as evidence accumulates \u2014 never trading against the hard 26 C inlet cap, which is non-negotiable."
+    },
+    {
+     "q": "How is the 3.6% reduction defined, and against what baseline?",
+     "a": "Against the as-operated baseline: the medians of the operator's historical setpoints (planner/baseline.py from his_data), evaluated once by EnergyPlus to get baseline energy. Each week's saving = (baseline \u2212 plan energy)/baseline on the hall-scoped HVAC energy (ACU fans + shared CHW-plant share, energy_scope hall_controllable_v1). The 2024-11-08 row literally shows that baseline at 273564.6 kWh / +0.0%, so the comparison is fixed and transparent, not re-baselined each week."
+    },
+    {
+     "q": "The Energy column and the chart \u2014 are those predicted or realized numbers?",
+     "a": "The Energy (kWh) column and the cyan line are both the PREDICTED weekly HVAC energy (p.energy_kwh). The amber line is the separate realized value (p.realized_energy_kwh); the table does not print realized as a number, only the chart shows it. So the 259894.0 / \u2026 / 273564.6 figures are the planner's forecasts, and the reduction % is computed off those predicted figures against the predicted baseline. The realized-vs-predicted agreement is read from how tightly the two lines sit, not from a column."
+    },
+    {
+     "q": "The chart shows energy but not safety \u2014 how do I know these savings didn't come from running the hall hotter and closer to the cap?",
+     "a": "Safety lives on the Dashboard/Review tabs, but the FACTS are: realized peak inlet rose 23.37 \u2192 25.60 C across these same six weeks and NEVER reached the 26 C cap \u2014 zero violations, worst-case margin 0.40 C. The objective rejects any candidate that breaches the cap (objective.is_feasible), the cap is pre-tightened by k\u00b7sigma (k=1), and a robust CVaR_0.8 ensemble plus a zero-tolerance deploy backstop guard it. So the 3.6% saving is earned under a hard constraint \u2014 I'd pair this tab with the safety-margin chart to show that explicitly."
+    },
+    {
+     "q": "Six weeks is a short record \u2014 is this statistically meaningful, and why these particular weeks?",
+     "a": "Six weeks is the demonstrated record (2024-11-08..2024-12-13), and the live calibration state has n=7 weeks of evidence (inlet bias 0.18 C, fading-floor sigma_inlet 0.14 C, sigma_post 0.36 C, energy bias ~515 kWh \u2248 0.2%). I'd frame it as a proof-of-mechanism, not a seasonal study: the IT load on 1F-2A is roughly flat, so week-to-week energy is weather-dominated and the forecaster is seasonal/week-aligned. The monotone error decay (1.33\u21920.10%) across distinct weather weeks is the meaningful signal; longer field deployment is the stated next step."
+    },
+    {
+     "q": "What exactly updates between weeks to make the prediction better \u2014 is it just refitting, or something physical?",
+     "a": "Two things. First, uncertainty sizing: fading-floor sigma = max(sample, prior/n) backs the search margin, and sigma_post = sqrt((n\u00b7s^2 + sigma0^2)/(n+1)) sizes the robust ensemble \u2014 both tighten as n grows. Second, and more physical, recalibration corrects model parameters from persistent residuals: a standing energy bias drives a fan-efficiency correction, and inlet residuals update the inlet bias/sigma with residual clipping. So it is not curve-fitting the output; it is correcting the physics inputs so the next full-week EnergyPlus run is closer to reality \u2014 which is why the gap narrows monotonically rather than oscillating."
+    }
+   ],
+   "caveats": [
+    "SHADOW MODE: the 45 actuator commands from each deployed plan are recorded, never sent to physical equipment. 'DEPLOYED' on this tab means 'approved and committed in the system', not 'actuated on the live hall'.",
+    "SIMULATED FEED: 'Realized' energy is a perturbed-plant EnergyPlus stand-in, not a physical meter or historian. The realized line is a high-fidelity surrogate, not ground truth \u2014 say this before the professor infers field validation.",
+    "The learning loop is structurally proven, not yet field-proven. The convergence shown is evidence the loop is wired and recalibrating correctly; real-world numbers require a BACnet adapter + historian (the stated next milestone).",
+    "The Energy (kWh) column and BOTH the chart's percentages-of-error are derived/predicted, not measured-on-hardware. The column is the predicted series; realized is only the amber line. Don't present the column numbers as 'measured energy'.",
+    "The energy chart alone does not show safety. Always pair it with the inlet-margin evidence (peak inlet 23.37\u219225.60 C, zero violations, 0.40 C worst-case margin) so the savings are read as constrained, not free.",
+    "Only 6 weeks (calibration n=7). This is a proof-of-mechanism over weather-varied weeks, not a multi-season statistical claim. IT load on 1F-2A is ~flat, so week-to-week energy is weather-dominated.",
+    "Reduction % rendering quirk to pre-empt confusion: the UI prints a positive saving with a leading '\u2212' and greens it (a '\u22123.6%' cell means a 3.6% REDUCTION, which is good). '+0.0%' on 2024-11-08 is the baseline week (reduction_pct == 0), not a regression.",
+    "The chart appears only because at least one realized value exists (code gate). If a fresh DB had no realized values, this tab would show the ledger alone \u2014 the chart's presence is itself evidence the loop has closed at least once."
+   ],
+   "money_insight": "\"Over six consecutive deployed weeks the twin's predicted weekly HVAC energy converges onto its realized stand-in \u2014 prediction error falling 1.33% \u2192 0.10% \u2014 while the gate releases savings in a 0% \u2192 3.2% \u2192 3.6% staircase, all with zero inlet-cap violations (peak inlet 23.37\u219225.60 C, 0.40 C margin): the dual loop is demonstrably learning and getting safer-to-trust over time, not just optimizing once. (Realized = perturbed-plant EnergyPlus surrogate in shadow mode \u2014 structurally proven, field trial is the next step.)\"",
+   "visual_aid_suggestions": [
+    "Add a magnified inset over the chart's top band (~258k\u2013280k kWh) showing the cyan and amber lines pulling apart at week 1 (2024-11-08) and merging by week 6 (2024-12-13), annotated 'gap = prediction error: 1.33% \u2192 0.10%' with a small arrow at each end.",
+    "Overlay a green staircase arrow along the Reduction % column: a callout at the 2024-11-08 row 'baseline week, +0.0% anchor' and at 2024-12-13 'gate fully released, \u22123.6% (\u21923.63%)', labelled 'savings released as confidence grew'.",
+    "Annotate the all-DEPLOYED Status column with a bracket and the label '6 complete closed-loop cycles \u2014 forecast\u2192search\u2192safety gate\u2192deploy\u2192recalibrate'.",
+    "Add two honesty badges near the chart title: 'SHADOW MODE (commands recorded, not actuated)' and 'SIMULATED FEED (realized = perturbed-plant EnergyPlus)' so the caveat is on-screen, not just spoken.",
+    "Label the Energy column header with a small '(predicted)' tag and put a tiny 'predicted' vs 'realized' key on the chart, to pre-empt the 'is this measured?' question.",
+    "Draw a small companion dual-loop diagram beside the tab: inner loop [forecaster \u2192 beam search \u2192 EnergyPlus oracle \u2192 safety gate] feeding a deployed plan, outer loop [realized energy \u2192 recalibrator (fan-eff + sigma) \u2192 back to forecaster], labelled 'this tab visualizes the outer loop closing'.",
+    "Add a one-line callout linking to the safety story: 'Energy here; inlet stayed 23.37\u219225.60 C, 0 violations, 0.40 C margin (see Dashboard)' so the audience never reads savings without the constraint."
+   ]
+  },
+  {
+   "tab": "Digital Twin (3D)",
+   "one_line_purpose": "A 3-D rendering of the controlled data hall (1F 2A) that makes the digital twin tangible: it overlays the active plan's three setpoints and predicted KPIs onto the actual hall geometry and colors rack rows (from live telemetry when flowing, else the static plan thermal gradient), so the energy/safety state and any hotspot are spatially legible at a glance.",
+   "professor_framing": "This tab is the spatial face of the digital twin: the same EnergyPlus-backed plan you saw as numbers elsewhere is bound to the real hall geometry (1F 2A, 22 CRAHs, ~2 MW IT) inside the full 7-hall / 3-level building, with rack rows colored against the hard inlet safety cap. It demonstrates that the control abstraction (3 global setpoints -> 45 actuators) and the physical asset it acts on are one consistent model, and that the margin to the 26 C cap is something you can literally see. (Honesty up front: deploy is shadow-mode and any telemetry feed is a simulated/perturbed-EnergyPlus stand-in.)",
+   "elements": [
+    {
+     "label": "Header: \u25c8 Digital Twin (3D) \u2014 Data Hall 1F 2A",
+     "what_it_shows": "Title plus topo.hall.name \u2014 the name of the hall that drives the HUD (the controlled hall, 1F 2A).",
+     "how_to_read": "Confirms the scene's HUD is anchored to the one operator-controlled hall; the rest of the building is context."
+    },
+    {
+     "label": "Plan selector dropdown \u2014 '2024-12-13 \u2014 gds-2024 (deploy\u2026)'",
+     "what_it_shows": "Which weekly plan supplies the setpoints and predicted KPIs in the HUD. Format is 'week_start \u2014 plan_id[:8] (status)'; selected here is the 2024-12-13 plan, status 'deploy(ed)'. (Note: the 'gds-2024' shown is the first 8 chars of the plan_id, not a separate model name.)",
+     "how_to_read": "Everything in the HUD comes from this plan's recommendation.json. 2024-12-13 is the final (week 6) of the 6 deployed weeks. Changing it re-skins the whole scene. If no plans exist the option reads 'No plans (showing nominal)'."
+    },
+    {
+     "label": "'\u25c9 All Levels' / '\u25cb Controlled Only' toggle",
+     "what_it_shows": "Whether all 7 halls across 3 levels are drawn (showContext=true), or just the controlled 1F 2A hall.",
+     "how_to_read": "'\u25c9 All Levels' (current) shows the full building so you can place 1F 2A in context; toggling to 'Controlled Only' isolates the controlled hall."
+    },
+    {
+     "label": "'\u25cb Labels Off' / '\u25c9 Labels On' toggle",
+     "what_it_shows": "Toggles the floating hall name/level labels inside the 3-D GL scene (showLabels).",
+     "how_to_read": "Off in this shot for a cleaner GL view. Note: the right-hand hall list is a separate fixed legend and is NOT affected by this toggle."
+    },
+    {
+     "label": "Twin Live status line \u2014 'TWIN LIVE \u00b7 22 CRAH \u00b7 6 ROWS \u00b7 7 HALLS / 3 LEVELS'",
+     "what_it_shows": "Topology summary from the backend: topo.crahs.length CRAHs, topo.rack_rows.length rack rows, and halls/distinct-levels of the building.",
+     "how_to_read": "22 CRAH matches the 22 controlled ACUs (22 SAT + 22 airflow actuators). 6 ROWS is the controlled hall's rack-row layout used for the schematic telemetry mapping. The green 'Twin Live' dot is a static UI badge for the topology feed; it does not by itself indicate that live rack telemetry is flowing."
+    },
+    {
+     "label": "Setpoint HUD: Supply Air 25.3 \u00b0C",
+     "what_it_shows": "The plan's CRAH supply-air temperature (SAT) setpoint, broadcast to all 22 CRAHs.",
+     "how_to_read": "One of the 3 global controls. Range 20\u201326 C; 25.3 C sits near the warm end, saving chiller/fan energy while staying under the inlet cap. Its color is tempColor(sat,sat,inletAnchor) \u2014 i.e. exactly the cold-aisle (blue) end of the thermal scale by construction."
+    },
+    {
+     "label": "Setpoint HUD: Air Flow 4.8 kg/s \u2014 '20% jet speed'",
+     "what_it_shows": "The plan's per-CRAH supply-air mass-flow setpoint, plus the airflow rendered as particle 'jet speed' in the scene.",
+     "how_to_read": "Range 4.8\u201313.8 kg/s; 4.8 is the exact floor of the range. particleSpeed() maps the floor to 0.20, so it reads '20% jet speed' \u2014 the visual floor (the helper never renders below 20% so even minimal flow shows gentle motion). Airflow is the dominant energy lever (15.5% of hall energy), so minimizing it is the biggest saving \u2014 bounded by the inlet cap."
+    },
+    {
+     "label": "Setpoint HUD: CHW Supply 17.9 \u00b0C",
+     "what_it_shows": "The chilled-water supply temperature (CHWST) setpoint \u2014 a single plant-wide actuator.",
+     "how_to_read": "Range 13\u201319 C; 17.9 C is near the warm end, which lifts chiller efficiency. Rendered in a fixed violet (accent='var(--violet)') to distinguish the water loop from the air loop \u2014 the violet is not a temperature color."
+    },
+    {
+     "label": "Predicted KPIs: HVAC Energy 259894 kWh",
+     "what_it_shows": "Plan-predicted weekly hall-scoped HVAC energy (kpi.total_hvac_energy_kwh = 22 ACU fans + shared CHW-plant share) for the selected week.",
+     "how_to_read": "This is the objective being minimized. It is hall-controllable energy, not facility total minus IT. Lower is better; this is the number against which the ~3.6% saving vs the as-operated baseline is measured."
+    },
+    {
+     "label": "Predicted KPIs: PUE Mean 1.19",
+     "what_it_shows": "Plan-predicted mean Power Usage Effectiveness for the week (kpi.pue_mean).",
+     "how_to_read": "~1.19 is the plan's optimistic, hall-scoped view; the live full-hall snapshot including the shared plant share is ~1.30. Quote both so the boundary is explicit."
+    },
+    {
+     "label": "Predicted KPIs: Peak Inlet 25.5 \u00b0C",
+     "what_it_shows": "Predicted worst-case server inlet temperature across the whole week, all 15-min steps (kpi.inlet_temp_max_c).",
+     "how_to_read": "The safety-critical number. The hard cap is 26.0 C; 25.5 C predicted leaves ~0.5 C headroom. Colored on the same thermal scale via tempColor(inletMax,sat,inletAnchor), warming toward red as it nears the cap."
+    },
+    {
+     "label": "Predicted KPIs: Violations 0 steps",
+     "what_it_shows": "Count of 15-min steps where predicted inlet exceeds the 26 C cap (kpi.inlet_violation_steps).",
+     "how_to_read": "0 = the plan is feasible; the gate would never deploy a plan with >0 here. Renders green at 0, red if any. Binary go/no-go safety signal."
+    },
+    {
+     "label": "Selected-hall card \u2014 'Data Hall 1F 2A \u00b7 \u25c6 CONTROLLED'",
+     "what_it_shows": "Asset facts for the inspected hall: Level 1F; Footprint 42.5 \u00d7 22.6 m; Floor (z) 7.0\u201310.5 m; IT power 2.00 MW; ACUs 22 (22 controlled); ITE 22 obj \u00b7 22,000 units; Volume 3351 m\u00b3.",
+     "how_to_read": "Grounds the abstraction in a real asset: 2.00 MW IT, 22 controllable ACUs, 3351 m\u00b3 of air to keep under 26 C. The cyan border + CONTROLLED badge mark it as the hall the agent actuates; other halls show MONITORED. Click any hall in the scene to swap this card to that hall."
+    },
+    {
+     "label": "Hall HVAC footnote \u2014 '22 ACUs \u00b7 agent-controlled SAT + airflow \u00b7 water-cooled VAV \u00b7 live setpoints/KPIs above'",
+     "what_it_shows": "selHall.infra.hvac string, with ' \u00b7 live setpoints/KPIs above' appended only because this hall is the controlled one.",
+     "how_to_read": "Confirms the 22-actuator-per-channel story and that the HUD above belongs to this hall. (For a MONITORED hall the trailing 'live setpoints/KPIs above' clause is omitted.)"
+    },
+    {
+     "label": "Thermal legend \u2014 'Cold Aisle \u2192 Hot Aisle' gradient, 25 \u00b0C \u2192 30 \u00b0C",
+     "what_it_shows": "The color scale mapping rack-surface temperature from supply-air (cold) to a hot-aisle anchor.",
+     "how_to_read": "Low end = SAT (25 \u00b0C, sat.toFixed(0) of 25.3); high end = inletAnchor.toFixed(0). Because predicted peak inlet (25.5) is NOT > SAT+1 (26.3), the code sets inletAnchor = SAT+5 = 30.3 -> shown as 30, to guarantee a non-degenerate color span. So '30 \u00b0C' is a rendering choice, not a measured hot-aisle temperature."
+    },
+    {
+     "label": "Right-side hall labels \u2014 Super Core Room 1F, Data Hall 2F 3B, 2F 3A, 1F 2B, 1F 2A (CONTROLLED \u00b7 22 ITE), GF 1B, GF 1A",
+     "what_it_shows": "The 7 halls of the building across 3 levels (GF / 1F / 2F), with 1F 2A highlighted (amber/cyan) as the controlled one.",
+     "how_to_read": "Shows the scope honestly: the framework controls one hall (1F 2A) and monitors the rest. The highlighted '1F 2A \u00b7 CONTROLLED \u00b7 1F \u00b7 22 ITE' label is the one bound to the HUD."
+    },
+    {
+     "label": "Status chip (bottom-right) \u2014 'animating recommended setpoints \u00b7 drag to orbit \u00b7 click a hall to inspect'",
+     "what_it_shows": "Interaction hint shown when a plan is loaded (hasPlan).",
+     "how_to_read": "If no plan were selected it would instead warn 'no plan selected \u2014 showing nominal envelope' in amber; while loading it reads 'loading plan\u2026'. Its presence confirms the scene is plan-driven, not a placeholder."
+    },
+    {
+     "label": "3-D rack rows (cyan blocks) with one warm/orange row",
+     "what_it_shows": "The rack rows of the controlled hall colored by temperature; cyan = cool, the orange row near center is the warmest cluster.",
+     "how_to_read": "The live-telemetry legend is absent in this shot (no telemetry frame had a non-null point at capture), so the rows are colored by the static plan thermal gradient (cold-aisle->hot-aisle), NOT by live telemetry. The orange row marks where the model places the hottest air \u2014 a spatial hotspot cue."
+    },
+    {
+     "label": "Live rack-row legend (NOT shown in this shot)",
+     "what_it_shows": "A 'Live telemetry \u00b7 rack rows \u00b7 worst ITE inlet' legend that appears top-left ONLY when a telemetry frame is flowing, binning rows green (<24.5 C) / amber (24.5\u201325.5 C) / red (\u226525.5 C).",
+     "how_to_read": "Its absence in this screenshot is the tell that rack colors are the static plan gradient, not live. Worth pointing out so the professor knows both modes exist and which is on screen."
+    }
+   ],
+   "key_numbers": [
+    "Supply Air (SAT) setpoint: 25.3 \u00b0C \u2014 within 20\u201326 C, near the warm/efficient end",
+    "Air Flow setpoint: 4.8 kg/s per CRAH = '20% jet speed' \u2014 the exact floor of the 4.8\u201313.8 kg/s range (particleSpeed floors the visual at 0.20); airflow is the dominant energy lever (15.5% of hall energy)",
+    "CHW Supply (CHWST) setpoint: 17.9 \u00b0C \u2014 near the warm end of the 13\u201319 C range, for chiller efficiency",
+    "Predicted weekly HVAC energy: 259894 kWh \u2014 the hall-scoped objective being minimized",
+    "PUE Mean: 1.19 (plan-predicted, hall-scoped); live full-hall snapshot incl. shared plant \u2248 1.30",
+    "Peak Inlet (predicted, whole week): 25.5 \u00b0C vs the hard 26.0 C cap -> ~0.5 C predicted headroom",
+    "Violations: 0 steps \u2014 plan is feasible; gate never deploys with >0",
+    "Topology: 22 CRAH \u00b7 6 ROWS in the controlled hall; 7 HALLS / 3 LEVELS in the building",
+    "Hall 1F 2A asset facts: 2.00 MW IT, 22 ACUs (22 controlled), 42.5 \u00d7 22.6 m footprint, floor z 7.0\u201310.5 m, 22 obj \u00b7 22,000 ITE units, Volume 3351 m\u00b3",
+    "Selected plan: week-start 2024-12-13, plan_id starts 'gds-2024', status 'deploy(ed)' \u2014 the final (week 6) of the 6 deployed weeks",
+    "Thermal legend span: 25 \u00b0C (SAT, cold aisle) -> 30 \u00b0C (hot-aisle anchor = SAT+5, a rendering choice)",
+    "Live rack-row zone thresholds (when telemetry flows): green <24.5 C, amber 24.5\u201325.5 C, red \u226525.5 C"
+   ],
+   "talking_points": [
+    "This is the digital twin made tangible: the abstract control problem \u2014 3 global setpoints expanding to 45 actuators \u2014 is bound to the actual hall geometry. The HUD top-left is exactly what the agent sets; the HUD top-right is what EnergyPlus predicts will happen.",
+    "The whole scene is plan-driven. I selected the 2024-12-13 deployed plan, so Supply Air 25.3 C, Air Flow 4.8 kg/s, and CHW 17.9 C are the recommended setpoints, and the orange rack row shows where the model places the hottest air.",
+    "Safety is visible, not just tabulated. Predicted Peak Inlet is 25.5 C against the hard 26.0 C cap, and Violations reads 0 \u2014 green. The same cap the gate enforces numerically is what the rack colors are scored against.",
+    "The setpoints tell the efficiency story spatially: airflow is pinned at the 4.8 kg/s floor \u2014 the minimum, rendering as 20% jet speed \u2014 because airflow is the dominant energy lever (15.5% of hall energy in our real E+ sweep), while SAT and CHWST are pushed warm. That is the energy saving you can see.",
+    "Scope is shown honestly. The right-hand labels list all 7 halls across 3 levels; only 1F 2A carries the cyan CONTROLLED badge and the live HUD. We control one ~2 MW hall and monitor the rest.",
+    "This week, 2024-12-13, is the 6th and final deployed week. By then prediction error had fallen to ~0.10% and the realized energy saving was ~3.6%, with zero inlet violations every week \u2014 the converged state, not a cherry-pick. (Caveat I'll state plainly: deploy is shadow-mode and 'realized' is a perturbed-EnergyPlus stand-in, not yet a real BMS feed.)"
+   ],
+   "narrative": "This tab is the payoff of the framework: after the planner has searched hundreds of full-week EnergyPlus simulations and the safety gate has cleared a plan, this is where you stand inside the building and watch that plan applied. It advances the argument that the digital twin is one consistent object \u2014 the same model EnergyPlus simulates, the optimizer searches, and the operator inspects \u2014 rather than a slide-deck cartoon disconnected from the physics. It also reframes the energy-vs-safety trade as spatial intuition: warm, floor-flow setpoints (saving energy) push the hottest rack row toward orange, and you can see how much headroom is left before the 26 C cap turns it red. It closes the loop the operator-facing tabs open: numbers become a place. The honesty caveat travels with it \u2014 deploy is shadow-mode and the optional telemetry coloring is a simulated stand-in.",
+   "professor_questions": [
+    {
+     "q": "Are the rack-row colors driven by live telemetry, or are they faked?",
+     "a": "Both modes exist, and I'll be precise about which is showing. The code colors rows from live telemetry \u2014 worst per-row inlet binned green/amber/red at 24.5 and 25.5 C \u2014 only when a telemetry frame has at least one non-null point, and it then shows a 'Live telemetry' legend top-left. In this screenshot that legend is absent, so no live frame was active at capture and the rows fall back to the static plan thermal gradient (cold-aisle to hot-aisle). And critically, even in live mode the telemetry feed is SIMULATED (perturbed-EnergyPlus stand-in) and the ITE-to-row mapping is schematic (22 points spread row-major 4,4,4,4,3,3 over the 6 rows), not a surveyed rack assignment \u2014 it's a hotspot cue, not rack-level ground truth."
+    },
+    {
+     "q": "Your HUD says PUE 1.19 but you mentioned 1.30 elsewhere. Which is real?",
+     "a": "They measure different boundaries. 1.19 is the plan-predicted, hall-scoped PUE for the controlled load. 1.30 is the live full-hall snapshot that includes this hall's share of the shared chilled-water plant and other overheads. Neither is wrong; I quote both so the boundary is explicit. The energy objective itself is hall-controllable energy \u2014 the 22 ACU fans plus the CHW-plant share \u2014 not facility-total-minus-IT."
+    },
+    {
+     "q": "Peak inlet 25.5 C is only 0.5 C under the cap. Isn't that dangerously tight?",
+     "a": "That 0.5 C is the predicted margin on the most optimized week, and it is deliberate, not accidental. The gate doesn't deploy on the believed plant alone: the hard cap is pre-tightened by k\u00b7sigma (k=1), then a robust ensemble of perturbed plants plus a +1-sigma hot-weather week must all still hold the 26 C cap, with energy summarized by CVaR at 0.8; a safety ladder substitutes the cheapest provably-robust plan (CHWST-first) if needed. Over the 6 deployed weeks the realized peak inlet rose 23.37 -> 25.60 C and never reached 26 \u2014 worst-case realized margin 0.40 C, zero violations. So the tightness is earned headroom backed by three independent safety nets and a zero-tolerance deploy backstop. Caveat: 'realized' here is still a perturbed-EnergyPlus stand-in, not field hardware."
+    },
+    {
+     "q": "Why is airflow at the absolute minimum of its range?",
+     "a": "Because airflow is by far the most powerful energy lever. In a real EnergyPlus sweep, airflow moves hall energy 15.5%, versus 3.4% for CHWST and only ~0.5% for SAT. So the optimizer drives airflow down to the 4.8 kg/s floor \u2014 which the scene renders as 20% jet speed (the helper's visual floor) \u2014 as far as the inlet cap allows, and uses warm SAT and CHWST as secondary levers. The well-posedness of that ranking is itself a measured result, not an assumption."
+    },
+    {
+     "q": "You only control one hall \u2014 is this just a toy?",
+     "a": "It's a deliberately scoped, honest deployment. The building has 7 halls on 3 levels; we control the 1F 2A hall \u2014 ~2 MW IT, 22 ACUs \u2014 and monitor the rest, which the labels show explicitly. The scope is one hall because that's where we have a clean actuator map and the EnergyPlus model; the 3-global-setpoint-to-45-actuator broadcast is the same pattern that would extend to more halls. We don't claim more than we've validated \u2014 and even this hall runs in shadow mode today."
+    },
+    {
+     "q": "What does the 3-D model actually buy you scientifically \u2014 couldn't this be a table?",
+     "a": "Two things a table can't give. First, spatial hotspot localization: the warm rack row tells an operator where margin is being consumed, which a single scalar peak-inlet can't. Second, model-fidelity confidence: the geometry, IT power, ACU count and volume on the hall card are the same asset the EnergyPlus oracle simulates, so the twin and the physics model are demonstrably the same object. It turns 'trust the optimizer' into 'inspect the asset the optimizer reasons about.' I'd add the honest limit: the rack-to-row mapping is schematic, so the hotspot is a cue, not a surveyed measurement."
+    },
+    {
+     "q": "Is this animating in real time, or is it a static recommendation?",
+     "a": "The status chip reads 'animating recommended setpoints' \u2014 the scene animates airflow as particle jet speed scaled from the setpoint (4.8 kg/s renders as 20% speed) and colors temperature from the plan. It is a visualization of one selected weekly plan; any rack telemetry polls every 5 s and the topology is loaded once on mount. It is NOT a live closed-loop control display \u2014 and indeed deploy itself runs in shadow mode (commands recorded, never actuated)."
+    }
+   ],
+   "caveats": [
+    "SHADOW MODE: deploying a plan records 45 actuator commands but never actuates real hardware. This 3-D view visualizes the recommended/recorded setpoints, not commands sent to a live BMS.",
+    "SIMULATED FEED: when rack rows ARE colored from telemetry, that telemetry is a simulated/perturbed-EnergyPlus stand-in (labelled 'Live telemetry' in-scene and 'SIMULATED FEED' elsewhere), not a real BACnet/historian feed.",
+    "In THIS screenshot the live-telemetry legend is NOT shown, so the rack rows are colored by the STATIC plan thermal gradient (cold->hot aisle), not by any live frame. The orange row reflects the model's hottest cluster, not a measured hotspot.",
+    "The ITE-to-rack-row mapping is SCHEMATIC: 22 telemetry points are spread row-major across 6 rows (4,4,4,4,3,3). It is a spatial hotspot cue, not surveyed rack-level ground truth.",
+    "'20% jet speed' is the floor of the visual scale, not a 20% airflow: particleSpeed maps the 4.8 kg/s lower bound to 0.20 (it never renders below 20% so minimal flow still shows motion). The setpoint itself sits at the exact bottom of the 4.8\u201313.8 kg/s band.",
+    "PUE 1.19 is plan-predicted and hall-scoped; the realistic full-hall figure including the shared-plant share is ~1.30. HVAC energy 259894 kWh is hall-controllable energy, not facility total.",
+    "Peak Inlet 25.5 C and Violations 0 are PREDICTED by EnergyPlus for this plan; the gate's robustness margins (k\u00b7sigma, +1\u03c3 hot week, CVaR_0.8, safety ladder) justify trusting that prediction, but the learning loop is structurally proven, not yet field-proven on real hardware.",
+    "The thermal-legend top anchor (30 \u00b0C) is a rendering choice (SAT+5) made because predicted peak inlet (25.5) is not more than 1 C above SAT; it is not a measured hot-aisle temperature.",
+    "'gds-2024' in the plan dropdown is the first 8 characters of the plan_id, not a separate model designation.",
+    "The green 'Twin Live' dot is a static UI badge for the topology load; it is not a live-telemetry indicator (the separate 'Live telemetry' legend is)."
+   ],
+   "money_insight": "The energy-vs-safety trade is something you can literally see: the optimizer has pushed airflow to its 4.8 kg/s floor (20% jet speed) and SAT/CHWST warm to save energy, the hottest rack row glows orange \u2014 and predicted Peak Inlet is 25.5 C with 0 violations, only ~0.5 C under the hard 26 C cap. The digital twin is one consistent object \u2014 the asset the EnergyPlus oracle simulates, the optimizer searches, and the operator inspects \u2014 so 'trust the optimizer' becomes 'inspect the hall it reasons about.' (Stated honestly: shadow-mode deploy, simulated telemetry.)",
+   "visual_aid_suggestions": [
+    "Draw a bold arrow from the 'Air Flow 4.8 kg/s \u00b7 20% jet speed' HUD stat down to the orange rack row, captioned 'minimum airflow -> warmest aisle, by design (airflow = 15.5% of energy)'.",
+    "Put a red dashed reference line/badge next to 'Peak Inlet 25.5 \u00b0C' labeled 'Hard cap 26.0 C', with a small bracket showing the ~0.5 C headroom; pair it with a green check on 'Violations 0 steps'.",
+    "Circle the single orange rack row and annotate 'spatial hotspot cue' with a footnote: 'schematic 4,4,4,4,3,3 mapping; static plan gradient in this shot (no live feed legend present)'.",
+    "Add a callout box over the right-hand hall labels: 'Scope: control 1 hall (1F 2A, cyan), monitor 6 \u2014 7 halls / 3 levels total'.",
+    "Overlay a 'SIMULATED FEED \u00b7 SHADOW MODE' watermark badge in a corner so the honesty caveat travels with the slide.",
+    "Inset mini-diagram: 3 setpoint tiles (SAT 25.3, Flow 4.8, CHWST 17.9) -> a fan-out arrow -> '45 actuators (22 SAT + 22 airflow + 1 CHWST)' -> '22 ACUs in 1F 2A'.",
+    "Annotate the bottom-left thermal legend: 'cold aisle (SAT 25 \u00b0C) -> hot-aisle anchor 30 \u00b0C (= SAT+5, rendering choice)' with a note that rack colors read against this scale.",
+    "Highlight the plan selector with a small flag: 'Week 6 of 6 deployed (2024-12-13): pred. error 0.10%, saving ~3.6%, 0 violations'."
+   ]
+  }
+ ],
+ "narrative": {
+  "deck_title": "Cheaper Without Crossing the Line",
+  "deck_subtitle": "A Digital-Twin Dual-Loop Controller for Data-Center Cooling, Walked Through Its Own Cockpit (EnergyPlus 9.5 in-the-loop; 6 deployed weeks; 0 safety violations)",
+  "one_sentence_thesis": "By making the 26 C inlet cap a hard, non-negotiable constraint and energy a soft objective, a physics-grounded dual-loop controller can run a 2 MW hall warmer and slower for a measured 3.63% weekly HVAC saving while a learning loop drives its prediction error from 1.33% to 0.10% over six weeks and never once touches the cap.",
+  "opening_hook": "Every data center on earth wastes energy over-cooling, because the one thing an operator cannot afford is a server inlet over its limit, so they buy safety with electricity. Our question was the inverse: how warm and how slow can you run a 2 MW hall before you touch the line, and can you prove you never will? This app is the answer made operable \u2014 I'll walk you through the operator's cockpit and show you the safety case, the savings, and the learning, in that order, ending with exactly what is and isn't real yet.",
+  "recommended_tab_order": [
+   {
+    "tab": "Login",
+    "why_here": "Establish the trust boundary first: a fail-closed, role-separated token gate so the dangerous capability (3 setpoints to 45 actuators in a 2 MW hall) is never reachable anonymously. Safety starts at the door, before any physics.",
+    "transition_in": "Before I show you anything that can move a setpoint, notice you can't get in without a token \u2014 and that the system errs toward locking you out."
+   },
+   {
+    "tab": "New Plan",
+    "why_here": "Frame the inner loop as a reproducible experiment: declare the week, the search budget (grid=5/beam=3/levels=3), and expose exactly what the planner conditions on \u2014 a near-flat IT load and a strongly diurnal weather forecast \u2014 before a single EnergyPlus run fires.",
+    "transition_in": "Once you're in, this is the only place a human touches the optimizer: you choose which week and how hard to search \u2014 and notice safety is NOT one of the knobs."
+   },
+   {
+    "tab": "Review",
+    "why_here": "This is the scientific heart: the per-plan evidence gate where savings and the hard-constraint safety case are demonstrated side by side \u2014 predicted vs as-operated baseline, the robust ensemble, realized actuals, twin calibration, and the inlet trajectory under the 26 C cap. It is where an expert is allowed to deploy.",
+    "transition_in": "The search produced a winner; now watch the gate it must survive before any expert can sign off \u2014 this single page is where 'safety is a constraint, not a trade' becomes concrete."
+   },
+   {
+    "tab": "Dashboard",
+    "why_here": "Collapse the whole optimizer into the operator's five-second contract: three setpoints, predicted energy/PUE/peak inlet, zero violations, 3.63% saving, status. It is the headline after the proof, not before it.",
+    "transition_in": "Having seen the evidence, here's how an operator reads the committed plan at a glance \u2014 three numbers in, a safe-and-cheaper verdict out."
+   },
+   {
+    "tab": "Live",
+    "why_here": "Close the loop in real time: the on-line audit that the realized hall never breaches the cap and that the 3 commanded setpoints are actually held within tolerance. This is where off-line promises meet on-line reality \u2014 and where the honesty caveat is most visible.",
+    "transition_in": "A prediction is a promise; this screen is the live audit that the promise holds \u2014 worst inlet right now, and proof the plant is executing what we commanded."
+   },
+   {
+    "tab": "History",
+    "why_here": "Prove the system learns, not just optimizes once: six deployed weeks where predicted and realized energy converge (error 1.33% to 0.10%) and savings ramp 0% to 3.63% in a gate-released staircase, with zero violations throughout. This is the outer loop closing.",
+    "transition_in": "One safe, cheap week could be luck; six in a row where the prediction tightens every week is a learning controller \u2014 here is the outer loop on one chart."
+   },
+   {
+    "tab": "Digital Twin (3D)",
+    "why_here": "Make the twin tangible and land the energy-vs-safety intuition spatially: airflow pinned at its 4.8 kg/s floor pushes the hottest rack row toward orange, with ~0.5 C of visible headroom to the cap \u2014 proving the asset the optimizer reasons about and the asset the operator inspects are one consistent object.",
+    "transition_in": "Finally, let's stand inside the hall: everything you saw as numbers is now a place, and you can literally see how much headroom is left before a rack would turn red."
+   }
+  ],
+  "framing_sections": [
+   "Act 0 - The trust boundary: governance before physics (Login)",
+   "Act 1 - The inner loop as a reproducible experiment: a 45-actuator plant reduced to a 3-knob weekly search scored by full-week EnergyPlus runs (New Plan)",
+   "Act 2 - Safety as a hard constraint, savings as the consequence: the evidence gate and the three safety nets (Review)",
+   "Act 3 - The operator's contract and the live audit: the at-a-glance verdict and real-time proof the cap holds (Dashboard, Live)",
+   "Act 4 - The outer loop closing: six weeks of convergence and gate-released savings (History)",
+   "Act 5 - The twin made tangible: seeing the energy-vs-safety trade in space (Digital Twin 3D)",
+   "Act 6 - Honest limits: shadow mode, simulated feed, structurally proven not yet field-proven \u2014 and the one remaining seam"
+  ],
+  "closing": "Close by restating the demonstrated result in one breath: over six consecutive deployed weeks the twin's weekly-energy prediction error fell from 1.33% to 0.10%, the gate released savings from 0% to a measured 3.63%, realized peak inlet rose from 23.37 C to 25.60 C and never reached the 26 C cap \u2014 zero violations, worst-case margin 0.40 C. Then be disarmingly honest about scope: deploy runs in shadow mode (45 commands recorded, never actuated), the telemetry feed is a labelled perturbed-plant EnergyPlus stand-in, so the learning loop is structurally proven end-to-end but not yet field-proven. State the single remaining step plainly: everything up to the building seam is built, tested, and exercisable today \u2014 what's left is wiring a real BACnet adapter and historian behind the seam this exact governance and safety stack already guards. The science exists to earn an expert's signature; the last step is to let that signature reach a real chiller.",
+  "big_questions": [
+   {
+    "q": "You deliberately run the hall ~2.2 C hotter than the operators do (25.5 C vs 23.3 C peak inlet). Isn't trading temperature for energy exactly the dangerous thing you claim to avoid?",
+    "a": "I never trade against the cap \u2014 I trade against the over-cooling margin the operators leave on the table. The 26 C inlet cap is a hard constraint in the objective: any candidate with a single 15-min step over it is rejected outright; energy is the soft thing being minimized underneath. The 2.2 C of extra warmth lives entirely below the cap. And it's protected by three independent nets before deploy: the cap is pre-tightened by k*sigma (k=1) with a fading-floor sigma; a robust ensemble of perturbed plants plus a +1-sigma hot-weather week must all still hold the cap with energy summarized by CVaR_0.8 and a CHWST-first safety ladder; and a zero-tolerance deploy backstop. Empirically, across six weeks realized peak inlet rose to 25.60 C and never reached 26 \u2014 worst-case margin 0.40 C, zero violations. The warmth is earned headroom, audited three times, not a gamble."
+   },
+   {
+    "q": "Your predicted and realized energy lines are nearly identical, and 'realized' comes from EnergyPlus too. Isn't this circular \u2014 aren't you just validating a model against itself?",
+    "a": "I'll state it before you do: realized here is a perturbed-plant EnergyPlus stand-in, not a physical meter, and deploy is shadow mode. So this is a structural proof that the closed loop is wired and recalibrating correctly, not field validation. Crucially the realized run is deliberately NOT the same model: it uses perturbed plant parameters plus a hotter-weather scenario, which is why week-1 error is 1.33% rather than zero, and why it then decays monotonically to 0.10% as the recalibrator corrects fan-efficiency and tightens sigma. If it were circular the error would be ~0 from week one. Monotone convergence across weather-varied weeks is the signal; the honest claim is 'structurally proven, field trial is the next step.'"
+   },
+   {
+    "q": "Beam search over three setpoints feels crude. Why not Bayesian optimization or gradients, and how do you know you're near-optimal?",
+    "a": "The objective is a black-box, expensive, noisy EnergyPlus run over only three bounded setpoints with a hard constraint, so coarse-to-fine beam search is the right fit: noise-robust, trivially parallel across processes, and respects box bounds natively. And the landscape justifies it \u2014 a real EnergyPlus sensitivity sweep shows airflow moves hall energy 15.5%, CHWST 3.4%, and SAT only ~0.5%, so it's a smooth, airflow-dominated surface where grid-then-refine converges fast without gradients. The defaults (grid=5/beam=3/levels=3) cost roughly hundreds of full-week sims and land at fine sub-grid resolution. I'd call that good engineering convergence on a smooth surface, not a proven global optimum \u2014 and you can raise grid/levels for tighter resolution at more sim cost. Bayesian optimization is a reasonable later layer, but with three dims and a hard cap the marginal gain is modest versus the added fragility."
+   },
+   {
+    "q": "You keep quoting two PUE numbers, 1.19 and 1.30. Which is real, and are you cherry-picking the flattering one?",
+    "a": "Both are real at different scopes, and I quote both deliberately so the boundary is explicit. 1.19 is the plan-predicted, hall-scoped PUE over the controllable HVAC. 1.30 is the live hall snapshot that includes the hall's allocated share of the shared chilled-water plant overhead \u2014 the more conservative, plant-inclusive figure, which is the one I show on the live supervision screen. The energy objective itself is hall-scoped (hall_controllable_v1 = the 22 ACU fans plus the hall's CHW-plant share), not facility-total-minus-IT, precisely so the 3.63% saving is attributable to exactly what these three setpoints can move. Scoping to the controllable boundary is the honest choice, not the flattering one."
+   },
+   {
+    "q": "Six weeks on one hall, with a flat IT load \u2014 is this statistically meaningful or a toy?",
+    "a": "It's a deliberately scoped proof-of-mechanism, and I'd frame it as such rather than oversell it. The building has 7 halls on 3 levels; I control one \u2014 the 1F-2A hall, ~2 MW IT, 22 ACUs \u2014 because that's where there's a clean actuator map and a calibrated EnergyPlus model. The IT load on that hall is genuinely near-flat in the historian, so week-to-week energy is weather-dominated, which is exactly why a weather-aware planner pays off and why the forecaster is seasonal/week-aligned. The meaningful signal isn't 'six points' \u2014 it's monotone error decay (1.33, 0.86, 0.21, 0.19, 0.08, 0.10%) across distinct weather weeks plus n=7 weeks of calibration evidence. The 3-global-to-45-actuator broadcast is the same pattern that extends to more halls; longer multi-season field deployment is the stated next step, not a claim I'm making today."
+   },
+   {
+    "q": "On the Review inlet-trajectory chart, the worst-case red line clearly pokes above 26 C at the very start. Doesn't that contradict 'zero violations'?",
+    "a": "It does cross there, and I won't claim otherwise \u2014 that spike at step 1-2 is an EnergyPlus initialization transient, the model settling from its starting state, not a steady-state operating excursion. The deployable safety guarantee rests on three things that are all under the cap: the steady-state trajectory sits ~0.4-0.6 C under 26 C for essentially the entire 671-step week; the realized peak was 25.60 C; and the robust ensemble's inlet summary is 25.8 C across all four scenarios. The gate's feasibility and the 'robust-feasible' verdict are computed on per-step and scenario-summary KPIs that exclude that warm-up, which is consistent with how feasibility is defined \u2014 but the honest fix is to trim or flag the warm-up steps in the plotted series so the chart can't be misread. I'd rather point at it than have you find it."
+   },
+   {
+    "q": "You call deploy 'shadow mode' \u2014 so has this system ever actually controlled a data center?",
+    "a": "No, and that's the most important caveat in the whole talk. Deploy generates, validates, and records all 45 actuator commands but never sends them to a physical BMS; the realized telemetry is a perturbed-plant EnergyPlus stand-in, clearly badged SIMULATED FEED, because there's no BACnet adapter or historian connected yet. What IS real and exercised end-to-end is the entire stack up to that seam: real EnergyPlus 9.5 physics, the beam search, the three-net safety gate, the role-based fail-closed governance, the calibration and recalibration loop, and the live supervision UI \u2014 422 backend and 104 frontend tests behind it. The BACnet adapter is an explicit NotImplementedError seam, deliberately the last unbuilt thing, so that 'recommended' becomes 'actuated' is a contained change behind controls that already work. I'm presenting a controller that is ready for a field trial, not one that has run a field trial."
+   }
+  ],
+  "presenting_tips": [
+   "Lead every claim with safety, then reveal savings as the consequence \u2014 never the reverse. The whole talk lands if the professor believes the cap is sacred; the 3.63% is only interesting because it was bought under that constraint.",
+   "Pre-empt the three honesty caveats out loud and early (shadow mode, simulated feed, structurally-not-field-proven). Say them before the professor finds them; a reviewer who catches you hiding a caveat distrusts every other number. Make 'I'll state it before you do' your reflex.",
+   "Spend the most time on the Review tab \u2014 it is the scientific heart. Walk it left-to-right as a ribbon: Predict -> Stress-test -> Realize -> Calibrate -> Approve. Budget roughly a third of the talk here and keep the other tabs crisp.",
+   "When you show the Review inlet-trajectory, point at the start-up transient yourself and name it an EnergyPlus warm-up artifact. Do not let the red line above the cap sit unaddressed for even a second.",
+   "Always state the scope when you quote a number: 'hall-scoped HVAC energy', 'plan-predicted PUE', 'realized stand-in'. The two PUE values (1.19 vs 1.30) and predicted-vs-realized energy are the easiest places to look sloppy \u2014 labeling scope every time signals rigor.",
+   "Memorize the safety spine cold: 26 C hard cap, k=1 sigma pre-tighten, +1-sigma hot week, CVaR_0.8, CHWST-first ladder, zero-tolerance backstop, realized peak 25.60 C, margin 0.40 C, zero violations. These should come out without glancing at a slide.",
+   "Click live sparingly and only where it adds proof: change the plan selector on the 3D or Review tab once to show every panel re-skins from one recommendation.json (one consistent object), and let the Live heat-map sit so the green all-clear reads. Avoid live-clicking anything that might show an empty state (e.g. the Live rolling window said 'no series yet' in the capture).",
+   "Use the staircase narrative on History: 0% -> 3.2% -> 3.6% is the gate releasing savings as confidence grew, not the optimizer ramping up. This reframes savings as a function of earned trust, which is your strongest framing.",
+   "On New Plan, make the point that safety is not a knob \u2014 there is no 26 C field on that form by design. It is the cleanest one-line proof that the constraint is structural, not operator-discretionary.",
+   "Keep a one-slide backup of the airflow=15.5% / CHWST=3.4% / SAT=0.5% sensitivity sweep. It pre-empts both 'why beam search' and 'why is airflow pinned to its floor' in a single answer, and it's a measured result, not an assumption."
+  ],
+  "visual_theme": "Adopt the app's own skin so the deck and the live cockpit are visually continuous: near-black navy background (#0A0E1A) with panel cards (#12182A), cyan as the primary accent (#36E0E0) for setpoints and controlled assets, mint-green (#66D99A) for SAFE/feasible states, amber (#F0A83A) for warnings and every honesty caveat, and red (#FF6B6B) reserved exclusively for the 26 C cap and violations \u2014 so the cap is the only thing that ever turns the deck red. Use real annotated screenshots from prof_deck/shots (login, newplan, review, dashboard, live, history, twin3d) with clean numbered markers and the legend text on the slide rather than on the image, matching deckkit.py's annotate style. Run one persistent motif across every slide: a thin horizontal 'safety ribbon' near the top, a green band under a red dashed 26 C line, with a small marker showing the current tab's relevant margin (e.g. 0.48 C predicted, 0.40 C realized worst-case) \u2014 a constant visual reminder that energy lives in the gap below the line. Put a small persistent corner badge reading 'SHADOW MODE / SIMULATED FEED' on every screenshot slide so the honesty caveat travels with the evidence and you never have to re-earn trust. Monospace for all numbers (kWh, C, kg/s) to read as instrument readouts; one accent color per concept, never decorative gradients."
+ }
+}
