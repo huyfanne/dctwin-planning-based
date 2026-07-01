@@ -1,4 +1,17 @@
-# DCTwin
+# Digital Twin Dual-Loop Control Framework
+
+A **planning-based optimizer** that recommends weekly data-center cooling setpoints (CRAH supply-air
+temperature, CRAH airflow, chilled-water supply temperature), scores every candidate with a
+**full-week EnergyPlus 9.5** simulation, and enforces a hard **26 °C** server-inlet safety cap via a
+three-net robust gate. Built on the DCTwin engine documented below.
+
+- ▶ **Run it (clone → web app → first optimization plan):** [**QUICKSTART.md**](QUICKSTART.md)
+- 📦 **Exact dependencies:** [`requirements.lock.txt`](requirements.lock.txt)
+- 📄 **Reports & guides:** [`docs/`](docs/) — user guide, code-handoff guide, dcwiz template-compliance summary, and a plain-language book chapter.
+
+---
+
+# DCTwin (engine)
 
 DCTwin is a easy-to-use tool for building Digital Twin models for data centers.
 Currently, the tool supports the following models:
